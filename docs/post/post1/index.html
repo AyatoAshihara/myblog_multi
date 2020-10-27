@@ -1,0 +1,1394 @@
+<!DOCTYPE html><html lang="ja" >
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  
+  
+  
+  <meta name="generator" content="Wowchemy 4.8.0 for Hugo">
+  
+
+  
+
+  
+  
+
+  
+  
+  
+  
+  
+    
+    
+    
+  
+  
+
+  <meta name="author" content="Ayato Ashihara">
+
+  
+  
+  
+    
+  
+  <meta name="description" content="万能すぎて逆に面白くないと話題のガウス回帰を実装してみました。">
+
+  
+  <link rel="alternate" hreflang="ja" href="../../post/post1/">
+
+  
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+  
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+
+  
+  
+  
+  <meta name="theme-color" content="#2962ff">
+  
+
+  
+  
+  
+  <script src="../../js/mathjax-config.js"></script>
+  
+
+  
+  
+  
+  
+    
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha256-FMvZuGapsJLjouA6k7Eo2lusoAX9i0ShlWFG6qt7SLc=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin="anonymous">
+
+    
+    
+    
+      
+    
+    
+      
+      
+        
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/github.min.css" crossorigin="anonymous" title="hl-light">
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/dracula.min.css" crossorigin="anonymous" title="hl-dark" disabled>
+        
+      
+    
+
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.css" integrity="sha512-1xoFisiGdy9nvho8EgXuXvnpR5GAMSjFwp40gSRE3NwdUdIMIKuPa7bqoUhLD0O/5tPNhteAsE5XyyMi5reQVA==" crossorigin="anonymous">
+    
+
+    
+
+    
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.2.2/lazysizes.min.js" integrity="sha512-TmDwFLhg3UA4ZG0Eb4MIyT1O1Mb+Oww5kFG0uHqXsdbyZz9DcvYQhKpGgNkamAI6h2lGGZq2X8ftOJvF/XjTUg==" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" integrity="" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+
+  
+
+  
+  
+  
+    
+      
+      
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,700%7CRoboto:400,400italic,700%7CRoboto+Mono&display=swap">
+    
+  
+
+  
+  
+  
+  
+  <link rel="stylesheet" href="../../css/wowchemy.css">
+
+  
+
+
+
+
+  
+
+
+  
+  
+
+  
+
+  <link rel="manifest" href="../../index.webmanifest">
+  <link rel="icon" type="image/png" href="../../images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
+  <link rel="apple-touch-icon" type="image/png" href="../../images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
+
+  <link rel="canonical" href="../../post/post1/">
+
+  
+  
+  
+  
+  
+  
+  
+    
+  
+  
+  <meta property="twitter:card" content="summary_large_image">
+  
+  <meta property="og:site_name" content="東京の資産運用会社で働く社会人が研究に没頭するブログ">
+  <meta property="og:url" content="/post/post1/">
+  <meta property="og:title" content="ガウス回帰の実装をやってみた | 東京の資産運用会社で働く社会人が研究に没頭するブログ">
+  <meta property="og:description" content="万能すぎて逆に面白くないと話題のガウス回帰を実装してみました。"><meta property="og:image" content="/post/post1/featured.png">
+  <meta property="twitter:image" content="/post/post1/featured.png"><meta property="og:locale" content="ja">
+  
+    
+      <meta property="article:published_time" content="2018-12-02T00:00:00&#43;00:00">
+    
+    <meta property="article:modified_time" content="2018-12-02T00:00:00&#43;00:00">
+  
+
+  
+
+
+    
+
+
+
+
+
+
+  
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "/post/post1/"
+  },
+  "headline": "ガウス回帰の実装をやってみた",
+  
+  "image": [
+    "/post/post1/featured.png"
+  ],
+  
+  "datePublished": "2018-12-02T00:00:00Z",
+  "dateModified": "2018-12-02T00:00:00Z",
+  
+  "author": {
+    "@type": "Person",
+    "name": "Ayato Ashihara"
+  },
+  
+  "publisher": {
+    "@type": "Organization",
+    "name": "東京の資産運用会社で働く社会人が研究に没頭するブログ",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png"
+    }
+  },
+  "description": "万能すぎて逆に面白くないと話題のガウス回帰を実装してみました。"
+}
+</script>
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+
+  <title>ガウス回帰の実装をやってみた | 東京の資産運用会社で働く社会人が研究に没頭するブログ</title>
+
+</head>
+
+
+<body id="top" data-spy="scroll" data-offset="70" data-target="#TableOfContents" class=" ">
+
+  
+  
+  
+    <script>window.wcDarkLightEnabled = true;</script>
+  
+  
+    <script>const isSiteThemeDark = false;</script>
+  
+  
+  <script src="../../js/load-theme.js"></script>
+
+  <aside class="search-results" id="search">
+  <div class="container">
+    <section class="search-header">
+
+      <div class="row no-gutters justify-content-between mb-3">
+        <div class="col-6">
+          <h1>Search</h1>
+        </div>
+        <div class="col-6 col-search-close">
+          <a class="js-search" href="#"><i class="fas fa-times-circle text-muted" aria-hidden="true"></i></a>
+        </div>
+      </div>
+
+      <div id="search-box">
+        
+        <input name="q" id="search-query" placeholder="検索..." autocapitalize="off"
+        autocomplete="off" autocorrect="off" spellcheck="false" type="search" class="form-control">
+        
+      </div>
+
+    </section>
+    <section class="section-search-results">
+
+      <div id="search-hits">
+        
+      </div>
+
+    </section>
+  </div>
+</aside>
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+<nav class="navbar navbar-expand-lg navbar-light compensate-for-scrollbar" id="navbar-main">
+  <div class="container">
+
+    
+    <div class="d-none d-lg-inline-flex">
+      <a class="navbar-brand" href="../../">東京の資産運用会社で働く社会人が研究に没頭するブログ</a>
+    </div>
+    
+
+    
+    <button type="button" class="navbar-toggler" data-toggle="collapse"
+            data-target="#navbar-content" aria-controls="navbar" aria-expanded="false" aria-label="ナビゲーションの切り替え">
+    <span><i class="fas fa-bars"></i></span>
+    </button>
+    
+
+    
+    <div class="navbar-brand-mobile-wrapper d-inline-flex d-lg-none">
+      <a class="navbar-brand" href="../../">東京の資産運用会社で働く社会人が研究に没頭するブログ</a>
+    </div>
+    
+
+    
+    
+    <div class="navbar-collapse main-menu-item collapse justify-content-start" id="navbar-content">
+
+      
+      <ul class="navbar-nav d-md-inline-flex">
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+            
+            
+            
+              
+            
+            
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="../../#about"><span>About</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link  active" href="../../post"><span>Posts</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="../../publication"><span>Publications</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+            
+            
+            
+              
+            
+            
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="../../#contact"><span>Contact</span></a>
+        </li>
+
+        
+        
+
+      
+
+        
+      </ul>
+    </div>
+
+    <ul class="nav-icons navbar-nav flex-row ml-auto d-flex pl-md-2">
+      
+      
+      <li class="nav-item">
+        <a class="nav-link js-search" href="#" aria-label="Search"><i class="fas fa-search" aria-hidden="true"></i></a>
+      </li>
+      
+
+      
+      
+      <li class="nav-item dropdown theme-dropdown">
+        <a href="#" class="nav-link" data-toggle="dropdown" aria-haspopup="true">
+          <i class="fas fa-moon" aria-hidden="true"></i>
+        </a>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item js-set-theme-light">
+            <span>Light</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-dark">
+            <span>Dark</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-auto">
+            <span>Automatic</span>
+          </a>
+        </div>
+      </li>
+      
+
+      
+
+    </ul>
+
+  </div>
+</nav>
+
+
+
+  <article class="article">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+<div class="article-container pt-3">
+  <h1>ガウス回帰の実装をやってみた</h1>
+
+  
+
+  
+
+
+<div class="article-metadata">
+
+  
+  
+
+  
+  <span class="article-date">
+    
+    
+      
+    
+    Dec 2, 2018
+  </span>
+  
+
+  
+
+  
+  <span class="middot-divider"></span>
+  <span class="article-reading-time">
+    11 分で読める
+  </span>
+  
+
+  
+  
+  
+
+  
+  
+  <span class="middot-divider"></span>
+  <span class="article-categories">
+    <i class="fas fa-folder mr-1"></i><a href="../../category/%E3%83%9E%E3%82%AF%E3%83%AD%E7%B5%8C%E6%B8%88%E5%AD%A6/">マクロ経済学</a></span>
+  
+
+</div>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+<div class="article-header container featured-image-wrapper mt-4 mb-4" style="max-width: 1155px; max-height: 645px;">
+  <div style="position: relative">
+    <img src="../../post/post1/featured.png" alt="" class="featured-image">
+    
+  </div>
+</div>
+
+
+
+  <div class="article-container">
+
+    <div class="article-style">
+      
+<script src="index_files/header-attrs/header-attrs.js"></script>
+<link href="index_files/pagedtable/css/pagedtable.css" rel="stylesheet" />
+<script src="index_files/pagedtable/js/pagedtable.js"></script>
+
+<div id="TOC">
+<ul>
+<li><a href="#gprとは">1. <code>GPR</code>とは</a></li>
+<li><a href="#gprの実装">2. <code>GPR</code>の実装</a></li>
+</ul>
+</div>
+
+<p>　おはこんばんにちは。昨日、<code>Bayesian Vector Autoregression</code>の記事を書きました。<br />
+　その中でハイパーパラメータのチューニングの話が出てきて、なにか効率的にチューニングを行う方法はないかと探していた際に<code>Bayesian Optimization</code>を発見しました。日次GDPでも機械学習の手法を利用しようと思っているので、<code>Bayesian Optimization</code>はかなり使える手法ではないかと思い、昨日徹夜で理解しました。<br />
+　その内容をここで実装しようとは思うのですが、<code>Bayesian Optimization</code>ではガウス回帰（<code>Gaussian Pocess Regression</code>,以下<code>GPR</code>）を使用しており、まずその実装を行おうと持ったのがこのエントリを書いた動機です。<code>Bayesian Optimization</code>の実装はこのエントリの後にでも書こうかなと思っています。</p>
+<div id="gprとは" class="section level2">
+<h2>1. <code>GPR</code>とは</h2>
+<p>　<code>GRP</code>とは簡単に言ってしまえば「<strong>ベイズ推定を用いた非線形回帰手法の１種</strong>」です。モデル自体は線形ですが、<strong>カーネルトリックを用いて入力変数を無限個非線形変換したもの</strong>を説明変数として推定できるところが特徴です（カーネルになにを選択するかによります）。<br />
+　<code>GPR</code>が想定しているのは、学習データとして入力データと教師データがそれぞれN個得られており、また入力データに関しては<span class="math inline">\(N+1\)</span>個目のデータも得られている状況です。この状況から、<span class="math inline">\(N+1\)</span>個目の教師データを予測します。<br />
+　教師データにはノイズが含まれており、以下のような確率モデルに従います。</p>
+<p><span class="math display">\[
+t_{i} = y_{i} + \epsilon_{i}
+\]</span></p>
+<p>ここで、<span class="math inline">\(t_{i}\)</span>は<span class="math inline">\(i\)</span>番目の観測可能な教師データ（スカラー）、<span class="math inline">\(y_{i}\)</span>は観測できない出力データ（スカラー）、<span class="math inline">\(\epsilon_{i}\)</span>は測定誤差で正規分布<span class="math inline">\(N(0,\beta^{-1})\)</span>に従います。<span class="math inline">\(y_{i}\)</span>は以下のような確率モデルに従います。</p>
+<p><span class="math display">\[
+\displaystyle y_{i}  = \textbf{w}^{T}\phi(x_{i})
+\]</span></p>
+<p>ここで、<span class="math inline">\(x_{i}\)</span>はi番目の入力データベクトル、<span class="math inline">\(\phi(・)\)</span>は非線形関数、 <span class="math inline">\(\textbf{w}^{T}\)</span>は各入力データに対する重み係数（回帰係数）ベクトルです。非線形関数としては、<span class="math inline">\(\phi(x_{i}) = (x_{1,i}, x_{1,i}^{2},...,x_{1,i}x_{2,i},...)\)</span>を想定しています（<span class="math inline">\(x_{1,i}\)</span>は<span class="math inline">\(i\)</span>番目の入力データ<span class="math inline">\(x_{i}\)</span>の１番目の変数）。教師データの確率モデルから、<span class="math inline">\(i\)</span>番目の出力データ<span class="math inline">\(y_{i}\)</span>が得られたうえで<span class="math inline">\(t_{i}\)</span>が得られる条件付確率は、</p>
+<p><span class="math display">\[
+ p(t_{i}|y_{i}) = N(t_{i}|y_{i},\beta^{-1})
+\]</span></p>
+<p>となります。<span class="math inline">\(\displaystyle \textbf{t} = (t_{1},...,t_{n})^{T}\)</span>、<span class="math inline">\(\displaystyle \textbf{y} = (y_{1},...,y_{n})^{T}\)</span>とすると、上式を拡張することで</p>
+<p><span class="math display">\[
+\displaystyle p(\textbf{t}|\textbf{y}) = N(\textbf{t}|\textbf{y},\beta^{-1}\textbf{I}_{N})
+\]</span></p>
+<p>と書けます。また、事前分布として<span class="math inline">\(\textbf{w}\)</span>の期待値は0、分散は全て<span class="math inline">\(\alpha\)</span>と仮定します。<span class="math inline">\(\displaystyle \textbf{y}\)</span>はガウス過程に従うと仮定します。ガウス過程とは、<span class="math inline">\(\displaystyle \textbf{y}\)</span>の同時分布が多変量ガウス分布に従うもののことです。コードで書くと以下のようになります。</p>
+<pre class="r"><code># Define Kernel function
+Kernel_Mat &lt;- function(X,sigma,beta){
+  N &lt;- NROW(X)
+  K &lt;- matrix(0,N,N)
+  for (i in 1:N) {
+    for (k in 1:N) {
+      if(i==k) kdelta = 1 else kdelta = 0
+      K[i,k] &lt;- K[k,i] &lt;- exp(-t(X[i,]-X[k,])%*%(X[i,]-X[k,])/(2*sigma^2)) + beta^{-1}*kdelta
+    }
+  }
+  return(K)
+}
+
+N &lt;- 10 # max value of X
+M &lt;- 1000 # sample size
+X &lt;- matrix(seq(1,N,length=M),M,1) # create X
+testK &lt;- Kernel_Mat(X,0.5,1e+18) # calc kernel matrix
+
+library(MASS)
+
+P &lt;- 6 # num of sample path
+Y &lt;- matrix(0,M,P) # define Y
+
+for(i in 1:P){
+  Y[,i] &lt;- mvrnorm(n=1,rep(0,M),testK) # sample Y
+}
+
+# Plot
+matplot(x=X,y=Y,type = &quot;l&quot;,lwd = 2)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
+<p>　Kernel_Matについては後述しますが、<span class="math inline">\(\displaystyle \textbf{y}\)</span>の各要素<span class="math inline">\(\displaystyle y_{i} = \textbf{w}^{T}\phi(x_{i})\)</span>の間の共分散行列<span class="math inline">\(K\)</span>を入力<span class="math inline">\(x\)</span>からカーネル法を用いて計算しています。そして、この<span class="math inline">\(K\)</span>と平均0から、多変量正規乱数を6系列生成し、それをプロットしています。</p>
+<p>　これらの系列は共分散行列から計算されるので、<strong>各要素の共分散が正に大きくなればなるほど同じ値をとりやすくなる</strong>ようモデリングされていることになります。また、グラフを見ればわかるように非常になめらかなグラフが生成されており、かつ非常に柔軟な関数を表現できていることがわかります。コードでは計算コストの関係上、入力を0から10に限定して1000個の入力点をサンプルし、作図を行っていますが、原理的には<span class="math inline">\(x\)</span>は実数空間で定義されるものであるので、<span class="math inline">\(p(\textbf{y})\)</span>は無限次元の多変量正規分布に従います。
+以上のように、<span class="math inline">\(\displaystyle \textbf{y}\)</span>はガウス過程に従うと仮定するので同時確率<span class="math inline">\(p(\textbf{y})\)</span>は平均0、分散共分散行列が<span class="math inline">\(K\)</span>の多変量正規分布<span class="math inline">\(N(\textbf{y}|0,K)\)</span>に従います。ここで、<span class="math inline">\(K\)</span>の各要素<span class="math inline">\(K_{i,j}\)</span>は、</p>
+<p><span class="math display">\[
+\begin{eqnarray}
+K_{i,j} &amp;=&amp; cov[y_{i},y_{j}] = cov[\textbf{w}\phi(x_{i}),\textbf{w}\phi(x_{j})] \\
+&amp;=&amp;\phi(x_{i})\phi(x_{j})cov[\textbf{w},\textbf{w}]=\phi(x_{i})\phi(x_{j})\alpha
+\end{eqnarray}
+\]</span></p>
+<p>です。ここで、<span class="math inline">\(\phi(x_{i})\phi(x_{j})\alpha\)</span>は<span class="math inline">\(\phi(x_{i})\)</span>の<strong>次元が大きくなればなるほど計算量が多く</strong>なります（つまり、非線形変換をかければかけるほど計算が終わらない）。しかし、カーネル関数<span class="math inline">\(k(x,x&#39;)\)</span>を用いると、計算量は高々入力データ<span class="math inline">\(x_{i},x_{j}\)</span>のサンプルサイズの次元になるので、計算がしやすくなります。カーネル関数を用いて<span class="math inline">\(K_{i,j} = k(x_{i},x_{j})\)</span>となります。カーネル関数としてはいくつか種類がありますが、以下のガウスカーネルがよく使用されます。</p>
+<p><span class="math display">\[
+k(x,x&#39;) = a \exp(-b(x-x&#39;)^{2})
+\]</span></p>
+<p><span class="math inline">\(\displaystyle \textbf{y}\)</span>の同時確率が定義できたので、<span class="math inline">\(\displaystyle \textbf{t}\)</span>の同時確率を求めることができます。</p>
+<p><span class="math display">\[
+\begin{eqnarray}
+\displaystyle p(\textbf{t}) &amp;=&amp; \int p(\textbf{t}|\textbf{y})p(\textbf{y}) d\textbf{y} \\
+ \displaystyle &amp;=&amp; \int N(\textbf{t}|\textbf{y},\beta^{-1}\textbf{I}_{N})N(\textbf{y}|0,K)d\textbf{y} \\
+ &amp;=&amp; N(\textbf{y}|0,\textbf{C}_{N})
+\end{eqnarray}
+\]</span></p>
+<p>ここで、<span class="math inline">\(\textbf{C}_{N} = K + \beta^{-1}\textbf{I}_{N}\)</span>です。なお、最後の式展開は正規分布の再生性を利用しています（証明は正規分布の積率母関数から容易に導けます）。要は、両者は独立なので共分散は2つの分布の共分散の和となると言っているだけです。個人的には、<span class="math inline">\(p(\textbf{y})\)</span>が先ほど説明したガウス過程の事前分布であり、<span class="math inline">\(p(\textbf{t}|\textbf{y})\)</span>が尤度関数で、<span class="math inline">\(p(\textbf{t})\)</span>は事後分布をというようなイメージです。事前分布<span class="math inline">\(p(\textbf{y})\)</span>は制約の緩い分布でなめらかであることのみが唯一の制約です。
+<span class="math inline">\(N\)</span>個の観測可能な教師データ<span class="math inline">\(\textbf{t}\)</span>と<span class="math inline">\(t_{N+1}\)</span>の同時確率は、</p>
+<p><span class="math display">\[
+ p(\textbf{t},t_{N+1}) = N(\textbf{t},t_{N+1}|0,\textbf{C}_{N+1})
+\]</span></p>
+<p>ここで、<span class="math inline">\(\textbf{C}_{N+1}\)</span>は、</p>
+<p><span class="math display">\[
+ \textbf{C}_{N+1} = \left(
+    \begin{array}{cccc}
+      \textbf{C}_{N} &amp; \textbf{k} \\
+      \textbf{k}^{T} &amp; c \\
+    \end{array}
+  \right)
+\]</span></p>
+<p>です。ここで、<span class="math inline">\(\textbf{k} = (k(x_{1},x_{N+1}),...,k(x_{N},x_{N+1}))\)</span>、<span class="math inline">\(c = k(x_{N+1},x_{N+1})\)</span>です。<span class="math inline">\(\textbf{t}\)</span>と<span class="math inline">\(t_{N+1}\)</span>の同時分布から条件付分布<span class="math inline">\(p(t_{N+1}|\textbf{t})\)</span>を求めることができます。</p>
+<p><span class="math display">\[
+p(t_{N+1}|\textbf{t}) = N(t_{N+1}|\textbf{k}^{T}\textbf{C}_{N+1}^{-1}\textbf{t},c-\textbf{k}^{T}\textbf{C}_{N+1}^{-1}\textbf{k})
+\]</span></p>
+<p>条件付分布の計算においては、<a href="https://qiita.com/kilometer/items/34249479dc2ac3af5706:title">条件付多変量正規分布の性質</a>を利用しています。上式を見ればわかるように、条件付分布<span class="math inline">\(p(t_{N+1}|\textbf{t})\)</span>は<span class="math inline">\(N+1\)</span>個の入力データ、<span class="math inline">\(N\)</span>個の教師データ、カーネル関数のパラメータ<span class="math inline">\(a,b\)</span>が既知であれば計算可能となっていますので、任意の点を入力データとして与えてやれば、元のData Generating Processを近似することが可能になります。<code>GPR</code>の良いところは上で定義した確率モデル<span class="math inline">\(\displaystyle y_{i} = \textbf{w}^{T}\phi(x_{i})\)</span>を直接推定しなくても予測値が得られるところです。確率モデルには<span class="math inline">\(\phi(x_{i})\)</span>があり、非線形変換により入力データを高次元ベクトルへ変換しています。よって、次元が高くなればなるほど<span class="math inline">\(\phi(x_{i})\phi(x_{j})\alpha\)</span>の計算量は大きくなっていきますが、<code>GPR</code>ではカーネルトリックを用いているので高々入力データベクトルのサンプルサイズの次元の計算量で事足りることになります。</p>
+</div>
+<div id="gprの実装" class="section level2">
+<h2>2. <code>GPR</code>の実装</h2>
+<p>　とりあえずここまでを<code>R</code>で実装してみましょう。PRMLのテストデータで実装しているものがあったので、それをベースにいじってみました。</p>
+<pre class="r"><code>library(ggplot2)
+library(grid)
+
+# 1.Gaussian Process Regression
+
+# PRML&#39;s synthetic data set
+curve_fitting &lt;- data.frame(
+  x=c(0.000000,0.111111,0.222222,0.333333,0.444444,0.555556,0.666667,0.777778,0.888889,1.000000),
+  t=c(0.349486,0.830839,1.007332,0.971507,0.133066,0.166823,-0.848307,-0.445686,-0.563567,0.261502))
+
+f &lt;- function(beta, sigma, xmin, xmax, input, train) {
+  kernel &lt;- function(x1, x2) exp(-(x1-x2)^2/(2*sigma^2)); # define Kernel function
+  K &lt;- outer(input, input, kernel); # calc gram matrix
+  C_N &lt;- K + diag(length(input))/beta
+  m &lt;- function(x) (outer(x, input, kernel) %*% solve(C_N) %*% train) # coditiona mean 
+  m_sig &lt;- function(x)(kernel(x,x) - diag(outer(x, input, kernel) %*% solve(C_N) %*% t(outer(x, input, kernel)))) #conditional variance
+  x &lt;- seq(xmin,xmax,length=100)
+  output &lt;- ggplot(data.frame(x1=x,m=m(x),sig1=m(x)+1.96*sqrt(m_sig(x)),sig2=m(x)-1.96*sqrt(m_sig(x)),
+                              tx=input,ty=train),
+                   aes(x=x1,y=m)) + 
+    geom_line() +
+    geom_ribbon(aes(ymin=sig1,ymax=sig2),alpha=0.2) +
+    geom_point(aes(x=tx,y=ty))
+  return(output)
+}
+
+grid.newpage() # make a palet
+pushViewport(viewport(layout=grid.layout(2, 2))) # divide the palet into 2 by 2
+print(f(100,0.1,0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=1, layout.pos.col=1))
+print(f(4,0.10,0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=1, layout.pos.col=2))
+print(f(25,0.30,0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=2, layout.pos.col=1))
+print(f(25,0.030,0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=2, layout.pos.col=2)) </code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<p><span class="math inline">\(\beta^{-1}\)</span>は測定誤差を表しています。<strong><span class="math inline">\(\beta\)</span>が大きい（つまり、測定誤差が小さい）とすでに得られているデータとの誤差が少なくなるように予測値をはじき出すので、over fitting しやすくなります。</strong>上図の左上がそうなっています。左上は<span class="math inline">\(\beta=400\)</span>で、現時点で得られているデータに過度にfitしていることがわかります。逆に<span class="math inline">\(\beta\)</span>が小さいと教師データとの誤差を無視するように予測値をはじき出しますが、汎化性能は向上するかもしれません。右上の図がそれです。<span class="math inline">\(\beta=4\)</span>で、得られているデータ点を平均はほとんど通っていません。<span class="math inline">\(b\)</span>は現時点で得られているデータが周りに及ぼす影響の広さを表しています。<span class="math inline">\(b\)</span>が小さいと、隣接する点が互いに強く影響を及ぼし合うため、精度は下がるが汎化性能は上がるかもしれません。逆に、<span class="math inline">\(b\)</span>が大きいと、個々の点にのみフィットする不自然な結果になります。これは右下の図になります（<span class="math inline">\(b=\frac{1}{0.03},\beta=25\)</span>）。御覧の通り、<span class="math inline">\(\beta\)</span>が大きいのでoverfitting気味であり、なおかつ<span class="math inline">\(b\)</span>も大きいので個々の点のみにfitし、無茶苦茶なグラフになっています。左下のグラフが最もよさそうです。<span class="math inline">\(b=\frac{1}{0.3},\beta=2\)</span>となっています。試しに、このグラフのx区間を[0,2]へ伸ばしてみましょう。すると、以下のようなグラフがかけます。</p>
+<pre class="r"><code>grid.newpage() # make a palet
+pushViewport(viewport(layout=grid.layout(2, 2))) # divide the palet into 2 by 2
+print(f(100,0.1,0,2,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=1, layout.pos.col=1)) 
+print(f(4,0.10,0,2,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=1, layout.pos.col=2)) 
+print(f(25,0.30,0,2,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=2, layout.pos.col=1))
+print(f(25,0.030,0,2,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=2, layout.pos.col=2)) </code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p>これを見ればわかるように、左下以外のグラフはすぐに95%信頼区間のバンドが広がり、データ点がないところではまったく使い物にならないことがわかります。一方、左下のグラフは1.3~1.4ぐらいまではそこそこのバンドがかけており、我々が直感的に理解する関数とも整合的な点を平均値が通っているように思えます。また、観測可能なデータ点から離れすぎるとパラメータに何を与えようと平均０、分散１の正規分布になることもわかるがわかります。
+さて、このようにパラメータの値に応じて、アウトサンプルの予測精度が異なることを示したわけですが、ここで問題となるのはこれらハイパーパラメータをどのようにして推計するかです。これは対数尤度関数<span class="math inline">\(\ln p(\textbf{t}|a,b)\)</span>を最大にするハイパーパラメータを勾配法により求めます((<span class="math inline">\(\beta\)</span>は少しタイプが異なるようで、発展的な議論では他のチューニング方法をとる模様。まだ、そのレベルにはいけていないのでここではカリブレートすることにします。))。<span class="math inline">\(p(\textbf{t}) = N(\textbf{y}|0,\textbf{C}_{N})\)</span>なので、対数尤度関数は</p>
+<p><span class="math display">\[
+\displaystyle \ln p(\textbf{t}|a,b,\beta) = -\frac{1}{2}\ln|\textbf{C}_{N}| - \frac{N}{2}\ln(2\pi) - \frac{1}{2}\textbf{t}^{T}\textbf{C}_{N}^{-1}\textbf{k}
+\]</span></p>
+<p>となります。あとは、これをパラメータで微分し、得られた連立方程式を解くことで最尤推定量が得られます。ではまず導関数を導出してみます。</p>
+<p><span class="math display">\[
+\displaystyle \frac{\partial}{\partial \theta_{i}} \ln p(\textbf{t}|\theta) = -\frac{1}{2}Tr(\textbf{C}_{N}^{-1}\frac{\partial \textbf{C}_{N}}{\partial \theta_{i}}) + \frac{1}{2}\textbf{t}^{T}\textbf{C}_{N}^{-1}
+\frac{\partial\textbf{C}_{N}}{\partial\theta_{i}}\textbf{C}_{N}^{-1}\textbf{t}
+\]</span></p>
+<p>ここで、<span class="math inline">\(\theta\)</span>はパラメータセットで、<span class="math inline">\(\theta_{i}\)</span>は<span class="math inline">\(i\)</span>番目のパラメータを表しています。この導関数が理解できない方は<a href="http://users.isr.ist.utl.pt/~wurmd/Livros/school/Bishop%20-%20Pattern%20Recognition%20And%20Machine%20Learning%20-%20Springer%20%202006.pdf:title=PRML">こちら</a>の補論にある(C.21)式と(C.22)式をご覧になると良いと思います。今回はガウスカーネルを用いているため、</p>
+<p><span class="math display">\[
+\displaystyle \frac{\partial k(x,x&#39;)}{\partial a} = \exp(-b(x-x&#39;)^{2}) \\
+\displaystyle \frac{\partial k(x,x&#39;)}{\partial b} = -a(x-x&#39;)^{2}\exp(-b(x-x&#39;)^{2})
+\]</span></p>
+<p>を上式に代入すれば良いだけです。ただ、今回は勾配法により最適なパラメータを求めます。以下、実装のコードです（かなり迷走しています）。</p>
+<pre class="r"><code>g &lt;- function(xmin, xmax, input, train){
+  # initial value
+  beta = 100
+  b = 1
+  a = 1
+  learning_rate = 0.1
+  itermax &lt;- 1000
+  if (class(input) == &quot;numeric&quot;){
+    N &lt;- length(input)
+  } else
+  {
+    N &lt;- NROW(input)
+  }
+  kernel &lt;- function(x1, x2) a*exp(-0.5*b*(x1-x2)^2); # define kernel
+  derivative_a &lt;- function(x1,x2) exp(-0.5*b*(x1-x2)^2)
+  derivative_b &lt;- function(x1,x2) -0.5*a*(x1-x2)^2*exp(-0.5*b*(x1-x2)^2)
+  dloglik_a &lt;- function(C_N,y,x1,x2) {
+    -sum(diag(solve(C_N)%*%outer(input, input, derivative_a)))+t(y)%*%solve(C_N)%*%outer(input, input, derivative_a)%*%solve(C_N)%*%y 
+  }
+  dloglik_b &lt;- function(C_N,y,x1,x2) {
+    -sum(diag(solve(C_N)%*%outer(input, input, derivative_b)))+t(y)%*%solve(C_N)%*%outer(input, input, derivative_b)%*%solve(C_N)%*%y 
+  }
+  # loglikelihood function
+  likelihood &lt;- function(b,a,x,y){
+    kernel &lt;- function(x1, x2) a*exp(-0.5*b*(x1-x2)^2)
+    K &lt;- outer(x, x, kernel)
+    C_N &lt;- K + diag(N)/beta
+    itermax &lt;- 1000
+    l &lt;- -1/2*log(det(C_N)) - N/2*(2*pi) - 1/2*t(y)%*%solve(C_N)%*%y
+    return(l)
+  }
+  K &lt;- outer(input, input, kernel) 
+  C_N &lt;- K + diag(N)/beta
+  for (i in 1:itermax){
+    kernel &lt;- function(x1, x2) a*exp(-b*(x1-x2)^2)
+    derivative_b &lt;- function(x1,x2) -0.5*a*(x1-x2)^2*exp(-0.5*b*(x1-x2)^2)
+    dloglik_b &lt;- function(C_N,y,x1,x2) {
+      -sum(diag(solve(C_N)%*%outer(input, input, derivative_b)))+t(y)%*%solve(C_N)%*%outer(input, input, derivative_b)%*%solve(C_N)%*%y 
+    }
+    K &lt;- outer(input, input, kernel) # calc gram matrix
+    C_N &lt;- K + diag(N)/beta
+    l &lt;- 0
+    if(abs(l-likelihood(b,a,input,train))&lt;0.0001&amp;i&gt;2){
+      break
+    }else{
+      a &lt;- as.numeric(a + learning_rate*dloglik_a(C_N,train,input,input))
+      b &lt;- as.numeric(b + learning_rate*dloglik_b(C_N,train,input,input))
+    }
+    l &lt;- likelihood(b,a,input,train)
+  }
+  K &lt;- outer(input, input, kernel)
+  C_N &lt;- K + diag(length(input))/beta
+  m &lt;- function(x) (outer(x, input, kernel) %*% solve(C_N) %*% train)  
+  m_sig &lt;- function(x)(kernel(x,x) - diag(outer(x, input, kernel) %*% solve(C_N) %*% t(outer(x, input, kernel))))
+  x &lt;- seq(xmin,xmax,length=100)
+  output &lt;- ggplot(data.frame(x1=x,m=m(x),sig1=m(x)+1.96*sqrt(m_sig(x)),sig2=m(x)-1.96*sqrt(m_sig(x)),
+                              tx=input,ty=train),
+                   aes(x=x1,y=m)) + 
+    geom_line() +
+    geom_ribbon(aes(ymin=sig1,ymax=sig2),alpha=0.2) +
+    geom_point(aes(x=tx,y=ty))
+  return(output)
+}
+
+print(g(0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=1, layout.pos.col=1))</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p>たしかに、良さそうな感じがします（笑）
+とりあえず、今日はここまで。</p>
+</div>
+
+    </div>
+
+    
+
+
+
+
+
+
+<div class="article-tags">
+  
+  <a class="badge badge-light" href="../../tag/r/">R</a>
+  
+</div>
+
+
+
+<div class="share-box" aria-hidden="true">
+  <ul class="share">
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://twitter.com/intent/tweet?url=../../post/post1/&amp;text=%e3%82%ac%e3%82%a6%e3%82%b9%e5%9b%9e%e5%b8%b0%e3%81%ae%e5%ae%9f%e8%a3%85%e3%82%92%e3%82%84%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%9f" target="_blank" rel="noopener" class="share-btn-twitter">
+          <i class="fab fa-twitter"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://www.facebook.com/sharer.php?u=/post/post1/&amp;t=%e3%82%ac%e3%82%a6%e3%82%b9%e5%9b%9e%e5%b8%b0%e3%81%ae%e5%ae%9f%e8%a3%85%e3%82%92%e3%82%84%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%9f" target="_blank" rel="noopener" class="share-btn-facebook">
+          <i class="fab fa-facebook"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="mailto:?subject=%e3%82%ac%e3%82%a6%e3%82%b9%e5%9b%9e%e5%b8%b0%e3%81%ae%e5%ae%9f%e8%a3%85%e3%82%92%e3%82%84%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%9f&amp;body=/post/post1/" target="_blank" rel="noopener" class="share-btn-email">
+          <i class="fas fa-envelope"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://www.linkedin.com/shareArticle?url=../../post/post1/&amp;title=%e3%82%ac%e3%82%a6%e3%82%b9%e5%9b%9e%e5%b8%b0%e3%81%ae%e5%ae%9f%e8%a3%85%e3%82%92%e3%82%84%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%9f" target="_blank" rel="noopener" class="share-btn-linkedin">
+          <i class="fab fa-linkedin-in"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="whatsapp://send?text=%e3%82%ac%e3%82%a6%e3%82%b9%e5%9b%9e%e5%b8%b0%e3%81%ae%e5%ae%9f%e8%a3%85%e3%82%92%e3%82%84%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%9f%20/post/post1/" target="_blank" rel="noopener" class="share-btn-whatsapp">
+          <i class="fab fa-whatsapp"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://service.weibo.com/share/share.php?url=../../post/post1/&amp;title=%e3%82%ac%e3%82%a6%e3%82%b9%e5%9b%9e%e5%b8%b0%e3%81%ae%e5%ae%9f%e8%a3%85%e3%82%92%e3%82%84%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%9f" target="_blank" rel="noopener" class="share-btn-weibo">
+          <i class="fab fa-weibo"></i>
+        </a>
+      </li>
+    
+  </ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+
+  
+  
+  
+    
+  
+  
+  
+  <div class="media author-card content-widget-hr">
+    
+      
+      <a href="../../"><img class="avatar mr-3 avatar-circle" src="../../author/ayato-ashihara/avatar_hu77c0c0affdebd3b9cbda9c39412092b5_245163_270x270_fill_q90_lanczos_center.jpg" alt="Ayato Ashihara"></a>
+    
+
+    <div class="media-body">
+      <h5 class="card-title"><a href="../../">Ayato Ashihara</a></h5>
+      <h6 class="card-subtitle">会社員3年目</h6>
+      <p class="card-text">院卒3年目の社会人が夜な夜な更新中。本ブログの内容は筆者が所属する組織の公式見解とは全く関係ありません。</p>
+      <ul class="network-icon" aria-hidden="true">
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="../../#contact" >
+        <i class="fas fa-envelope"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://www.facebook.com/ASSIY" target="_blank" rel="noopener">
+        <i class="fab fa-facebook"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://github.com/AyatoAshihara/myblog_jp" target="_blank" rel="noopener">
+        <i class="fab fa-github"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://www.linkedin.com/in/%E5%BD%A9%E4%BA%BA-%E8%91%A6%E5%8E%9F-9391b7143/" target="_blank" rel="noopener">
+        <i class="fab fa-linkedin"></i>
+      </a>
+    </li>
+  
+</ul>
+
+    </div>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <div class="article-widget content-widget-hr">
+    <h3>関連項目</h3>
+    <ul>
+      
+      <li><a href="../../post/post14/">10年物長期金利をフィッティングしてみる</a></li>
+      
+      <li><a href="../../post/post8/">GPLVMでマルチファクターモデルを構築してみた</a></li>
+      
+      <li><a href="../../post/post3/">カルマンフィルタの実装</a></li>
+      
+      <li><a href="../../post/post6/">Gianonne et. al. (2008)のマルチファクターモデルで四半期GDPを予想してみた</a></li>
+      
+      <li><a href="../../post/post7/">日次GDP推計に使用する経済統計を統計ダッシュボードから集めてみた</a></li>
+      
+    </ul>
+  </div>
+  
+
+
+
+
+
+  </div>
+</article>
+
+      
+
+    
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.4/imagesloaded.pkgd.min.js" integrity="sha256-lqvxZrPLtfffUl2G/e7szqSvPBILGbwmsGE1MKlOi0Q=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js" integrity="sha256-CBrpuqrMhXwcLLUd5tvQ4euBHCdh7wGlDfNz8vbu/iI=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js" integrity="sha256-yt2kYMy0w8AbtF89WXb2P1rfjcP/HTHLT7097U8Y5b8=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/instant.page/5.1.0/instantpage.min.js" integrity="sha512-1+qUtKoh9XZW7j+6LhRMAyOrgSQKenQ4mluTR+cvxXjP1Z54RxZuzstR/H9kgPXQsVB8IW7DMDFUJpzLjvhGSQ==" crossorigin="anonymous"></script>
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/8.8.0/mermaid.min.js" integrity="sha512-ja+hSBi4JDtjSqc4LTBsSwuBT3tdZ3oKYKd07lTVYmCnTCor56AnRql00ssqnTOR9Ss4gOP/ROGB3SfcJnZkeg==" crossorigin="anonymous" title="mermaid"></script>
+      
+
+      
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/highlight.min.js" integrity="sha512-TDKKr+IvoqZnPzc3l35hdjpHD0m+b2EC2SrLEgKDRWpxf2rFCxemkgvJ5kfU48ip+Y+m2XVKyOCD85ybtlZDmw==" crossorigin="anonymous"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/languages/r.min.js"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/languages/latex.min.js"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/languages/python.min.js"></script>
+        
+      
+
+    
+
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.js" integrity="sha512-SeiQaaDh73yrb56sTW/RgVdi/mMqNeM2oBwubFHagc5BkixSpP1fvqF47mKzPGWYSSy4RwbBunrJBQ4Co8fRWA==" crossorigin="anonymous"></script>
+    
+
+    
+    
+    <script>const code_highlighting = true;</script>
+    
+
+    
+    
+    
+    
+    
+    
+    <script>
+      const search_config = {"indexURI":"/index.json","minLength":1,"threshold":0.3};
+      const i18n = {"no_results":"結果が見つかりませんでした","placeholder":"検索...","results":"results found"};
+      const content_type = {
+        'post': "投稿",
+        'project': "プロジェクト",
+        'publication' : "発表文献",
+        'talk' : "登壇",
+        'slides' : "Slides"
+        };
+    </script>
+    
+
+    
+    
+
+    
+    
+    <script id="search-hit-fuse-template" type="text/x-template">
+      <div class="search-hit" id="summary-{{key}}">
+      <div class="search-hit-content">
+        <div class="search-hit-name">
+          <a href="{{relpermalink}}">{{title}}</a>
+          <div class="article-metadata search-hit-type">{{type}}</div>
+          <p class="search-hit-description">{{snippet}}</p>
+        </div>
+      </div>
+      </div>
+    </script>
+    
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.2.1/fuse.min.js" integrity="sha256-VzgmKYmhsGNNN4Ph1kMW+BjoYJM2jV5i4IlFoeZA9XI=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js" integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin="anonymous"></script>
+    
+
+    
+    
+
+    
+    
+
+    
+    
+
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+      
+    
+    
+    
+    
+    <script src="../../js/wowchemy.min.4c2bca31150ce93c5a5e43b8a50f22fd.js"></script>
+
+    
+
+
+
+
+
+
+  
+  
+  <div class="container">
+    <footer class="site-footer">
+  
+
+  <p class="powered-by">
+    
+  </p>
+
+  
+  
+
+
+
+
+
+
+  <p class="powered-by">
+    
+    Published with
+    <a href="https://wowchemy.com" target="_blank" rel="noopener">Wowchemy</a>  —
+    the free, <a href="https://github.com/wowchemy/wowchemy-hugo-modules" target="_blank" rel="noopener">
+    open source</a> website builder that empowers creators.
+    
+
+    
+    <span class="float-right" aria-hidden="true">
+      <a href="#" class="back-to-top">
+        <span class="button_icon">
+          <i class="fas fa-chevron-up fa-2x"></i>
+        </span>
+      </a>
+    </span>
+    
+  </p>
+</footer>
+
+  </div>
+  
+
+  
+<div id="modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">引用</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <pre><code class="tex hljs"></code></pre>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-outline-primary my-1 js-copy-cite" href="#" target="_blank">
+          <i class="fas fa-copy"></i> コピー
+        </a>
+        <a class="btn btn-outline-primary my-1 js-download-cite" href="#" target="_blank">
+          <i class="fas fa-download"></i> ダウンロード
+        </a>
+        <div id="modal-error"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,1334 @@
+<!DOCTYPE html><html lang="ja" >
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  
+  
+  
+  <meta name="generator" content="Wowchemy 4.8.0 for Hugo">
+  
+
+  
+
+  
+  
+
+  
+  
+  
+  
+  
+    
+    
+    
+  
+  
+
+  <meta name="author" content="Ayato Ashihara">
+
+  
+  
+  
+    
+  
+  <meta name="description" content="新語に強いNEologd辞書をMecabにインストールしてみました。">
+
+  
+  <link rel="alternate" hreflang="ja" href="../../post/post17/">
+
+  
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+  
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+
+  
+  
+  
+  <meta name="theme-color" content="#2962ff">
+  
+
+  
+  
+  
+  <script src="../../js/mathjax-config.js"></script>
+  
+
+  
+  
+  
+  
+    
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha256-FMvZuGapsJLjouA6k7Eo2lusoAX9i0ShlWFG6qt7SLc=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin="anonymous">
+
+    
+    
+    
+      
+    
+    
+      
+      
+        
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/github.min.css" crossorigin="anonymous" title="hl-light">
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/dracula.min.css" crossorigin="anonymous" title="hl-dark" disabled>
+        
+      
+    
+
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.css" integrity="sha512-1xoFisiGdy9nvho8EgXuXvnpR5GAMSjFwp40gSRE3NwdUdIMIKuPa7bqoUhLD0O/5tPNhteAsE5XyyMi5reQVA==" crossorigin="anonymous">
+    
+
+    
+
+    
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.2.2/lazysizes.min.js" integrity="sha512-TmDwFLhg3UA4ZG0Eb4MIyT1O1Mb+Oww5kFG0uHqXsdbyZz9DcvYQhKpGgNkamAI6h2lGGZq2X8ftOJvF/XjTUg==" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" integrity="" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+
+  
+
+  
+  
+  
+    
+      
+      
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,700%7CRoboto:400,400italic,700%7CRoboto+Mono&display=swap">
+    
+  
+
+  
+  
+  
+  
+  <link rel="stylesheet" href="../../css/wowchemy.css">
+
+  
+
+
+
+
+  
+
+
+  
+  
+
+  
+
+  <link rel="manifest" href="../../index.webmanifest">
+  <link rel="icon" type="image/png" href="../../images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
+  <link rel="apple-touch-icon" type="image/png" href="../../images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
+
+  <link rel="canonical" href="../../post/post17/">
+
+  
+  
+  
+  
+  
+  
+  
+    
+  
+  
+  <meta property="twitter:card" content="summary_large_image">
+  
+  <meta property="og:site_name" content="東京の資産運用会社で働く社会人が研究に没頭するブログ">
+  <meta property="og:url" content="/post/post17/">
+  <meta property="og:title" content="WindowsにNEologd辞書をインストールして、RMeCabを実行する方法 | 東京の資産運用会社で働く社会人が研究に没頭するブログ">
+  <meta property="og:description" content="新語に強いNEologd辞書をMecabにインストールしてみました。"><meta property="og:image" content="/post/post17/featured.jpg">
+  <meta property="twitter:image" content="/post/post17/featured.jpg"><meta property="og:locale" content="ja">
+  
+    
+      <meta property="article:published_time" content="2020-04-19T00:00:00&#43;00:00">
+    
+    <meta property="article:modified_time" content="2020-04-19T00:00:00&#43;00:00">
+  
+
+  
+
+
+    
+
+
+
+
+
+
+  
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "/post/post17/"
+  },
+  "headline": "WindowsにNEologd辞書をインストールして、RMeCabを実行する方法",
+  
+  "image": [
+    "/post/post17/featured.jpg"
+  ],
+  
+  "datePublished": "2020-04-19T00:00:00Z",
+  "dateModified": "2020-04-19T00:00:00Z",
+  
+  "author": {
+    "@type": "Person",
+    "name": "Ayato Ashihara"
+  },
+  
+  "publisher": {
+    "@type": "Organization",
+    "name": "東京の資産運用会社で働く社会人が研究に没頭するブログ",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png"
+    }
+  },
+  "description": "新語に強いNEologd辞書をMecabにインストールしてみました。"
+}
+</script>
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+
+  <title>WindowsにNEologd辞書をインストールして、RMeCabを実行する方法 | 東京の資産運用会社で働く社会人が研究に没頭するブログ</title>
+
+</head>
+
+
+<body id="top" data-spy="scroll" data-offset="70" data-target="#TableOfContents" class=" ">
+
+  
+  
+  
+    <script>window.wcDarkLightEnabled = true;</script>
+  
+  
+    <script>const isSiteThemeDark = false;</script>
+  
+  
+  <script src="../../js/load-theme.js"></script>
+
+  <aside class="search-results" id="search">
+  <div class="container">
+    <section class="search-header">
+
+      <div class="row no-gutters justify-content-between mb-3">
+        <div class="col-6">
+          <h1>Search</h1>
+        </div>
+        <div class="col-6 col-search-close">
+          <a class="js-search" href="#"><i class="fas fa-times-circle text-muted" aria-hidden="true"></i></a>
+        </div>
+      </div>
+
+      <div id="search-box">
+        
+        <input name="q" id="search-query" placeholder="検索..." autocapitalize="off"
+        autocomplete="off" autocorrect="off" spellcheck="false" type="search" class="form-control">
+        
+      </div>
+
+    </section>
+    <section class="section-search-results">
+
+      <div id="search-hits">
+        
+      </div>
+
+    </section>
+  </div>
+</aside>
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+<nav class="navbar navbar-expand-lg navbar-light compensate-for-scrollbar" id="navbar-main">
+  <div class="container">
+
+    
+    <div class="d-none d-lg-inline-flex">
+      <a class="navbar-brand" href="../../">東京の資産運用会社で働く社会人が研究に没頭するブログ</a>
+    </div>
+    
+
+    
+    <button type="button" class="navbar-toggler" data-toggle="collapse"
+            data-target="#navbar-content" aria-controls="navbar" aria-expanded="false" aria-label="ナビゲーションの切り替え">
+    <span><i class="fas fa-bars"></i></span>
+    </button>
+    
+
+    
+    <div class="navbar-brand-mobile-wrapper d-inline-flex d-lg-none">
+      <a class="navbar-brand" href="../../">東京の資産運用会社で働く社会人が研究に没頭するブログ</a>
+    </div>
+    
+
+    
+    
+    <div class="navbar-collapse main-menu-item collapse justify-content-start" id="navbar-content">
+
+      
+      <ul class="navbar-nav d-md-inline-flex">
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+            
+            
+            
+              
+            
+            
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="../../#about"><span>About</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link  active" href="../../post"><span>Posts</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="../../publication"><span>Publications</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+            
+            
+            
+              
+            
+            
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="../../#contact"><span>Contact</span></a>
+        </li>
+
+        
+        
+
+      
+
+        
+      </ul>
+    </div>
+
+    <ul class="nav-icons navbar-nav flex-row ml-auto d-flex pl-md-2">
+      
+      
+      <li class="nav-item">
+        <a class="nav-link js-search" href="#" aria-label="Search"><i class="fas fa-search" aria-hidden="true"></i></a>
+      </li>
+      
+
+      
+      
+      <li class="nav-item dropdown theme-dropdown">
+        <a href="#" class="nav-link" data-toggle="dropdown" aria-haspopup="true">
+          <i class="fas fa-moon" aria-hidden="true"></i>
+        </a>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item js-set-theme-light">
+            <span>Light</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-dark">
+            <span>Dark</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-auto">
+            <span>Automatic</span>
+          </a>
+        </div>
+      </li>
+      
+
+      
+
+    </ul>
+
+  </div>
+</nav>
+
+
+
+  <article class="article">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+<div class="article-container pt-3">
+  <h1>WindowsにNEologd辞書をインストールして、RMeCabを実行する方法</h1>
+
+  
+
+  
+
+
+<div class="article-metadata">
+
+  
+  
+
+  
+  <span class="article-date">
+    
+    
+      
+    
+    Apr 19, 2020
+  </span>
+  
+
+  
+
+  
+  <span class="middot-divider"></span>
+  <span class="article-reading-time">
+    11 分で読める
+  </span>
+  
+
+  
+  
+  
+
+  
+  
+  <span class="middot-divider"></span>
+  <span class="article-categories">
+    <i class="fas fa-folder mr-1"></i><a href="../../category/%E5%8D%98%E7%99%BA/">単発</a>, <a href="../../category/tips/">Tips</a></span>
+  
+
+</div>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+<div class="article-header container featured-image-wrapper mt-4 mb-4" style="max-width: 1200px; max-height: 391px;">
+  <div style="position: relative">
+    <img src="../../post/post17/featured.jpg" alt="" class="featured-image">
+    
+  </div>
+</div>
+
+
+
+  <div class="article-container">
+
+    <div class="article-style">
+      
+<script src="index_files/header-attrs/header-attrs.js"></script>
+
+<div id="TOC">
+<ul>
+<li><a href="#mecabrmecabとは">1. Mecab(RMeCab)とは？</a>
+<ul>
+<li><a href="#固有名詞に弱いデフォルトのmecab">固有名詞に弱いデフォルトのMeCab</a></li>
+<li><a href="#新語に強いneologd辞書">新語に強いNEologd辞書</a></li>
+</ul></li>
+<li><a href="#インストール手順">2. インストール手順</a>
+<ul>
+<li><a href="#a.-windows-subsystem-for-linuxwslのインストール">A. <code>Windows Subsystem for Linux</code>(WSL)のインストール</a></li>
+<li><a href="#b.-ubuntu-linuxのインストール">B. Ubuntu Linuxのインストール</a></li>
+<li><a href="#c.-ubuntu-linuxにmecabをインストール">C. Ubuntu LinuxにMeCabをインストール</a></li>
+<li><a href="#d.-ubuntu-for-linuxにneologd辞書をインストール">D. Ubuntu for Linuxに<code>NEologd</code>辞書をインストール</a></li>
+<li><a href="#e.-ubuntu-for-linuxからwindowsへ辞書ファイルをコピー">E. Ubuntu for LinuxからWindowsへ辞書ファイルをコピー</a></li>
+<li><a href="#f.-windows内で辞書ファイルのコンパイルshift-jisを行う">F. Windows内で辞書ファイルのコンパイル(<code>SHIFT-JIS</code>)を行う。</a></li>
+</ul></li>
+<li><a href="#まとめ">3. まとめ</a></li>
+</ul>
+</div>
+
+<p>皆さんおはこんばんにちは。
+最近在宅勤務で運動不足ですが、平日休日問わず研究活動をしています。
+学術誌投稿を目指したBlog記事には書けない内容なので、更新はストップしてしまっていますがちゃんと活動はしています。</p>
+<p>今回はその研究の中で利用しているMeCabにまつわるTipsのご紹介です。MeCabというと形態素解析ソフトということはこのブログを読まれている方はお分かりかと思いますが、その辞書にNEologd辞書を使用できるようにしてみたというのが内容です。MeCabってなに？という方もいらっしゃるかもしれませんので、かなり簡単にご紹介します。</p>
+<div id="mecabrmecabとは" class="section level2">
+<h2>1. Mecab(RMeCab)とは？</h2>
+<p><code>MeCab</code>は日本語テキストマイニングで使用される形態素解析ソフトです。英語などの言語とは異なり、日本語は単語毎にスペースを置かないため、テキストマイニングを行う際、そのままでは文章を単語単位に区切って集計するといったことができません。例えば、「これはペンです。」という文章はそのままでは「これはペンです。」という<em>1つ</em>の単語として認識されてしまいます。ですが、単語の頻度分析を行う際などは、「これ/は/ペン/です/。」という風に文章を単語レベルにまで分割し、「ペン」という特徴量を取得したいわけです。それができるのが<code>RMeCab</code>で、この処理は形態素解析と呼ばれます。<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>そして、<code>RMeCab</code>とはこの<code>MeCab</code>のラッパーになります。<code>R</code>から<code>MeCab</code>を使用するには<code>RMeCab</code>を使用する必要があります。使用方法は簡単で、<code>RMeCabC</code>関数に文章を渡すだけです。</p>
+<pre class="r"><code>library(magrittr)
+library(RMeCab)
+
+RMeCabC(&quot;これはペンです。&quot;) %&gt;% unlist()</code></pre>
+<pre><code>##   名詞   助詞   名詞 助動詞   記号 
+## &quot;これ&quot;   &quot;は&quot; &quot;ペン&quot; &quot;です&quot;   &quot;。&quot;</code></pre>
+<p><code>RMeCabC</code>関数は結果をリストで返してくるので、<code>unlist</code>でcharacterに変換しています。</p>
+<div id="固有名詞に弱いデフォルトのmecab" class="section level3">
+<h3>固有名詞に弱いデフォルトのMeCab</h3>
+<p>便利なように思えるのですが、デフォルトの<code>MeCab</code>は固有名詞に弱いという弱点があります。例えば、「欅坂46が赤いきつねを食べている。」という文章を形態素解析してみましょう。</p>
+<pre class="r"><code>RMeCabC(&quot;欅坂46が赤いきつねを食べている。&quot;) %&gt;% unlist()</code></pre>
+<pre><code>##     名詞     名詞     名詞     助詞   形容詞     名詞     助詞     動詞 
+##     &quot;欅&quot;     &quot;坂&quot;     &quot;46&quot;     &quot;が&quot;   &quot;赤い&quot; &quot;きつね&quot;     &quot;を&quot;   &quot;食べ&quot; 
+##     助詞     動詞     記号 
+##     &quot;て&quot;   &quot;いる&quot;     &quot;。&quot;</code></pre>
+<p>予想していた結果は「欅坂46/が/赤いきつね/を/食べ/て/いる/。」でしょう。ただ、固有名詞を上手く形態素解析することができていないため、不必要なところで分割がなされており、「赤い/きつね/を/食べ」という部分については「赤い（動物の）きつね」を食べているかのような解析結果になっています。赤いきつねの「きつね」と動物の「きつね」を同等に扱ってしまうので、問題があります。また、経済においても以下のように日経平均株価が分割され、新聞社の「日経」と株価の「日経」が、大統領の「トランプ」とカードの「トランプ」が区別できないといったことが想定されます。</p>
+<pre class="r"><code>RMeCabC(&quot;今週の日経平均株価は、上値抵抗線を突破して上昇！&quot;) %&gt;% unlist()</code></pre>
+<pre><code>##   名詞   助詞   名詞   名詞   名詞   助詞   記号   名詞   名詞   名詞   助詞 
+## &quot;今週&quot;   &quot;の&quot; &quot;日経&quot; &quot;平均&quot; &quot;株価&quot;   &quot;は&quot;   &quot;、&quot; &quot;上値&quot; &quot;抵抗&quot;   &quot;線&quot;   &quot;を&quot; 
+##   名詞   動詞   助詞   名詞   記号 
+## &quot;突破&quot;   &quot;し&quot;   &quot;て&quot; &quot;上昇&quot;   &quot;！&quot;</code></pre>
+<pre class="r"><code>RMeCabC(&quot;トランプ政権による経済活動再開の指針発表が評価される&quot;) %&gt;% unlist()</code></pre>
+<pre><code>##       名詞       名詞       助詞       名詞       名詞       名詞       助詞 
+## &quot;トランプ&quot;     &quot;政権&quot;   &quot;による&quot;     &quot;経済&quot;     &quot;活動&quot;     &quot;再開&quot;       &quot;の&quot; 
+##       名詞       名詞       助詞       名詞       動詞       動詞 
+##     &quot;指針&quot;     &quot;発表&quot;       &quot;が&quot;     &quot;評価&quot;       &quot;さ&quot;     &quot;れる&quot;</code></pre>
+<p>これはデフォルトで<code>MeCab</code>が使用している<em>辞書</em>に原因があります。IPA辞書(<code>ipadic</code>)と呼ばれる物で、奈良先端科学技術大学院大学が公開している茶筌と呼ばれる形態素解析ソフト用に作られました。<a href="https://ja.osdn.net/projects/ipadic/releases/">こちら</a>を見ると辞書の更新は2007年でストップしており、新語や流行語がアップデートされていないために上記の固有名詞が上手く形態素解析できないことがわかります。</p>
+</div>
+<div id="新語に強いneologd辞書" class="section level3">
+<h3>新語に強いNEologd辞書</h3>
+<p>最近<code>MeCab</code>でよく使用されている辞書に<code>NEologd</code>辞書というものがあります。<code>NEologd</code>辞書とは、Web上から得た新語に対応しており、頻繁に更新される<code>MeCab</code>用のシステム辞書です。<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>Twitterのアカウントには、</p>
+<blockquote>
+<p>特色は語彙の多さと更新頻度、新語の採録の速さ、読み仮名の正確さ、表記揺れへの対応。おもな解析対象はWeb上のニュース記事や流行した出来事。
+おもな用途は文書分類、文書ベクトル作成、単語埋め込みベクトル作成、読み仮名付与。</p>
+</blockquote>
+<p>と記載されており、上述したIPA辞書の弱点を補完する辞書となっています。今回の記事はその辞書のインストール方法についてですが、インストールした辞書の威力を先にお見せしておきます。実行するには、<code>RMeCab</code>関数に辞書ファイル(.dicファイル)のパスを渡してやれば良いです。</p>
+<pre class="r"><code>dic_directory &lt;- &quot;C:\\hogehoge\\mecab-user-dict-seed.yyyymmdd.dic&quot;</code></pre>
+<pre class="r"><code>RMeCabC(&quot;欅坂46が赤いきつねを食べている。&quot;,dic=dic_directory) %&gt;% unlist()</code></pre>
+<pre><code>##         名詞         助詞         名詞         助詞         動詞         助詞 
+##     &quot;欅坂46&quot;         &quot;が&quot; &quot;赤いきつね&quot;         &quot;を&quot;       &quot;食べ&quot;         &quot;て&quot; 
+##         動詞         記号 
+##       &quot;いる&quot;         &quot;。&quot;</code></pre>
+<pre class="r"><code>RMeCabC(&quot;今週の日経平均株価は、上値抵抗線を突破して上昇！&quot;,dic=dic_directory) %&gt;% unlist()</code></pre>
+<pre><code>##           名詞           助詞           名詞           助詞           記号 
+##         &quot;今週&quot;           &quot;の&quot; &quot;日経平均株価&quot;           &quot;は&quot;           &quot;、&quot; 
+##           名詞           名詞           名詞           助詞           名詞 
+##         &quot;上値&quot;         &quot;抵抗&quot;           &quot;線&quot;           &quot;を&quot;         &quot;突破&quot; 
+##           動詞           助詞           名詞           記号 
+##           &quot;し&quot;           &quot;て&quot;         &quot;上昇&quot;           &quot;！&quot;</code></pre>
+<pre class="r"><code>RMeCabC(&quot;トランプ政権による経済活動再開の指針発表が評価される&quot;,dic=dic_directory) %&gt;% unlist()</code></pre>
+<pre><code>##           名詞           助詞           名詞           名詞           助詞 
+## &quot;トランプ政権&quot;       &quot;による&quot;     &quot;経済活動&quot;         &quot;再開&quot;           &quot;の&quot; 
+##           名詞           名詞           助詞           名詞           動詞 
+##         &quot;指針&quot;         &quot;発表&quot;           &quot;が&quot;         &quot;評価&quot;           &quot;さ&quot; 
+##           動詞 
+##         &quot;れる&quot;</code></pre>
+<p>上値抵抗線は1語カウントしてほしいところではありますが、それ以外は上手く形態素解析できていそうです。
+この<code>NEologd</code>辞書ですが、<em>Windowsのインストールが想定されていません</em>。つまり、Windowsユーザーは直接インストールすることができないのです。Windowsユーザーは少々ややこしい手順を踏まなければなりません。今回はそのややこしい手順を解説する記事です。Linuxでインストールを行い、それをWindows環境にコピー、その後辞書ファイルを作成します。</p>
+</div>
+</div>
+<div id="インストール手順" class="section level2">
+<h2>2. インストール手順</h2>
+<div id="a.-windows-subsystem-for-linuxwslのインストール" class="section level3">
+<h3>A. <code>Windows Subsystem for Linux</code>(WSL)のインストール</h3>
+<p><code>Windows Power Shell</code>を<em>管理者権限</em>で開き、</p>
+<pre class="bash"><code>Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux</code></pre>
+<p>を実行する。WSLをインストールすることができます。</p>
+<div class="figure">
+<img src="../../my_blog/post/post21_files/powershell.PNG" style="width:100.0%" alt="" />
+<p class="caption">powerShellでの実行の様子</p>
+</div>
+</div>
+<div id="b.-ubuntu-linuxのインストール" class="section level3">
+<h3>B. Ubuntu Linuxのインストール</h3>
+<p>Microsoft Storeよりubuntuをダウンロードする。</p>
+<div class="figure">
+<img src="ubuntu.PNG" style="width:100.0%" alt="" />
+<p class="caption">ubuntuの画面</p>
+</div>
+<p>インストールが完了したらubuntuを起動し、初期設定を完了させる(ID、パスワード)。</p>
+</div>
+<div id="c.-ubuntu-linuxにmecabをインストール" class="section level3">
+<h3>C. Ubuntu LinuxにMeCabをインストール</h3>
+<p>ubuntuのコマンドプロンプトで、</p>
+<pre class="bash"><code>sudo apt-get update
+sudo apt install mecab
+sudo apt install libmecab-dev
+sudo apt install mecab-ipadic-utf8</code></pre>
+<p>を入力し、<code>MeCab</code>をインストール。</p>
+<div class="figure">
+<img src="ubuntumecab.PNG" style="width:100.0%" alt="" />
+<p class="caption">ubuntuでmecabをインストール</p>
+</div>
+</div>
+<div id="d.-ubuntu-for-linuxにneologd辞書をインストール" class="section level3">
+<h3>D. Ubuntu for Linuxに<code>NEologd</code>辞書をインストール</h3>
+<p>ubuntsuのコマンドプロンプトで</p>
+<pre class="bash"><code>sudo apt install make
+git clone --depth 1 https://github.com/neologd/mecab-ipadic-neologd.git
+cd mecab-ipadic-neologd
+sudo bin/install-mecab-ipadic-neologd -n -a</code></pre>
+<p>を実行。<code>NEologd</code>辞書ファイルが(<code>/usr/lib/x86_64-linux-gnu/mecab/dic/mecab-ipadic-neologd/</code>)にインストールできます。</p>
+</div>
+<div id="e.-ubuntu-for-linuxからwindowsへ辞書ファイルをコピー" class="section level3">
+<h3>E. Ubuntu for LinuxからWindowsへ辞書ファイルをコピー</h3>
+<p>ubuntuのコマンドプロンプトで</p>
+<pre class="bash"><code>explorer.exe .</code></pre>
+<p>を入力。エクスプローラーが立ち上がるので、<code>/usr/lib/x86_64-linux-gnu/mecab/dic/mecab-ipadic-neologd/(ディレクトリ)</code>をWindowsの任意のディレクトリにコピーする。完了したらUbuntuは閉じる。</p>
+<div class="figure">
+<img src="explorer.PNG" style="width:100.0%" alt="" />
+<p class="caption">エクスプローラーでubuntu内部ディレクトリを確認する図</p>
+</div>
+</div>
+<div id="f.-windows内で辞書ファイルのコンパイルshift-jisを行う" class="section level3">
+<h3>F. Windows内で辞書ファイルのコンパイル(<code>SHIFT-JIS</code>)を行う。</h3>
+<p>コピーしたディレクトリ内の以下のcsvを辞書ファイル(.dic)にコンパイルします。(yyyymmddは辞書の最終更新日なので変更してください)</p>
+<pre class="bash"><code>-mecab-ipadic-neologd-buildmecab-ipadic-2.7.0-20070801-neologd-yyyymmdd-mecab-user-dict-seed.yyyymmdd.csv</code></pre>
+<p>その際、元ファイルは<strong>エンコーディングが<code>UTF-8</code>となっているので、<code>SHIFT-JIS</code>へ変換することに注意</strong>です。これをしないと、<code>RMeCab</code>を実行したときに結果が文字化けします。コンパイルにはMeCabのmecab-dict-indexというバイナリファイルを使用します。自分は以下のディレクトリに存在しました。</p>
+<p>C:
+-Program Files (x86)
+-MeCab
+-bin
+-mecab-dict-index.exe</p>
+<p><img src="mecab_dict_index.PNG" style="width:100.0%" /></p>
+<p>コマンドプロンプトを立ち上げ、</p>
+<pre class="bash"><code>C:\Program Files (x86)\MeCab\bin\mecab-dict-index.exe -d .../mecab-ipadic-neologd/buildmecab/ipadic-2.7.0-20070801-neologd-yyyymmdd(ファイルの保存場所) -u NEologd.yyyymmdd.dic -f utf-8 -t shift-jis mecab-ipadic-neologd\buildmecab\ipadic-2.7.0-20070801-neologd-yyyymmdd\mecab-user-dict-seed.yyyymmdd.csv </code></pre>
+<p>を適宜変更の上、入力。<code>.../mecab-ipadic-neologd/buildmecab/ipadic-2.7.0-20070801-neologd-yyyymmdd</code>に辞書がコンパイルされ、<code>NEologd.yyyymmdd.dic</code>ができます。</p>
+</div>
+</div>
+<div id="まとめ" class="section level2">
+<h2>3. まとめ</h2>
+<p>以上で、<code>NEologd</code>辞書が使用できるようになります。非常に強力なツールなので使用してみてください。なお、辞書がアップデートされた際は同じ手続きを行う必要があります。</p>
+<p><後日談>
+Ubuntu for Linuxを使用しなくてもダウンロードできそうな方法ありました。</p>
+<p><a href="https://qiita.com/zincjp/items/c61c441426b9482b5a48" class="uri">https://qiita.com/zincjp/items/c61c441426b9482b5a48</a></p>
+<p>ただ、自分は実行していないので実際にできるかはわかりません。辞書が更新されたら、やってみたいと思います。</p>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>MeCab内部の仕組みについては<a href="https://techlife.cookpad.com/entry/2016/05/11/170000">こちら</a>の記事が参考になります。<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>2020/4/19時点の最近版は2020/3/15更新の辞書です。<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
+
+    </div>
+
+    
+
+
+
+
+
+
+<div class="article-tags">
+  
+  <a class="badge badge-light" href="../../tag/r/">R</a>
+  
+  <a class="badge badge-light" href="../../tag/%E3%83%86%E3%82%AD%E3%82%B9%E3%83%88%E3%83%9E%E3%82%A4%E3%83%8B%E3%83%B3%E3%82%AF/">テキストマイニング</a>
+  
+</div>
+
+
+
+<div class="share-box" aria-hidden="true">
+  <ul class="share">
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://twitter.com/intent/tweet?url=../../post/post17/&amp;text=Windows%e3%81%abNEologd%e8%be%9e%e6%9b%b8%e3%82%92%e3%82%a4%e3%83%b3%e3%82%b9%e3%83%88%e3%83%bc%e3%83%ab%e3%81%97%e3%81%a6%e3%80%81RMeCab%e3%82%92%e5%ae%9f%e8%a1%8c%e3%81%99%e3%82%8b%e6%96%b9%e6%b3%95" target="_blank" rel="noopener" class="share-btn-twitter">
+          <i class="fab fa-twitter"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://www.facebook.com/sharer.php?u=/post/post17/&amp;t=Windows%e3%81%abNEologd%e8%be%9e%e6%9b%b8%e3%82%92%e3%82%a4%e3%83%b3%e3%82%b9%e3%83%88%e3%83%bc%e3%83%ab%e3%81%97%e3%81%a6%e3%80%81RMeCab%e3%82%92%e5%ae%9f%e8%a1%8c%e3%81%99%e3%82%8b%e6%96%b9%e6%b3%95" target="_blank" rel="noopener" class="share-btn-facebook">
+          <i class="fab fa-facebook"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="mailto:?subject=Windows%e3%81%abNEologd%e8%be%9e%e6%9b%b8%e3%82%92%e3%82%a4%e3%83%b3%e3%82%b9%e3%83%88%e3%83%bc%e3%83%ab%e3%81%97%e3%81%a6%e3%80%81RMeCab%e3%82%92%e5%ae%9f%e8%a1%8c%e3%81%99%e3%82%8b%e6%96%b9%e6%b3%95&amp;body=/post/post17/" target="_blank" rel="noopener" class="share-btn-email">
+          <i class="fas fa-envelope"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://www.linkedin.com/shareArticle?url=../../post/post17/&amp;title=Windows%e3%81%abNEologd%e8%be%9e%e6%9b%b8%e3%82%92%e3%82%a4%e3%83%b3%e3%82%b9%e3%83%88%e3%83%bc%e3%83%ab%e3%81%97%e3%81%a6%e3%80%81RMeCab%e3%82%92%e5%ae%9f%e8%a1%8c%e3%81%99%e3%82%8b%e6%96%b9%e6%b3%95" target="_blank" rel="noopener" class="share-btn-linkedin">
+          <i class="fab fa-linkedin-in"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="whatsapp://send?text=Windows%e3%81%abNEologd%e8%be%9e%e6%9b%b8%e3%82%92%e3%82%a4%e3%83%b3%e3%82%b9%e3%83%88%e3%83%bc%e3%83%ab%e3%81%97%e3%81%a6%e3%80%81RMeCab%e3%82%92%e5%ae%9f%e8%a1%8c%e3%81%99%e3%82%8b%e6%96%b9%e6%b3%95%20/post/post17/" target="_blank" rel="noopener" class="share-btn-whatsapp">
+          <i class="fab fa-whatsapp"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://service.weibo.com/share/share.php?url=../../post/post17/&amp;title=Windows%e3%81%abNEologd%e8%be%9e%e6%9b%b8%e3%82%92%e3%82%a4%e3%83%b3%e3%82%b9%e3%83%88%e3%83%bc%e3%83%ab%e3%81%97%e3%81%a6%e3%80%81RMeCab%e3%82%92%e5%ae%9f%e8%a1%8c%e3%81%99%e3%82%8b%e6%96%b9%e6%b3%95" target="_blank" rel="noopener" class="share-btn-weibo">
+          <i class="fab fa-weibo"></i>
+        </a>
+      </li>
+    
+  </ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+
+  
+  
+  
+    
+  
+  
+  
+  <div class="media author-card content-widget-hr">
+    
+      
+      <a href="../../"><img class="avatar mr-3 avatar-circle" src="../../author/ayato-ashihara/avatar_hu77c0c0affdebd3b9cbda9c39412092b5_245163_270x270_fill_q90_lanczos_center.jpg" alt="Ayato Ashihara"></a>
+    
+
+    <div class="media-body">
+      <h5 class="card-title"><a href="../../">Ayato Ashihara</a></h5>
+      <h6 class="card-subtitle">会社員3年目</h6>
+      <p class="card-text">院卒3年目の社会人が夜な夜な更新中。本ブログの内容は筆者が所属する組織の公式見解とは全く関係ありません。</p>
+      <ul class="network-icon" aria-hidden="true">
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="../../#contact" >
+        <i class="fas fa-envelope"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://www.facebook.com/ASSIY" target="_blank" rel="noopener">
+        <i class="fab fa-facebook"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://github.com/AyatoAshihara/myblog_jp" target="_blank" rel="noopener">
+        <i class="fab fa-github"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://www.linkedin.com/in/%E5%BD%A9%E4%BA%BA-%E8%91%A6%E5%8E%9F-9391b7143/" target="_blank" rel="noopener">
+        <i class="fab fa-linkedin"></i>
+      </a>
+    </li>
+  
+</ul>
+
+    </div>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <div class="article-widget content-widget-hr">
+    <h3>関連項目</h3>
+    <ul>
+      
+      <li><a href="../../post/post14/">10年物長期金利をフィッティングしてみる</a></li>
+      
+      <li><a href="../../post/post11/">rvestでyahoo競馬にある過去のレース結果をスクレイピングしてみた（2回目）</a></li>
+      
+      <li><a href="../../post/post8/">GPLVMでマルチファクターモデルを構築してみた</a></li>
+      
+      <li><a href="../../post/post2/">Asset Allocation ModelをRで組んでみた。</a></li>
+      
+      <li><a href="../../post/post3/">カルマンフィルタの実装</a></li>
+      
+    </ul>
+  </div>
+  
+
+
+
+
+
+  </div>
+</article>
+
+      
+
+    
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.4/imagesloaded.pkgd.min.js" integrity="sha256-lqvxZrPLtfffUl2G/e7szqSvPBILGbwmsGE1MKlOi0Q=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js" integrity="sha256-CBrpuqrMhXwcLLUd5tvQ4euBHCdh7wGlDfNz8vbu/iI=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js" integrity="sha256-yt2kYMy0w8AbtF89WXb2P1rfjcP/HTHLT7097U8Y5b8=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/instant.page/5.1.0/instantpage.min.js" integrity="sha512-1+qUtKoh9XZW7j+6LhRMAyOrgSQKenQ4mluTR+cvxXjP1Z54RxZuzstR/H9kgPXQsVB8IW7DMDFUJpzLjvhGSQ==" crossorigin="anonymous"></script>
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/8.8.0/mermaid.min.js" integrity="sha512-ja+hSBi4JDtjSqc4LTBsSwuBT3tdZ3oKYKd07lTVYmCnTCor56AnRql00ssqnTOR9Ss4gOP/ROGB3SfcJnZkeg==" crossorigin="anonymous" title="mermaid"></script>
+      
+
+      
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/highlight.min.js" integrity="sha512-TDKKr+IvoqZnPzc3l35hdjpHD0m+b2EC2SrLEgKDRWpxf2rFCxemkgvJ5kfU48ip+Y+m2XVKyOCD85ybtlZDmw==" crossorigin="anonymous"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/languages/r.min.js"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/languages/latex.min.js"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/languages/python.min.js"></script>
+        
+      
+
+    
+
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.js" integrity="sha512-SeiQaaDh73yrb56sTW/RgVdi/mMqNeM2oBwubFHagc5BkixSpP1fvqF47mKzPGWYSSy4RwbBunrJBQ4Co8fRWA==" crossorigin="anonymous"></script>
+    
+
+    
+    
+    <script>const code_highlighting = true;</script>
+    
+
+    
+    
+    
+    
+    
+    
+    <script>
+      const search_config = {"indexURI":"/index.json","minLength":1,"threshold":0.3};
+      const i18n = {"no_results":"結果が見つかりませんでした","placeholder":"検索...","results":"results found"};
+      const content_type = {
+        'post': "投稿",
+        'project': "プロジェクト",
+        'publication' : "発表文献",
+        'talk' : "登壇",
+        'slides' : "Slides"
+        };
+    </script>
+    
+
+    
+    
+
+    
+    
+    <script id="search-hit-fuse-template" type="text/x-template">
+      <div class="search-hit" id="summary-{{key}}">
+      <div class="search-hit-content">
+        <div class="search-hit-name">
+          <a href="{{relpermalink}}">{{title}}</a>
+          <div class="article-metadata search-hit-type">{{type}}</div>
+          <p class="search-hit-description">{{snippet}}</p>
+        </div>
+      </div>
+      </div>
+    </script>
+    
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.2.1/fuse.min.js" integrity="sha256-VzgmKYmhsGNNN4Ph1kMW+BjoYJM2jV5i4IlFoeZA9XI=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js" integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin="anonymous"></script>
+    
+
+    
+    
+
+    
+    
+
+    
+    
+
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+      
+    
+    
+    
+    
+    <script src="../../js/wowchemy.min.4c2bca31150ce93c5a5e43b8a50f22fd.js"></script>
+
+    
+
+
+
+
+
+
+  
+  
+  <div class="container">
+    <footer class="site-footer">
+  
+
+  <p class="powered-by">
+    
+  </p>
+
+  
+  
+
+
+
+
+
+
+  <p class="powered-by">
+    
+    Published with
+    <a href="https://wowchemy.com" target="_blank" rel="noopener">Wowchemy</a>  —
+    the free, <a href="https://github.com/wowchemy/wowchemy-hugo-modules" target="_blank" rel="noopener">
+    open source</a> website builder that empowers creators.
+    
+
+    
+    <span class="float-right" aria-hidden="true">
+      <a href="#" class="back-to-top">
+        <span class="button_icon">
+          <i class="fas fa-chevron-up fa-2x"></i>
+        </span>
+      </a>
+    </span>
+    
+  </p>
+</footer>
+
+  </div>
+  
+
+  
+<div id="modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">引用</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <pre><code class="tex hljs"></code></pre>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-outline-primary my-1 js-copy-cite" href="#" target="_blank">
+          <i class="fas fa-copy"></i> コピー
+        </a>
+        <a class="btn btn-outline-primary my-1 js-download-cite" href="#" target="_blank">
+          <i class="fas fa-download"></i> ダウンロード
+        </a>
+        <div id="modal-error"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

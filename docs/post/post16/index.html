@@ -1,0 +1,1382 @@
+<!DOCTYPE html><html lang="ja" >
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  
+  
+  
+  <meta name="generator" content="Wowchemy 4.8.0 for Hugo">
+  
+
+  
+
+  
+  
+
+  
+  
+  
+  
+  
+    
+    
+    
+  
+  
+
+  <meta name="author" content="Ayato Ashihara">
+
+  
+  
+  
+    
+  
+  <meta name="description" content="Kagglerが大好きなLightGBMで競馬の順位予想してみました。">
+
+  
+  <link rel="alternate" hreflang="ja" href="../../post/post16/">
+
+  
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+  
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+
+  
+  
+  
+  <meta name="theme-color" content="#2962ff">
+  
+
+  
+  
+  
+  <script src="../../js/mathjax-config.js"></script>
+  
+
+  
+  
+  
+  
+    
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha256-FMvZuGapsJLjouA6k7Eo2lusoAX9i0ShlWFG6qt7SLc=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin="anonymous">
+
+    
+    
+    
+      
+    
+    
+      
+      
+        
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/github.min.css" crossorigin="anonymous" title="hl-light">
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/dracula.min.css" crossorigin="anonymous" title="hl-dark" disabled>
+        
+      
+    
+
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.css" integrity="sha512-1xoFisiGdy9nvho8EgXuXvnpR5GAMSjFwp40gSRE3NwdUdIMIKuPa7bqoUhLD0O/5tPNhteAsE5XyyMi5reQVA==" crossorigin="anonymous">
+    
+
+    
+
+    
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.2.2/lazysizes.min.js" integrity="sha512-TmDwFLhg3UA4ZG0Eb4MIyT1O1Mb+Oww5kFG0uHqXsdbyZz9DcvYQhKpGgNkamAI6h2lGGZq2X8ftOJvF/XjTUg==" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" integrity="" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+
+  
+
+  
+  
+  
+    
+      
+      
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,700%7CRoboto:400,400italic,700%7CRoboto+Mono&display=swap">
+    
+  
+
+  
+  
+  
+  
+  <link rel="stylesheet" href="../../css/wowchemy.css">
+
+  
+
+
+
+
+  
+
+
+  
+  
+
+  
+
+  <link rel="manifest" href="../../index.webmanifest">
+  <link rel="icon" type="image/png" href="../../images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
+  <link rel="apple-touch-icon" type="image/png" href="../../images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
+
+  <link rel="canonical" href="../../post/post16/">
+
+  
+  
+  
+  
+  
+  
+  
+    
+  
+  
+  <meta property="twitter:card" content="summary_large_image">
+  
+  <meta property="og:site_name" content="東京の資産運用会社で働く社会人が研究に没頭するブログ">
+  <meta property="og:url" content="/post/post16/">
+  <meta property="og:title" content="LightGBMを使用して競馬結果を予想してみる | 東京の資産運用会社で働く社会人が研究に没頭するブログ">
+  <meta property="og:description" content="Kagglerが大好きなLightGBMで競馬の順位予想してみました。"><meta property="og:image" content="/post/post16/featured.jpg">
+  <meta property="twitter:image" content="/post/post16/featured.jpg"><meta property="og:locale" content="ja">
+  
+    
+      <meta property="article:published_time" content="2020-02-29T00:00:00&#43;00:00">
+    
+    <meta property="article:modified_time" content="2020-02-29T00:00:00&#43;00:00">
+  
+
+  
+
+
+    
+
+
+
+
+
+
+  
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "/post/post16/"
+  },
+  "headline": "LightGBMを使用して競馬結果を予想してみる",
+  
+  "image": [
+    "/post/post16/featured.jpg"
+  ],
+  
+  "datePublished": "2020-02-29T00:00:00Z",
+  "dateModified": "2020-02-29T00:00:00Z",
+  
+  "author": {
+    "@type": "Person",
+    "name": "Ayato Ashihara"
+  },
+  
+  "publisher": {
+    "@type": "Organization",
+    "name": "東京の資産運用会社で働く社会人が研究に没頭するブログ",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png"
+    }
+  },
+  "description": "Kagglerが大好きなLightGBMで競馬の順位予想してみました。"
+}
+</script>
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+
+  <title>LightGBMを使用して競馬結果を予想してみる | 東京の資産運用会社で働く社会人が研究に没頭するブログ</title>
+
+</head>
+
+
+<body id="top" data-spy="scroll" data-offset="70" data-target="#TableOfContents" class=" ">
+
+  
+  
+  
+    <script>window.wcDarkLightEnabled = true;</script>
+  
+  
+    <script>const isSiteThemeDark = false;</script>
+  
+  
+  <script src="../../js/load-theme.js"></script>
+
+  <aside class="search-results" id="search">
+  <div class="container">
+    <section class="search-header">
+
+      <div class="row no-gutters justify-content-between mb-3">
+        <div class="col-6">
+          <h1>Search</h1>
+        </div>
+        <div class="col-6 col-search-close">
+          <a class="js-search" href="#"><i class="fas fa-times-circle text-muted" aria-hidden="true"></i></a>
+        </div>
+      </div>
+
+      <div id="search-box">
+        
+        <input name="q" id="search-query" placeholder="検索..." autocapitalize="off"
+        autocomplete="off" autocorrect="off" spellcheck="false" type="search" class="form-control">
+        
+      </div>
+
+    </section>
+    <section class="section-search-results">
+
+      <div id="search-hits">
+        
+      </div>
+
+    </section>
+  </div>
+</aside>
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+<nav class="navbar navbar-expand-lg navbar-light compensate-for-scrollbar" id="navbar-main">
+  <div class="container">
+
+    
+    <div class="d-none d-lg-inline-flex">
+      <a class="navbar-brand" href="../../">東京の資産運用会社で働く社会人が研究に没頭するブログ</a>
+    </div>
+    
+
+    
+    <button type="button" class="navbar-toggler" data-toggle="collapse"
+            data-target="#navbar-content" aria-controls="navbar" aria-expanded="false" aria-label="ナビゲーションの切り替え">
+    <span><i class="fas fa-bars"></i></span>
+    </button>
+    
+
+    
+    <div class="navbar-brand-mobile-wrapper d-inline-flex d-lg-none">
+      <a class="navbar-brand" href="../../">東京の資産運用会社で働く社会人が研究に没頭するブログ</a>
+    </div>
+    
+
+    
+    
+    <div class="navbar-collapse main-menu-item collapse justify-content-start" id="navbar-content">
+
+      
+      <ul class="navbar-nav d-md-inline-flex">
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+            
+            
+            
+              
+            
+            
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="../../#about"><span>About</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link  active" href="../../post"><span>Posts</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="../../publication"><span>Publications</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+            
+            
+            
+              
+            
+            
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="../../#contact"><span>Contact</span></a>
+        </li>
+
+        
+        
+
+      
+
+        
+      </ul>
+    </div>
+
+    <ul class="nav-icons navbar-nav flex-row ml-auto d-flex pl-md-2">
+      
+      
+      <li class="nav-item">
+        <a class="nav-link js-search" href="#" aria-label="Search"><i class="fas fa-search" aria-hidden="true"></i></a>
+      </li>
+      
+
+      
+      
+      <li class="nav-item dropdown theme-dropdown">
+        <a href="#" class="nav-link" data-toggle="dropdown" aria-haspopup="true">
+          <i class="fas fa-moon" aria-hidden="true"></i>
+        </a>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item js-set-theme-light">
+            <span>Light</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-dark">
+            <span>Dark</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-auto">
+            <span>Automatic</span>
+          </a>
+        </div>
+      </li>
+      
+
+      
+
+    </ul>
+
+  </div>
+</nav>
+
+
+
+  <article class="article">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+<div class="article-container pt-3">
+  <h1>LightGBMを使用して競馬結果を予想してみる</h1>
+
+  
+
+  
+
+
+<div class="article-metadata">
+
+  
+  
+
+  
+  <span class="article-date">
+    
+    
+      
+    
+    Feb 29, 2020
+  </span>
+  
+
+  
+
+  
+  <span class="middot-divider"></span>
+  <span class="article-reading-time">
+    7 分で読める
+  </span>
+  
+
+  
+  
+  
+
+  
+  
+  <span class="middot-divider"></span>
+  <span class="article-categories">
+    <i class="fas fa-folder mr-1"></i><a href="../../category/%E7%AB%B6%E9%A6%AC/">競馬</a></span>
+  
+
+</div>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+<div class="article-header container featured-image-wrapper mt-4 mb-4" style="max-width: 1200px; max-height: 787px;">
+  <div style="position: relative">
+    <img src="../../post/post16/featured.jpg" alt="" class="featured-image">
+    
+  </div>
+</div>
+
+
+
+  <div class="article-container">
+
+    <div class="article-style">
+      
+<script src="index_files/header-attrs/header-attrs.js"></script>
+
+<div id="TOC">
+<ul>
+<li><a href="#データインポート">1.データインポート</a></li>
+<li><a href="#予測モデルの作成">2. 予測モデルの作成</a></li>
+<li><a href="#shapでの結果解釈">3. shapでの結果解釈</a></li>
+<li><a href="#最後に">4. 最後に</a></li>
+</ul>
+</div>
+
+<p>おはこんばんにちは。かなり久しぶりではありますが、Pythonの勉強をかねて以前yahoo.keibaで収集した競馬のレース結果データから、レース結果を予想するモデルを作成したいと思います。</p>
+<div id="データインポート" class="section level2">
+<h2>1.データインポート</h2>
+<p>まず、前回<code>sqlite</code>に保存したレース結果データを<code>pandas</code>データフレームへ保存します。</p>
+<pre class="python"><code>conn = sqlite3.connect(r&#39;C:\hogehoge\horse_data.db&#39;)
+sql = r&#39;SELECT * FROM race_result&#39;
+df = pd.read_sql(con=conn,sql=sql)</code></pre>
+<p>データの中身を確認してみましょう。列は以下のようになっています。orderが着順となっています。</p>
+<pre class="python"><code>df.columns</code></pre>
+<pre><code>## Index([&#39;order&#39;, &#39;frame_number&#39;, &#39;horse_number&#39;, &#39;trainer&#39;, &#39;passing_rank&#39;,
+##        &#39;last_3F&#39;, &#39;time&#39;, &#39;margin&#39;, &#39;horse_name&#39;, &#39;horse_age&#39;, &#39;horse_sex&#39;,
+##        &#39;horse_weight&#39;, &#39;horse_weight_change&#39;, &#39;brinker&#39;, &#39;jockey&#39;,
+##        &#39;jockey_weight&#39;, &#39;jockey_weight_change&#39;, &#39;odds&#39;, &#39;popularity&#39;,
+##        &#39;race_date&#39;, &#39;race_course&#39;, &#39;race_name&#39;, &#39;race_distance&#39;, &#39;type&#39;,
+##        &#39;race_turn&#39;, &#39;race_condition&#39;, &#39;race_weather&#39;, &#39;colour&#39;, &#39;owner&#39;,
+##        &#39;farm&#39;, &#39;locality&#39;, &#39;horse_birthday&#39;, &#39;father&#39;, &#39;mother&#39;, &#39;prize&#39;,
+##        &#39;http&#39;],
+##       dtype=&#39;object&#39;)</code></pre>
+<p>orderの中身を確認してみると、括弧（）がついている物が多く、また取消や中止、失格などが存在するため、文字型に認識されていることがわかります。ちなみに括弧（）内の順位は入線順位というやつで、他馬の走行を妨害したりして順位が降着させられたことを意味します（<a href="http://www.jra.go.jp/judge/" class="uri">http://www.jra.go.jp/judge/</a>）。</p>
+<pre class="python"><code>df.loc[:,&#39;order&#39;].unique()</code></pre>
+<pre><code>## array([&#39;1&#39;, &#39;7&#39;, &#39;2&#39;, &#39;8&#39;, &#39;5&#39;, &#39;15&#39;, &#39;6&#39;, &#39;12&#39;, &#39;11&#39;, &#39;14&#39;, &#39;3&#39;, &#39;13&#39;,
+##        &#39;4&#39;, &#39;16&#39;, &#39;9&#39;, &#39;10&#39;, &#39;取消&#39;, &#39;中止&#39;, &#39;除外&#39;, &#39;17&#39;, &#39;18&#39;, &#39;4(3)&#39;, &#39;2(1)&#39;,
+##        &#39;3(2)&#39;, &#39;6(4)&#39;, &#39;失格&#39;, &#39;9(8)&#39;, &#39;16(6)&#39;, &#39;12(12)&#39;, &#39;13(9)&#39;, &#39;6(3)&#39;,
+##        &#39;10(7)&#39;, &#39;6(5)&#39;, &#39;9(3)&#39;, &#39;11(8)&#39;, &#39;13(2)&#39;, &#39;12(9)&#39;, &#39;14(7)&#39;,
+##        &#39;10(1)&#39;, &#39;16(8)&#39;, &#39;14(6)&#39;, &#39;10(3)&#39;, &#39;12(1)&#39;, &#39;13(6)&#39;, &#39;7(1)&#39;,
+##        &#39;12(6)&#39;, &#39;6(2)&#39;, &#39;11(2)&#39;, &#39;15(6)&#39;, &#39;13(10)&#39;, &#39;14(4)&#39;, &#39;7(5)&#39;,
+##        &#39;17(4)&#39;, &#39;9(7)&#39;, &#39;16(14)&#39;, &#39;12(11)&#39;, &#39;14(2)&#39;, &#39;8(2)&#39;, &#39;9(5)&#39;,
+##        &#39;11(5)&#39;, &#39;12(7)&#39;, &#39;11(1)&#39;, &#39;12(8)&#39;, &#39;7(4)&#39;, &#39;5(4)&#39;, &#39;13(12)&#39;,
+##        &#39;14(3)&#39;, &#39;10(2)&#39;, &#39;11(10)&#39;, &#39;18(3)&#39;, &#39;10(4)&#39;, &#39;15(8)&#39;, &#39;8(3)&#39;,
+##        &#39;5(1)&#39;, &#39;10(5)&#39;, &#39;7(3)&#39;, &#39;5(2)&#39;, &#39;9(1)&#39;, &#39;13(3)&#39;, &#39;16(11)&#39;,
+##        &#39;11(3)&#39;, &#39;18(15)&#39;, &#39;11(6)&#39;, &#39;10(6)&#39;, &#39;14(12)&#39;, &#39;12(5)&#39;, &#39;15(14)&#39;,
+##        &#39;17(8)&#39;, &#39;18(6)&#39;, &#39;4(2)&#39;, &#39;18(10)&#39;, &#39;16(7)&#39;, &#39;13(1)&#39;, &#39;16(10)&#39;,
+##        &#39;15(7)&#39;, &#39;9(4)&#39;, &#39;15(5)&#39;, &#39;12(3)&#39;, &#39;8(7)&#39;, &#39;15(2)&#39;, &#39;12(10)&#39;,
+##        &#39;14(9)&#39;, &#39;3(1)&#39;, &#39;6(1)&#39;, &#39;14(5)&#39;, &#39;15(4)&#39;, &#39;11(4)&#39;, &#39;12(4)&#39;,
+##        &#39;16(4)&#39;, &#39;9(2)&#39;, &#39;13(5)&#39;, &#39;12(2)&#39;, &#39;15(1)&#39;, &#39;4(1)&#39;, &#39;14(13)&#39;,
+##        &#39;14(1)&#39;, &#39;13(7)&#39;, &#39;5(3)&#39;, &#39;8(6)&#39;, &#39;15(13)&#39;, &#39;7(2)&#39;, &#39;15(11)&#39;,
+##        &#39;10(9)&#39;, &#39;11(9)&#39;, &#39;8(4)&#39;, &#39;15(3)&#39;, &#39;13(4)&#39;, &#39;16(12)&#39;, &#39;16(5)&#39;,
+##        &#39;18(11)&#39;, &#39;10(8)&#39;, &#39;18(8)&#39;, &#39;14(8)&#39;, &#39;16(9)&#39;, &#39;8(5)&#39;, &#39;8(1)&#39;,
+##        &#39;14(11)&#39;, &#39;9(6)&#39;, &#39;16(13)&#39;, &#39;16(15)&#39;, &#39;11(11)&#39;, &#39;15(10)&#39;, &#39;7(6)&#39;],
+##       dtype=object)</code></pre>
+<p>まずここを修正しましょう。括弧を除去してint型に型変更し、入線順位は新たな列<code>arriving order</code>として追加します。</p>
+<pre class="python"><code>df[&#39;arriving order&#39;] = df[df.order.str.contains(r&#39;\d*\(\d*\)&#39;,regex=True)][&#39;order&#39;].replace(r&#39;\d+\(&#39;,r&#39;&#39;,regex=True).replace(r&#39;\)&#39;,r&#39;&#39;,regex=True).astype(&#39;float64&#39;)
+df[&#39;arriving order&#39;].unique()</code></pre>
+<pre><code>## array([nan,  3.,  1.,  2.,  4.,  8.,  6., 12.,  9.,  7.,  5., 10., 14.,
+##        11., 15., 13.])</code></pre>
+<pre class="python"><code>df[&#39;order&#39;] = df[&#39;order&#39;].replace(r&#39;\(\d+\)&#39;,r&#39;&#39;,regex=True)
+df = df[lambda df: ~df.order.str.contains(r&#39;(取消|中止|除外|失格)&#39;,regex=True)]</code></pre>
+<pre><code>## C:\Users\aashi\Anaconda3\envs\umanalytics\lib\site-packages\pandas\core\strings.py:1954: UserWarning: This pattern has match groups. To actually get the groups, use str.extract.
+##   return func(self, *args, **kwargs)</code></pre>
+<pre class="python"><code>df[&#39;order&#39;] = df[&#39;order&#39;].astype(&#39;float64&#39;)
+df[&#39;order&#39;].unique()</code></pre>
+<pre><code>## array([ 1.,  7.,  2.,  8.,  5., 15.,  6., 12., 11., 14.,  3., 13.,  4.,
+##        16.,  9., 10., 17., 18.])</code></pre>
+<p>きれいな<code>float</code>型に処理することができました。では、次にラスト3Fのタイムの前処理に移ります。前走のラスト3Fのタイムを予測に使用します。</p>
+<pre class="python"><code>import numpy as np
+df[&#39;last_3F&#39;] = df[&#39;last_3F&#39;].replace(r&#39;character(0)&#39;,np.nan,regex=False).astype(&#39;float64&#39;)
+df[&#39;last_3F&#39;] = df.groupby(&#39;horse_name&#39;)[&#39;last_3F&#39;].shift(-1)</code></pre>
+<p>前走のレースと順位、追加順位もデータセットへ含めましょう。</p>
+<pre class="python"><code>df[&#39;prerace&#39;] = df.groupby(&#39;horse_name&#39;)[&#39;race_name&#39;].shift(-1)
+df[&#39;preorder&#39;] = df.groupby(&#39;horse_name&#39;)[&#39;order&#39;].shift(-1)
+df[&#39;prepassing&#39;] = df.groupby(&#39;horse_name&#39;)[&#39;passing_rank&#39;].shift(-1)</code></pre>
+<p>出走時点で獲得している累積賞金額も追加します。</p>
+<pre class="python"><code>df[&#39;preprize&#39;] = df.groupby(&#39;horse_name&#39;)[&#39;prize&#39;].shift(-1)
+df[&#39;preprize&#39;] = df[&#39;preprize&#39;].fillna(0)
+df[&#39;margin&#39;] = df.groupby(&#39;horse_name&#39;)[&#39;margin&#39;].shift(-1)</code></pre>
+<p>その他、欠損値やデータ型の修正、カテゴリデータのラベルエンコーディングです。</p>
+<pre class="python"><code>df[&#39;horse_weight&#39;] = df[&#39;horse_weight&#39;].astype(&#39;float64&#39;)
+df[&#39;margin&#39;] = df[&#39;margin&#39;].replace(r&#39;character(0)&#39;,np.nan,regex=False)
+df[&#39;horse_age&#39;] = df[&#39;horse_age&#39;].astype(&#39;float64&#39;)
+df[&#39;horse_weight_change&#39;] = df[&#39;horse_weight_change&#39;].astype(&#39;float64&#39;)
+df[&#39;jockey_weight&#39;] = df[&#39;jockey_weight&#39;].astype(&#39;float64&#39;)
+df[&#39;race_distance&#39;] = df[&#39;race_distance&#39;].replace(r&#39;m&#39;,r&#39;&#39;,regex=True).astype(&#39;float64&#39;)
+df[&#39;race_turn&#39;] = df[&#39;race_turn&#39;].replace(r&#39;character(0)&#39;,np.nan,regex=False)
+df.loc[df[&#39;order&#39;]!=1,&#39;order&#39;] = 0
+
+df[&#39;race_turn&#39;] = df[&#39;race_turn&#39;].fillna(&#39;missing&#39;)
+df[&#39;colour&#39;] = df[&#39;colour&#39;].fillna(&#39;missing&#39;)
+df[&#39;prepassing&#39;] = df[&#39;prepassing&#39;].fillna(&#39;missing&#39;)
+df[&#39;prerace&#39;] = df[&#39;prerace&#39;].fillna(&#39;missing&#39;)
+df[&#39;father&#39;] = df[&#39;father&#39;].fillna(&#39;missing&#39;)
+df[&#39;mother&#39;] = df[&#39;mother&#39;].fillna(&#39;missing&#39;)
+
+from sklearn import preprocessing
+cat_list = [&#39;trainer&#39;, &#39;horse_name&#39;, &#39;horse_sex&#39;, &#39;brinker&#39;, &#39;jockey&#39;, &#39;race_course&#39;, &#39;race_name&#39;, &#39;type&#39;, &#39;race_turn&#39;, &#39;race_condition&#39;, &#39;race_weather&#39;, &#39;colour&#39;, &#39;father&#39;, &#39;mother&#39;, &#39;prerace&#39;, &#39;prepassing&#39;]
+for column in cat_list:
+    target_column = df[column]
+    le = preprocessing.LabelEncoder()
+    le.fit(target_column)
+    label_encoded_column = le.transform(target_column)
+    df[column] = pd.Series(label_encoded_column).astype(&#39;category&#39;)</code></pre>
+<pre><code>## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()</code></pre>
+<pre class="python"><code>import pandas_profiling as pdq
+profile = pdq.ProfileReport(df)
+profile</code></pre>
+</div>
+<div id="予測モデルの作成" class="section level2">
+<h2>2. 予測モデルの作成</h2>
+<p>では<code>LightGBM</code>で予測モデルを作ってみます。<code>optuna</code>の<code>LightGBM</code>を使用して、ハイパーパラメータチューニングを行い、学習したモデルを用いて計算したテストデータの予測値と実績値の<code>confusion matrix</code>ならびに正解率を算出します。</p>
+<pre class="python"><code>import optuna.integration.lightgbm as lgb
+from sklearn.model_selection import train_test_split
+
+y = df[&#39;order&#39;]
+x = df.drop([&#39;order&#39;,&#39;passing_rank&#39;,&#39;time&#39;,&#39;odds&#39;,&#39;popularity&#39;,&#39;owner&#39;,&#39;farm&#39;,&#39;locality&#39;,&#39;horse_birthday&#39;,&#39;http&#39;,&#39;prize&#39;,&#39;race_date&#39;,&#39;margin&#39;],axis=1)
+
+X_train, X_test, y_train, y_test = train_test_split(x, y)
+X_train, x_val, y_train, y_val = train_test_split(X_train, y_train)
+
+lgb_train = lgb.Dataset(X_train, y_train)
+lgb_eval = lgb.Dataset(x_val, y_val)
+lgb_test = lgb.Dataset(X_test, y_test, reference=lgb_train)
+
+lgbm_params = {
+        &#39;objective&#39;: &#39;binary&#39;,
+        &#39;boost_from_average&#39;: False
+    }
+
+best_params, history = {}, []
+model = lgb.train(lgbm_params, lgb_train, categorical_feature = cat_list,valid_sets = lgb_eval, num_boost_round=100,early_stopping_rounds=20,best_params=best_params,tuning_history=history, verbose_eval=False)
+best_params
+
+def calibration(y_proba, beta):
+    return y_proba / (y_proba + (1 - y_proba) / beta)
+
+sampling_rate = y_train.sum() / len(y_train)
+y_proba = model.predict(X_test, num_iteration=model.best_iteration)
+y_proba_calib = calibration(y_proba, sampling_rate)
+
+y_pred = np.vectorize(lambda x: 1 if x &gt; 0.49 else 0)(y_proba_calib)</code></pre>
+<p>可視化パートです。</p>
+<pre class="python"><code>from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, accuracy_score, precision_score, recall_score, f1_score, roc_curve, auc
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# AUC (Area Under the Curve) を計算する
+fpr, tpr, thresholds = roc_curve(y_test, y_pred)
+auc = auc(fpr, tpr)
+
+# ROC曲線をプロット
+plt.plot(fpr, tpr, label=&#39;ROC curve (area = %.2f)&#39;%auc)
+plt.legend()
+plt.title(&#39;ROC curve&#39;)
+plt.xlabel(&#39;False Positive Rate&#39;)
+plt.ylabel(&#39;True Positive Rate&#39;)
+plt.grid(True)
+plt.show()</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
+<pre class="python"><code>plt.close()
+
+# Confusion Matrixを生成
+ConfusionMatrixDisplay(confusion_matrix(y_test, y_pred)).plot()</code></pre>
+<pre><code>## &lt;sklearn.metrics._plot.confusion_matrix.ConfusionMatrixDisplay object at 0x000000004F873388&gt;</code></pre>
+<pre class="python"><code>plt.show()</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-16-2.png" width="672" /></p>
+<pre class="python"><code>plt.close()
+
+accuracy_score(y_test, y_pred)</code></pre>
+<pre><code>## 0.9300814465677578</code></pre>
+<pre class="python"><code>precision_score(y_test, y_pred)</code></pre>
+<pre><code>## 0.9426605504587156</code></pre>
+<p><code>accuracy_score</code>（予測精度）が90%を超え、<code>precision_Score</code>（適合率、陽=1着と予想したデータの正解率）もいい感じです。</p>
+<pre class="python"><code>recall_score(y_test, y_pred)</code></pre>
+<pre><code>## 0.01211460236986382</code></pre>
+<pre class="python"><code>f1_score(y_test, y_pred)</code></pre>
+<pre><code>## 0.02392177405273267</code></pre>
+<p>一方、<code>recall_score</code>(再現性、陽=1着のサンプルのうち実際に正解した割合)が低く偽陰性が高いことが確認できます。その結果、<code>F1</code>値も低くなっていますね。競馬予測モデルの場合、偽陰性が高いことは偽陽性が高いことよりはましなのですが、回収率を上げるためには偽陰性を下げることを頑張らなければいけません。これは今後の課題ですね。次節では<code>shapley</code>値を使って要因分解をしたいと思います。。</p>
+</div>
+<div id="shapでの結果解釈" class="section level2">
+<h2>3. shapでの結果解釈</h2>
+<pre class="python"><code>import shap
+
+shap.initjs()</code></pre>
+<pre><code>## &lt;IPython.core.display.HTML object&gt;</code></pre>
+<pre class="python"><code>explainer = shap.TreeExplainer(model)</code></pre>
+<pre><code>## Setting feature_perturbation = &quot;tree_path_dependent&quot; because no background data was given.</code></pre>
+<pre class="python"><code>shap_values = explainer.shap_values(X_test)</code></pre>
+<pre><code>## LightGBM binary classifier with TreeExplainer shap values output has changed to a list of ndarray</code></pre>
+<p>まず、各特徴量の重要度を見ることにします。<code>summary_plot</code>メソッドを使用します。</p>
+<pre class="python"><code>shap.summary_plot(shap_values, X_test)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-19-1.png" width="768" /></p>
+<p>横軸は各特徴量の平均的な重要度を表しています(shap値の絶対値)。preprize(前走までの賞金獲得金額)やhorse_age、preorder(前走の着順)などが予測に重要であることが分かります。特にpreprizeの重要度は1着の予測、1着以外の予測どちらに対しても大きいです。horse_ageも同様です。ただ、これでは重要というだけで定性的な評価はできません。例えば、preprizeが大きい→1位になる確率が上昇といった関係が確認できれば、それは重要な情報になり得ます。次にそれを確認します。<code>summary_plot</code>メソッドを使用します。</p>
+<pre class="python"><code>shap.summary_plot(shap_values[1], X_test)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-20-1.png" width="768" /></p>
+<p>上図も各特徴量の重要度を表しています(今回は絶対値ではありません)。今回はそれぞれの特徴量の重要度がバイオリンプロットによって表されており、かつ特徴量の値の大きさで色分けがされています。例えば、preprizeだと横軸が0以上の部分でのみ赤色の分布が発生しており、ここからpreprizeの特徴量が大きい、つまり前走までの獲得賞金額が多いと平均的に1着の確率が上がるという当たり前の解釈をすることができます。
+他にも、horse_age,preorder,last_3Fは特徴量が小さくなるほど1着になる確率があがることも読み取れます。horse_weight, jokey_weightは大きくなるほど1着になる確率が上がるようです。一方、その他は特に定性的な関係を読み取ることはできません。</p>
+<p>次に、特徴量と確率の関係をより詳しく確認してみましょう。先ほど、preprizeは特徴量が大きくなるほど1着になる確率が上昇するということがわかりました。ただ、その確率の上昇は1次関数的に増加するのか、指数的に増大するのか、それとも<span class="math inline">\(\log x\)</span>のように逓減していくのか、わかりません。<code>dependence_plot</code>を使用してそれを確認してみましょう。</p>
+<pre class="python"><code>shap.dependence_plot(ind=&quot;preprize&quot;, shap_values=shap_values[1], features=X_test)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-21-1.png" width="720" /></p>
+<p>上図は学習した<code>LightGBM</code>をpreprizeの関数として見たときの概形をplotしたものです。先に確認したとおり、やはり特徴量が大きくなるにつれ、1着になる確率が上昇していきます。ただ、その上昇は徐々に逓減していき、2000万円を超えるところでほぼ頭打ちとなります。また、上図ではhorse_ageでの色分けを行っており、preprizeとの関係性も確認できるようになっています。やはり、直感と同じく、preprizeが高い馬の中でもhorse_ageが若い馬の1着確率が高くなることが見て取れます。</p>
+<p>preorderの<code>dependence_plot</code>も確認してみましょう。</p>
+<pre class="python"><code>shap.dependence_plot(ind=&quot;preorder&quot;, shap_values=shap_values[1], features=X_test)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-22-1.png" width="720" /></p>
+<p>やはり、前走の着順が上位になるほど1着確率が高まることがここからも分かります。また、その確率は6着以上とそれ以外で水準感が変わることも分かります。last_3Fのタイムとの関係性も確認していますが、こちらはあまり関連性はなさそうです。</p>
+</div>
+<div id="最後に" class="section level2">
+<h2>4. 最後に</h2>
+<p><code>LightGBM</code>を使用し、競馬の予測モデルを作成してみました。さすが<code>LightGBM</code>といった感じで、予測精度は高かったです。また、<code>shap</code>値を使用した重要特徴量の検出も上手くいきました。これによって、<code>LightGBM</code>の気持ちを理解し、より良い特徴量の発見を進めていくことでモデリングの精度を高めていこうと思います。</p>
+</div>
+
+    </div>
+
+    
+
+
+
+
+
+
+<div class="article-tags">
+  
+  <a class="badge badge-light" href="../../tag/python/">Python</a>
+  
+  <a class="badge badge-light" href="../../tag/%E5%89%8D%E5%87%A6%E7%90%86/">前処理</a>
+  
+  <a class="badge badge-light" href="../../tag/%E6%A9%9F%E6%A2%B0%E5%AD%A6%E7%BF%92/">機械学習</a>
+  
+</div>
+
+
+
+<div class="share-box" aria-hidden="true">
+  <ul class="share">
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://twitter.com/intent/tweet?url=../../post/post16/&amp;text=LightGBM%e3%82%92%e4%bd%bf%e7%94%a8%e3%81%97%e3%81%a6%e7%ab%b6%e9%a6%ac%e7%b5%90%e6%9e%9c%e3%82%92%e4%ba%88%e6%83%b3%e3%81%97%e3%81%a6%e3%81%bf%e3%82%8b" target="_blank" rel="noopener" class="share-btn-twitter">
+          <i class="fab fa-twitter"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://www.facebook.com/sharer.php?u=/post/post16/&amp;t=LightGBM%e3%82%92%e4%bd%bf%e7%94%a8%e3%81%97%e3%81%a6%e7%ab%b6%e9%a6%ac%e7%b5%90%e6%9e%9c%e3%82%92%e4%ba%88%e6%83%b3%e3%81%97%e3%81%a6%e3%81%bf%e3%82%8b" target="_blank" rel="noopener" class="share-btn-facebook">
+          <i class="fab fa-facebook"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="mailto:?subject=LightGBM%e3%82%92%e4%bd%bf%e7%94%a8%e3%81%97%e3%81%a6%e7%ab%b6%e9%a6%ac%e7%b5%90%e6%9e%9c%e3%82%92%e4%ba%88%e6%83%b3%e3%81%97%e3%81%a6%e3%81%bf%e3%82%8b&amp;body=/post/post16/" target="_blank" rel="noopener" class="share-btn-email">
+          <i class="fas fa-envelope"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://www.linkedin.com/shareArticle?url=../../post/post16/&amp;title=LightGBM%e3%82%92%e4%bd%bf%e7%94%a8%e3%81%97%e3%81%a6%e7%ab%b6%e9%a6%ac%e7%b5%90%e6%9e%9c%e3%82%92%e4%ba%88%e6%83%b3%e3%81%97%e3%81%a6%e3%81%bf%e3%82%8b" target="_blank" rel="noopener" class="share-btn-linkedin">
+          <i class="fab fa-linkedin-in"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="whatsapp://send?text=LightGBM%e3%82%92%e4%bd%bf%e7%94%a8%e3%81%97%e3%81%a6%e7%ab%b6%e9%a6%ac%e7%b5%90%e6%9e%9c%e3%82%92%e4%ba%88%e6%83%b3%e3%81%97%e3%81%a6%e3%81%bf%e3%82%8b%20/post/post16/" target="_blank" rel="noopener" class="share-btn-whatsapp">
+          <i class="fab fa-whatsapp"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://service.weibo.com/share/share.php?url=../../post/post16/&amp;title=LightGBM%e3%82%92%e4%bd%bf%e7%94%a8%e3%81%97%e3%81%a6%e7%ab%b6%e9%a6%ac%e7%b5%90%e6%9e%9c%e3%82%92%e4%ba%88%e6%83%b3%e3%81%97%e3%81%a6%e3%81%bf%e3%82%8b" target="_blank" rel="noopener" class="share-btn-weibo">
+          <i class="fab fa-weibo"></i>
+        </a>
+      </li>
+    
+  </ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+
+  
+  
+  
+    
+  
+  
+  
+  <div class="media author-card content-widget-hr">
+    
+      
+      <a href="../../"><img class="avatar mr-3 avatar-circle" src="../../author/ayato-ashihara/avatar_hu77c0c0affdebd3b9cbda9c39412092b5_245163_270x270_fill_q90_lanczos_center.jpg" alt="Ayato Ashihara"></a>
+    
+
+    <div class="media-body">
+      <h5 class="card-title"><a href="../../">Ayato Ashihara</a></h5>
+      <h6 class="card-subtitle">会社員3年目</h6>
+      <p class="card-text">院卒3年目の社会人が夜な夜な更新中。本ブログの内容は筆者が所属する組織の公式見解とは全く関係ありません。</p>
+      <ul class="network-icon" aria-hidden="true">
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="../../#contact" >
+        <i class="fas fa-envelope"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://www.facebook.com/ASSIY" target="_blank" rel="noopener">
+        <i class="fab fa-facebook"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://github.com/AyatoAshihara/myblog_jp" target="_blank" rel="noopener">
+        <i class="fab fa-github"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://www.linkedin.com/in/%E5%BD%A9%E4%BA%BA-%E8%91%A6%E5%8E%9F-9391b7143/" target="_blank" rel="noopener">
+        <i class="fab fa-linkedin"></i>
+      </a>
+    </li>
+  
+</ul>
+
+    </div>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <div class="article-widget content-widget-hr">
+    <h3>関連項目</h3>
+    <ul>
+      
+      <li><a href="../../post/post12/">Google Earth Engine APIで衛星画像データを取得し、景況感をナウキャスティングしてみる</a></li>
+      
+      <li><a href="../../post/post11/">rvestでyahoo競馬にある過去のレース結果をスクレイピングしてみた（2回目）</a></li>
+      
+      <li><a href="../../post/post9/">rvestでyahoo競馬にある過去のレース結果をクローリングしてみた</a></li>
+      
+    </ul>
+  </div>
+  
+
+
+
+
+
+  </div>
+</article>
+
+      
+
+    
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.4/imagesloaded.pkgd.min.js" integrity="sha256-lqvxZrPLtfffUl2G/e7szqSvPBILGbwmsGE1MKlOi0Q=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js" integrity="sha256-CBrpuqrMhXwcLLUd5tvQ4euBHCdh7wGlDfNz8vbu/iI=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js" integrity="sha256-yt2kYMy0w8AbtF89WXb2P1rfjcP/HTHLT7097U8Y5b8=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/instant.page/5.1.0/instantpage.min.js" integrity="sha512-1+qUtKoh9XZW7j+6LhRMAyOrgSQKenQ4mluTR+cvxXjP1Z54RxZuzstR/H9kgPXQsVB8IW7DMDFUJpzLjvhGSQ==" crossorigin="anonymous"></script>
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/8.8.0/mermaid.min.js" integrity="sha512-ja+hSBi4JDtjSqc4LTBsSwuBT3tdZ3oKYKd07lTVYmCnTCor56AnRql00ssqnTOR9Ss4gOP/ROGB3SfcJnZkeg==" crossorigin="anonymous" title="mermaid"></script>
+      
+
+      
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/highlight.min.js" integrity="sha512-TDKKr+IvoqZnPzc3l35hdjpHD0m+b2EC2SrLEgKDRWpxf2rFCxemkgvJ5kfU48ip+Y+m2XVKyOCD85ybtlZDmw==" crossorigin="anonymous"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/languages/r.min.js"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/languages/latex.min.js"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/languages/python.min.js"></script>
+        
+      
+
+    
+
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.js" integrity="sha512-SeiQaaDh73yrb56sTW/RgVdi/mMqNeM2oBwubFHagc5BkixSpP1fvqF47mKzPGWYSSy4RwbBunrJBQ4Co8fRWA==" crossorigin="anonymous"></script>
+    
+
+    
+    
+    <script>const code_highlighting = true;</script>
+    
+
+    
+    
+    
+    
+    
+    
+    <script>
+      const search_config = {"indexURI":"/index.json","minLength":1,"threshold":0.3};
+      const i18n = {"no_results":"結果が見つかりませんでした","placeholder":"検索...","results":"results found"};
+      const content_type = {
+        'post': "投稿",
+        'project': "プロジェクト",
+        'publication' : "発表文献",
+        'talk' : "登壇",
+        'slides' : "Slides"
+        };
+    </script>
+    
+
+    
+    
+
+    
+    
+    <script id="search-hit-fuse-template" type="text/x-template">
+      <div class="search-hit" id="summary-{{key}}">
+      <div class="search-hit-content">
+        <div class="search-hit-name">
+          <a href="{{relpermalink}}">{{title}}</a>
+          <div class="article-metadata search-hit-type">{{type}}</div>
+          <p class="search-hit-description">{{snippet}}</p>
+        </div>
+      </div>
+      </div>
+    </script>
+    
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.2.1/fuse.min.js" integrity="sha256-VzgmKYmhsGNNN4Ph1kMW+BjoYJM2jV5i4IlFoeZA9XI=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js" integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin="anonymous"></script>
+    
+
+    
+    
+
+    
+    
+
+    
+    
+
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+      
+    
+    
+    
+    
+    <script src="../../js/wowchemy.min.4c2bca31150ce93c5a5e43b8a50f22fd.js"></script>
+
+    
+
+
+
+
+
+
+  
+  
+  <div class="container">
+    <footer class="site-footer">
+  
+
+  <p class="powered-by">
+    
+  </p>
+
+  
+  
+
+
+
+
+
+
+  <p class="powered-by">
+    
+    Published with
+    <a href="https://wowchemy.com" target="_blank" rel="noopener">Wowchemy</a>  —
+    the free, <a href="https://github.com/wowchemy/wowchemy-hugo-modules" target="_blank" rel="noopener">
+    open source</a> website builder that empowers creators.
+    
+
+    
+    <span class="float-right" aria-hidden="true">
+      <a href="#" class="back-to-top">
+        <span class="button_icon">
+          <i class="fas fa-chevron-up fa-2x"></i>
+        </span>
+      </a>
+    </span>
+    
+  </p>
+</footer>
+
+  </div>
+  
+
+  
+<div id="modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">引用</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <pre><code class="tex hljs"></code></pre>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-outline-primary my-1 js-copy-cite" href="#" target="_blank">
+          <i class="fas fa-copy"></i> コピー
+        </a>
+        <a class="btn btn-outline-primary my-1 js-download-cite" href="#" target="_blank">
+          <i class="fas fa-download"></i> ダウンロード
+        </a>
+        <div id="modal-error"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,38 @@
+/*************************************************
+ *  Page content
+ **************************************************/
+.article-container {
+  max-width: 1000px;
+  padding: 0 20px 0 20px;
+  margin: 50px auto 0 auto; }
+  
+h1 {
+  font-weight: 600;
+  border-bottom: 3px solid #000;
+}
+
+h2 {
+  padding: 0.5rem 0.5rem;
+  font-weight: 700;
+  border-left: 8px solid #000;
+  background: #f4f4f4;    
+}
+
+.portrait-title h2 {
+  border-left: none;
+  background: #ffffff
+}
+
+.section-heading h1 {
+  margin: 0 0 10px 0;
+  border-bottom: none;
+}
+
+.article-style img, .article-style video {
+    margin-top: 0rem;
+    margin-bottom: 0rem;
+}
+
+.hljs {
+    font-size: 120%;
+}

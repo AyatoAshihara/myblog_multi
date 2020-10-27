@@ -1,0 +1,307 @@
+---
+title: "LightGBMを使用して競馬結果を予想してみる"
+author: admin
+date: 2020-02-29T00:00:00Z
+categories: ["競馬"]
+tags: ["Python","前処理","機械学習"]
+draft: false
+featured: false
+slug: ["LightGBM"]
+image:
+  caption: ''
+  focal_point: ""
+  placement: 2
+  preview_only: false
+lastmod: ""
+projects: []
+summary: Kagglerが大好きなLightGBMで競馬の順位予想してみました。
+output: 
+  blogdown::html_page:
+    number_sections: false
+    toc: true
+---
+
+```{r,include=FALSE}
+library(reticulate)
+conda_path <- "C:\\Users\\aashi\\Anaconda3\\envs\\umanalytics"
+use_condaenv(conda_path)
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+```{python,include=FALSE}
+import os
+os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = 'C:/Users/aashi/Anaconda3/envs/umanalytics/Library/plugins/platforms'
+```
+
+```{python,include=FALSE}
+import sqlite3
+import pandas as pd
+
+conn = sqlite3.connect(r'C:\Users\aashi\umanalytics\horse_data.db')
+sql = r'SELECT * FROM race_result'
+df = pd.read_sql(con=conn,sql=sql)
+```
+
+おはこんばんにちは。かなり久しぶりではありますが、Pythonの勉強をかねて以前yahoo.keibaで収集した競馬のレース結果データから、レース結果を予想するモデルを作成したいと思います。
+
+## 1.データインポート
+
+まず、前回`sqlite`に保存したレース結果データを`pandas`データフレームへ保存します。
+
+```{python,eval=FALSE}
+conn = sqlite3.connect(r'C:\hogehoge\horse_data.db')
+sql = r'SELECT * FROM race_result'
+df = pd.read_sql(con=conn,sql=sql)
+```
+
+データの中身を確認してみましょう。列は以下のようになっています。orderが着順となっています。
+
+```{python}
+df.columns
+```
+
+orderの中身を確認してみると、括弧（）がついている物が多く、また取消や中止、失格などが存在するため、文字型に認識されていることがわかります。ちなみに括弧（）内の順位は入線順位というやつで、他馬の走行を妨害したりして順位が降着させられたことを意味します（http://www.jra.go.jp/judge/）。
+
+```{python}
+df.loc[:,'order'].unique()
+```
+
+まずここを修正しましょう。括弧を除去してint型に型変更し、入線順位は新たな列`arriving order`として追加します。
+
+```{python}
+df['arriving order'] = df[df.order.str.contains(r'\d*\(\d*\)',regex=True)]['order'].replace(r'\d+\(',r'',regex=True).replace(r'\)',r'',regex=True).astype('float64')
+df['arriving order'].unique()
+```
+
+```{python}
+df['order'] = df['order'].replace(r'\(\d+\)',r'',regex=True)
+df = df[lambda df: ~df.order.str.contains(r'(取消|中止|除外|失格)',regex=True)]
+df['order'] = df['order'].astype('float64')
+df['order'].unique()
+```
+
+きれいな`float`型に処理することができました。では、次にラスト3Fのタイムの前処理に移ります。前走のラスト3Fのタイムを予測に使用します。
+
+```{python}
+import numpy as np
+df['last_3F'] = df['last_3F'].replace(r'character(0)',np.nan,regex=False).astype('float64')
+df['last_3F'] = df.groupby('horse_name')['last_3F'].shift(-1)
+```
+
+前走のレースと順位、追加順位もデータセットへ含めましょう。
+
+```{python}
+df['prerace'] = df.groupby('horse_name')['race_name'].shift(-1)
+df['preorder'] = df.groupby('horse_name')['order'].shift(-1)
+df['prepassing'] = df.groupby('horse_name')['passing_rank'].shift(-1)
+```
+
+出走時点で獲得している累積賞金額も追加します。
+
+```{python}
+df['preprize'] = df.groupby('horse_name')['prize'].shift(-1)
+df['preprize'] = df['preprize'].fillna(0)
+df['margin'] = df.groupby('horse_name')['margin'].shift(-1)
+```
+
+その他、欠損値やデータ型の修正、カテゴリデータのラベルエンコーディングです。
+
+```{python}
+df['horse_weight'] = df['horse_weight'].astype('float64')
+df['margin'] = df['margin'].replace(r'character(0)',np.nan,regex=False)
+df['horse_age'] = df['horse_age'].astype('float64')
+df['horse_weight_change'] = df['horse_weight_change'].astype('float64')
+df['jockey_weight'] = df['jockey_weight'].astype('float64')
+df['race_distance'] = df['race_distance'].replace(r'm',r'',regex=True).astype('float64')
+df['race_turn'] = df['race_turn'].replace(r'character(0)',np.nan,regex=False)
+df.loc[df['order']!=1,'order'] = 0
+
+df['race_turn'] = df['race_turn'].fillna('missing')
+df['colour'] = df['colour'].fillna('missing')
+df['prepassing'] = df['prepassing'].fillna('missing')
+df['prerace'] = df['prerace'].fillna('missing')
+df['father'] = df['father'].fillna('missing')
+df['mother'] = df['mother'].fillna('missing')
+
+from sklearn import preprocessing
+cat_list = ['trainer', 'horse_name', 'horse_sex', 'brinker', 'jockey', 'race_course', 'race_name', 'type', 'race_turn', 'race_condition', 'race_weather', 'colour', 'father', 'mother', 'prerace', 'prepassing']
+for column in cat_list:
+    target_column = df[column]
+    le = preprocessing.LabelEncoder()
+    le.fit(target_column)
+    label_encoded_column = le.transform(target_column)
+    df[column] = pd.Series(label_encoded_column).astype('category')
+
+```
+
+```{python,eval=FALSE}
+import pandas_profiling as pdq
+profile = pdq.ProfileReport(df)
+profile
+```
+
+## 2. 予測モデルの作成
+
+では`LightGBM`で予測モデルを作ってみます。`optuna`の`LightGBM`を使用して、ハイパーパラメータチューニングを行い、学習したモデルを用いて計算したテストデータの予測値と実績値の`confusion matrix`ならびに正解率を算出します。
+
+```{python,include=FALSE}
+import optuna.integration.lightgbm as lgb
+from sklearn.model_selection import train_test_split
+from imblearn.under_sampling import RandomUnderSampler
+
+y = df['order'].astype('int')
+x = df.drop(['order','passing_rank','time','odds','popularity','owner','farm','locality','horse_birthday','http','prize','race_date','margin'],axis=1)
+
+X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.5, random_state=0)
+
+sampler = RandomUnderSampler(sampling_strategy={0: y_train.sum(), 1: y_train.sum()}, random_state=42)
+X_train_sampled, y_train_sampled = sampler.fit_sample(X_train, y_train)
+
+X_train_sampled, x_val, y_train_sampled, y_val = train_test_split(X_train_sampled, y_train_sampled, test_size=0.5, random_state=68)
+
+lgb_train = lgb.Dataset(X_train_sampled, y_train_sampled)
+lgb_eval = lgb.Dataset(x_val, y_val)
+lgb_test = lgb.Dataset(X_test, y_test, reference=lgb_train)
+
+lgbm_params = {
+        'objective': 'binary',
+        'boost_from_average': False
+    }
+
+best_params, history = {}, []
+model = lgb.train(lgbm_params, lgb_train, categorical_feature = cat_list,valid_sets = lgb_eval, num_boost_round=100,early_stopping_rounds=20,best_params=best_params,tuning_history=history, verbose_eval=False)
+best_params
+
+def calibration(y_proba, beta):
+    return y_proba / (y_proba + (1 - y_proba) / beta)
+
+sampling_rate = y_train.sum() / len(y_train)
+y_proba = model.predict(X_test, num_iteration=model.best_iteration)
+y_proba_calib = calibration(y_proba, sampling_rate)
+
+y_pred = np.vectorize(lambda x: 1 if x > 0.49 else 0)(y_proba_calib)
+
+```
+
+```{python,eval=FALSE}
+import optuna.integration.lightgbm as lgb
+from sklearn.model_selection import train_test_split
+
+y = df['order']
+x = df.drop(['order','passing_rank','time','odds','popularity','owner','farm','locality','horse_birthday','http','prize','race_date','margin'],axis=1)
+
+X_train, X_test, y_train, y_test = train_test_split(x, y)
+X_train, x_val, y_train, y_val = train_test_split(X_train, y_train)
+
+lgb_train = lgb.Dataset(X_train, y_train)
+lgb_eval = lgb.Dataset(x_val, y_val)
+lgb_test = lgb.Dataset(X_test, y_test, reference=lgb_train)
+
+lgbm_params = {
+        'objective': 'binary',
+        'boost_from_average': False
+    }
+
+best_params, history = {}, []
+model = lgb.train(lgbm_params, lgb_train, categorical_feature = cat_list,valid_sets = lgb_eval, num_boost_round=100,early_stopping_rounds=20,best_params=best_params,tuning_history=history, verbose_eval=False)
+best_params
+
+def calibration(y_proba, beta):
+    return y_proba / (y_proba + (1 - y_proba) / beta)
+
+sampling_rate = y_train.sum() / len(y_train)
+y_proba = model.predict(X_test, num_iteration=model.best_iteration)
+y_proba_calib = calibration(y_proba, sampling_rate)
+
+y_pred = np.vectorize(lambda x: 1 if x > 0.49 else 0)(y_proba_calib)
+
+```
+
+可視化パートです。
+
+```{python}
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, accuracy_score, precision_score, recall_score, f1_score, roc_curve, auc
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# AUC (Area Under the Curve) を計算する
+fpr, tpr, thresholds = roc_curve(y_test, y_pred)
+auc = auc(fpr, tpr)
+
+# ROC曲線をプロット
+plt.plot(fpr, tpr, label='ROC curve (area = %.2f)'%auc)
+plt.legend()
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.grid(True)
+plt.show()
+plt.close()
+
+# Confusion Matrixを生成
+ConfusionMatrixDisplay(confusion_matrix(y_test, y_pred)).plot()
+plt.show()
+plt.close()
+
+accuracy_score(y_test, y_pred)
+precision_score(y_test, y_pred)
+
+```
+
+`accuracy_score`（予測精度）が90%を超え、`precision_Score`（適合率、陽=1着と予想したデータの正解率）もいい感じです。
+
+```{python}
+recall_score(y_test, y_pred)
+f1_score(y_test, y_pred)
+```
+
+一方、`recall_score`(再現性、陽=1着のサンプルのうち実際に正解した割合)が低く偽陰性が高いことが確認できます。その結果、`F1`値も低くなっていますね。競馬予測モデルの場合、偽陰性が高いことは偽陽性が高いことよりはましなのですが、回収率を上げるためには偽陰性を下げることを頑張らなければいけません。これは今後の課題ですね。次節では`shapley`値を使って要因分解をしたいと思います。。
+
+## 3. shapでの結果解釈
+
+```{python}
+import shap
+
+shap.initjs()
+explainer = shap.TreeExplainer(model)
+shap_values = explainer.shap_values(X_test)
+```
+
+まず、各特徴量の重要度を見ることにします。`summary_plot`メソッドを使用します。
+
+```{python}
+shap.summary_plot(shap_values, X_test)
+```
+
+横軸は各特徴量の平均的な重要度を表しています(shap値の絶対値)。preprize(前走までの賞金獲得金額)やhorse_age、preorder(前走の着順)などが予測に重要であることが分かります。特にpreprizeの重要度は1着の予測、1着以外の予測どちらに対しても大きいです。horse_ageも同様です。ただ、これでは重要というだけで定性的な評価はできません。例えば、preprizeが大きい→1位になる確率が上昇といった関係が確認できれば、それは重要な情報になり得ます。次にそれを確認します。`summary_plot`メソッドを使用します。
+
+```{python}
+shap.summary_plot(shap_values[1], X_test)
+```
+
+上図も各特徴量の重要度を表しています(今回は絶対値ではありません)。今回はそれぞれの特徴量の重要度がバイオリンプロットによって表されており、かつ特徴量の値の大きさで色分けがされています。例えば、preprizeだと横軸が0以上の部分でのみ赤色の分布が発生しており、ここからpreprizeの特徴量が大きい、つまり前走までの獲得賞金額が多いと平均的に1着の確率が上がるという当たり前の解釈をすることができます。
+他にも、horse_age,preorder,last_3Fは特徴量が小さくなるほど1着になる確率があがることも読み取れます。horse_weight, jokey_weightは大きくなるほど1着になる確率が上がるようです。一方、その他は特に定性的な関係を読み取ることはできません。
+
+次に、特徴量と確率の関係をより詳しく確認してみましょう。先ほど、preprizeは特徴量が大きくなるほど1着になる確率が上昇するということがわかりました。ただ、その確率の上昇は1次関数的に増加するのか、指数的に増大するのか、それとも$\log x$のように逓減していくのか、わかりません。`dependence_plot`を使用してそれを確認してみましょう。
+
+```{python}
+shap.dependence_plot(ind="preprize", shap_values=shap_values[1], features=X_test)
+```
+
+上図は学習した`LightGBM`をpreprizeの関数として見たときの概形をplotしたものです。先に確認したとおり、やはり特徴量が大きくなるにつれ、1着になる確率が上昇していきます。ただ、その上昇は徐々に逓減していき、2000万円を超えるところでほぼ頭打ちとなります。また、上図ではhorse_ageでの色分けを行っており、preprizeとの関係性も確認できるようになっています。やはり、直感と同じく、preprizeが高い馬の中でもhorse_ageが若い馬の1着確率が高くなることが見て取れます。
+
+preorderの`dependence_plot`も確認してみましょう。
+
+```{python}
+shap.dependence_plot(ind="preorder", shap_values=shap_values[1], features=X_test)
+```
+
+やはり、前走の着順が上位になるほど1着確率が高まることがここからも分かります。また、その確率は6着以上とそれ以外で水準感が変わることも分かります。last_3Fのタイムとの関係性も確認していますが、こちらはあまり関連性はなさそうです。
+
+## 4. 最後に
+
+`LightGBM`を使用し、競馬の予測モデルを作成してみました。さすが`LightGBM`といった感じで、予測精度は高かったです。また、`shap`値を使用した重要特徴量の検出も上手くいきました。これによって、`LightGBM`の気持ちを理解し、より良い特徴量の発見を進めていくことでモデリングの精度を高めていこうと思います。

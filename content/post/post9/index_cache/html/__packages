@@ -1,0 +1,13 @@
+base
+methods
+datasets
+utils
+grDevices
+graphics
+stats
+qdapRegex
+xml2
+rvest
+stringr
+dplyr
+beepr

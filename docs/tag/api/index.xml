@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>API | 東京の資産運用会社で働く社会人が研究に没頭するブログ</title>
+    <link>/tag/api/</link>
+      <atom:link href="/tag/api/index.xml" rel="self" type="application/rss+xml" />
+    <description>API</description>
+    <generator>Wowchemy (https://wowchemy.com)</generator><language>ja</language><lastBuildDate>Sat, 14 Jul 2018 00:00:00 +0000</lastBuildDate>
+    <image>
+      <url>/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
+      <title>API</title>
+      <link>/tag/api/</link>
+    </image>
+    
+    <item>
+      <title>日次GDP推計に使用する経済統計を統計ダッシュボードから集めてみた</title>
+      <link>/post/post7/</link>
+      <pubDate>Sat, 14 Jul 2018 00:00:00 +0000</pubDate>
+      <guid>/post/post7/</guid>
+      <description>
+&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+&lt;link href=&#34;index_files/pagedtable/css/pagedtable.css&#34; rel=&#34;stylesheet&#34; /&gt;
+&lt;script src=&#34;index_files/pagedtable/js/pagedtable.js&#34;&gt;&lt;/script&gt;
+
+&lt;div id=&#34;TOC&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#先行研究と具体的にやりたいこと&#34;&gt;1. 先行研究と具体的にやりたいこと&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#統計ダッシュボードからのデータの収集&#34;&gt;2. 統計ダッシュボードからのデータの収集&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#得られたデータを主成分分析にかけてみる&#34;&gt;3. 得られたデータを主成分分析にかけてみる&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+
+&lt;p&gt;おはこんばんちわ。&lt;/p&gt;
+&lt;p&gt;最近、競馬ばっかりやってましたが、そろそろ本業のマクロの方もやらないとなということで今回は日次GDP推計に使用するデータを総務省が公開している統計ダッシュボードから取ってきました。
+そもそも、前の記事では四半期GDP速報の精度が低いことをモチベーションに高頻度データを用いてより精度の高い予測値をはじき出すモデルを作れないかというテーマで研究を進めていました。しかし、先行研究を進めていくうちに、どうやら大規模な経済指標を利用することで日次で四半期GDPの予測値を計算することが可能であることが判明しました。しかも、精度も良い(米国ですが)ということで、なんとかこの方向で研究を進めていけないかということになりました。&lt;/p&gt;
+&lt;div id=&#34;先行研究と具体的にやりたいこと&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;1. 先行研究と具体的にやりたいこと&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;http://dept.ku.edu/~empirics/Courses/Econ844/papers/Nowcasting%20GDP.pdf&#34;&gt;先行研究&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Giannoneらが2008年にパブリッシュした論文です(JME)。彼らはアメリカの経済指標を用いて四半期GDPを日次で推計し、予測指標としての有用性を示しました。指標間の連動性(colinearity)を利用して、多数ある経済指標をいくつかのファクターに圧縮し、そのファクターを四半期GDPにフィッティングさせることによって高い予測性を実現しました。なお、ファクターの計算にはカルマンスムージングを用いています(詳しい推計方法は論文&amp;amp;Technical Appendixを参照)。理論的な定式化は無いのですが、なかなか当たります。そもそも私がこの研究に興味を持ったのは、以下の本を立ち読みした際に参考文献として出てきたからで、いよいよ運用機関などでも使用され始めるのかと思い、やっておこうと思った次第です。&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;http://www.amazon.co.jp/exec/obidos/ASIN/4532134811/hatena-blog-22/&#34;&gt;実践 金融データサイエンス 隠れた構造をあぶり出す6つのアプローチ&lt;/a&gt;
+&lt;img src=&#34;https://images-na.ssl-images-amazon.com/images/I/51KIE5GeV+L._SX350_BO1,204,203,200_.jpg&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;とりあえずはGiannoneの日本版をやろうかなと思っています。実はこの後に、ファクターモデルとDSGEを組み合わせたモデルがありましてそこまで発展させたいなーなんて思っておりますが。とにかく、ファクターを計算するための経済統計が必要ですので、今回はそれを集めてきたというのがこの記事の趣旨です。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;統計ダッシュボードからのデータの収集&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;2. 統計ダッシュボードからのデータの収集&lt;/h2&gt;
+&lt;p&gt;政府や日銀が公表しているデータの一部は統計ダッシュボードから落とすことができます。これは総務省統計局が提供しているもので、これまで利用しにくかった経済統計をより身近に使用してもらおうというのが一応のコンセプトとなっています。似たものに総務省統計局が提供しているestatがありますが、日銀の公表データがなかったり、メールアドレスの登録が必要だったりと非常に使い勝手が悪いです(個人的感想)。ただ、estatにはestatapiというRパッケージがあり、データを整形するのは比較的容易であると言えます。今回、統計ダッシュボードを選択した理由はそうは言っても日銀のデータがないのはダメだろうという理由で、データの整形に関しては関数を組みました。
+そもそも統計ダッシュボードは経済統計をグラフなどで見て楽しむ？ものですが、私のような研究をしたい者を対象にAPIを提供してくれています。取得できるデータは大きく分けて6つあります。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;20180714160029.png&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;やり方は簡単で、ベースのurlと欲しい統計のIDをGET関数で渡すことによって、データを取得することができます。公式にも以下のように書かれています。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;基本的な使い方としては、まず①「統計メタ情報（系列）取得」で取得したいデータの[系列コード]を検索し、 その後⑥「統計データ取得」で[系列コード]を検索条件に指定し、その系列の情報を取得します。
+（②③④⑤は補助的な情報として独立して取得できるようにしています。データのみ必要な場合は当該機能は不要です。）
+具体的な使い方は、以下の「WebAPIの詳細仕様」に記載する[ベースURL]に検索条件となる[パラメータ]を“&amp;amp;”で連結し、HTTPリクエスト（GET）を送信することで目的のデータを取得できます。
+各パラメータは「パラメータ名=値」のように名称と値を’=‘で結合し、複数のパラメータを指定する場合は「パラメータ名=値&amp;amp;パラメータ名=値&amp;amp;…」のようにそれぞれのパラメータ指定を’&amp;amp;’で結合してください。
+また、パラメータ値は必ずURLエンコード(文字コードUTF-8)してから結合してください。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;今回も以下の文献を参考にデータを取ってきたいと思います。&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://www.amazon.co.jp/dp/486354216X&#34;&gt;Rによるスクレイピング入門&lt;/a&gt;
+&lt;img src=&#34;https://images-na.ssl-images-amazon.com/images/I/51ZBnu8oSvL._SX350_BO1,204,203,200_.jpg&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;まず、最初にこのAPIからデータを取得し、得られた結果を分析しやすいように整形する関数を定義したいと思います。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(httr)
+library(estatapi)
+library(dplyr)
+library(XML)
+library(stringr)
+library(xts)
+library(GGally)
+library(ggplot2)
+library(seasonal)
+library(dlm)
+library(vars)
+library(MASS)
+
+# 関数を定義
+get_dashboard &amp;lt;- function(ID){
+  base_url &amp;lt;- &amp;quot;https://dashboard.e-stat.go.jp/api/1.0/JsonStat/getData?&amp;quot;
+  res &amp;lt;- GET(
+    url = base_url,
+    query = list(
+      IndicatorCode=ID
+    )
+  )
+  result &amp;lt;- content(res)
+  x &amp;lt;- result$link$item[[1]]$value
+  x &amp;lt;- t(do.call(&amp;quot;data.frame&amp;quot;,x))
+  date_x &amp;lt;- result$link$item[[1]]$dimension$Time$category$label
+  date_x &amp;lt;- t(do.call(&amp;quot;data.frame&amp;quot;,date_x))
+  date_x &amp;lt;- str_replace_all(date_x, pattern=&amp;quot;年&amp;quot;, replacement=&amp;quot;/&amp;quot;)
+  date_x &amp;lt;- str_replace_all(date_x, pattern=&amp;quot;月&amp;quot;, replacement=&amp;quot;&amp;quot;)
+  date_x &amp;lt;- as.Date(gsub(&amp;quot;([0-9]+)/([0-9]+)&amp;quot;, &amp;quot;\\1/\\2/1&amp;quot;, date_x))
+  date_x &amp;lt;- as.Date(date_x, format = &amp;quot;%m/%d/%Y&amp;quot;)
+  date_x &amp;lt;- as.numeric(date_x)
+  date_x &amp;lt;- as.Date(date_x, origin=&amp;quot;1970-01-01&amp;quot;)
+  #x &amp;lt;- cbind(x,date_x)
+  x &amp;lt;- data.frame(x)
+  x[,1] &amp;lt;- as.character(x[,1])%&amp;gt;%as.numeric(x[,1])
+  colnames(x) &amp;lt;- c(result$link$item[[1]]$label)
+  x &amp;lt;- x %&amp;gt;% mutate(&amp;quot;publication&amp;quot; = date_x)
+  return(x)
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;まずベースのurlを定義しています。今回はデータが欲しいので⑥統計データのベースurlを使用します（
+&lt;a href=&#34;https://dashboard.e-stat.go.jp/static/api&#34;&gt;参考&lt;/a&gt;）。次にベースurlと統計ID（IndicatorCode）を&lt;code&gt;GET&lt;/code&gt;関数で渡し、結果を取得しています。統計IDについてはエクセルファイルで公開されています。得られた結果の中身（リスト形式）をresultに格納し、リストの深層にある原数値データ（value）をxに格納します。原数値データもリスト形式なので、それを&lt;code&gt;do.call&lt;/code&gt;でデータフレームに変換しています。次に、データ日付を取得します。resultの中を深くたどるとTime→category→labelというデータがあり、そこに日付データが保存されているので、それをdate_xに格納し、同じようにデータフレームへ変換します。データの仕様上、日付は「yyyy年mm月」になっていますが、これだと&lt;code&gt;R&lt;/code&gt;は日付データとして読み取ってくれないので、&lt;code&gt;str_replace_all&lt;/code&gt;等で変換したのち、&lt;code&gt;Date&lt;/code&gt;型に変換しています。列名にデータ名（result→link→item[[1]]→label）をつけ、データ日付をxに追加したら完成です。
+そのほか、&lt;code&gt;data_connect&lt;/code&gt;という関数も定義しています。これはデータ系列によれば、たとえば推計方法の変更などで1980年～2005年の系列と2003年～2018年までの系列の2系列があるようなデータも存在し、この2系列を接続するための関数です。これは単純に接続しているだけなので、説明は省略します。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;data_connect &amp;lt;- function(x){
+  a &amp;lt;- min(which(x[,ncol(x)] != &amp;quot;NA&amp;quot;))
+  b &amp;lt;- x[a,ncol(x)]/x[a,1]
+  c &amp;lt;- x[1:a-1,1]*b
+  return(c)
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;では、実際にデータを取得していきます。今回取得するデータは月次データとなっています。これは統計dashboardが月次以下のデータがとれないからです。なので、例えば日経平均などは月末の終値を引っ張っています。ただし、GDPは四半期データとなっています。さきほど定義したget_dashboardの使用方法は簡単で、引数に統計ダッシュボードで公開されている統計IDを入力するだけでデータが取れます。今回使用するデータを以下の表にまとめました。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;20180714212330.png&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# データを取得
+Nikkei &amp;lt;- get_dashboard(&amp;quot;0702020501000010010&amp;quot;)
+callrate &amp;lt;- get_dashboard(&amp;quot;0702020300000010010&amp;quot;)
+TOPIX &amp;lt;- get_dashboard(&amp;quot;0702020590000090010&amp;quot;)
+kikai &amp;lt;- get_dashboard(&amp;quot;0701030000000010010&amp;quot;)
+kigyo.bukka &amp;lt;- get_dashboard(&amp;quot;0703040300000090010&amp;quot;)
+money.stock1 &amp;lt;- get_dashboard(&amp;quot;0702010201000010030&amp;quot;)
+money.stock2 &amp;lt;- get_dashboard(&amp;quot;0702010202000010030&amp;quot;)
+money.stock &amp;lt;- dplyr::full_join(money.stock1,money.stock2,by=&amp;quot;publication&amp;quot;)
+c &amp;lt;- data_connect(money.stock)
+a &amp;lt;- min(which(money.stock[,ncol(money.stock)] != &amp;quot;NA&amp;quot;))
+money.stock[1:a-1,ncol(money.stock)] &amp;lt;- c
+money.stock &amp;lt;- money.stock[,c(2,3)]
+cpi &amp;lt;- get_dashboard(&amp;quot;0703010401010090010&amp;quot;)
+export.price &amp;lt;- get_dashboard(&amp;quot;0703050301000090010&amp;quot;)
+import.price &amp;lt;- get_dashboard(&amp;quot;0703060301000090010&amp;quot;)
+import.price$`輸出物価指数（総平均）（円ベース）2015年基準` &amp;lt;- NULL
+public.expenditure1 &amp;lt;- get_dashboard(&amp;quot;0802020200000010010&amp;quot;)
+public.expenditure2 &amp;lt;- get_dashboard(&amp;quot;0802020201000010010&amp;quot;)
+public.expenditure &amp;lt;- dplyr::full_join(public.expenditure1,public.expenditure2,by=&amp;quot;publication&amp;quot;)
+c &amp;lt;- data_connect(public.expenditure)
+a &amp;lt;- min(which(public.expenditure[,ncol(public.expenditure)] != &amp;quot;NA&amp;quot;))
+public.expenditure[1:a-1,ncol(public.expenditure)] &amp;lt;- c
+public.expenditure &amp;lt;- public.expenditure[,c(2,3)]
+export.service &amp;lt;- get_dashboard(&amp;quot;1601010101000010010&amp;quot;)
+working.population &amp;lt;- get_dashboard(&amp;quot;0201010010000010020&amp;quot;)
+yukoukyuujinn &amp;lt;- get_dashboard(&amp;quot;0301020001000010010&amp;quot;)
+hours_worked &amp;lt;- get_dashboard(&amp;quot;0302010000000010000&amp;quot;)
+nominal.wage &amp;lt;- get_dashboard(&amp;quot;0302020000000010000&amp;quot;) 
+iip &amp;lt;- get_dashboard(&amp;quot;0502070101000090010&amp;quot;)
+shukka.shisu &amp;lt;- get_dashboard(&amp;quot;0502070102000090010&amp;quot;)
+zaiko.shisu &amp;lt;- get_dashboard(&amp;quot;0502070103000090010&amp;quot;)
+sanji.sangyo &amp;lt;- get_dashboard(&amp;quot;0603100100000090010&amp;quot;)
+retail.sells &amp;lt;- get_dashboard(&amp;quot;0601010201010010000&amp;quot;)
+GDP1 &amp;lt;- get_dashboard(&amp;quot;0705020101000010000&amp;quot;)
+GDP2 &amp;lt;- get_dashboard(&amp;quot;0705020301000010000&amp;quot;)
+GDP &amp;lt;- dplyr::full_join(GDP1,GDP2,by=&amp;quot;publication&amp;quot;)
+c &amp;lt;- data_connect(GDP)
+a &amp;lt;- min(which(GDP[,ncol(GDP)] != &amp;quot;NA&amp;quot;))
+GDP[1:a-1,ncol(GDP)] &amp;lt;- c
+GDP &amp;lt;- GDP[,c(2,3)]
+yen &amp;lt;- get_dashboard(&amp;quot;0702020401000010010&amp;quot;)
+household.consumption &amp;lt;- get_dashboard(&amp;quot;0704010101000010001&amp;quot;)
+JGB10y &amp;lt;- get_dashboard(&amp;quot;0702020300000010020&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;今取得したデータは原数値系列のデータが多いので、それらは季節調整をかけます。なぜ季節調整済みのデータを取得しないのかというとそれらのデータは何故か極端にサンプル期間が短くなってしまうからです。ここらへんは使い勝手が悪いです。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# 季節調整をかける
+Sys.setenv(X13_PATH = &amp;quot;C:\\Program Files\\WinX13\\x13as&amp;quot;)
+checkX13()
+seasoning &amp;lt;- function(data,i,start.y,start.m){
+  timeseries &amp;lt;- ts(data[,i],frequency = 12,start=c(start.y,start.m))
+  m &amp;lt;- seas(timeseries)
+  summary(m$data)
+  return(m$series$s11)
+}
+k &amp;lt;- seasoning(kikai,1,2005,4)
+kikai$`機械受注額（船舶・電力を除く民需）` &amp;lt;- as.numeric(k)
+k &amp;lt;- seasoning(kigyo.bukka,1,1960,1)
+kigyo.bukka$`国内企業物価指数（総平均）2015年基準` &amp;lt;- as.numeric(k)
+k &amp;lt;- seasoning(cpi,1,1970,1)
+cpi$`消費者物価指数（生鮮食品を除く総合）2015年基準` &amp;lt;- as.numeric(k)
+k &amp;lt;- seasoning(export.price,1,1960,1)
+export.price$`輸出物価指数（総平均）（円ベース）2015年基準` &amp;lt;- as.numeric(k)
+k &amp;lt;- seasoning(import.price,1,1960,1)
+import.price$`輸入物価指数（総平均）（円ベース）2015年基準` &amp;lt;- as.numeric(k)
+k &amp;lt;- seasoning(public.expenditure,2,2004,4)
+public.expenditure$公共工事受注額 &amp;lt;- as.numeric(k)
+k &amp;lt;- seasoning(export.service,1,1996,1)
+export.service$`貿易・サービス収支` &amp;lt;- as.numeric(k)
+k &amp;lt;- seasoning(yukoukyuujinn,1,1963,1)
+yukoukyuujinn$有効求人倍率 &amp;lt;- as.numeric(k)
+k &amp;lt;- seasoning(hours_worked,1,1990,1)
+hours_worked$総実労働時間 &amp;lt;- as.numeric(k)
+k &amp;lt;- seasoning(nominal.wage,1,1990,1)
+nominal.wage$現金給与総額 &amp;lt;- as.numeric(k)
+k &amp;lt;- seasoning(iip,1,1978,1)
+iip$`鉱工業生産指数　2010年基準` &amp;lt;- as.numeric(k)
+k &amp;lt;- seasoning(shukka.shisu,1,1990,1)
+shukka.shisu$`鉱工業出荷指数　2010年基準` &amp;lt;- as.numeric(k)
+k &amp;lt;- seasoning(zaiko.shisu,1,1990,1)
+zaiko.shisu$`鉱工業在庫指数　2010年基準` &amp;lt;- as.numeric(k)
+k &amp;lt;- seasoning(sanji.sangyo,1,1988,1)
+sanji.sangyo$`第３次産業活動指数　2010年基準` &amp;lt;- as.numeric(k)
+k &amp;lt;- seasoning(retail.sells,1,1980,1)
+retail.sells$`小売業販売額（名目）` &amp;lt;- as.numeric(k)
+k &amp;lt;- seasoning(household.consumption,1,2010,1)
+household.consumption$`二人以上の世帯　消費支出（除く住居等）` &amp;lt;- as.numeric(k)
+GDP.ts &amp;lt;- ts(GDP[,2],frequency = 4,start=c(1980,1))
+m &amp;lt;- seas(GDP.ts)
+GDP$`国内総生産（支出側）（実質）2011年基準` &amp;lt;- m$series$s11&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;ここでは詳しく季節調整のかけ方は説明しません。x13arimaを使用しています。上述のコードを回す際はx13arimaがインストールされている必要があります。以下の記事を参考にしてください。&lt;/p&gt;
+&lt;p&gt;[&lt;a href=&#34;http://sinhrks.hatenablog.com/entry/2014/11/09/003632&#34; class=&#34;uri&#34;&gt;http://sinhrks.hatenablog.com/entry/2014/11/09/003632&lt;/a&gt;]&lt;/p&gt;
+&lt;p&gt;では、データ日付を基準に落としてきたデータを結合し、データセットを作成します。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# データセットに結合
+dataset &amp;lt;- dplyr::full_join(kigyo.bukka,callrate,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,kikai,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,Nikkei,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,money.stock,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,cpi,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,export.price,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,import.price,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,public.expenditure,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,export.service,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,working.population,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,yukoukyuujinn,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,hours_worked,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,nominal.wage,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,iip,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,shukka.shisu,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,zaiko.shisu,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,sanji.sangyo,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,retail.sells,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,yen,by=&amp;quot;publication&amp;quot;)
+colnames(dataset) &amp;lt;- c(&amp;quot;DCGPI&amp;quot;,&amp;quot;publication&amp;quot;,&amp;quot;callrate&amp;quot;,&amp;quot;Machinery_Orders&amp;quot;,
+                       &amp;quot;Nikkei225&amp;quot;,&amp;quot;money_stock&amp;quot;,&amp;quot;CPI&amp;quot;,&amp;quot;export_price&amp;quot;,
+                       &amp;quot;import_price&amp;quot;,&amp;quot;public_works_order&amp;quot;,
+                       &amp;quot;trade_service&amp;quot;,&amp;quot;working_population&amp;quot;,
+                       &amp;quot;active_opening_ratio&amp;quot;,&amp;quot;hours_worked&amp;quot;,
+                       &amp;quot;wage&amp;quot;,&amp;quot;iip_production&amp;quot;,&amp;quot;iip_shipment&amp;quot;,&amp;quot;iip_inventory&amp;quot;,
+                       &amp;quot;ITIA&amp;quot;,&amp;quot;retail_sales&amp;quot;,&amp;quot;yen&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;最後に列名をつけています。datasetはそれぞれのデータの公表開始時期が異なるために大量の&lt;code&gt;NA&lt;/code&gt;を含むデータフレームとなっているので、&lt;code&gt;NA&lt;/code&gt;を削除するために最もデータの開始時期が遅い機械受注統計に合わせてデータセットを再構築します。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;a &amp;lt;- min(which(dataset$Machinery_Orders != &amp;quot;NA&amp;quot;))
+dataset1 &amp;lt;- dataset[a:nrow(dataset),]
+dataset1 &amp;lt;- na.omit(dataset1)
+rownames(dataset1) &amp;lt;- dataset1$publication
+dataset1 &amp;lt;- dataset1[,-2]
+dataset1.xts &amp;lt;- xts(dataset1,order.by = as.Date(rownames(dataset1)))&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;これでとりあえずデータの収集は終わりました。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;得られたデータを主成分分析にかけてみる&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;3. 得られたデータを主成分分析にかけてみる&lt;/h2&gt;
+&lt;p&gt;本格的な分析はまた今後にしたいのですが、データを集めるだけでは面白くないので、Gianonneらのように主成分分析を行いたいと思います。主成分分析をこれまでに学んだことのない方は以下を参考にしてください。個人的にはわかりやすいと思っています。&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://datachemeng.com/principalcomponentanalysis/&#34;&gt;主成分分析(Principal Component Analysis, PCA)～データセットの見える化・可視化といったらまずはこれ！～&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;では主成分分析を実行してみます。&lt;code&gt;R&lt;/code&gt;では&lt;code&gt;princomp&lt;/code&gt;関数を使用することで非常に簡単に主成分分析を行うことができます。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# 主成分分析を実行
+factor.pca &amp;lt;- princomp(~.,cor = TRUE,data = dataset1) # cor = TRUEでデータの基準化を自動で行ってくれる。
+summary(factor.pca)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Importance of components:
+##                           Comp.1    Comp.2    Comp.3     Comp.4     Comp.5
+## Standard deviation     3.2538097 1.8606047 1.5142917 1.05061250 0.88155352
+## Proportion of Variance 0.5293639 0.1730925 0.1146540 0.05518933 0.03885683
+## Cumulative Proportion  0.5293639 0.7024563 0.8171103 0.87229965 0.91115648
+##                           Comp.6     Comp.7     Comp.8      Comp.9     Comp.10
+## Standard deviation     0.7504599 0.63476742 0.48794520 0.413374289 0.358909911
+## Proportion of Variance 0.0281595 0.02014648 0.01190453 0.008543915 0.006440816
+## Cumulative Proportion  0.9393160 0.95946246 0.97136699 0.979910904 0.986351721
+##                            Comp.11     Comp.12     Comp.13      Comp.14
+## Standard deviation     0.296125594 0.254294037 0.233119328 0.1394055697
+## Proportion of Variance 0.004384518 0.003233273 0.002717231 0.0009716956
+## Cumulative Proportion  0.990736239 0.993969512 0.996686743 0.9976584386
+##                             Comp.15      Comp.16      Comp.17     Comp.18
+## Standard deviation     0.1356026290 0.1104356585 0.0861468897 0.070612034
+## Proportion of Variance 0.0009194036 0.0006098017 0.0003710643 0.000249303
+## Cumulative Proportion  0.9985778423 0.9991876440 0.9995587083 0.999808011
+##                            Comp.19      Comp.20
+## Standard deviation     0.053565104 3.115371e-02
+## Proportion of Variance 0.000143461 4.852767e-05
+## Cumulative Proportion  0.999951472 1.000000e+00&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;screeplot(factor.pca)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-7-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;pc &amp;lt;- predict(factor.pca,dataset1)[,1:3] # 主成分を計算
+pc.xts &amp;lt;- xts(pc,order.by = as.Date(rownames(dataset1)))
+plot.zoo(pc.xts,col=c(&amp;quot;red&amp;quot;,&amp;quot;blue&amp;quot;,&amp;quot;green&amp;quot;,&amp;quot;purple&amp;quot;,&amp;quot;yellow&amp;quot;),plot.type = &amp;quot;single&amp;quot;) # 主成分を時系列プロット&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-7-2.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;第3主成分まででデータの約80％が説明できる結果を得たので、第3主成分までのプロットをお見せします。第1主成分（赤）はリーマンショックや東日本大震災、消費税増税のあたりで急上昇しています。ゆえに経済全体のリスクセンチメントを表しているのではないかと思っています。第2主成分（青）と第3主成分（緑）はリーマンショックのあたりで大きく落ち込んでいることは共通していますが2015年～現在の動きが大きく異なっています。また、第2主成分（青）はサンプル期間を通して過去トレンドを持つことから日本経済の潜在能力のようなものを表しているのではないでしょうか（そうするとリーマンショックまで上昇傾向にあることが疑問なのですが）。第3主成分（緑）はいまだ解読不能です（物価＆為替動向を表しているのではないかと思っています）。とりあえず今日はこれまで。次回はGianonne et. al.(2008)の日本版の再現を行いたいと思います。&lt;/p&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

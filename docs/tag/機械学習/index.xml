@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>機械学習 | 東京の資産運用会社で働く社会人が研究に没頭するブログ</title>
+    <link>/tag/%E6%A9%9F%E6%A2%B0%E5%AD%A6%E7%BF%92/</link>
+      <atom:link href="/tag/%E6%A9%9F%E6%A2%B0%E5%AD%A6%E7%BF%92/index.xml" rel="self" type="application/rss+xml" />
+    <description>機械学習</description>
+    <generator>Wowchemy (https://wowchemy.com)</generator><language>ja</language><lastBuildDate>Sat, 29 Feb 2020 00:00:00 +0000</lastBuildDate>
+    <image>
+      <url>/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
+      <title>機械学習</title>
+      <link>/tag/%E6%A9%9F%E6%A2%B0%E5%AD%A6%E7%BF%92/</link>
+    </image>
+    
+    <item>
+      <title>LightGBMを使用して競馬結果を予想してみる</title>
+      <link>/post/post16/</link>
+      <pubDate>Sat, 29 Feb 2020 00:00:00 +0000</pubDate>
+      <guid>/post/post16/</guid>
+      <description>
+&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+
+&lt;div id=&#34;TOC&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#データインポート&#34;&gt;1.データインポート&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#予測モデルの作成&#34;&gt;2. 予測モデルの作成&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#shapでの結果解釈&#34;&gt;3. shapでの結果解釈&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#最後に&#34;&gt;4. 最後に&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+
+&lt;p&gt;おはこんばんにちは。かなり久しぶりではありますが、Pythonの勉強をかねて以前yahoo.keibaで収集した競馬のレース結果データから、レース結果を予想するモデルを作成したいと思います。&lt;/p&gt;
+&lt;div id=&#34;データインポート&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;1.データインポート&lt;/h2&gt;
+&lt;p&gt;まず、前回&lt;code&gt;sqlite&lt;/code&gt;に保存したレース結果データを&lt;code&gt;pandas&lt;/code&gt;データフレームへ保存します。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;conn = sqlite3.connect(r&amp;#39;C:\hogehoge\horse_data.db&amp;#39;)
+sql = r&amp;#39;SELECT * FROM race_result&amp;#39;
+df = pd.read_sql(con=conn,sql=sql)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;データの中身を確認してみましょう。列は以下のようになっています。orderが着順となっています。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df.columns&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Index([&amp;#39;order&amp;#39;, &amp;#39;frame_number&amp;#39;, &amp;#39;horse_number&amp;#39;, &amp;#39;trainer&amp;#39;, &amp;#39;passing_rank&amp;#39;,
+##        &amp;#39;last_3F&amp;#39;, &amp;#39;time&amp;#39;, &amp;#39;margin&amp;#39;, &amp;#39;horse_name&amp;#39;, &amp;#39;horse_age&amp;#39;, &amp;#39;horse_sex&amp;#39;,
+##        &amp;#39;horse_weight&amp;#39;, &amp;#39;horse_weight_change&amp;#39;, &amp;#39;brinker&amp;#39;, &amp;#39;jockey&amp;#39;,
+##        &amp;#39;jockey_weight&amp;#39;, &amp;#39;jockey_weight_change&amp;#39;, &amp;#39;odds&amp;#39;, &amp;#39;popularity&amp;#39;,
+##        &amp;#39;race_date&amp;#39;, &amp;#39;race_course&amp;#39;, &amp;#39;race_name&amp;#39;, &amp;#39;race_distance&amp;#39;, &amp;#39;type&amp;#39;,
+##        &amp;#39;race_turn&amp;#39;, &amp;#39;race_condition&amp;#39;, &amp;#39;race_weather&amp;#39;, &amp;#39;colour&amp;#39;, &amp;#39;owner&amp;#39;,
+##        &amp;#39;farm&amp;#39;, &amp;#39;locality&amp;#39;, &amp;#39;horse_birthday&amp;#39;, &amp;#39;father&amp;#39;, &amp;#39;mother&amp;#39;, &amp;#39;prize&amp;#39;,
+##        &amp;#39;http&amp;#39;],
+##       dtype=&amp;#39;object&amp;#39;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;orderの中身を確認してみると、括弧（）がついている物が多く、また取消や中止、失格などが存在するため、文字型に認識されていることがわかります。ちなみに括弧（）内の順位は入線順位というやつで、他馬の走行を妨害したりして順位が降着させられたことを意味します（&lt;a href=&#34;http://www.jra.go.jp/judge/&#34; class=&#34;uri&#34;&gt;http://www.jra.go.jp/judge/&lt;/a&gt;）。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df.loc[:,&amp;#39;order&amp;#39;].unique()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## array([&amp;#39;1&amp;#39;, &amp;#39;7&amp;#39;, &amp;#39;2&amp;#39;, &amp;#39;8&amp;#39;, &amp;#39;5&amp;#39;, &amp;#39;15&amp;#39;, &amp;#39;6&amp;#39;, &amp;#39;12&amp;#39;, &amp;#39;11&amp;#39;, &amp;#39;14&amp;#39;, &amp;#39;3&amp;#39;, &amp;#39;13&amp;#39;,
+##        &amp;#39;4&amp;#39;, &amp;#39;16&amp;#39;, &amp;#39;9&amp;#39;, &amp;#39;10&amp;#39;, &amp;#39;取消&amp;#39;, &amp;#39;中止&amp;#39;, &amp;#39;除外&amp;#39;, &amp;#39;17&amp;#39;, &amp;#39;18&amp;#39;, &amp;#39;4(3)&amp;#39;, &amp;#39;2(1)&amp;#39;,
+##        &amp;#39;3(2)&amp;#39;, &amp;#39;6(4)&amp;#39;, &amp;#39;失格&amp;#39;, &amp;#39;9(8)&amp;#39;, &amp;#39;16(6)&amp;#39;, &amp;#39;12(12)&amp;#39;, &amp;#39;13(9)&amp;#39;, &amp;#39;6(3)&amp;#39;,
+##        &amp;#39;10(7)&amp;#39;, &amp;#39;6(5)&amp;#39;, &amp;#39;9(3)&amp;#39;, &amp;#39;11(8)&amp;#39;, &amp;#39;13(2)&amp;#39;, &amp;#39;12(9)&amp;#39;, &amp;#39;14(7)&amp;#39;,
+##        &amp;#39;10(1)&amp;#39;, &amp;#39;16(8)&amp;#39;, &amp;#39;14(6)&amp;#39;, &amp;#39;10(3)&amp;#39;, &amp;#39;12(1)&amp;#39;, &amp;#39;13(6)&amp;#39;, &amp;#39;7(1)&amp;#39;,
+##        &amp;#39;12(6)&amp;#39;, &amp;#39;6(2)&amp;#39;, &amp;#39;11(2)&amp;#39;, &amp;#39;15(6)&amp;#39;, &amp;#39;13(10)&amp;#39;, &amp;#39;14(4)&amp;#39;, &amp;#39;7(5)&amp;#39;,
+##        &amp;#39;17(4)&amp;#39;, &amp;#39;9(7)&amp;#39;, &amp;#39;16(14)&amp;#39;, &amp;#39;12(11)&amp;#39;, &amp;#39;14(2)&amp;#39;, &amp;#39;8(2)&amp;#39;, &amp;#39;9(5)&amp;#39;,
+##        &amp;#39;11(5)&amp;#39;, &amp;#39;12(7)&amp;#39;, &amp;#39;11(1)&amp;#39;, &amp;#39;12(8)&amp;#39;, &amp;#39;7(4)&amp;#39;, &amp;#39;5(4)&amp;#39;, &amp;#39;13(12)&amp;#39;,
+##        &amp;#39;14(3)&amp;#39;, &amp;#39;10(2)&amp;#39;, &amp;#39;11(10)&amp;#39;, &amp;#39;18(3)&amp;#39;, &amp;#39;10(4)&amp;#39;, &amp;#39;15(8)&amp;#39;, &amp;#39;8(3)&amp;#39;,
+##        &amp;#39;5(1)&amp;#39;, &amp;#39;10(5)&amp;#39;, &amp;#39;7(3)&amp;#39;, &amp;#39;5(2)&amp;#39;, &amp;#39;9(1)&amp;#39;, &amp;#39;13(3)&amp;#39;, &amp;#39;16(11)&amp;#39;,
+##        &amp;#39;11(3)&amp;#39;, &amp;#39;18(15)&amp;#39;, &amp;#39;11(6)&amp;#39;, &amp;#39;10(6)&amp;#39;, &amp;#39;14(12)&amp;#39;, &amp;#39;12(5)&amp;#39;, &amp;#39;15(14)&amp;#39;,
+##        &amp;#39;17(8)&amp;#39;, &amp;#39;18(6)&amp;#39;, &amp;#39;4(2)&amp;#39;, &amp;#39;18(10)&amp;#39;, &amp;#39;16(7)&amp;#39;, &amp;#39;13(1)&amp;#39;, &amp;#39;16(10)&amp;#39;,
+##        &amp;#39;15(7)&amp;#39;, &amp;#39;9(4)&amp;#39;, &amp;#39;15(5)&amp;#39;, &amp;#39;12(3)&amp;#39;, &amp;#39;8(7)&amp;#39;, &amp;#39;15(2)&amp;#39;, &amp;#39;12(10)&amp;#39;,
+##        &amp;#39;14(9)&amp;#39;, &amp;#39;3(1)&amp;#39;, &amp;#39;6(1)&amp;#39;, &amp;#39;14(5)&amp;#39;, &amp;#39;15(4)&amp;#39;, &amp;#39;11(4)&amp;#39;, &amp;#39;12(4)&amp;#39;,
+##        &amp;#39;16(4)&amp;#39;, &amp;#39;9(2)&amp;#39;, &amp;#39;13(5)&amp;#39;, &amp;#39;12(2)&amp;#39;, &amp;#39;15(1)&amp;#39;, &amp;#39;4(1)&amp;#39;, &amp;#39;14(13)&amp;#39;,
+##        &amp;#39;14(1)&amp;#39;, &amp;#39;13(7)&amp;#39;, &amp;#39;5(3)&amp;#39;, &amp;#39;8(6)&amp;#39;, &amp;#39;15(13)&amp;#39;, &amp;#39;7(2)&amp;#39;, &amp;#39;15(11)&amp;#39;,
+##        &amp;#39;10(9)&amp;#39;, &amp;#39;11(9)&amp;#39;, &amp;#39;8(4)&amp;#39;, &amp;#39;15(3)&amp;#39;, &amp;#39;13(4)&amp;#39;, &amp;#39;16(12)&amp;#39;, &amp;#39;16(5)&amp;#39;,
+##        &amp;#39;18(11)&amp;#39;, &amp;#39;10(8)&amp;#39;, &amp;#39;18(8)&amp;#39;, &amp;#39;14(8)&amp;#39;, &amp;#39;16(9)&amp;#39;, &amp;#39;8(5)&amp;#39;, &amp;#39;8(1)&amp;#39;,
+##        &amp;#39;14(11)&amp;#39;, &amp;#39;9(6)&amp;#39;, &amp;#39;16(13)&amp;#39;, &amp;#39;16(15)&amp;#39;, &amp;#39;11(11)&amp;#39;, &amp;#39;15(10)&amp;#39;, &amp;#39;7(6)&amp;#39;],
+##       dtype=object)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;まずここを修正しましょう。括弧を除去してint型に型変更し、入線順位は新たな列&lt;code&gt;arriving order&lt;/code&gt;として追加します。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df[&amp;#39;arriving order&amp;#39;] = df[df.order.str.contains(r&amp;#39;\d*\(\d*\)&amp;#39;,regex=True)][&amp;#39;order&amp;#39;].replace(r&amp;#39;\d+\(&amp;#39;,r&amp;#39;&amp;#39;,regex=True).replace(r&amp;#39;\)&amp;#39;,r&amp;#39;&amp;#39;,regex=True).astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;arriving order&amp;#39;].unique()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## array([nan,  3.,  1.,  2.,  4.,  8.,  6., 12.,  9.,  7.,  5., 10., 14.,
+##        11., 15., 13.])&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df[&amp;#39;order&amp;#39;] = df[&amp;#39;order&amp;#39;].replace(r&amp;#39;\(\d+\)&amp;#39;,r&amp;#39;&amp;#39;,regex=True)
+df = df[lambda df: ~df.order.str.contains(r&amp;#39;(取消|中止|除外|失格)&amp;#39;,regex=True)]&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## C:\Users\aashi\Anaconda3\envs\umanalytics\lib\site-packages\pandas\core\strings.py:1954: UserWarning: This pattern has match groups. To actually get the groups, use str.extract.
+##   return func(self, *args, **kwargs)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df[&amp;#39;order&amp;#39;] = df[&amp;#39;order&amp;#39;].astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;order&amp;#39;].unique()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## array([ 1.,  7.,  2.,  8.,  5., 15.,  6., 12., 11., 14.,  3., 13.,  4.,
+##        16.,  9., 10., 17., 18.])&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;きれいな&lt;code&gt;float&lt;/code&gt;型に処理することができました。では、次にラスト3Fのタイムの前処理に移ります。前走のラスト3Fのタイムを予測に使用します。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import numpy as np
+df[&amp;#39;last_3F&amp;#39;] = df[&amp;#39;last_3F&amp;#39;].replace(r&amp;#39;character(0)&amp;#39;,np.nan,regex=False).astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;last_3F&amp;#39;] = df.groupby(&amp;#39;horse_name&amp;#39;)[&amp;#39;last_3F&amp;#39;].shift(-1)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;前走のレースと順位、追加順位もデータセットへ含めましょう。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df[&amp;#39;prerace&amp;#39;] = df.groupby(&amp;#39;horse_name&amp;#39;)[&amp;#39;race_name&amp;#39;].shift(-1)
+df[&amp;#39;preorder&amp;#39;] = df.groupby(&amp;#39;horse_name&amp;#39;)[&amp;#39;order&amp;#39;].shift(-1)
+df[&amp;#39;prepassing&amp;#39;] = df.groupby(&amp;#39;horse_name&amp;#39;)[&amp;#39;passing_rank&amp;#39;].shift(-1)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;出走時点で獲得している累積賞金額も追加します。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df[&amp;#39;preprize&amp;#39;] = df.groupby(&amp;#39;horse_name&amp;#39;)[&amp;#39;prize&amp;#39;].shift(-1)
+df[&amp;#39;preprize&amp;#39;] = df[&amp;#39;preprize&amp;#39;].fillna(0)
+df[&amp;#39;margin&amp;#39;] = df.groupby(&amp;#39;horse_name&amp;#39;)[&amp;#39;margin&amp;#39;].shift(-1)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;その他、欠損値やデータ型の修正、カテゴリデータのラベルエンコーディングです。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df[&amp;#39;horse_weight&amp;#39;] = df[&amp;#39;horse_weight&amp;#39;].astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;margin&amp;#39;] = df[&amp;#39;margin&amp;#39;].replace(r&amp;#39;character(0)&amp;#39;,np.nan,regex=False)
+df[&amp;#39;horse_age&amp;#39;] = df[&amp;#39;horse_age&amp;#39;].astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;horse_weight_change&amp;#39;] = df[&amp;#39;horse_weight_change&amp;#39;].astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;jockey_weight&amp;#39;] = df[&amp;#39;jockey_weight&amp;#39;].astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;race_distance&amp;#39;] = df[&amp;#39;race_distance&amp;#39;].replace(r&amp;#39;m&amp;#39;,r&amp;#39;&amp;#39;,regex=True).astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;race_turn&amp;#39;] = df[&amp;#39;race_turn&amp;#39;].replace(r&amp;#39;character(0)&amp;#39;,np.nan,regex=False)
+df.loc[df[&amp;#39;order&amp;#39;]!=1,&amp;#39;order&amp;#39;] = 0
+
+df[&amp;#39;race_turn&amp;#39;] = df[&amp;#39;race_turn&amp;#39;].fillna(&amp;#39;missing&amp;#39;)
+df[&amp;#39;colour&amp;#39;] = df[&amp;#39;colour&amp;#39;].fillna(&amp;#39;missing&amp;#39;)
+df[&amp;#39;prepassing&amp;#39;] = df[&amp;#39;prepassing&amp;#39;].fillna(&amp;#39;missing&amp;#39;)
+df[&amp;#39;prerace&amp;#39;] = df[&amp;#39;prerace&amp;#39;].fillna(&amp;#39;missing&amp;#39;)
+df[&amp;#39;father&amp;#39;] = df[&amp;#39;father&amp;#39;].fillna(&amp;#39;missing&amp;#39;)
+df[&amp;#39;mother&amp;#39;] = df[&amp;#39;mother&amp;#39;].fillna(&amp;#39;missing&amp;#39;)
+
+from sklearn import preprocessing
+cat_list = [&amp;#39;trainer&amp;#39;, &amp;#39;horse_name&amp;#39;, &amp;#39;horse_sex&amp;#39;, &amp;#39;brinker&amp;#39;, &amp;#39;jockey&amp;#39;, &amp;#39;race_course&amp;#39;, &amp;#39;race_name&amp;#39;, &amp;#39;type&amp;#39;, &amp;#39;race_turn&amp;#39;, &amp;#39;race_condition&amp;#39;, &amp;#39;race_weather&amp;#39;, &amp;#39;colour&amp;#39;, &amp;#39;father&amp;#39;, &amp;#39;mother&amp;#39;, &amp;#39;prerace&amp;#39;, &amp;#39;prepassing&amp;#39;]
+for column in cat_list:
+    target_column = df[column]
+    le = preprocessing.LabelEncoder()
+    le.fit(target_column)
+    label_encoded_column = le.transform(target_column)
+    df[column] = pd.Series(label_encoded_column).astype(&amp;#39;category&amp;#39;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import pandas_profiling as pdq
+profile = pdq.ProfileReport(df)
+profile&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;予測モデルの作成&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;2. 予測モデルの作成&lt;/h2&gt;
+&lt;p&gt;では&lt;code&gt;LightGBM&lt;/code&gt;で予測モデルを作ってみます。&lt;code&gt;optuna&lt;/code&gt;の&lt;code&gt;LightGBM&lt;/code&gt;を使用して、ハイパーパラメータチューニングを行い、学習したモデルを用いて計算したテストデータの予測値と実績値の&lt;code&gt;confusion matrix&lt;/code&gt;ならびに正解率を算出します。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import optuna.integration.lightgbm as lgb
+from sklearn.model_selection import train_test_split
+
+y = df[&amp;#39;order&amp;#39;]
+x = df.drop([&amp;#39;order&amp;#39;,&amp;#39;passing_rank&amp;#39;,&amp;#39;time&amp;#39;,&amp;#39;odds&amp;#39;,&amp;#39;popularity&amp;#39;,&amp;#39;owner&amp;#39;,&amp;#39;farm&amp;#39;,&amp;#39;locality&amp;#39;,&amp;#39;horse_birthday&amp;#39;,&amp;#39;http&amp;#39;,&amp;#39;prize&amp;#39;,&amp;#39;race_date&amp;#39;,&amp;#39;margin&amp;#39;],axis=1)
+
+X_train, X_test, y_train, y_test = train_test_split(x, y)
+X_train, x_val, y_train, y_val = train_test_split(X_train, y_train)
+
+lgb_train = lgb.Dataset(X_train, y_train)
+lgb_eval = lgb.Dataset(x_val, y_val)
+lgb_test = lgb.Dataset(X_test, y_test, reference=lgb_train)
+
+lgbm_params = {
+        &amp;#39;objective&amp;#39;: &amp;#39;binary&amp;#39;,
+        &amp;#39;boost_from_average&amp;#39;: False
+    }
+
+best_params, history = {}, []
+model = lgb.train(lgbm_params, lgb_train, categorical_feature = cat_list,valid_sets = lgb_eval, num_boost_round=100,early_stopping_rounds=20,best_params=best_params,tuning_history=history, verbose_eval=False)
+best_params
+
+def calibration(y_proba, beta):
+    return y_proba / (y_proba + (1 - y_proba) / beta)
+
+sampling_rate = y_train.sum() / len(y_train)
+y_proba = model.predict(X_test, num_iteration=model.best_iteration)
+y_proba_calib = calibration(y_proba, sampling_rate)
+
+y_pred = np.vectorize(lambda x: 1 if x &amp;gt; 0.49 else 0)(y_proba_calib)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;可視化パートです。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, accuracy_score, precision_score, recall_score, f1_score, roc_curve, auc
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# AUC (Area Under the Curve) を計算する
+fpr, tpr, thresholds = roc_curve(y_test, y_pred)
+auc = auc(fpr, tpr)
+
+# ROC曲線をプロット
+plt.plot(fpr, tpr, label=&amp;#39;ROC curve (area = %.2f)&amp;#39;%auc)
+plt.legend()
+plt.title(&amp;#39;ROC curve&amp;#39;)
+plt.xlabel(&amp;#39;False Positive Rate&amp;#39;)
+plt.ylabel(&amp;#39;True Positive Rate&amp;#39;)
+plt.grid(True)
+plt.show()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-16-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.close()
+
+# Confusion Matrixを生成
+ConfusionMatrixDisplay(confusion_matrix(y_test, y_pred)).plot()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## &amp;lt;sklearn.metrics._plot.confusion_matrix.ConfusionMatrixDisplay object at 0x000000004F873388&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.show()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-16-2.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.close()
+
+accuracy_score(y_test, y_pred)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 0.9300814465677578&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;precision_score(y_test, y_pred)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 0.9426605504587156&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;accuracy_score&lt;/code&gt;（予測精度）が90%を超え、&lt;code&gt;precision_Score&lt;/code&gt;（適合率、陽=1着と予想したデータの正解率）もいい感じです。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;recall_score(y_test, y_pred)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 0.01211460236986382&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;f1_score(y_test, y_pred)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 0.02392177405273267&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;一方、&lt;code&gt;recall_score&lt;/code&gt;(再現性、陽=1着のサンプルのうち実際に正解した割合)が低く偽陰性が高いことが確認できます。その結果、&lt;code&gt;F1&lt;/code&gt;値も低くなっていますね。競馬予測モデルの場合、偽陰性が高いことは偽陽性が高いことよりはましなのですが、回収率を上げるためには偽陰性を下げることを頑張らなければいけません。これは今後の課題ですね。次節では&lt;code&gt;shapley&lt;/code&gt;値を使って要因分解をしたいと思います。。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;shapでの結果解釈&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;3. shapでの結果解釈&lt;/h2&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import shap
+
+shap.initjs()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## &amp;lt;IPython.core.display.HTML object&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;explainer = shap.TreeExplainer(model)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Setting feature_perturbation = &amp;quot;tree_path_dependent&amp;quot; because no background data was given.&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;shap_values = explainer.shap_values(X_test)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## LightGBM binary classifier with TreeExplainer shap values output has changed to a list of ndarray&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;まず、各特徴量の重要度を見ることにします。&lt;code&gt;summary_plot&lt;/code&gt;メソッドを使用します。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;shap.summary_plot(shap_values, X_test)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-19-1.png&#34; width=&#34;768&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;横軸は各特徴量の平均的な重要度を表しています(shap値の絶対値)。preprize(前走までの賞金獲得金額)やhorse_age、preorder(前走の着順)などが予測に重要であることが分かります。特にpreprizeの重要度は1着の予測、1着以外の予測どちらに対しても大きいです。horse_ageも同様です。ただ、これでは重要というだけで定性的な評価はできません。例えば、preprizeが大きい→1位になる確率が上昇といった関係が確認できれば、それは重要な情報になり得ます。次にそれを確認します。&lt;code&gt;summary_plot&lt;/code&gt;メソッドを使用します。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;shap.summary_plot(shap_values[1], X_test)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-20-1.png&#34; width=&#34;768&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;上図も各特徴量の重要度を表しています(今回は絶対値ではありません)。今回はそれぞれの特徴量の重要度がバイオリンプロットによって表されており、かつ特徴量の値の大きさで色分けがされています。例えば、preprizeだと横軸が0以上の部分でのみ赤色の分布が発生しており、ここからpreprizeの特徴量が大きい、つまり前走までの獲得賞金額が多いと平均的に1着の確率が上がるという当たり前の解釈をすることができます。
+他にも、horse_age,preorder,last_3Fは特徴量が小さくなるほど1着になる確率があがることも読み取れます。horse_weight, jokey_weightは大きくなるほど1着になる確率が上がるようです。一方、その他は特に定性的な関係を読み取ることはできません。&lt;/p&gt;
+&lt;p&gt;次に、特徴量と確率の関係をより詳しく確認してみましょう。先ほど、preprizeは特徴量が大きくなるほど1着になる確率が上昇するということがわかりました。ただ、その確率の上昇は1次関数的に増加するのか、指数的に増大するのか、それとも&lt;span class=&#34;math inline&#34;&gt;\(\log x\)&lt;/span&gt;のように逓減していくのか、わかりません。&lt;code&gt;dependence_plot&lt;/code&gt;を使用してそれを確認してみましょう。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;shap.dependence_plot(ind=&amp;quot;preprize&amp;quot;, shap_values=shap_values[1], features=X_test)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-21-1.png&#34; width=&#34;720&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;上図は学習した&lt;code&gt;LightGBM&lt;/code&gt;をpreprizeの関数として見たときの概形をplotしたものです。先に確認したとおり、やはり特徴量が大きくなるにつれ、1着になる確率が上昇していきます。ただ、その上昇は徐々に逓減していき、2000万円を超えるところでほぼ頭打ちとなります。また、上図ではhorse_ageでの色分けを行っており、preprizeとの関係性も確認できるようになっています。やはり、直感と同じく、preprizeが高い馬の中でもhorse_ageが若い馬の1着確率が高くなることが見て取れます。&lt;/p&gt;
+&lt;p&gt;preorderの&lt;code&gt;dependence_plot&lt;/code&gt;も確認してみましょう。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;shap.dependence_plot(ind=&amp;quot;preorder&amp;quot;, shap_values=shap_values[1], features=X_test)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-22-1.png&#34; width=&#34;720&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;やはり、前走の着順が上位になるほど1着確率が高まることがここからも分かります。また、その確率は6着以上とそれ以外で水準感が変わることも分かります。last_3Fのタイムとの関係性も確認していますが、こちらはあまり関連性はなさそうです。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;最後に&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;4. 最後に&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;LightGBM&lt;/code&gt;を使用し、競馬の予測モデルを作成してみました。さすが&lt;code&gt;LightGBM&lt;/code&gt;といった感じで、予測精度は高かったです。また、&lt;code&gt;shap&lt;/code&gt;値を使用した重要特徴量の検出も上手くいきました。これによって、&lt;code&gt;LightGBM&lt;/code&gt;の気持ちを理解し、より良い特徴量の発見を進めていくことでモデリングの精度を高めていこうと思います。&lt;/p&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

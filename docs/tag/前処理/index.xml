@@ -1,0 +1,932 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>前処理 | 東京の資産運用会社で働く社会人が研究に没頭するブログ</title>
+    <link>/tag/%E5%89%8D%E5%87%A6%E7%90%86/</link>
+      <atom:link href="/tag/%E5%89%8D%E5%87%A6%E7%90%86/index.xml" rel="self" type="application/rss+xml" />
+    <description>前処理</description>
+    <generator>Wowchemy (https://wowchemy.com)</generator><language>ja</language><lastBuildDate>Sat, 29 Feb 2020 00:00:00 +0000</lastBuildDate>
+    <image>
+      <url>/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
+      <title>前処理</title>
+      <link>/tag/%E5%89%8D%E5%87%A6%E7%90%86/</link>
+    </image>
+    
+    <item>
+      <title>LightGBMを使用して競馬結果を予想してみる</title>
+      <link>/post/post16/</link>
+      <pubDate>Sat, 29 Feb 2020 00:00:00 +0000</pubDate>
+      <guid>/post/post16/</guid>
+      <description>
+&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+
+&lt;div id=&#34;TOC&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#データインポート&#34;&gt;1.データインポート&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#予測モデルの作成&#34;&gt;2. 予測モデルの作成&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#shapでの結果解釈&#34;&gt;3. shapでの結果解釈&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#最後に&#34;&gt;4. 最後に&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+
+&lt;p&gt;おはこんばんにちは。かなり久しぶりではありますが、Pythonの勉強をかねて以前yahoo.keibaで収集した競馬のレース結果データから、レース結果を予想するモデルを作成したいと思います。&lt;/p&gt;
+&lt;div id=&#34;データインポート&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;1.データインポート&lt;/h2&gt;
+&lt;p&gt;まず、前回&lt;code&gt;sqlite&lt;/code&gt;に保存したレース結果データを&lt;code&gt;pandas&lt;/code&gt;データフレームへ保存します。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;conn = sqlite3.connect(r&amp;#39;C:\hogehoge\horse_data.db&amp;#39;)
+sql = r&amp;#39;SELECT * FROM race_result&amp;#39;
+df = pd.read_sql(con=conn,sql=sql)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;データの中身を確認してみましょう。列は以下のようになっています。orderが着順となっています。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df.columns&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Index([&amp;#39;order&amp;#39;, &amp;#39;frame_number&amp;#39;, &amp;#39;horse_number&amp;#39;, &amp;#39;trainer&amp;#39;, &amp;#39;passing_rank&amp;#39;,
+##        &amp;#39;last_3F&amp;#39;, &amp;#39;time&amp;#39;, &amp;#39;margin&amp;#39;, &amp;#39;horse_name&amp;#39;, &amp;#39;horse_age&amp;#39;, &amp;#39;horse_sex&amp;#39;,
+##        &amp;#39;horse_weight&amp;#39;, &amp;#39;horse_weight_change&amp;#39;, &amp;#39;brinker&amp;#39;, &amp;#39;jockey&amp;#39;,
+##        &amp;#39;jockey_weight&amp;#39;, &amp;#39;jockey_weight_change&amp;#39;, &amp;#39;odds&amp;#39;, &amp;#39;popularity&amp;#39;,
+##        &amp;#39;race_date&amp;#39;, &amp;#39;race_course&amp;#39;, &amp;#39;race_name&amp;#39;, &amp;#39;race_distance&amp;#39;, &amp;#39;type&amp;#39;,
+##        &amp;#39;race_turn&amp;#39;, &amp;#39;race_condition&amp;#39;, &amp;#39;race_weather&amp;#39;, &amp;#39;colour&amp;#39;, &amp;#39;owner&amp;#39;,
+##        &amp;#39;farm&amp;#39;, &amp;#39;locality&amp;#39;, &amp;#39;horse_birthday&amp;#39;, &amp;#39;father&amp;#39;, &amp;#39;mother&amp;#39;, &amp;#39;prize&amp;#39;,
+##        &amp;#39;http&amp;#39;],
+##       dtype=&amp;#39;object&amp;#39;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;orderの中身を確認してみると、括弧（）がついている物が多く、また取消や中止、失格などが存在するため、文字型に認識されていることがわかります。ちなみに括弧（）内の順位は入線順位というやつで、他馬の走行を妨害したりして順位が降着させられたことを意味します（&lt;a href=&#34;http://www.jra.go.jp/judge/&#34; class=&#34;uri&#34;&gt;http://www.jra.go.jp/judge/&lt;/a&gt;）。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df.loc[:,&amp;#39;order&amp;#39;].unique()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## array([&amp;#39;1&amp;#39;, &amp;#39;7&amp;#39;, &amp;#39;2&amp;#39;, &amp;#39;8&amp;#39;, &amp;#39;5&amp;#39;, &amp;#39;15&amp;#39;, &amp;#39;6&amp;#39;, &amp;#39;12&amp;#39;, &amp;#39;11&amp;#39;, &amp;#39;14&amp;#39;, &amp;#39;3&amp;#39;, &amp;#39;13&amp;#39;,
+##        &amp;#39;4&amp;#39;, &amp;#39;16&amp;#39;, &amp;#39;9&amp;#39;, &amp;#39;10&amp;#39;, &amp;#39;取消&amp;#39;, &amp;#39;中止&amp;#39;, &amp;#39;除外&amp;#39;, &amp;#39;17&amp;#39;, &amp;#39;18&amp;#39;, &amp;#39;4(3)&amp;#39;, &amp;#39;2(1)&amp;#39;,
+##        &amp;#39;3(2)&amp;#39;, &amp;#39;6(4)&amp;#39;, &amp;#39;失格&amp;#39;, &amp;#39;9(8)&amp;#39;, &amp;#39;16(6)&amp;#39;, &amp;#39;12(12)&amp;#39;, &amp;#39;13(9)&amp;#39;, &amp;#39;6(3)&amp;#39;,
+##        &amp;#39;10(7)&amp;#39;, &amp;#39;6(5)&amp;#39;, &amp;#39;9(3)&amp;#39;, &amp;#39;11(8)&amp;#39;, &amp;#39;13(2)&amp;#39;, &amp;#39;12(9)&amp;#39;, &amp;#39;14(7)&amp;#39;,
+##        &amp;#39;10(1)&amp;#39;, &amp;#39;16(8)&amp;#39;, &amp;#39;14(6)&amp;#39;, &amp;#39;10(3)&amp;#39;, &amp;#39;12(1)&amp;#39;, &amp;#39;13(6)&amp;#39;, &amp;#39;7(1)&amp;#39;,
+##        &amp;#39;12(6)&amp;#39;, &amp;#39;6(2)&amp;#39;, &amp;#39;11(2)&amp;#39;, &amp;#39;15(6)&amp;#39;, &amp;#39;13(10)&amp;#39;, &amp;#39;14(4)&amp;#39;, &amp;#39;7(5)&amp;#39;,
+##        &amp;#39;17(4)&amp;#39;, &amp;#39;9(7)&amp;#39;, &amp;#39;16(14)&amp;#39;, &amp;#39;12(11)&amp;#39;, &amp;#39;14(2)&amp;#39;, &amp;#39;8(2)&amp;#39;, &amp;#39;9(5)&amp;#39;,
+##        &amp;#39;11(5)&amp;#39;, &amp;#39;12(7)&amp;#39;, &amp;#39;11(1)&amp;#39;, &amp;#39;12(8)&amp;#39;, &amp;#39;7(4)&amp;#39;, &amp;#39;5(4)&amp;#39;, &amp;#39;13(12)&amp;#39;,
+##        &amp;#39;14(3)&amp;#39;, &amp;#39;10(2)&amp;#39;, &amp;#39;11(10)&amp;#39;, &amp;#39;18(3)&amp;#39;, &amp;#39;10(4)&amp;#39;, &amp;#39;15(8)&amp;#39;, &amp;#39;8(3)&amp;#39;,
+##        &amp;#39;5(1)&amp;#39;, &amp;#39;10(5)&amp;#39;, &amp;#39;7(3)&amp;#39;, &amp;#39;5(2)&amp;#39;, &amp;#39;9(1)&amp;#39;, &amp;#39;13(3)&amp;#39;, &amp;#39;16(11)&amp;#39;,
+##        &amp;#39;11(3)&amp;#39;, &amp;#39;18(15)&amp;#39;, &amp;#39;11(6)&amp;#39;, &amp;#39;10(6)&amp;#39;, &amp;#39;14(12)&amp;#39;, &amp;#39;12(5)&amp;#39;, &amp;#39;15(14)&amp;#39;,
+##        &amp;#39;17(8)&amp;#39;, &amp;#39;18(6)&amp;#39;, &amp;#39;4(2)&amp;#39;, &amp;#39;18(10)&amp;#39;, &amp;#39;16(7)&amp;#39;, &amp;#39;13(1)&amp;#39;, &amp;#39;16(10)&amp;#39;,
+##        &amp;#39;15(7)&amp;#39;, &amp;#39;9(4)&amp;#39;, &amp;#39;15(5)&amp;#39;, &amp;#39;12(3)&amp;#39;, &amp;#39;8(7)&amp;#39;, &amp;#39;15(2)&amp;#39;, &amp;#39;12(10)&amp;#39;,
+##        &amp;#39;14(9)&amp;#39;, &amp;#39;3(1)&amp;#39;, &amp;#39;6(1)&amp;#39;, &amp;#39;14(5)&amp;#39;, &amp;#39;15(4)&amp;#39;, &amp;#39;11(4)&amp;#39;, &amp;#39;12(4)&amp;#39;,
+##        &amp;#39;16(4)&amp;#39;, &amp;#39;9(2)&amp;#39;, &amp;#39;13(5)&amp;#39;, &amp;#39;12(2)&amp;#39;, &amp;#39;15(1)&amp;#39;, &amp;#39;4(1)&amp;#39;, &amp;#39;14(13)&amp;#39;,
+##        &amp;#39;14(1)&amp;#39;, &amp;#39;13(7)&amp;#39;, &amp;#39;5(3)&amp;#39;, &amp;#39;8(6)&amp;#39;, &amp;#39;15(13)&amp;#39;, &amp;#39;7(2)&amp;#39;, &amp;#39;15(11)&amp;#39;,
+##        &amp;#39;10(9)&amp;#39;, &amp;#39;11(9)&amp;#39;, &amp;#39;8(4)&amp;#39;, &amp;#39;15(3)&amp;#39;, &amp;#39;13(4)&amp;#39;, &amp;#39;16(12)&amp;#39;, &amp;#39;16(5)&amp;#39;,
+##        &amp;#39;18(11)&amp;#39;, &amp;#39;10(8)&amp;#39;, &amp;#39;18(8)&amp;#39;, &amp;#39;14(8)&amp;#39;, &amp;#39;16(9)&amp;#39;, &amp;#39;8(5)&amp;#39;, &amp;#39;8(1)&amp;#39;,
+##        &amp;#39;14(11)&amp;#39;, &amp;#39;9(6)&amp;#39;, &amp;#39;16(13)&amp;#39;, &amp;#39;16(15)&amp;#39;, &amp;#39;11(11)&amp;#39;, &amp;#39;15(10)&amp;#39;, &amp;#39;7(6)&amp;#39;],
+##       dtype=object)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;まずここを修正しましょう。括弧を除去してint型に型変更し、入線順位は新たな列&lt;code&gt;arriving order&lt;/code&gt;として追加します。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df[&amp;#39;arriving order&amp;#39;] = df[df.order.str.contains(r&amp;#39;\d*\(\d*\)&amp;#39;,regex=True)][&amp;#39;order&amp;#39;].replace(r&amp;#39;\d+\(&amp;#39;,r&amp;#39;&amp;#39;,regex=True).replace(r&amp;#39;\)&amp;#39;,r&amp;#39;&amp;#39;,regex=True).astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;arriving order&amp;#39;].unique()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## array([nan,  3.,  1.,  2.,  4.,  8.,  6., 12.,  9.,  7.,  5., 10., 14.,
+##        11., 15., 13.])&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df[&amp;#39;order&amp;#39;] = df[&amp;#39;order&amp;#39;].replace(r&amp;#39;\(\d+\)&amp;#39;,r&amp;#39;&amp;#39;,regex=True)
+df = df[lambda df: ~df.order.str.contains(r&amp;#39;(取消|中止|除外|失格)&amp;#39;,regex=True)]&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## C:\Users\aashi\Anaconda3\envs\umanalytics\lib\site-packages\pandas\core\strings.py:1954: UserWarning: This pattern has match groups. To actually get the groups, use str.extract.
+##   return func(self, *args, **kwargs)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df[&amp;#39;order&amp;#39;] = df[&amp;#39;order&amp;#39;].astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;order&amp;#39;].unique()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## array([ 1.,  7.,  2.,  8.,  5., 15.,  6., 12., 11., 14.,  3., 13.,  4.,
+##        16.,  9., 10., 17., 18.])&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;きれいな&lt;code&gt;float&lt;/code&gt;型に処理することができました。では、次にラスト3Fのタイムの前処理に移ります。前走のラスト3Fのタイムを予測に使用します。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import numpy as np
+df[&amp;#39;last_3F&amp;#39;] = df[&amp;#39;last_3F&amp;#39;].replace(r&amp;#39;character(0)&amp;#39;,np.nan,regex=False).astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;last_3F&amp;#39;] = df.groupby(&amp;#39;horse_name&amp;#39;)[&amp;#39;last_3F&amp;#39;].shift(-1)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;前走のレースと順位、追加順位もデータセットへ含めましょう。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df[&amp;#39;prerace&amp;#39;] = df.groupby(&amp;#39;horse_name&amp;#39;)[&amp;#39;race_name&amp;#39;].shift(-1)
+df[&amp;#39;preorder&amp;#39;] = df.groupby(&amp;#39;horse_name&amp;#39;)[&amp;#39;order&amp;#39;].shift(-1)
+df[&amp;#39;prepassing&amp;#39;] = df.groupby(&amp;#39;horse_name&amp;#39;)[&amp;#39;passing_rank&amp;#39;].shift(-1)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;出走時点で獲得している累積賞金額も追加します。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df[&amp;#39;preprize&amp;#39;] = df.groupby(&amp;#39;horse_name&amp;#39;)[&amp;#39;prize&amp;#39;].shift(-1)
+df[&amp;#39;preprize&amp;#39;] = df[&amp;#39;preprize&amp;#39;].fillna(0)
+df[&amp;#39;margin&amp;#39;] = df.groupby(&amp;#39;horse_name&amp;#39;)[&amp;#39;margin&amp;#39;].shift(-1)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;その他、欠損値やデータ型の修正、カテゴリデータのラベルエンコーディングです。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df[&amp;#39;horse_weight&amp;#39;] = df[&amp;#39;horse_weight&amp;#39;].astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;margin&amp;#39;] = df[&amp;#39;margin&amp;#39;].replace(r&amp;#39;character(0)&amp;#39;,np.nan,regex=False)
+df[&amp;#39;horse_age&amp;#39;] = df[&amp;#39;horse_age&amp;#39;].astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;horse_weight_change&amp;#39;] = df[&amp;#39;horse_weight_change&amp;#39;].astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;jockey_weight&amp;#39;] = df[&amp;#39;jockey_weight&amp;#39;].astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;race_distance&amp;#39;] = df[&amp;#39;race_distance&amp;#39;].replace(r&amp;#39;m&amp;#39;,r&amp;#39;&amp;#39;,regex=True).astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;race_turn&amp;#39;] = df[&amp;#39;race_turn&amp;#39;].replace(r&amp;#39;character(0)&amp;#39;,np.nan,regex=False)
+df.loc[df[&amp;#39;order&amp;#39;]!=1,&amp;#39;order&amp;#39;] = 0
+
+df[&amp;#39;race_turn&amp;#39;] = df[&amp;#39;race_turn&amp;#39;].fillna(&amp;#39;missing&amp;#39;)
+df[&amp;#39;colour&amp;#39;] = df[&amp;#39;colour&amp;#39;].fillna(&amp;#39;missing&amp;#39;)
+df[&amp;#39;prepassing&amp;#39;] = df[&amp;#39;prepassing&amp;#39;].fillna(&amp;#39;missing&amp;#39;)
+df[&amp;#39;prerace&amp;#39;] = df[&amp;#39;prerace&amp;#39;].fillna(&amp;#39;missing&amp;#39;)
+df[&amp;#39;father&amp;#39;] = df[&amp;#39;father&amp;#39;].fillna(&amp;#39;missing&amp;#39;)
+df[&amp;#39;mother&amp;#39;] = df[&amp;#39;mother&amp;#39;].fillna(&amp;#39;missing&amp;#39;)
+
+from sklearn import preprocessing
+cat_list = [&amp;#39;trainer&amp;#39;, &amp;#39;horse_name&amp;#39;, &amp;#39;horse_sex&amp;#39;, &amp;#39;brinker&amp;#39;, &amp;#39;jockey&amp;#39;, &amp;#39;race_course&amp;#39;, &amp;#39;race_name&amp;#39;, &amp;#39;type&amp;#39;, &amp;#39;race_turn&amp;#39;, &amp;#39;race_condition&amp;#39;, &amp;#39;race_weather&amp;#39;, &amp;#39;colour&amp;#39;, &amp;#39;father&amp;#39;, &amp;#39;mother&amp;#39;, &amp;#39;prerace&amp;#39;, &amp;#39;prepassing&amp;#39;]
+for column in cat_list:
+    target_column = df[column]
+    le = preprocessing.LabelEncoder()
+    le.fit(target_column)
+    label_encoded_column = le.transform(target_column)
+    df[column] = pd.Series(label_encoded_column).astype(&amp;#39;category&amp;#39;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import pandas_profiling as pdq
+profile = pdq.ProfileReport(df)
+profile&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;予測モデルの作成&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;2. 予測モデルの作成&lt;/h2&gt;
+&lt;p&gt;では&lt;code&gt;LightGBM&lt;/code&gt;で予測モデルを作ってみます。&lt;code&gt;optuna&lt;/code&gt;の&lt;code&gt;LightGBM&lt;/code&gt;を使用して、ハイパーパラメータチューニングを行い、学習したモデルを用いて計算したテストデータの予測値と実績値の&lt;code&gt;confusion matrix&lt;/code&gt;ならびに正解率を算出します。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import optuna.integration.lightgbm as lgb
+from sklearn.model_selection import train_test_split
+
+y = df[&amp;#39;order&amp;#39;]
+x = df.drop([&amp;#39;order&amp;#39;,&amp;#39;passing_rank&amp;#39;,&amp;#39;time&amp;#39;,&amp;#39;odds&amp;#39;,&amp;#39;popularity&amp;#39;,&amp;#39;owner&amp;#39;,&amp;#39;farm&amp;#39;,&amp;#39;locality&amp;#39;,&amp;#39;horse_birthday&amp;#39;,&amp;#39;http&amp;#39;,&amp;#39;prize&amp;#39;,&amp;#39;race_date&amp;#39;,&amp;#39;margin&amp;#39;],axis=1)
+
+X_train, X_test, y_train, y_test = train_test_split(x, y)
+X_train, x_val, y_train, y_val = train_test_split(X_train, y_train)
+
+lgb_train = lgb.Dataset(X_train, y_train)
+lgb_eval = lgb.Dataset(x_val, y_val)
+lgb_test = lgb.Dataset(X_test, y_test, reference=lgb_train)
+
+lgbm_params = {
+        &amp;#39;objective&amp;#39;: &amp;#39;binary&amp;#39;,
+        &amp;#39;boost_from_average&amp;#39;: False
+    }
+
+best_params, history = {}, []
+model = lgb.train(lgbm_params, lgb_train, categorical_feature = cat_list,valid_sets = lgb_eval, num_boost_round=100,early_stopping_rounds=20,best_params=best_params,tuning_history=history, verbose_eval=False)
+best_params
+
+def calibration(y_proba, beta):
+    return y_proba / (y_proba + (1 - y_proba) / beta)
+
+sampling_rate = y_train.sum() / len(y_train)
+y_proba = model.predict(X_test, num_iteration=model.best_iteration)
+y_proba_calib = calibration(y_proba, sampling_rate)
+
+y_pred = np.vectorize(lambda x: 1 if x &amp;gt; 0.49 else 0)(y_proba_calib)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;可視化パートです。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, accuracy_score, precision_score, recall_score, f1_score, roc_curve, auc
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# AUC (Area Under the Curve) を計算する
+fpr, tpr, thresholds = roc_curve(y_test, y_pred)
+auc = auc(fpr, tpr)
+
+# ROC曲線をプロット
+plt.plot(fpr, tpr, label=&amp;#39;ROC curve (area = %.2f)&amp;#39;%auc)
+plt.legend()
+plt.title(&amp;#39;ROC curve&amp;#39;)
+plt.xlabel(&amp;#39;False Positive Rate&amp;#39;)
+plt.ylabel(&amp;#39;True Positive Rate&amp;#39;)
+plt.grid(True)
+plt.show()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-16-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.close()
+
+# Confusion Matrixを生成
+ConfusionMatrixDisplay(confusion_matrix(y_test, y_pred)).plot()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## &amp;lt;sklearn.metrics._plot.confusion_matrix.ConfusionMatrixDisplay object at 0x000000004F873388&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.show()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-16-2.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.close()
+
+accuracy_score(y_test, y_pred)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 0.9300814465677578&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;precision_score(y_test, y_pred)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 0.9426605504587156&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;accuracy_score&lt;/code&gt;（予測精度）が90%を超え、&lt;code&gt;precision_Score&lt;/code&gt;（適合率、陽=1着と予想したデータの正解率）もいい感じです。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;recall_score(y_test, y_pred)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 0.01211460236986382&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;f1_score(y_test, y_pred)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 0.02392177405273267&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;一方、&lt;code&gt;recall_score&lt;/code&gt;(再現性、陽=1着のサンプルのうち実際に正解した割合)が低く偽陰性が高いことが確認できます。その結果、&lt;code&gt;F1&lt;/code&gt;値も低くなっていますね。競馬予測モデルの場合、偽陰性が高いことは偽陽性が高いことよりはましなのですが、回収率を上げるためには偽陰性を下げることを頑張らなければいけません。これは今後の課題ですね。次節では&lt;code&gt;shapley&lt;/code&gt;値を使って要因分解をしたいと思います。。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;shapでの結果解釈&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;3. shapでの結果解釈&lt;/h2&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import shap
+
+shap.initjs()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## &amp;lt;IPython.core.display.HTML object&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;explainer = shap.TreeExplainer(model)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Setting feature_perturbation = &amp;quot;tree_path_dependent&amp;quot; because no background data was given.&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;shap_values = explainer.shap_values(X_test)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## LightGBM binary classifier with TreeExplainer shap values output has changed to a list of ndarray&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;まず、各特徴量の重要度を見ることにします。&lt;code&gt;summary_plot&lt;/code&gt;メソッドを使用します。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;shap.summary_plot(shap_values, X_test)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-19-1.png&#34; width=&#34;768&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;横軸は各特徴量の平均的な重要度を表しています(shap値の絶対値)。preprize(前走までの賞金獲得金額)やhorse_age、preorder(前走の着順)などが予測に重要であることが分かります。特にpreprizeの重要度は1着の予測、1着以外の予測どちらに対しても大きいです。horse_ageも同様です。ただ、これでは重要というだけで定性的な評価はできません。例えば、preprizeが大きい→1位になる確率が上昇といった関係が確認できれば、それは重要な情報になり得ます。次にそれを確認します。&lt;code&gt;summary_plot&lt;/code&gt;メソッドを使用します。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;shap.summary_plot(shap_values[1], X_test)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-20-1.png&#34; width=&#34;768&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;上図も各特徴量の重要度を表しています(今回は絶対値ではありません)。今回はそれぞれの特徴量の重要度がバイオリンプロットによって表されており、かつ特徴量の値の大きさで色分けがされています。例えば、preprizeだと横軸が0以上の部分でのみ赤色の分布が発生しており、ここからpreprizeの特徴量が大きい、つまり前走までの獲得賞金額が多いと平均的に1着の確率が上がるという当たり前の解釈をすることができます。
+他にも、horse_age,preorder,last_3Fは特徴量が小さくなるほど1着になる確率があがることも読み取れます。horse_weight, jokey_weightは大きくなるほど1着になる確率が上がるようです。一方、その他は特に定性的な関係を読み取ることはできません。&lt;/p&gt;
+&lt;p&gt;次に、特徴量と確率の関係をより詳しく確認してみましょう。先ほど、preprizeは特徴量が大きくなるほど1着になる確率が上昇するということがわかりました。ただ、その確率の上昇は1次関数的に増加するのか、指数的に増大するのか、それとも&lt;span class=&#34;math inline&#34;&gt;\(\log x\)&lt;/span&gt;のように逓減していくのか、わかりません。&lt;code&gt;dependence_plot&lt;/code&gt;を使用してそれを確認してみましょう。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;shap.dependence_plot(ind=&amp;quot;preprize&amp;quot;, shap_values=shap_values[1], features=X_test)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-21-1.png&#34; width=&#34;720&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;上図は学習した&lt;code&gt;LightGBM&lt;/code&gt;をpreprizeの関数として見たときの概形をplotしたものです。先に確認したとおり、やはり特徴量が大きくなるにつれ、1着になる確率が上昇していきます。ただ、その上昇は徐々に逓減していき、2000万円を超えるところでほぼ頭打ちとなります。また、上図ではhorse_ageでの色分けを行っており、preprizeとの関係性も確認できるようになっています。やはり、直感と同じく、preprizeが高い馬の中でもhorse_ageが若い馬の1着確率が高くなることが見て取れます。&lt;/p&gt;
+&lt;p&gt;preorderの&lt;code&gt;dependence_plot&lt;/code&gt;も確認してみましょう。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;shap.dependence_plot(ind=&amp;quot;preorder&amp;quot;, shap_values=shap_values[1], features=X_test)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-22-1.png&#34; width=&#34;720&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;やはり、前走の着順が上位になるほど1着確率が高まることがここからも分かります。また、その確率は6着以上とそれ以外で水準感が変わることも分かります。last_3Fのタイムとの関係性も確認していますが、こちらはあまり関連性はなさそうです。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;最後に&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;4. 最後に&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;LightGBM&lt;/code&gt;を使用し、競馬の予測モデルを作成してみました。さすが&lt;code&gt;LightGBM&lt;/code&gt;といった感じで、予測精度は高かったです。また、&lt;code&gt;shap&lt;/code&gt;値を使用した重要特徴量の検出も上手くいきました。これによって、&lt;code&gt;LightGBM&lt;/code&gt;の気持ちを理解し、より良い特徴量の発見を進めていくことでモデリングの精度を高めていこうと思います。&lt;/p&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Google Earth Engine APIで衛星画像データを取得し、景況感をナウキャスティングしてみる</title>
+      <link>/post/post12/</link>
+      <pubDate>Tue, 16 Jul 2019 00:00:00 +0000</pubDate>
+      <guid>/post/post12/</guid>
+      <description>
+&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+
+&lt;div id=&#34;TOC&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#earth-engineを使うための事前準備&#34;&gt;1. Earth Engineを使うための事前準備&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#python-apiを用いた衛星画像データの取得&#34;&gt;2. Python APIを用いた衛星画像データの取得&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#image&#34;&gt;Image…&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#imagecollection&#34;&gt;ImageCollection…&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#featurecollection&#34;&gt;FeatureCollection…&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+
+&lt;p&gt;皆さんおはこんばんにちわ。前回、GPLVMモデルを用いたGDP予測モデルを構築しました。ただ、ナウキャスティングというからにはオルタナティブデータを用いた解析を行いたいところではあります。ふと、以下の記事を見つけました。&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://jp.reuters.com/article/gdp-u-tokyo-idJPKBN15M0NH&#34;&gt;焦点：ナウキャストのＧＤＰ推計、世界初の衛星画像利用　利用拡大も&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;こちらは東京大学の渡辺努先生が人工衛星画像を用いてGDP予測モデルを開発したというものです。記事には&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;米国の海洋大気庁が運営する気象衛星「スオミＮＰＰ」が日本上空を通過する毎日午前１時３０分時点の画像を購入し、縦、横７２０メートル四方のマス目ごとの明るさを計測する。同じ明るさでも、農地、商業用地、工業用地など土地の用途によって経済活動の大きさが異なるため、国土地理院の土地利用調査を参照。土地の用途と、明るさが示す経済活動の相関を弾き出し、この結果を考慮した上で、明るさから経済活動の大きさを試算する。
+（中略）衛星画像のように誰もが入手可能な公表データであれば、政府、民間の区別なく分析が可能であるため、渡辺氏はこれを「統計の民主化」と呼び、世界的な潮流になると予想している。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;と書かれており、衛星写真を用いた分析に興味を惹かれました。 衛星写真って誰でも利用可能か？というところですが、Googleが&lt;code&gt;Earth Engine&lt;/code&gt;というサービスを提供していることがわかりました。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;earthengine3.jpg&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://earthengine.google.com/&#34; class=&#34;uri&#34;&gt;https://earthengine.google.com/&lt;/a&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;（拙訳）Google Earth Engineは、数ペタバイトの衛星画像群と地理空間データセットを惑星規模の解析機能と組み合わせ、科学者、研究者、開発者が変化を検出し、傾向を射影し、地球の変容を定量化することを可能にします。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;研究・教育・非営利目的ならば、なんと&lt;strong&gt;無料&lt;/strong&gt;で衛星写真データを解析することができます。具体的に何ができるのかは以下の動画を見てください。&lt;/p&gt;
+&lt;iframe src=&#34;//www.youtube.com/embed/gKGOeTFHnKY&#34; width=&#34;100%&#34; height=&#34;500&#34; seamless frameborder=&#34;0&#34; allowfullscreen&gt;
+&lt;/iframe&gt;
+&lt;p&gt;今回はそんなEath Engineのpython APIを用いて衛星画像データを取得し、解析していきたいと思います。&lt;/p&gt;
+&lt;div id=&#34;earth-engineを使うための事前準備&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;1. Earth Engineを使うための事前準備&lt;/h2&gt;
+&lt;p&gt;Earth Engineを使用するためには、Google Accountを使って申請を行う必要があります。先ほどの画像の右上の「Sign Up」からできます。申請を行って、Gmailに以下のようなメールが来るととりあえずEarth Engineは使用できるようになります。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;earthengine4.jpg&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;とりあえずというのはWEB上の&lt;code&gt;Earth Engine&lt;/code&gt; コードエディタは使用できるということです。コードエディタというのは以下のようなもので、ブラウザ上でデータを取得したり、解析をしたり、解析結果をMAPに投影したりすることができる便利ツールです。&lt;code&gt;Earth Engine&lt;/code&gt;の本体はむしろこいつで、APIは副次的なものと考えています。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;earthengine5.jpg&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;真ん中のコードエディタにコードを打っていきますが、言語はjavascriptです(APIは&lt;code&gt;python&lt;/code&gt;と&lt;code&gt;javascript&lt;/code&gt;両方あるんですけどね)。解析結果をMAPに投影したり、reference（左）を参照したり、Consoleに吐き出したデータを確認することができるのでかなり便利です。が、データを落とした後で高度な解析を行いたい場合はpythonを使ったほうが慣れているので今回はAPIを使用しています。
+話が脱線しました。さて、&lt;code&gt;Earth Engine&lt;/code&gt;の承認を得たら、&lt;code&gt;pip&lt;/code&gt;で&lt;code&gt;earthengine-api&lt;/code&gt;をインストールしておきます。そして、コマンドプロンプト上で、&lt;code&gt;earthengine authenticate&lt;/code&gt;と打ちます。そうすると、勝手にブラウザが立ち上がり、以下のように&lt;code&gt;python api&lt;/code&gt;のauthenticationを行う画面がでますので「次へ」を押下します。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;earthengine1.jpg&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;次に以下のような画面にいきますので、そのまま承認します。これでauthenticationの完成です。&lt;code&gt;python&lt;/code&gt;からAPIが使えます。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;earthengine2.jpg&#34; /&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;python-apiを用いた衛星画像データの取得&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;2. Python APIを用いた衛星画像データの取得&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;Python&lt;/code&gt; APIを使用する準備ができました。ここからは衛星画像データを取得していきます。以下にあるように&lt;code&gt;Earth Engine&lt;/code&gt;にはたくさんのデータセットが存在します。&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://developers.google.com/earth-engine/datasets/&#34; class=&#34;uri&#34;&gt;https://developers.google.com/earth-engine/datasets/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;今回は&lt;code&gt;VIIRS Stray Light Corrected Nighttime Day/Night Band Composites Version 1&lt;/code&gt;というデータセットを使用します。このデータセットは世界中の夜間光の光量を月次単位で平均し、提供するものです。サンプル期間は2014-01~現在です。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;Earth Engine&lt;/code&gt;にはいくつかの固有なデータ型が存在します。覚えておくべきものは以下の3つです。&lt;/p&gt;
+&lt;div id=&#34;image&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;Image…&lt;/h3&gt;
+&lt;p&gt;ある１時点における&lt;code&gt;raste&lt;/code&gt;rデータです。&lt;code&gt;image&lt;/code&gt;オブジェクトはいくつかの&lt;code&gt;band&lt;/code&gt;で構成されています。この&lt;code&gt;band&lt;/code&gt;はデータによって異なりますが、おおよそのデータは&lt;code&gt;band&lt;/code&gt;それぞれがRGB値を表していたりします。&lt;code&gt;Earth Engine&lt;/code&gt;を使用する上で最も基本的なデータです。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;imagecollection&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;ImageCollection…&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;Image&lt;/code&gt;オブジェクトを時系列に並べたオブジェクトです。今回は時系列解析をするのでこのデータを使用します。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;featurecollection&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;FeatureCollection…&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;GeoJSON Feature&lt;/code&gt;です。地理情報を表す&lt;code&gt;Geometry&lt;/code&gt;オブジェクトやそのデータのプロパティ（国名等）が格納されています。今回は日本の位置情報を取得する際に使用しています。&lt;/p&gt;
+&lt;p&gt;ではコーディングしていきます。まず、日本の地理情報の&lt;code&gt;FeatureCollection&lt;/code&gt;オブジェクトを取得します。地理情報は&lt;code&gt;Fusion Tables&lt;/code&gt;に格納されていますので、IDで引っ張りCountryがJapanのものを抽出します。&lt;code&gt;ee.FeatureCollection()&lt;/code&gt;の引数にIDを入力すれば簡単に取得できます。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import ee
+from dateutil.parser import parse
+
+ee.Initialize()
+
+# get Japan geometory as FeatureCollection from fusion table
+japan = ee.FeatureCollection(&amp;#39;ft:1tdSwUL7MVpOauSgRzqVTOwdfy17KDbw-1d9omPw&amp;#39;).filter(ee.Filter.eq(&amp;#39;Country&amp;#39;, &amp;#39;Japan&amp;#39;))&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;次に夜間光の衛星画像を取得してみます。こちらも&lt;code&gt;ee.ImageCollection()&lt;/code&gt;にデータセットのIDを渡すと取得できます。なお、ここでは&lt;code&gt;band&lt;/code&gt;を月次の平均光量である&lt;code&gt;avg_rad&lt;/code&gt;に抽出しています。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;# get night-light data from earth engine from 2014-01-01 to 2019-01-01
+dataset = ee.ImageCollection(&amp;#39;NOAA/VIIRS/DNB/MONTHLY_V1/VCMSLCFG&amp;#39;).filter(ee.Filter.date(&amp;#39;2014-01-01&amp;#39;,&amp;#39;2019-01-01&amp;#39;)).select(&amp;#39;avg_rad&amp;#39;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;取得した衛星画像を日本周辺に切り出し、画像ファイルとして出力してみましょう。画像ファイルの出力は&lt;code&gt;image&lt;/code&gt;オブジェクトで可能です（そうでないと画像がたくさん出てきてしまいますからね。。。）。今取得したのは&lt;code&gt;ImageCollection&lt;/code&gt;オブジェクトですから&lt;code&gt;Image&lt;/code&gt;オブジェクトへ圧縮してやる必要があります（上が&lt;code&gt;ImageCollection&lt;/code&gt;オブジェクト、下が圧縮された&lt;code&gt;Image&lt;/code&gt;オブジェクト）。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://developers.google.com/earth-engine/images/Reduce_ImageCollection.png&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;ここでは、&lt;code&gt;ImageCollection&lt;/code&gt;オブジェクトの中にあるの&lt;code&gt;Image&lt;/code&gt;オブジェクトの平均値をとってサンプル期間の平均的な画像を出力してみたいと思います。&lt;code&gt;ImageCollection.mean()&lt;/code&gt;でできます。また、&lt;code&gt;.visualize({min:0.5})&lt;/code&gt;でピクセル値が0.5以上でフィルターをかけています。こうしないと雲と思われるものやゴミ？みたいなものがついてしまいます。次に、ここまで加工した画像データをダウンロードするurlを&lt;code&gt;.getDownloadURL&lt;/code&gt;メソッドで取得しています。その際、&lt;code&gt;region&lt;/code&gt;で切り出す範囲をポリゴン値で指定し、&lt;code&gt;scale&lt;/code&gt;でデータの解像度を指定しています（&lt;code&gt;scale&lt;/code&gt;が小さすぎると処理が重すぎるらしくエラーが出て処理できません）。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;dataset.mean().visualize(min=0.5).getDownloadURL(dict(name=&amp;#39;thumbnail&amp;#39;,region=[[[120.3345348936478, 46.853488838010854],[119.8071911436478, 24.598157870729043],[148.6353161436478, 24.75788466523463],[149.3384411436478, 46.61252884462868]]],scale=5000))&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;取得した画像が以下です。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;earthengine6.jpg&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;やはり、東京を中心とした関東圏、大阪を中心とした関西圏、愛知、福岡、北海道（札幌周辺）の光量が多く、経済活動が活発であることがわかります。また、陸内よりも沿岸部で光量が多い地域があることがわかります。これは経済活動とは直接関係しない現象のような気もします。今回は分析対象外ですが、北緯38度を境に北側が真っ暗になるのが印象的です。これは言うまでもなく北朝鮮と韓国の境界線ですから、両国の経済活動水準の差が視覚的にコントラストされているのでしょう。今回使用したデータセットは2014年からのものですが、他のデータセットでは1990年代からのデータが取得できるものもあります（その代わり最近のデータは取れませんが）。それらを用いて朝鮮半島や中国の経済発展を観察するのも面白いかもしれません。&lt;/p&gt;
+&lt;p&gt;さて、画像は取得できましたがこのままでは解析ができません。ここからは夜間光をピクセル値にマッピングしたデータを取得し、数値的な解析を試みます。ただ、先ほどとはデータ取得の手続きが少し変わります。というのも、今度は日本各地で各ピクセル単位ごとにさまざまな値をとる夜間光を&lt;strong&gt;集約&lt;/strong&gt;し、1つの代用値にしなければならないからです。ピクセルごとの数値を手に入れたところで解析するには手に余ってしまいますからね。イメージは以下のような感じです（Earth Engineサイトから引用）。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://developers.google.com/earth-engine/images/Reduce_region_diagram.png&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;先ほど取得した夜間光の&lt;code&gt;ImageCollection&lt;/code&gt;のある1時点の衛星画像が左です。その中に日本という&lt;code&gt;Region&lt;/code&gt;が存在し、それを&lt;code&gt;ee.Reducer&lt;/code&gt;によって定量的に集約（aggregate）します。Earth Engine APIには&lt;code&gt;.reduceRegions()&lt;/code&gt;メソッドが用意されていますのでそれを用いればいいです。引数は、&lt;code&gt;reducer&lt;/code&gt;=集約方法（ここでは合計値）、&lt;code&gt;collection&lt;/code&gt;=集約をかける&lt;code&gt;region&lt;/code&gt;（&lt;code&gt;FeatureCollection&lt;/code&gt;オブジェクト）、&lt;code&gt;scale&lt;/code&gt;=解像度、です。以下では、&lt;code&gt;ImageCollection&lt;/code&gt;（dataset）の中にある1番目の&lt;code&gt;Image&lt;/code&gt;オブジェクトに&lt;code&gt;.reduceRegions()&lt;/code&gt;メソッドをかけています。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;# initialize output box
+time0 = dataset.first().get(&amp;#39;system:time_start&amp;#39;);
+first = dataset.first().reduceRegions(reducer=ee.Reducer.sum(),collection=japan,scale=1000).set(&amp;#39;time_start&amp;#39;, time0)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;我々は時系列データが欲しいわけですから、&lt;code&gt;ImageCollection&lt;/code&gt;内にある&lt;code&gt;Image&lt;/code&gt;それぞれに対して同じ処理を行う必要があります。Earth Engineには&lt;code&gt;iterate&lt;/code&gt;という便利な関数があり、引数に処理したい関数を渡せばfor文いらずでこの処理を行ってくれます。ここでは&lt;code&gt;Image&lt;/code&gt;オブジェクトに&lt;code&gt;reduceRegions&lt;/code&gt;メソッドを処理した&lt;code&gt;Computed Object&lt;/code&gt;を以前に処理したものとmergeする&lt;code&gt;myfunc&lt;/code&gt;という関数を定義し、それを&lt;code&gt;iterate&lt;/code&gt;に渡しています。最後に、先ほどと同じく生成したデータを&lt;code&gt;getDownloadURL&lt;/code&gt;メソッドを用いてurlを取得しています（ファイル形式はcsv）。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;# define reduceRegions function for iteration
+def myfunc(image,first):
+  added = image.reduceRegions(reducer=ee.Reducer.sum(),collection=japan,scale=1000).set(&amp;#39;time_start&amp;#39;, image.get(&amp;#39;system:time_start&amp;#39;))
+  return ee.FeatureCollection(first).merge(added)
+
+# implement iteration
+nightjp = dataset.filter(ee.Filter.date(&amp;#39;2014-02-01&amp;#39;,&amp;#39;2019-01-01&amp;#39;)).iterate(myfunc,first)
+
+# get url to download
+ee.FeatureCollection(nightjp).getDownloadURL(filetype=&amp;#39;csv&amp;#39;,selectors=ee.FeatureCollection(nightjp).first().propertyNames().getInfo())&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;CSVファイルのurlが取得できました。この時系列をプロットして今日は終わりにしたいと思います。
+データを読み込むとこんな感じです。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import pandas as pd
+import matplotlib.pyplot as plt
+import os
+
+os.environ[&amp;#39;QT_QPA_PLATFORM_PLUGIN_PATH&amp;#39;] = &amp;#39;C:/Users/aashi/Anaconda3/Library/plugins/platforms&amp;#39;
+
+plt.style.use(&amp;#39;ggplot&amp;#39;)
+
+nightjp_csv.head()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##   system:index          sum Country  Unnamed: 3  Unnamed: 4
+## 0     2014/1/1  881512.4572   Japan         NaN         NaN
+## 1     2014/2/1  827345.3551   Japan         NaN         NaN
+## 2     2014/3/1  729110.4619   Japan         NaN         NaN
+## 3     2014/4/1  612665.8866   Japan         NaN         NaN
+## 4     2014/5/1  661434.5027   Japan         NaN         NaN&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.plot(pd.to_datetime(nightjp_csv[&amp;#39;system:index&amp;#39;]),nightjp_csv[&amp;#39;sum&amp;#39;])&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-8-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;かなり季節性がありますね。冬場は日照時間が少ないこともあって光量が増えているみたいです。それにしても急激な増え方ですが。次回はこのデータと景況感の代理変数となる経済統計を元に統計解析を行いたいと思います。おたのしみに。&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>rvestでyahoo競馬にある過去のレース結果をスクレイピングしてみた（2回目）</title>
+      <link>/post/post11/</link>
+      <pubDate>Sat, 13 Jul 2019 00:00:00 +0000</pubDate>
+      <guid>/post/post11/</guid>
+      <description>&lt;p&gt;2回目になりますが、またrvestで過去のレース結果を落としてみたいと思います。過去の記事を見てないという人は先にそちらをご覧になられることをお勧めします。&lt;/p&gt;
+&lt;p&gt;今回データを取り直そうと思ったのは、競馬の分析をした際により多くの項目を説明変数に加えて、分析をしたいと思ったからです。なので、今回は前回のRスクリプトに追記を行う形でプログラムを作成しました。新たに追加したデータ項目は以下の14個です。&lt;/p&gt;
+&lt;ol style=&#34;list-style-type: decimal&#34;&gt;
+&lt;li&gt;芝かダートか&lt;/li&gt;
+&lt;li&gt;右回りか左回りか&lt;/li&gt;
+&lt;li&gt;レースコンディション（良や稍重など）&lt;/li&gt;
+&lt;li&gt;天候&lt;/li&gt;
+&lt;li&gt;馬の毛色（栗毛、鹿毛など）&lt;/li&gt;
+&lt;li&gt;馬主&lt;/li&gt;
+&lt;li&gt;生産者&lt;/li&gt;
+&lt;li&gt;産地&lt;/li&gt;
+&lt;li&gt;生年月日&lt;/li&gt;
+&lt;li&gt;父馬&lt;/li&gt;
+&lt;li&gt;母馬&lt;/li&gt;
+&lt;li&gt;そのレースまでの獲得賞金（2003年から入手可能）&lt;/li&gt;
+&lt;li&gt;ジョッキーの体重&lt;/li&gt;
+&lt;li&gt;ジョッキーの体重の増減&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;実はまだデータ収集は終わっていなくて、Rのプログラムがずっと実行中になっています（3日くらい回しています）。しかし、プログラム自体はきっちり回っているのでスクリプトの紹介をしていこうと思います。もしかしたら追記で結果を書くかもしれません。&lt;/p&gt;
+&lt;div id=&#34;スクリプトの中身&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;1. スクリプトの中身&lt;/h2&gt;
+&lt;p&gt;まずはパッケージの呼び出しです。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# rvestによる競馬データのwebスクレイピング
+
+#install.packages(&amp;quot;rvest&amp;quot;)
+#if (!require(&amp;quot;pacman&amp;quot;)) install.packages(&amp;quot;pacman&amp;quot;)
+#install.packages(&amp;quot;beepr&amp;quot;)
+#install.packages(&amp;quot;RSQLite&amp;quot;)
+pacman::p_load(qdapRegex)
+library(rvest)
+library(stringr)
+library(dplyr)
+library(beepr)
+library(RSQLite)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;かなりwarnningが出るのでそれを禁止し、SQLiteに接続しています&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# warnning禁止
+options(warn=-1)
+
+# SQLiteへの接続
+con = dbConnect(SQLite(), &amp;quot;horse_data.db&amp;quot;, synchronous=&amp;quot;off&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;1994年からしかオッズが取れないので、1994年から直近までのデータを取得します。yahoo競馬では月ごとにレースがまとめられているので、それを変数として使用しながらデータをとっていきます。基本的には、&lt;a href=&#34;https://keiba.yahoo.co.jp/schedule/list/2018/?month=7&#34;&gt;該当年、該当月のレース結果一覧&lt;/a&gt;へアクセスし、そのページ上の各日の&lt;a href=&#34;https://keiba.yahoo.co.jp/race/list/18020106/&#34;&gt;個々の競馬場ごとのタイムテーブル&lt;/a&gt;へのリンクを取得します。個々の競馬場でレースはだいたい12ほどあるので、そのリンクを取得し、各レースの&lt;a href=&#34;https://keiba.yahoo.co.jp/race/result/1802010601/&#34;&gt;レース結果ページ&lt;/a&gt;にアクセスします。そして、レース結果を取得していきます。まず、各日の個々の競馬場ごとのタイムテーブルへのリンクの取得方法です。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;for(year in 1994:2019){
+  start.time &amp;lt;- Sys.time() # 計算時間を図る
+  # yahoo競馬のレース結果一覧ページの取得
+  for (k in 1:12){ # kは月を表す
+    
+    tryCatch(
+      {
+        keiba.yahoo &amp;lt;- read_html(str_c(&amp;quot;https://keiba.yahoo.co.jp/schedule/list/&amp;quot;, year,&amp;quot;/?month=&amp;quot;,k)) # 該当年、該当月のレース結果一覧にアクセス
+        Sys.sleep(2)
+        race_lists &amp;lt;- keiba.yahoo %&amp;gt;%
+          html_nodes(&amp;quot;a&amp;quot;) %&amp;gt;% 
+          html_attr(&amp;quot;href&amp;quot;) # 全urlを取得
+        
+        # 競馬場ごとの各日のレースリストを取得
+        race_lists &amp;lt;- race_lists[str_detect(race_lists, pattern=&amp;quot;race/list/\\d+/&amp;quot;)==1] # 「result」が含まれるurlを抽出
+      }
+      , error = function(e){signal &amp;lt;- 1}
+    )&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;ここでは、取得したリンクのurlにresultという文字が含まれているものだけを抽出しています。要はそれが各競馬場のレーステーブルへのリンクとなります。ここからは取得した競馬場のレーステーブルのリンクを用いて、そのページにアクセスし、全12レースそれぞれのレース結果が掲載されているページのリンクを取得していきます。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;    for (j in 1:length(race_lists)){ # jは当該年月にあったレーステーブルへのリンクを表す
+      
+      tryCatch(
+        {
+          race_list &amp;lt;- read_html(str_c(&amp;quot;https://keiba.yahoo.co.jp&amp;quot;,race_lists[j]))
+          race_url &amp;lt;- race_list %&amp;gt;% html_nodes(&amp;quot;a&amp;quot;) %&amp;gt;% html_attr(&amp;quot;href&amp;quot;) # 全urlを取得
+          
+          # レース結果のurlを取得
+          race_url &amp;lt;- race_url[str_detect(race_url, pattern=&amp;quot;result&amp;quot;)==1] # 「result」が含まれるurlを抽出
+        }
+        , error = function(e){signal &amp;lt;- 1}
+      )&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;各レース結果へのリンクが取得できたので、ここからはいよいよレース結果の取得とその整形パートに入ります。かなり長ったらしく複雑なコードになってしまいました。レース結果は以下のようなテーブル属性に格納されているので、まずそれを単純に引っ張ってきます。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;      for (i in 1:length(race_url)){ # iは当該年月当該競馬場で開催されたレースを表す
+        
+        print(str_c(&amp;quot;現在、&amp;quot;, year, &amp;quot;年&amp;quot;, k, &amp;quot;月&amp;quot;,j, &amp;quot;グループ、&amp;quot;, i,&amp;quot;番目のレースの保存中です&amp;quot;))
+        
+        tryCatch(
+          {
+            race1 &amp;lt;-  read_html(str_c(&amp;quot;https://keiba.yahoo.co.jp&amp;quot;,race_url[i])) # レース結果のurlを取得
+            signal &amp;lt;- 0
+            Sys.sleep(2)
+          }
+          , error = function(e){signal &amp;lt;- 1}
+        )
+        
+        # レースが中止orこれまでの過程でエラーでなければ処理を実行
+        if (identical(race1 %&amp;gt;%
+                      html_nodes(xpath = &amp;quot;//div[@class = &amp;#39;resultAtt mgnBL fntSS&amp;#39;]&amp;quot;) %&amp;gt;%
+                      html_text(),character(0)) == TRUE &amp;amp;&amp;amp; signal == 0){
+          
+          # レース結果をスクレイピング
+          race_result &amp;lt;- race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//table[@id = &amp;#39;raceScore&amp;#39;]&amp;quot;) %&amp;gt;%
+            html_table()
+          race_result &amp;lt;- do.call(&amp;quot;data.frame&amp;quot;,race_result) # リストをデータフレームに変更
+          
+          colnames(race_result) &amp;lt;- c(&amp;quot;order&amp;quot;,&amp;quot;frame_number&amp;quot;,&amp;quot;horse_number&amp;quot;,&amp;quot;horse_name/age&amp;quot;,&amp;quot;time/margin&amp;quot;,&amp;quot;passing_rank/last_3F&amp;quot;,&amp;quot;jockey/weight&amp;quot;,&amp;quot;popularity/odds&amp;quot;,&amp;quot;trainer&amp;quot;) #　列名変更&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;tableをただ取得しただけでは以下のように、一つのセルに複数の情報が入っていたりと分析には使えないデータとなっています。なので、これを成型する必要が出てきます。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;          # 通過順位と上り3Fのタイム
+          race_result &amp;lt;- dplyr::mutate(race_result,passing_rank=as.character(str_extract_all(race_result$`passing_rank/last_3F`,&amp;quot;(\\d{2}-\\d{2}-\\d{2}-\\d{2})|(\\d{2}-\\d{2}-\\d{2})|(\\d{2}-\\d{2})&amp;quot;)))
+          race_result &amp;lt;- dplyr::mutate(race_result,last_3F=as.character(str_extract_all(race_result$`passing_rank/last_3F`,&amp;quot;\\d{2}\\.\\d&amp;quot;)))
+          race_result &amp;lt;- race_result[-6]
+          
+          # タイムと着差
+          race_result &amp;lt;- dplyr::mutate(race_result,time=as.character(str_extract_all(race_result$`time/margin`,&amp;quot;\\d\\.\\d{2}\\.\\d|\\d{2}\\.\\d&amp;quot;)))
+          race_result &amp;lt;- dplyr::mutate(race_result,margin=as.character(str_extract_all(race_result$`time/margin`,&amp;quot;./.馬身|.馬身|.[:space:]./.馬身|[ア-ン-]+&amp;quot;)))
+          race_result$margin[race_result$order==1] &amp;lt;- &amp;quot;トップ&amp;quot;
+          race_result$margin[race_result$margin==&amp;quot;character(0)&amp;quot;] &amp;lt;- &amp;quot;大差&amp;quot;
+          race_result$margin[race_result$order==0] &amp;lt;- NA
+          race_result &amp;lt;- race_result[-5]
+          
+          # 馬名、馬齢、馬体重
+          race_result &amp;lt;- dplyr::mutate(race_result,horse_name=as.character(str_extract_all(race_result$`horse_name/age`,&amp;quot;[ァ-ヴー・]+&amp;quot;)))
+          race_result &amp;lt;- dplyr::mutate(race_result,horse_age=as.character(str_extract_all(race_result$`horse_name/age`,&amp;quot;牡\\d+|牝\\d+|せん\\d+&amp;quot;)))
+          race_result$horse_sex &amp;lt;- str_extract(race_result$horse_age, pattern = &amp;quot;牡|牝|せん&amp;quot;)
+          race_result$horse_age &amp;lt;- str_extract(race_result$horse_age, pattern = &amp;quot;\\d&amp;quot;)
+          race_result &amp;lt;- dplyr::mutate(race_result,horse_weight=as.character(str_extract_all(race_result$`horse_name/age`,&amp;quot;\\d{3}&amp;quot;)))
+          race_result &amp;lt;- dplyr::mutate(race_result,horse_weight_change=as.character(str_extract_all(race_result$`horse_name/age`,&amp;quot;\\([\\+|\\-]\\d+\\)|\\([\\d+]\\)&amp;quot;)))
+          race_result$horse_weight_change &amp;lt;- sapply(rm_round(race_result$horse_weight_change, extract=TRUE), paste, collapse=&amp;quot;&amp;quot;)
+          race_result &amp;lt;- dplyr::mutate(race_result,brinker=as.character(str_extract_all(race_result$`horse_name/age`,&amp;quot;B&amp;quot;)))
+          race_result$brinker[race_result$brinker!=&amp;quot;B&amp;quot;] &amp;lt;- &amp;quot;N&amp;quot;
+          race_result &amp;lt;- race_result[-4]
+          
+          # ジョッキー
+          race_result &amp;lt;- dplyr::mutate(race_result,jockey=as.character(str_extract_all(race_result$`jockey/weight`,&amp;quot;[ぁ-ん一-龠]+\\s[ぁ-ん一-龠]+|[:upper:].[ァ-ヶー]+&amp;quot;)))
+          race_result &amp;lt;- dplyr::mutate(race_result,jockey_weight=as.character(str_extract_all(race_result$`jockey/weight`,&amp;quot;\\d{2}&amp;quot;)))
+          race_result$jockey_weight_change &amp;lt;- 0
+          race_result$jockey_weight_change[str_detect(race_result$`jockey/weight`,&amp;quot;☆&amp;quot;)==1] &amp;lt;- 1
+          race_result$jockey_weight_change[str_detect(race_result$`jockey/weight`,&amp;quot;△&amp;quot;)==1] &amp;lt;- 2
+          race_result$jockey_weight_change[str_detect(race_result$`jockey/weight`,&amp;quot;△&amp;quot;)==1] &amp;lt;- 3
+          race_result &amp;lt;- race_result[-4]
+          
+          # オッズと人気
+          race_result &amp;lt;- dplyr::mutate(race_result,odds=as.character(str_extract_all(race_result$`popularity/odds`,&amp;quot;\\(.+\\)&amp;quot;)))
+          race_result &amp;lt;- dplyr::mutate(race_result,popularity=as.character(str_extract_all(race_result$`popularity/odds`,&amp;quot;\\d+[^(\\d+.\\d)]&amp;quot;)))
+          race_result$odds &amp;lt;- sapply(rm_round(race_result$odds, extract=TRUE), paste, collapse=&amp;quot;&amp;quot;)
+          race_result &amp;lt;- race_result[-4]&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;次に、今取得したtable以外の情報も取り込むことにします。具体的には、レース名や天候、馬場状態、日付、競馬場などです。これらの情報はレース結果ページの上部に掲載されています。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;          # レース情報
+          race_date &amp;lt;- race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//div[@id = &amp;#39;raceTitName&amp;#39;]/p[@id = &amp;#39;raceTitDay&amp;#39;]&amp;quot;) %&amp;gt;%
+            html_text()
+          race_name &amp;lt;- race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//div[@id = &amp;#39;raceTitName&amp;#39;]/h1[@class = &amp;#39;fntB&amp;#39;]&amp;quot;) %&amp;gt;%
+            html_text()
+          race_distance &amp;lt;- race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//p[@id = &amp;#39;raceTitMeta&amp;#39;]&amp;quot;) %&amp;gt;%
+            html_text()
+        
+          race_result &amp;lt;- dplyr::mutate(race_result,race_date=as.character(str_extract_all(race_date,&amp;quot;\\d+年\\d+月\\d+日&amp;quot;)))
+          race_result$race_date &amp;lt;- str_replace_all(race_result$race_date,&amp;quot;年&amp;quot;,&amp;quot;/&amp;quot;)
+          race_result$race_date &amp;lt;- str_replace_all(race_result$race_date,&amp;quot;月&amp;quot;,&amp;quot;/&amp;quot;)
+          race_result$race_date &amp;lt;- as.Date(race_result$race_date)
+          race_course &amp;lt;- as.character(str_extract_all(race_date,pattern = &amp;quot;札幌|函館|福島|新潟|東京|中山|中京|京都|阪神|小倉&amp;quot;))
+          race_result$race_course &amp;lt;- race_course
+          race_result &amp;lt;- dplyr::mutate(race_result,race_name=as.character(str_replace_all(race_name,&amp;quot;\\s&amp;quot;,&amp;quot;&amp;quot;)))
+          race_result &amp;lt;- dplyr::mutate(race_result,race_distance=as.character(str_extract_all(race_distance,&amp;quot;\\d+m&amp;quot;)))
+          race_type=as.character(str_extract_all(race_distance,pattern = &amp;quot;芝|ダート&amp;quot;))
+          race_result$type &amp;lt;- race_type
+          race_turn &amp;lt;- as.character(str_extract_all(race_distance,pattern = &amp;quot;右|左&amp;quot;))
+          race_result$race_turn &amp;lt;- race_turn
+          
+          if(length(race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//img[@class = &amp;#39;spBg ryou&amp;#39;]&amp;quot;)) == 1){
+            race_result$race_condition &amp;lt;- &amp;quot;良&amp;quot;
+          } else if (length(race1 %&amp;gt;% 
+                            html_nodes(xpath = &amp;quot;//img[@class = &amp;#39;spBg yayaomo&amp;#39;]&amp;quot;)) == 1){
+            race_result$race_condition &amp;lt;- &amp;quot;稍重&amp;quot;
+          } else if (length(race1 %&amp;gt;%
+                            html_nodes(xpath = &amp;quot;//img[@class = &amp;#39;spBg omo&amp;#39;]&amp;quot;)) == 1){
+            race_result$race_condition &amp;lt;- &amp;quot;重&amp;quot;
+          } else if (length(race1 %&amp;gt;% 
+                            html_nodes(xpath = &amp;quot;//img[@class = &amp;#39;spBg furyou&amp;#39;]&amp;quot;)) == 1){
+            race_result$race_condition &amp;lt;- &amp;quot;不良&amp;quot;
+          } else race_result$race_condition &amp;lt;- &amp;quot;NA&amp;quot;
+          
+          if (length(race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//img[@class = &amp;#39;spBg hare&amp;#39;]&amp;quot;)) == 1){
+            race_result$race_weather &amp;lt;- &amp;quot;晴れ&amp;quot;
+          } else if (length(race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//img[@class = &amp;#39;spBg ame&amp;#39;]&amp;quot;)) == 1){
+            race_result$race_weather &amp;lt;- &amp;quot;曇り&amp;quot;
+          } else if (length(race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//img[@class = &amp;#39;spBg kumori&amp;#39;]&amp;quot;)) == 1){
+            race_result$race_weather &amp;lt;- &amp;quot;雨&amp;quot;
+          } else race_result$race_weather &amp;lt;- &amp;quot;その他&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;次は各馬の情報です。 実はさきほど取得したtableの馬名はリンクになっており、そのリンクをたどると&lt;a href=&#34;https://keiba.yahoo.co.jp/directory/horse/2015105508/&#34;&gt;各馬の情報&lt;/a&gt;が取得できます（毛色や生年月日など）。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;          horse_url &amp;lt;- race1 %&amp;gt;% html_nodes(&amp;quot;a&amp;quot;) %&amp;gt;% html_attr(&amp;quot;href&amp;quot;) 
+          horse_url &amp;lt;- horse_url[str_detect(horse_url, pattern=&amp;quot;directory/horse&amp;quot;)==1] # 馬情報のリンクだけ抽出する
+          
+          for (l in 1:length(horse_url)){
+            tryCatch(
+              {
+                horse1 &amp;lt;-  read_html(str_c(&amp;quot;https://keiba.yahoo.co.jp&amp;quot;,horse_url[l]))
+                Sys.sleep(0.5)
+                horse_name &amp;lt;- horse1 %&amp;gt;% html_nodes(xpath = &amp;quot;//div[@id = &amp;#39;dirTitName&amp;#39;]/h1[@class = &amp;#39;fntB&amp;#39;]&amp;quot;) %&amp;gt;% 
+                  html_text()
+                horse &amp;lt;- horse1 %&amp;gt;% html_nodes(xpath = &amp;quot;//div[@id = &amp;#39;dirTitName&amp;#39;]/ul&amp;quot;) %&amp;gt;% 
+                  html_text()
+                race_result$colour[race_result$horse_name==horse_name] &amp;lt;- as.character(str_extract_all(horse,&amp;quot;毛色：.+&amp;quot;)) 
+                race_result$owner[race_result$horse_name==horse_name] &amp;lt;- as.character(str_extract_all(horse,&amp;quot;馬主：.+&amp;quot;))
+                race_result$farm[race_result$horse_name==horse_name] &amp;lt;- as.character(str_extract_all(horse,&amp;quot;生産者：.+&amp;quot;))
+                race_result$locality[race_result$horse_name==horse_name] &amp;lt;- as.character(str_extract_all(horse,&amp;quot;産地：.+&amp;quot;))
+                race_result$horse_birthday[race_result$horse_name==horse_name] &amp;lt;- as.character(str_extract_all(horse,&amp;quot;\\d+年\\d+月\\d+日&amp;quot;))
+                race_result$father[race_result$horse_name==horse_name] &amp;lt;- horse1 %&amp;gt;% html_nodes(xpath = &amp;quot;//td[@class = &amp;#39;bloodM&amp;#39;][@rowspan = &amp;#39;4&amp;#39;]&amp;quot;) %&amp;gt;% html_text()
+                race_result$mother[race_result$horse_name==horse_name] &amp;lt;- horse1 %&amp;gt;% html_nodes(xpath = &amp;quot;//td[@class = &amp;#39;bloodF&amp;#39;][@rowspan = &amp;#39;4&amp;#39;]&amp;quot;) %&amp;gt;% html_text()
+              }
+              , error = function(e){
+                race_result$colour[race_result$horse_name==horse_name] &amp;lt;- NA 
+                race_result$owner[race_result$horse_name==horse_name] &amp;lt;- NA
+                race_result$farm[race_result$horse_name==horse_name] &amp;lt;- NA
+                race_result$locality[race_result$horse_name==horse_name] &amp;lt;- NA
+                race_result$horse_birthday[race_result$horse_name==horse_name] &amp;lt;- NA
+                race_result$father[race_result$horse_name==horse_name] &amp;lt;- NA
+                race_result$mother[race_result$horse_name==horse_name] &amp;lt;- NA
+                }
+            )
+          }
+          
+          race_result$colour &amp;lt;- str_replace_all(race_result$colour,&amp;quot;毛色：&amp;quot;,&amp;quot;&amp;quot;)
+          race_result$owner &amp;lt;- str_replace_all(race_result$owner,&amp;quot;馬主：&amp;quot;,&amp;quot;&amp;quot;)
+          race_result$farm &amp;lt;- str_replace_all(race_result$farm,&amp;quot;生産者：&amp;quot;,&amp;quot;&amp;quot;)
+          race_result$locality &amp;lt;- str_replace_all(race_result$locality,&amp;quot;産地：&amp;quot;,&amp;quot;&amp;quot;)
+          #race_result$horse_birthday &amp;lt;- str_replace_all(race_result$horse_birthday,&amp;quot;年&amp;quot;,&amp;quot;/&amp;quot;)
+          #race_result$horse_birthday &amp;lt;- str_replace_all(race_result$horse_birthday,&amp;quot;月&amp;quot;,&amp;quot;/&amp;quot;)
+          #race_result$horse_birthday &amp;lt;- as.Date(race_result$horse_birthday)
+          
+          race_result &amp;lt;- dplyr::arrange(race_result,horse_number) # 馬番順に並べる&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;次にそのレースまでに獲得した賞金額を落としに行きます。これはレース結果のページの&lt;a href=&#34;https://keiba.yahoo.co.jp/race/denma/1802010601/&#34;&gt;出馬表&lt;/a&gt;と書かれたリンクをたどるとアクセスできます。ここに賞金があるのでそれを取得します。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;          yosou_url &amp;lt;- race1 %&amp;gt;% html_nodes(&amp;quot;a&amp;quot;) %&amp;gt;% html_attr(&amp;quot;href&amp;quot;) 
+          yosou_url &amp;lt;- yosou_url[str_detect(yosou_url, pattern=&amp;quot;denma&amp;quot;)==1]
+          
+          if (length(yosou_url)==1){
+          yosou1 &amp;lt;-  read_html(str_c(&amp;quot;https://keiba.yahoo.co.jp&amp;quot;,yosou_url)) 
+          Sys.sleep(2)
+          yosou &amp;lt;- yosou1 %&amp;gt;% html_nodes(xpath = &amp;quot;//td[@class = &amp;#39;txC&amp;#39;]&amp;quot;) %&amp;gt;% as.character()
+          prize &amp;lt;- yosou[grepl(&amp;quot;万&amp;quot;,yosou)==TRUE] %&amp;gt;% str_extract_all(&amp;quot;\\d+万&amp;quot;)
+          prize &amp;lt;- t(do.call(&amp;quot;data.frame&amp;quot;,prize)) %&amp;gt;% as.character()
+          race_result$prize &amp;lt;- prize
+          race_result$prize &amp;lt;- str_replace_all(race_result$prize,&amp;quot;万&amp;quot;,&amp;quot;&amp;quot;) %&amp;gt;% as.numeric()
+          } else race_result$prize &amp;lt;- NA&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;取得した各レース結果を格納するdatasetというデータフレームを作成し、データを格納していきます。1年ごとにそれをSQLite
+へ保存していきます。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;          ## ファイル貯めるのかく
+          if (k == 1 &amp;amp;&amp;amp; i == 1 &amp;amp;&amp;amp; j == 1){
+            dataset &amp;lt;- race_result
+          } else {
+            dataset &amp;lt;- rbind(dataset,race_result)
+          } # if文2の終わり
+        }else
+        {
+          print(&amp;quot;保存できませんでした&amp;quot;) 
+        }# if文1の終わり
+      } # iループの終わり
+    } # jループ終わり
+  } # kループの終わり
+  beep(3)
+  write.csv(dataset,&amp;quot;race_result2.csv&amp;quot;, row.names = FALSE)
+  
+  if (year == 1994){
+    dbWriteTable(con, &amp;quot;race_result&amp;quot;, dataset)
+  } else {
+    dbWriteTable(con, &amp;quot;temp&amp;quot;, dataset)
+    dbSendQuery(con, &amp;quot;INSERT INTO race_result select * from temp&amp;quot;)
+    dbSendQuery(con, &amp;quot;DROP TABLE temp&amp;quot;)
+  } # ifの終わり
+} # yearループの終わり
+end.time &amp;lt;- Sys.time()
+print(str_c(&amp;quot;処理時間は&amp;quot;,end.time-start.time,&amp;quot;です。&amp;quot;))
+beep(5)
+
+options(warn = 1)
+
+dbDisconnect(con)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;以上です。取れたデータは以下のようになりました。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;head(race_result)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##   order frame_number horse_number   trainer passing_rank last_3F   time
+## 1    10            1            1   田中 剛        09-09    39.0 1.14.3
+## 2    16            1            2 天間 昭一        11-11    40.3 1.15.7
+## 3    15            2            3 田中 清隆        14-14    39.4 1.15.1
+## 4     9            2            4 中舘 英二        08-08    39.1 1.14.3
+## 5    12            3            5 根本 康広        11-11    39.0 1.14.4
+## 6     4            3            6 杉浦 宏昭        04-04    38.4 1.13.2
+##      margin         horse_name horse_age horse_sex horse_weight
+## 1    アタマ     サトノジョニー         3        牡          512
+## 2 3 1/2馬身       ツギノイッテ         3        牡          464
+## 3     3馬身           ギュウホ         3        牡          444
+## 4 2 1/2馬身 セイウンメラビリア         3        牝          466
+## 5      クビ サバイバルトリック         3        牝          450
+## 6    アタマ       ステイホット         3        牝          474
+##   horse_weight_change brinker      jockey jockey_weight jockey_weight_change
+## 1                 +30       N   松岡 正海            56                    0
+## 2                  +8       N 西田 雄一郎            56                    0
+## 3                  +8       N   杉原 誠人            56                    0
+## 4                 +10       N   村田 一誠            54                    0
+## 5                  -2       N 野中 悠太郎            51                    0
+## 6                  -2       N   大野 拓弥            54                    0
+##    odds popularity  race_date race_course       race_name race_distance   type
+## 1  40.3         9  2019-01-05        中山 サラ系3歳未勝利         1200m ダート
+## 2 340.9        16  2019-01-05        中山 サラ系3歳未勝利         1200m ダート
+## 3 283.1        14  2019-01-05        中山 サラ系3歳未勝利         1200m ダート
+## 4 299.7        15  2019-01-05        中山 サラ系3歳未勝利         1200m ダート
+## 5  26.7         8  2019-01-05        中山 サラ系3歳未勝利         1200m ダート
+## 6   2.4         1  2019-01-05        中山 サラ系3歳未勝利         1200m ダート
+##   race_turn race_condition race_weather colour                           owner
+## 1        右             良         晴れ   栗毛 株式会社 サトミホースカンパニー
+## 2        右             良         晴れ 黒鹿毛                     西村 新一郎
+## 3        右             良         晴れ   鹿毛           有限会社 ミルファーム
+## 4        右             良         晴れ 青鹿毛                       西山 茂行
+## 5        右             良         晴れ 黒鹿毛                       福田 光博
+## 6        右             良         晴れ   栗毛                       小林 善一
+##           farm   locality horse_birthday                 father
+## 1   千代田牧場 新ひだか町  2016年1月29日         オルフェーヴル
+## 2    織笠 時男     青森県  2016年4月17日 スクワートルスクワート
+## 3    神垣 道弘 新ひだか町  2016年4月19日     ジャングルポケット
+## 4  石郷岡 雅樹     新冠町  2016年4月21日     キンシャサノキセキ
+## 5     原田牧場     日高町  2016年4月30日       リーチザクラウン
+## 6 社台ファーム     千歳市  2016年3月13日     キャプテントゥーレ
+##               mother prize
+## 1 スパークルジュエル     0
+## 2   エプソムアイリス     0
+## 3     デライトシーン     0
+## 4     ドリームシップ     0
+## 5   フリーダムガール   180
+## 6     ステイアライヴ   455&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>rvestでyahoo競馬にある過去のレース結果をクローリングしてみた</title>
+      <link>/post/post9/</link>
+      <pubDate>Sat, 19 May 2018 00:00:00 +0000</pubDate>
+      <guid>/post/post9/</guid>
+      <description>
+&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+&lt;link href=&#34;index_files/pagedtable/css/pagedtable.css&#34; rel=&#34;stylesheet&#34; /&gt;
+&lt;script src=&#34;index_files/pagedtable/js/pagedtable.js&#34;&gt;&lt;/script&gt;
+
+&lt;div id=&#34;TOC&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#rvestとは&#34;&gt;1. Rvestとは&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#レース結果をスクレイピングしてみる&#34;&gt;2. レース結果をスクレイピングしてみる&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+
+&lt;p&gt;みなさん、おはこんばんにちは。&lt;/p&gt;
+&lt;p&gt;競馬のレース結果を的中させるモデルを作ろうということで研究をはじめましたが、まずはデータを自分で取ってくるところからやろうとおもいます。どこからデータを取ってくるのかという点が重要になるわけですが、データ先としてはdatascisotistさんがまとめられた非常にわかりやすい記事があります。どこからデータが取れるのかというと大きく分けて二つで、①JRA提供のJRA-VANや電子競馬新聞でおなじみの？JRJDといったデータベース、②netkeiba、yahoo競馬とといった競馬情報サイト、となっています。②の場合は自分でコードを書き、クローリングを行う必要があります。今回は②を選択し、yahoo競馬のデータをクローリングで落としてきたいと思います。Rでクローリングを行うパッケージとしては、rvest, httr, XMLがありますが、今回は1番簡単に使えるrvestを用います。yahoo競馬では以下のように各レース結果が表にまとめられています（5月の日本ダービーの結果）。&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://keiba.yahoo.co.jp/race/result/1805021210/&#34;&gt;yahoo競馬&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;各馬のざっくりとした特徴やレース結果（通過順位等含む）、オッズが掲載されています。とりあえず、このぐらい情報があれば良いのではないかと思います（オッズの情報はもう少し欲しいのですが）。ただ、今後は少しずつ必要になった情報を拡充していこうとも思っています。1986年までのレース結果が格納されており、全データ数は50万件を超えるのではないかと思っています。ただ、単勝オッズが利用できるのは1994年からのようなので今回は1994年から直近までのデータを落としてきます。今回のゴールは、このデータをcsvファイル or SQLに格納することです。&lt;/p&gt;
+&lt;div id=&#34;rvestとは&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;1. Rvestとは&lt;/h2&gt;
+&lt;p&gt;Rvestとは、webスクレイピングパッケージの一種でdplyrでおなじみのHadley Wickhamさんによって作成されたパッケージです。たった数行でwebスクレイピングができる優れものとなっており、操作が非常に簡単であるのが特徴です。今回は以下の本を参考にしました。&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;http://www.amazon.co.jp/exec/obidos/ASIN/486354216X/hatena-blog-22/&#34;&gt;Rによるスクレイピング入門&lt;/a&gt;
+&lt;img src=&#34;https://images-na.ssl-images-amazon.com/images/I/51ZBnu8oSvL._SX350_BO1,204,203,200_.jpg&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;そもそも、htmlも大学1年生にやった程度でほとんど忘れていたのですが、この本はそこも非常にわかりやすく解説されており、非常に実践的な本だと思います。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;レース結果をスクレイピングしてみる&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;2. レース結果をスクレイピングしてみる&lt;/h2&gt;
+&lt;p&gt;実際にyahoo競馬からデータを落としてみたいと思います。コードは以下のようになっています。ご留意頂きたいのはこのコードをそのまま使用してスクレイピングを行うことはご遠慮いただきたいという事です。webスクレイピングは高速でサイトにアクセスするため、サイトへの負荷が大きくなる可能性があります。スクレイピングを行う際は、時間を空けるコーディングするなどその点に留意をして行ってください（最悪訴えられる可能性がありますが、こちらは一切の責任を取りません）。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# rvestによる競馬データのwebスクレイピング
+
+#install.packages(&amp;quot;rvest&amp;quot;)
+#if (!require(&amp;quot;pacman&amp;quot;)) install.packages(&amp;quot;pacman&amp;quot;)
+pacman::p_load(qdapRegex)
+library(rvest)
+library(stringr)
+library(dplyr)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;使用するパッケージは&lt;code&gt;qdapRegex&lt;/code&gt;、&lt;code&gt;rvest&lt;/code&gt;、&lt;code&gt;stringr&lt;/code&gt;、&lt;code&gt;dplyr&lt;/code&gt;です。&lt;code&gt;qdapRegex&lt;/code&gt;はカッコ内の文字を取り出すために使用しています。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;keiba.yahoo &amp;lt;- read_html(str_c(&amp;quot;https://keiba.yahoo.co.jp/schedule/list/2016/?month=&amp;quot;,k))
+race_url &amp;lt;- keiba.yahoo %&amp;gt;%
+html_nodes(&amp;quot;a&amp;quot;) %&amp;gt;%
+html_attr(&amp;quot;href&amp;quot;) # 全urlを取得
+
+# レース結果のをurlを取得
+race_url &amp;lt;- race_url[str_detect(race_url, pattern=&amp;quot;result&amp;quot;)==1] # 「result」が含まれるurlを抽出&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;まず、read_htmlでyahoo競馬のレース結果一覧のhtml構造を引っ張ってきます（リンクは2016年1月の全レース）。ここで、kと出ているのは月を表し、k=1であれば2016年1月のレース結果を引っ張ってくるということです。keiba.yahooを覗いてみると以下のようにそのページ全体のhtml構造が格納されているのが分かります。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;keiba.yahoo&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## $node
+## &amp;lt;pointer: (nil)&amp;gt;
+## 
+## $doc
+## &amp;lt;pointer: (nil)&amp;gt;
+## 
+## attr(,&amp;quot;class&amp;quot;)
+## [1] &amp;quot;xml_document&amp;quot; &amp;quot;xml_node&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;race_urlにはyahoo.keibaのうちの2016年k月にあった全レース結果のリンクを格納しています。html_nodeとはhtml構造のうちどの要素を引っ張るかを指定し、それを引っ張る関数で、簡単に言えばほしいデータの住所を入力する関数であると認識しています（おそらく正しくない）。ここではa要素を引っ張ることにしています。注意すべきことは、html_nodeは欲しい情報をhtml形式で引っ張ることです。なので、テキストデータとしてリンクを保存するためにはhtml_attrを使用する必要があります。html_attrの引数として、リンク属性を表すhrefを渡しています。これでレース結果のurlが取れたと思いきや、実はこれでは他のリンクもとってしまっています。一番わかりやすいのが広告のリンクです。こういったリンクは除外する必要があります。レース結果のurlには“result”が含まれているので、この文字が入っている要素だけを抽出したのが一番最後のコードです。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;for (i in 1:length(race_url)){
+  race1 &amp;lt;- read_html(str_c(&amp;quot;https://keiba.yahoo.co.jp&amp;quot;,race_url[i])) # レース結果のurlを取得
+
+  # レース結果をスクレイピング
+  race_result &amp;lt;- race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//table[@id = &amp;#39;raceScore&amp;#39;]&amp;quot;) %&amp;gt;%
+  html_table()
+  race_result &amp;lt;- do.call(&amp;quot;data.frame&amp;quot;,race_result) # リストをデータフレームに変更
+  colnames(race_result) &amp;lt;- c(&amp;quot;order&amp;quot;,&amp;quot;frame_number&amp;quot;,&amp;quot;horse_number&amp;quot;,&amp;quot;horse_name/age&amp;quot;,&amp;quot;time/margin&amp;quot;,&amp;quot;passing_rank/last_3F&amp;quot;,&amp;quot;jockey/weight&amp;quot;,&amp;quot;popularity/odds&amp;quot;,&amp;quot;trainer&amp;quot;) #　列名変更&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;さて、いよいよレース結果のスクレイピングを行います。さきほど取得したリンク先のhtml構造を一つ一つ取得し、その中で必要なテキスト情報を引っ張るという作業をRに実行させます（なのでループを使う）。race_1にはあるレース結果ページのhtml構造が格納されおり、race_resultにはその結果が入っています。html_nodesの引数に入っているxpathですが、これはXLMフォーマットのドキュメントから効率的に要素を抜き出す言語です。先ほど説明した住所のようなものと思っていただければ良いと思います。その横に書いてある&lt;code&gt;//table[@id = &#39;raceScore&#39;]&lt;/code&gt;が住所です。これはwebブラウザから簡単に探すことができます。Firefoxの説明になりますが、ほかのブラウザでも同じような機能があると思います。スクレイプしたい画面で&lt;code&gt;Ctrl+Shift+C&lt;/code&gt;を押すと下のような画面が表示されます。&lt;/p&gt;
+&lt;p&gt;このインスペクターの横のマークをクリックすると、カーソルで指した部分のhtml構造（住所）が表示されます。この場合だと、レース結果はtable属性の&lt;code&gt;id&lt;/code&gt;がraceScoreの場所に格納されていることが分かります。なので、上のコードでは&lt;code&gt;xpath=&lt;/code&gt;のところにそれを記述しているのです。そして、レース結果は表（table）形式でドキュメント化されているので、&lt;code&gt;html_table&lt;/code&gt;でごっそりとスクレイプしました。基本的にリスト形式で返されるので、それをデータフレームに変換し、適当に列名をつけています。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# 通過順位と上り3Fのタイム
+  race_result &amp;lt;- dplyr::mutate(race_result,passing_rank=as.character(str_extract_all(race_result$`passing_rank/last_3F`,&amp;quot;(\\d{2}-\\d{2}-\\d{2}-\\d{2})|(\\d{2}-\\d{2}-\\d{2})|(\\d{2}-\\d{2})&amp;quot;)))
+  race_result &amp;lt;- dplyr::mutate(race_result,last_3F=as.character(str_extract_all(race_result$`passing_rank/last_3F`,&amp;quot;\\d{2}\\.\\d&amp;quot;)))
+  race_result &amp;lt;- race_result[-6]
+
+# タイムと着差
+  race_result &amp;lt;- dplyr::mutate(race_result,time=as.character(str_extract_all(race_result$`time/margin`,&amp;quot;\\d\\.\\d{2}\\.\\d|\\d{2}\\.\\d&amp;quot;)))
+  race_result &amp;lt;- dplyr::mutate(race_result,margin=as.character(str_extract_all(race_result$`time/margin`,&amp;quot;./.馬身|.馬身|.[:space:]./.馬身|[ア-ン-]+&amp;quot;)))
+  race_result &amp;lt;- race_result[-5]
+
+# 馬名、馬齢、馬体重
+  race_result &amp;lt;- dplyr::mutate(race_result,horse_name=as.character(str_extract_all(race_result$`horse_name/age`,&amp;quot;[ァ-ヴー・]+&amp;quot;)))
+  race_result &amp;lt;- dplyr::mutate(race_result,horse_age=as.character(str_extract_all(race_result$`horse_name/age`,&amp;quot;牡\\d+|牝\\d+|せん\\d+&amp;quot;)))
+  race_result &amp;lt;- dplyr::mutate(race_result,horse_weight=as.character(str_extract_all(race_result$`horse_name/age`,&amp;quot;\\d{3}&amp;quot;)))
+  race_result &amp;lt;- dplyr::mutate(race_result,horse_weight_change=as.character(str_extract_all(race_result$`horse_name/age`,&amp;quot;\\([\\+|\\-]\\d+\\)|\\([\\d+]\\)&amp;quot;)))
+  race_result$horse_weight_change &amp;lt;- sapply(rm_round(race_result$horse_weight_change, extract=TRUE), paste, collapse=&amp;quot;&amp;quot;)
+  race_result &amp;lt;- race_result[-4]
+
+# ジョッキー
+  race_result &amp;lt;- dplyr::mutate(race_result,jockey=as.character(str_extract_all(race_result$`jockey/weight`,&amp;quot;[ぁ-ん一-龠]+\\s[ぁ-ん一-龠]+|[:upper:].[ァ-ヶー]+&amp;quot;)))
+  race_result &amp;lt;- race_result[-4]
+
+# オッズと人気
+  race_result &amp;lt;- dplyr::mutate(race_result,odds=as.character(str_extract_all(race_result$`popularity/odds`,&amp;quot;\\(.+\\)&amp;quot;)))
+  race_result &amp;lt;- dplyr::mutate(race_result,popularity=as.character(str_extract_all(race_result$`popularity/odds`,&amp;quot;\\d+[^(\\d+.\\d)]&amp;quot;)))
+  race_result$odds &amp;lt;- sapply(rm_round(race_result$odds, extract=TRUE), paste, collapse=&amp;quot;&amp;quot;)
+  race_result &amp;lt;- race_result[-4]&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;ここまででデータは取得できたわけなのですが、そのデータは綺麗なものにはなっていません。 上のコードでは、その整形作業を行っています。現在、取得したデータは以下のようになっています。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;head(race_result)&lt;/code&gt;&lt;/pre&gt;
+&lt;div data-pagedtable=&#34;false&#34;&gt;
+&lt;script data-pagedtable-source type=&#34;application/json&#34;&gt;
+{&#34;columns&#34;:[{&#34;label&#34;:[&#34;&#34;],&#34;name&#34;:[&#34;_rn_&#34;],&#34;type&#34;:[&#34;&#34;],&#34;align&#34;:[&#34;left&#34;]},{&#34;label&#34;:[&#34;order&#34;],&#34;name&#34;:[1],&#34;type&#34;:[&#34;int&#34;],&#34;align&#34;:[&#34;right&#34;]},{&#34;label&#34;:[&#34;frame_number&#34;],&#34;name&#34;:[2],&#34;type&#34;:[&#34;int&#34;],&#34;align&#34;:[&#34;right&#34;]},{&#34;label&#34;:[&#34;horse_number&#34;],&#34;name&#34;:[3],&#34;type&#34;:[&#34;int&#34;],&#34;align&#34;:[&#34;right&#34;]},{&#34;label&#34;:[&#34;trainer&#34;],&#34;name&#34;:[4],&#34;type&#34;:[&#34;chr&#34;],&#34;align&#34;:[&#34;left&#34;]},{&#34;label&#34;:[&#34;passing_rank&#34;],&#34;name&#34;:[5],&#34;type&#34;:[&#34;chr&#34;],&#34;align&#34;:[&#34;left&#34;]},{&#34;label&#34;:[&#34;last_3F&#34;],&#34;name&#34;:[6],&#34;type&#34;:[&#34;chr&#34;],&#34;align&#34;:[&#34;left&#34;]},{&#34;label&#34;:[&#34;time&#34;],&#34;name&#34;:[7],&#34;type&#34;:[&#34;chr&#34;],&#34;align&#34;:[&#34;left&#34;]},{&#34;label&#34;:[&#34;margin&#34;],&#34;name&#34;:[8],&#34;type&#34;:[&#34;chr&#34;],&#34;align&#34;:[&#34;left&#34;]},{&#34;label&#34;:[&#34;horse_name&#34;],&#34;name&#34;:[9],&#34;type&#34;:[&#34;chr&#34;],&#34;align&#34;:[&#34;left&#34;]},{&#34;label&#34;:[&#34;horse_age&#34;],&#34;name&#34;:[10],&#34;type&#34;:[&#34;chr&#34;],&#34;align&#34;:[&#34;left&#34;]},{&#34;label&#34;:[&#34;horse_weight&#34;],&#34;name&#34;:[11],&#34;type&#34;:[&#34;chr&#34;],&#34;align&#34;:[&#34;left&#34;]},{&#34;label&#34;:[&#34;horse_weight_change&#34;],&#34;name&#34;:[12],&#34;type&#34;:[&#34;chr&#34;],&#34;align&#34;:[&#34;left&#34;]},{&#34;label&#34;:[&#34;jockey&#34;],&#34;name&#34;:[13],&#34;type&#34;:[&#34;chr&#34;],&#34;align&#34;:[&#34;left&#34;]},{&#34;label&#34;:[&#34;odds&#34;],&#34;name&#34;:[14],&#34;type&#34;:[&#34;chr&#34;],&#34;align&#34;:[&#34;left&#34;]},{&#34;label&#34;:[&#34;popularity&#34;],&#34;name&#34;:[15],&#34;type&#34;:[&#34;chr&#34;],&#34;align&#34;:[&#34;left&#34;]},{&#34;label&#34;:[&#34;race_date&#34;],&#34;name&#34;:[16],&#34;type&#34;:[&#34;chr&#34;],&#34;align&#34;:[&#34;left&#34;]},{&#34;label&#34;:[&#34;race_name&#34;],&#34;name&#34;:[17],&#34;type&#34;:[&#34;chr&#34;],&#34;align&#34;:[&#34;left&#34;]}],&#34;data&#34;:[{&#34;1&#34;:&#34;1&#34;,&#34;2&#34;:&#34;2&#34;,&#34;3&#34;:&#34;2&#34;,&#34;4&#34;:&#34;河野 通文&#34;,&#34;5&#34;:&#34;06-07-06-06&#34;,&#34;6&#34;:&#34;35.1&#34;,&#34;7&#34;:&#34;3.19.7&#34;,&#34;8&#34;:&#34;character(0)&#34;,&#34;9&#34;:&#34;センゴクシルバー&#34;,&#34;10&#34;:&#34;牡6&#34;,&#34;11&#34;:&#34;478&#34;,&#34;12&#34;:&#34;+2&#34;,&#34;13&#34;:&#34;田中 勝春&#34;,&#34;14&#34;:&#34;2.3&#34;,&#34;15&#34;:&#34;1&#34;,&#34;16&#34;:&#34;1994年1月31日&#34;,&#34;17&#34;:&#34;第44回ダイヤモンドステークス（GIII）&#34;,&#34;_rn_&#34;:&#34;1&#34;},{&#34;1&#34;:&#34;2&#34;,&#34;2&#34;:&#34;6&#34;,&#34;3&#34;:&#34;9&#34;,&#34;4&#34;:&#34;武 邦彦&#34;,&#34;5&#34;:&#34;06-05-04-04&#34;,&#34;6&#34;:&#34;35.7&#34;,&#34;7&#34;:&#34;3.19.9&#34;,&#34;8&#34;:&#34;1 1/4馬身&#34;,&#34;9&#34;:&#34;ジャムシード&#34;,&#34;10&#34;:&#34;牡6&#34;,&#34;11&#34;:&#34;480&#34;,&#34;12&#34;:&#34;0&#34;,&#34;13&#34;:&#34;柴田 政人&#34;,&#34;14&#34;:&#34;14&#34;,&#34;15&#34;:&#34;7&#34;,&#34;16&#34;:&#34;1994年1月31日&#34;,&#34;17&#34;:&#34;第44回ダイヤモンドステークス（GIII）&#34;,&#34;_rn_&#34;:&#34;2&#34;},{&#34;1&#34;:&#34;3&#34;,&#34;2&#34;:&#34;7&#34;,&#34;3&#34;:&#34;10&#34;,&#34;4&#34;:&#34;白井 寿昭&#34;,&#34;5&#34;:&#34;08-07-06-06&#34;,&#34;6&#34;:&#34;35.7&#34;,&#34;7&#34;:&#34;3.20.1&#34;,&#34;8&#34;:&#34;1 1/2馬身&#34;,&#34;9&#34;:&#34;ホクセツギンガ&#34;,&#34;10&#34;:&#34;牡6&#34;,&#34;11&#34;:&#34;500&#34;,&#34;12&#34;:&#34;+4&#34;,&#34;13&#34;:&#34;小屋敷 昭&#34;,&#34;14&#34;:&#34;7.5&#34;,&#34;15&#34;:&#34;3&#34;,&#34;16&#34;:&#34;1994年1月31日&#34;,&#34;17&#34;:&#34;第44回ダイヤモンドステークス（GIII）&#34;,&#34;_rn_&#34;:&#34;3&#34;},{&#34;1&#34;:&#34;4&#34;,&#34;2&#34;:&#34;7&#34;,&#34;3&#34;:&#34;11&#34;,&#34;4&#34;:&#34;矢野 進&#34;,&#34;5&#34;:&#34;03-03-03-02&#34;,&#34;6&#34;:&#34;36.3&#34;,&#34;7&#34;:&#34;3.20.4&#34;,&#34;8&#34;:&#34;1 3/4馬身&#34;,&#34;9&#34;:&#34;サマーワイン&#34;,&#34;10&#34;:&#34;牝5&#34;,&#34;11&#34;:&#34;422&#34;,&#34;12&#34;:&#34;-4&#34;,&#34;13&#34;:&#34;木幡 初広&#34;,&#34;14&#34;:&#34;32.6&#34;,&#34;15&#34;:&#34;9&#34;,&#34;16&#34;:&#34;1994年1月31日&#34;,&#34;17&#34;:&#34;第44回ダイヤモンドステークス（GIII）&#34;,&#34;_rn_&#34;:&#34;4&#34;},{&#34;1&#34;:&#34;5&#34;,&#34;2&#34;:&#34;1&#34;,&#34;3&#34;:&#34;1&#34;,&#34;4&#34;:&#34;秋山 史郎&#34;,&#34;5&#34;:&#34;12-12-12-12&#34;,&#34;6&#34;:&#34;35.6&#34;,&#34;7&#34;:&#34;3.20.5&#34;,&#34;8&#34;:&#34;1/2馬身&#34;,&#34;9&#34;:&#34;ダイワジェームス&#34;,&#34;10&#34;:&#34;牡6&#34;,&#34;11&#34;:&#34;472&#34;,&#34;12&#34;:&#34;+6&#34;,&#34;13&#34;:&#34;大塚 栄三郎&#34;,&#34;14&#34;:&#34;5.9&#34;,&#34;15&#34;:&#34;2&#34;,&#34;16&#34;:&#34;1994年1月31日&#34;,&#34;17&#34;:&#34;第44回ダイヤモンドステークス（GIII）&#34;,&#34;_rn_&#34;:&#34;5&#34;},{&#34;1&#34;:&#34;6&#34;,&#34;2&#34;:&#34;5&#34;,&#34;3&#34;:&#34;7&#34;,&#34;4&#34;:&#34;須貝 彦三&#34;,&#34;5&#34;:&#34;11-10-06-06&#34;,&#34;6&#34;:&#34;36.1&#34;,&#34;7&#34;:&#34;3.20.5&#34;,&#34;8&#34;:&#34;ハナ&#34;,&#34;9&#34;:&#34;シゲノランボー&#34;,&#34;10&#34;:&#34;牡7&#34;,&#34;11&#34;:&#34;438&#34;,&#34;12&#34;:&#34;-6&#34;,&#34;13&#34;:&#34;須貝 尚介&#34;,&#34;14&#34;:&#34;8.7&#34;,&#34;15&#34;:&#34;4&#34;,&#34;16&#34;:&#34;1994年1月31日&#34;,&#34;17&#34;:&#34;第44回ダイヤモンドステークス（GIII）&#34;,&#34;_rn_&#34;:&#34;6&#34;}],&#34;options&#34;:{&#34;columns&#34;:{&#34;min&#34;:{},&#34;max&#34;:[10]},&#34;rows&#34;:{&#34;min&#34;:[10],&#34;max&#34;:[10]},&#34;pages&#34;:{}}}
+  &lt;/script&gt;
+&lt;/div&gt;
+&lt;p&gt;ご覧のように、&lt;code&gt;\n&lt;/code&gt;が入っていたり、通過順位と上り3ハロンのタイムが一つのセルに入っていたりとこのままでは分析ができません。不要なものを取り除いたり、データを二つに分割する作業が必要になります。今回の記事ではこの部分について詳しくは説明しません。この部分は正規表現を駆使する必要がありますが、私自身全く詳しくないからです。今回も手探りでやりました。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# レース情報
+  race_date &amp;lt;- race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//div[@id = &amp;#39;raceTitName&amp;#39;]/p[@id = &amp;#39;raceTitDay&amp;#39;]&amp;quot;) %&amp;gt;%
+    html_text()
+  race_name &amp;lt;- race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//div[@id = &amp;#39;raceTitName&amp;#39;]/h1[@class = &amp;#39;fntB&amp;#39;]&amp;quot;) %&amp;gt;%
+    html_text()
+
+  race_result &amp;lt;- dplyr::mutate(race_result,race_date=as.character(str_extract_all(race_date,&amp;quot;\\d+年\\d+月\\d+日&amp;quot;)))
+  race_result &amp;lt;- dplyr::mutate(race_result,race_name=as.character(str_replace_all(race_name,&amp;quot;\\s&amp;quot;,&amp;quot;&amp;quot;)))
+
+# ファイル格納
+  if (k ==1 &amp;amp;&amp;amp; i == 1){
+    dataset &amp;lt;- race_result
+  } else {
+    dataset &amp;lt;- rbind(dataset,race_result)
+  }# if文の終わり
+} # iループの終わり
+
+    write.csv(race_result,&amp;quot;race_result.csv&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;最後に、レース日時とレース名を抜き出し、データを一時的に格納するコードとcsvファイルに書き出すコードを書いて終了です。完成データセットは以下のような状態になっています。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;head(dataset)&lt;/code&gt;&lt;/pre&gt;
+&lt;div data-pagedtable=&#34;false&#34;&gt;
+&lt;script data-pagedtable-source type=&#34;application/json&#34;&gt;
+{&#34;columns&#34;:[{&#34;label&#34;:[&#34;&#34;],&#34;name&#34;:[&#34;_rn_&#34;],&#34;type&#34;:[&#34;&#34;],&#34;align&#34;:[&#34;left&#34;]},{&#34;label&#34;:[&#34;order&#34;],&#34;name&#34;:[1],&#34;type&#34;:[&#34;chr&#34;],&#34;align&#34;:[&#34;left&#34;]},{&#34;label&#34;:[&#34;frame_number&#34;],&#34;name&#34;:[2],&#34;type&#34;:[&#34;int&#34;],&#34;align&#34;:[&#34;right&#34;]},{&#34;label&#34;:[&#34;horse_number&#34;],&#34;name&#34;:[3],&#34;type&#34;:[&#34;int&#34;],&#34;align&#34;:[&#34;right&#34;]},{&#34;label&#34;:[&#34;trainer&#34;],&#34;name&#34;:[4],&#34;type&#34;:[&#34;chr&#34;],&#34;align&#34;:[&#34;left&#34;]},{&#34;label&#34;:[&#34;passing_rank&#34;],&#34;name&#34;:[5],&#34;type&#34;:[&#34;chr&#34;],&#34;align&#34;:[&#34;left&#34;]},{&#34;label&#34;:[&#34;last_3F&#34;],&#34;name&#34;:[6],&#34;type&#34;:[&#34;chr&#34;],&#34;align&#34;:[&#34;left&#34;]},{&#34;label&#34;:[&#34;time&#34;],&#34;name&#34;:[7],&#34;type&#34;:[&#34;chr&#34;],&#34;align&#34;:[&#34;left&#34;]},{&#34;label&#34;:[&#34;margin&#34;],&#34;name&#34;:[8],&#34;type&#34;:[&#34;chr&#34;],&#34;align&#34;:[&#34;left&#34;]},{&#34;label&#34;:[&#34;horse_name&#34;],&#34;name&#34;:[9],&#34;type&#34;:[&#34;chr&#34;],&#34;align&#34;:[&#34;left&#34;]},{&#34;label&#34;:[&#34;horse_age&#34;],&#34;name&#34;:[10],&#34;type&#34;:[&#34;chr&#34;],&#34;align&#34;:[&#34;left&#34;]},{&#34;label&#34;:[&#34;horse_weight&#34;],&#34;name&#34;:[11],&#34;type&#34;:[&#34;chr&#34;],&#34;align&#34;:[&#34;left&#34;]},{&#34;label&#34;:[&#34;horse_weight_change&#34;],&#34;name&#34;:[12],&#34;type&#34;:[&#34;chr&#34;],&#34;align&#34;:[&#34;left&#34;]},{&#34;label&#34;:[&#34;jockey&#34;],&#34;name&#34;:[13],&#34;type&#34;:[&#34;chr&#34;],&#34;align&#34;:[&#34;left&#34;]},{&#34;label&#34;:[&#34;odds&#34;],&#34;name&#34;:[14],&#34;type&#34;:[&#34;chr&#34;],&#34;align&#34;:[&#34;left&#34;]},{&#34;label&#34;:[&#34;popularity&#34;],&#34;name&#34;:[15],&#34;type&#34;:[&#34;chr&#34;],&#34;align&#34;:[&#34;left&#34;]},{&#34;label&#34;:[&#34;race_date&#34;],&#34;name&#34;:[16],&#34;type&#34;:[&#34;chr&#34;],&#34;align&#34;:[&#34;left&#34;]},{&#34;label&#34;:[&#34;race_name&#34;],&#34;name&#34;:[17],&#34;type&#34;:[&#34;chr&#34;],&#34;align&#34;:[&#34;left&#34;]}],&#34;data&#34;:[{&#34;1&#34;:&#34;1&#34;,&#34;2&#34;:&#34;8&#34;,&#34;3&#34;:&#34;11&#34;,&#34;4&#34;:&#34;森安 弘昭&#34;,&#34;5&#34;:&#34;01-01-01-01&#34;,&#34;6&#34;:&#34;35.7&#34;,&#34;7&#34;:&#34;2.00.7&#34;,&#34;8&#34;:&#34;character(0)&#34;,&#34;9&#34;:&#34;ヒダカハヤト&#34;,&#34;10&#34;:&#34;牡8&#34;,&#34;11&#34;:&#34;488&#34;,&#34;12&#34;:&#34;-2&#34;,&#34;13&#34;:&#34;大塚 栄三郎&#34;,&#34;14&#34;:&#34;29&#34;,&#34;15&#34;:&#34;10&#34;,&#34;16&#34;:&#34;1994年1月5日&#34;,&#34;17&#34;:&#34;第43回日刊スポーツ賞金杯（GIII）&#34;,&#34;_rn_&#34;:&#34;1&#34;},{&#34;1&#34;:&#34;2&#34;,&#34;2&#34;:&#34;5&#34;,&#34;3&#34;:&#34;6&#34;,&#34;4&#34;:&#34;矢野 進&#34;,&#34;5&#34;:&#34;06-06-04-03&#34;,&#34;6&#34;:&#34;35.3&#34;,&#34;7&#34;:&#34;2.00.8&#34;,&#34;8&#34;:&#34;3/4馬身&#34;,&#34;9&#34;:&#34;ステージチャンプ&#34;,&#34;10&#34;:&#34;牡5&#34;,&#34;11&#34;:&#34;462&#34;,&#34;12&#34;:&#34;+14&#34;,&#34;13&#34;:&#34;岡部 幸雄&#34;,&#34;14&#34;:&#34;3.2&#34;,&#34;15&#34;:&#34;1&#34;,&#34;16&#34;:&#34;1994年1月5日&#34;,&#34;17&#34;:&#34;第43回日刊スポーツ賞金杯（GIII）&#34;,&#34;_rn_&#34;:&#34;2&#34;},{&#34;1&#34;:&#34;3&#34;,&#34;2&#34;:&#34;4&#34;,&#34;3&#34;:&#34;4&#34;,&#34;4&#34;:&#34;新関 力&#34;,&#34;5&#34;:&#34;03-03-02-02&#34;,&#34;6&#34;:&#34;35.8&#34;,&#34;7&#34;:&#34;2.01.1&#34;,&#34;8&#34;:&#34;1 3/4馬身&#34;,&#34;9&#34;:&#34;マキノトウショウ&#34;,&#34;10&#34;:&#34;牡5&#34;,&#34;11&#34;:&#34;502&#34;,&#34;12&#34;:&#34;+6&#34;,&#34;13&#34;:&#34;的場 均&#34;,&#34;14&#34;:&#34;6.9&#34;,&#34;15&#34;:&#34;4&#34;,&#34;16&#34;:&#34;1994年1月5日&#34;,&#34;17&#34;:&#34;第43回日刊スポーツ賞金杯（GIII）&#34;,&#34;_rn_&#34;:&#34;3&#34;},{&#34;1&#34;:&#34;4&#34;,&#34;2&#34;:&#34;8&#34;,&#34;3&#34;:&#34;12&#34;,&#34;4&#34;:&#34;大和田 稔&#34;,&#34;5&#34;:&#34;02-02-03-03&#34;,&#34;6&#34;:&#34;35.7&#34;,&#34;7&#34;:&#34;2.01.1&#34;,&#34;8&#34;:&#34;ハナ&#34;,&#34;9&#34;:&#34;ペガサス&#34;,&#34;10&#34;:&#34;牡5&#34;,&#34;11&#34;:&#34;464&#34;,&#34;12&#34;:&#34;+4&#34;,&#34;13&#34;:&#34;安田 富男&#34;,&#34;14&#34;:&#34;5.7&#34;,&#34;15&#34;:&#34;2&#34;,&#34;16&#34;:&#34;1994年1月5日&#34;,&#34;17&#34;:&#34;第43回日刊スポーツ賞金杯（GIII）&#34;,&#34;_rn_&#34;:&#34;4&#34;},{&#34;1&#34;:&#34;5&#34;,&#34;2&#34;:&#34;7&#34;,&#34;3&#34;:&#34;9&#34;,&#34;4&#34;:&#34;田中 和夫&#34;,&#34;5&#34;:&#34;07-07-07-05&#34;,&#34;6&#34;:&#34;35.8&#34;,&#34;7&#34;:&#34;2.01.6&#34;,&#34;8&#34;:&#34;3馬身&#34;,&#34;9&#34;:&#34;シャマードシンボリ&#34;,&#34;10&#34;:&#34;牡7&#34;,&#34;11&#34;:&#34;520&#34;,&#34;12&#34;:&#34;+4&#34;,&#34;13&#34;:&#34;田中 剛&#34;,&#34;14&#34;:&#34;29.6&#34;,&#34;15&#34;:&#34;12&#34;,&#34;16&#34;:&#34;1994年1月5日&#34;,&#34;17&#34;:&#34;第43回日刊スポーツ賞金杯（GIII）&#34;,&#34;_rn_&#34;:&#34;5&#34;},{&#34;1&#34;:&#34;6&#34;,&#34;2&#34;:&#34;3&#34;,&#34;3&#34;:&#34;3&#34;,&#34;4&#34;:&#34;中島 敏文&#34;,&#34;5&#34;:&#34;09-10-10-09&#34;,&#34;6&#34;:&#34;35.5&#34;,&#34;7&#34;:&#34;2.01.7&#34;,&#34;8&#34;:&#34;3/4馬身&#34;,&#34;9&#34;:&#34;モンタミール&#34;,&#34;10&#34;:&#34;牡7&#34;,&#34;11&#34;:&#34;474&#34;,&#34;12&#34;:&#34;+4&#34;,&#34;13&#34;:&#34;蓑田 早人&#34;,&#34;14&#34;:&#34;10.4&#34;,&#34;15&#34;:&#34;6&#34;,&#34;16&#34;:&#34;1994年1月5日&#34;,&#34;17&#34;:&#34;第43回日刊スポーツ賞金杯（GIII）&#34;,&#34;_rn_&#34;:&#34;6&#34;}],&#34;options&#34;:{&#34;columns&#34;:{&#34;min&#34;:{},&#34;max&#34;:[10]},&#34;rows&#34;:{&#34;min&#34;:[10],&#34;max&#34;:[10]},&#34;pages&#34;:{}}}
+  &lt;/script&gt;
+&lt;/div&gt;
+&lt;p&gt;以上です。次回はこのデータセットを使用して、分析を行っていきます。次回までには1994年からのデータを全てスクレイピングしてきます。&lt;/p&gt;
+&lt;p&gt;【追記（2018/6/10）】&lt;/p&gt;
+&lt;p&gt;上述したスクリプトを用いて、スクレイピングを行ったところエラーが出ました。どうやらレース結果の中には強風などで中止になったものも含まれているらしく、そこでエラーが出る様子（race_resultがcharacter(0)になってしまう）。なので、この部分を修正したスクリプトを以下で公開しておきます。こちらは私の PC環境では正常に作動しています。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# rvestによる競馬データのwebスクレイピング
+
+#install.packages(&amp;quot;rvest&amp;quot;)
+#if (!require(&amp;quot;pacman&amp;quot;)) install.packages(&amp;quot;pacman&amp;quot;)
+  install.packages(&amp;quot;beepr&amp;quot;)
+  pacman::p_load(qdapRegex)
+  library(rvest)
+  library(stringr)
+  library(dplyr)
+  library(beepr)
+
+# pathの設定
+  setwd(&amp;quot;C:/Users/assiy/Dropbox/競馬統計解析&amp;quot;)
+
+  for(year in 1994:2018){
+
+  # yahoo競馬のレース結果一覧ページの取得
+  for (k in 1:12){
+
+    keiba.yahoo &amp;lt;- read_html(str_c(&amp;quot;https://keiba.yahoo.co.jp/schedule/list/&amp;quot;, year,&amp;quot;/?month=&amp;quot;,k))
+    race_url &amp;lt;- keiba.yahoo %&amp;gt;%
+    html_nodes(&amp;quot;a&amp;quot;) %&amp;gt;%
+    html_attr(&amp;quot;href&amp;quot;) # 全urlを取得
+
+    # レース結果のをurlを取得
+    race_url &amp;lt;- race_url[str_detect(race_url, pattern=&amp;quot;result&amp;quot;)==1] # 「result」が含まれるurlを抽出
+
+    for (i in 1:length(race_url)){
+
+    Sys.sleep(10)
+    print(str_c(&amp;quot;現在、&amp;quot;, year, &amp;quot;年&amp;quot;, k, &amp;quot;月&amp;quot;, i,&amp;quot;番目のレースの保存中です&amp;quot;))
+
+    race1 &amp;lt;- read_html(str_c(&amp;quot;https://keiba.yahoo.co.jp&amp;quot;,race_url[i])) # レース結果のurlを取得
+
+    # レースが中止でなければ処理を実行
+    if (identical(race1 %&amp;gt;%
+    html_nodes(xpath = &amp;quot;//div[@class = &amp;#39;resultAtt mgnBL fntSS&amp;#39;]&amp;quot;) %&amp;gt;%
+    html_text(),character(0)) == TRUE){
+
+    # レース結果をスクレイピング
+    race_result &amp;lt;- race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//table[@id = &amp;#39;raceScore&amp;#39;]&amp;quot;) %&amp;gt;%
+    html_table()
+    race_result &amp;lt;- do.call(&amp;quot;data.frame&amp;quot;,race_result) # リストをデータフレームに変更
+    colnames(race_result) &amp;lt;- c(&amp;quot;order&amp;quot;,&amp;quot;frame_number&amp;quot;,&amp;quot;horse_number&amp;quot;,&amp;quot;horse_name/age&amp;quot;,&amp;quot;time/margin&amp;quot;,&amp;quot;passing_rank/last_3F&amp;quot;,&amp;quot;jockey/weight&amp;quot;,&amp;quot;popularity/odds&amp;quot;,&amp;quot;trainer&amp;quot;) #　列名変更
+
+    # 通過順位と上り3Fのタイム
+    race_result &amp;lt;- dplyr::mutate(race_result,passing_rank=as.character(str_extract_all(race_result$`passing_rank/last_3F`,&amp;quot;(\\d{2}-\\d{2}-\\d{2}-\\d{2})|(\\d{2}-\\d{2}-\\d{2})|(\\d{2}-\\d{2})&amp;quot;)))
+    race_result &amp;lt;- dplyr::mutate(race_result,last_3F=as.character(str_extract_all(race_result$`passing_rank/last_3F`,&amp;quot;\\d{2}\\.\\d&amp;quot;)))
+    race_result &amp;lt;- race_result[-6]
+
+    # タイムと着差
+    race_result &amp;lt;- dplyr::mutate(race_result,time=as.character(str_extract_all(race_result$`time/margin`,&amp;quot;\\d\\.\\d{2}\\.\\d|\\d{2}\\.\\d&amp;quot;)))
+    race_result &amp;lt;- dplyr::mutate(race_result,margin=as.character(str_extract_all(race_result$`time/margin`,&amp;quot;./.馬身|.馬身|.[:space:]./.馬身|[ア-ン-]+&amp;quot;)))
+    race_result &amp;lt;- race_result[-5]
+
+    # 馬名、馬齢、馬体重
+    race_result &amp;lt;- dplyr::mutate(race_result,horse_name=as.character(str_extract_all(race_result$`horse_name/age`,&amp;quot;[ァ-ヴー・]+&amp;quot;)))
+    race_result &amp;lt;- dplyr::mutate(race_result,horse_age=as.character(str_extract_all(race_result$`horse_name/age`,&amp;quot;牡\\d+|牝\\d+|せん\\d+&amp;quot;)))
+    race_result &amp;lt;- dplyr::mutate(race_result,horse_weight=as.character(str_extract_all(race_result$`horse_name/age`,&amp;quot;\\d{3}&amp;quot;)))
+    race_result &amp;lt;- dplyr::mutate(race_result,horse_weight_change=as.character(str_extract_all(race_result$`horse_name/age`,&amp;quot;\\([\\+|\\-]\\d+\\)|\\([\\d+]\\)&amp;quot;)))
+    race_result$horse_weight_change &amp;lt;- sapply(rm_round(race_result$horse_weight_change, extract=TRUE), paste, collapse=&amp;quot;&amp;quot;)
+    race_result &amp;lt;- race_result[-4]
+
+    # ジョッキー
+    race_result &amp;lt;- dplyr::mutate(race_result,jockey=as.character(str_extract_all(race_result$`jockey/weight`,&amp;quot;[ぁ-ん一-龠]+\\s[ぁ-ん一-龠]+|[:upper:].[ァ-ヶー]+&amp;quot;)))
+    race_result &amp;lt;- race_result[-4]
+
+    # オッズと人気
+    race_result &amp;lt;- dplyr::mutate(race_result,odds=as.character(str_extract_all(race_result$`popularity/odds`,&amp;quot;\\(.+\\)&amp;quot;)))
+    race_result &amp;lt;- dplyr::mutate(race_result,popularity=as.character(str_extract_all(race_result$`popularity/odds`,&amp;quot;\\d+[^(\\d+.\\d)]&amp;quot;)))
+    race_result$odds &amp;lt;- sapply(rm_round(race_result$odds, extract=TRUE), paste, collapse=&amp;quot;&amp;quot;)
+    race_result &amp;lt;- race_result[-4]
+
+    # レース情報
+    race_date &amp;lt;- race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//div[@id = &amp;#39;raceTitName&amp;#39;]/p[@id = &amp;#39;raceTitDay&amp;#39;]&amp;quot;) %&amp;gt;%
+    html_text()
+    race_name &amp;lt;- race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//div[@id = &amp;#39;raceTitName&amp;#39;]/h1[@class = &amp;#39;fntB&amp;#39;]&amp;quot;) %&amp;gt;%
+    html_text()
+
+    race_result &amp;lt;- dplyr::mutate(race_result,race_date=as.character(str_extract_all(race_date,&amp;quot;\\d+年\\d+月\\d+日&amp;quot;)))
+    race_result &amp;lt;- dplyr::mutate(race_result,race_name=as.character(str_replace_all(race_name,&amp;quot;\\s&amp;quot;,&amp;quot;&amp;quot;)))
+
+    ## ファイル貯めるのかく
+    if (k == 1 &amp;amp;&amp;amp; i == 1 &amp;amp;&amp;amp; year == 1994){
+    dataset &amp;lt;- race_result
+    } else {
+    dataset &amp;lt;- rbind(dataset,race_result)
+    } # if文2の終わり
+    } # if文1の終わり
+    } # iループの終わり
+    } # kループの終わり
+    beep()
+    } # yearループの終わり
+
+    write.csv(dataset,&amp;quot;race_result.csv&amp;quot;, row.names = FALSE)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;これを回すのに16時間かかりました（笑）データ数は想定していたよりは少なく、97939になりました。&lt;/p&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

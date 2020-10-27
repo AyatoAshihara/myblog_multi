@@ -1,0 +1,2161 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>マクロ経済学 | 東京の資産運用会社で働く社会人が研究に没頭するブログ</title>
+    <link>/category/%E3%83%9E%E3%82%AF%E3%83%AD%E7%B5%8C%E6%B8%88%E5%AD%A6/</link>
+      <atom:link href="/category/%E3%83%9E%E3%82%AF%E3%83%AD%E7%B5%8C%E6%B8%88%E5%AD%A6/index.xml" rel="self" type="application/rss+xml" />
+    <description>マクロ経済学</description>
+    <generator>Wowchemy (https://wowchemy.com)</generator><language>ja</language><lastBuildDate>Tue, 16 Jul 2019 00:00:00 +0000</lastBuildDate>
+    <image>
+      <url>/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
+      <title>マクロ経済学</title>
+      <link>/category/%E3%83%9E%E3%82%AF%E3%83%AD%E7%B5%8C%E6%B8%88%E5%AD%A6/</link>
+    </image>
+    
+    <item>
+      <title>10年物長期金利をフィッティングしてみる</title>
+      <link>/post/post14/</link>
+      <pubDate>Tue, 16 Jul 2019 00:00:00 +0000</pubDate>
+      <guid>/post/post14/</guid>
+      <description>
+&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+
+&lt;div id=&#34;TOC&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#データ収集&#34;&gt;1. データ収集&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#月次解析パート&#34;&gt;2. 月次解析パート&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#日次解析パート&#34;&gt;3. 日次解析パート&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+
+&lt;p&gt;おはこんばんにちは。とある理由で10年物長期金利のフィッティングを行いたいと思いました。というわけで、USデータを用いて解析していきます。まず、データを収集しましょう。&lt;code&gt;quantmod&lt;/code&gt;パッケージを用いて、FREDからデータを落とします。&lt;code&gt;getsymbols(キー,from=開始日,src=&#34;FRED&#34;, auto.assign=TRUE)&lt;/code&gt;で簡単にできちゃいます。ちなみにキーはFREDのHPで確認できます。&lt;/p&gt;
+&lt;div id=&#34;データ収集&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;1. データ収集&lt;/h2&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(quantmod)
+
+# data name collected
+symbols.name &amp;lt;- c(&amp;quot;10-Year Treasury Constant Maturity Rate&amp;quot;,&amp;quot;Effective Federal Funds Rate&amp;quot;,&amp;quot;
+Consumer Price Index for All Urban Consumers: All Items&amp;quot;,&amp;quot;Civilian Unemployment Rate&amp;quot;,&amp;quot;3-Month Treasury Bill: Secondary Market Rate&amp;quot;,&amp;quot;Industrial Production Index&amp;quot;,&amp;quot;
+10-Year Breakeven Inflation Rate&amp;quot;,&amp;quot;Trade Weighted U.S. Dollar Index: Broad, Goods&amp;quot;,&amp;quot;
+Smoothed U.S. Recession Probabilities&amp;quot;,&amp;quot;Moody&amp;#39;s Seasoned Baa Corporate Bond Yield&amp;quot;,&amp;quot;5-Year, 5-Year Forward Inflation Expectation Rate&amp;quot;,&amp;quot;Personal Consumption Expenditures&amp;quot;)
+
+# Collect economic data
+symbols &amp;lt;- c(&amp;quot;GS10&amp;quot;,&amp;quot;FEDFUNDS&amp;quot;,&amp;quot;CPIAUCSL&amp;quot;,&amp;quot;UNRATE&amp;quot;,&amp;quot;TB3MS&amp;quot;,&amp;quot;INDPRO&amp;quot;,&amp;quot;T10YIEM&amp;quot;,&amp;quot;TWEXBMTH&amp;quot;,&amp;quot;RECPROUSM156N&amp;quot;,&amp;quot;BAA&amp;quot;,&amp;quot;T5YIFRM&amp;quot;,&amp;quot;PCE&amp;quot;)
+getSymbols(symbols, from = &amp;#39;1980-01-01&amp;#39;, src = &amp;quot;FRED&amp;quot;, auto.assign = TRUE)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##  [1] &amp;quot;GS10&amp;quot;          &amp;quot;FEDFUNDS&amp;quot;      &amp;quot;CPIAUCSL&amp;quot;      &amp;quot;UNRATE&amp;quot;       
+##  [5] &amp;quot;TB3MS&amp;quot;         &amp;quot;INDPRO&amp;quot;        &amp;quot;T10YIEM&amp;quot;       &amp;quot;TWEXBMTH&amp;quot;     
+##  [9] &amp;quot;RECPROUSM156N&amp;quot; &amp;quot;BAA&amp;quot;           &amp;quot;T5YIFRM&amp;quot;       &amp;quot;PCE&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;macro_indicator &amp;lt;- merge(GS10,FEDFUNDS,CPIAUCSL,UNRATE,TB3MS,INDPRO,T10YIEM,TWEXBMTH,RECPROUSM156N,BAA,T5YIFRM,PCE)
+rm(GS10,FEDFUNDS,CPIAUCSL,UNRATE,TB3MS,INDPRO,T10YIEM,TWEXBMTH,RECPROUSM156N,BAA,T5YIFRM,PCE,USEPUINDXD)&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;月次解析パート&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;2. 月次解析パート&lt;/h2&gt;
+&lt;p&gt;データは
+&lt;a href=&#34;htmlwidget/macro_indicator.html&#34;&gt;こちら&lt;/a&gt;
+から参照できます。では、推計用のデータセットを作成していきます。被説明変数は&lt;code&gt;10-Year Treasury Constant Maturity Rate(GS10)&lt;/code&gt;です。説明変数は以下の通りです。&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th&gt;説明変数名&lt;/th&gt;
+&lt;th&gt;キー&lt;/th&gt;
+&lt;th&gt;代理変数&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Federal Funds Rate&lt;/td&gt;
+&lt;td&gt;FEDFUNDS&lt;/td&gt;
+&lt;td&gt;短期金利&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;Consumer Price Index&lt;/td&gt;
+&lt;td&gt;CPIAUCSL&lt;/td&gt;
+&lt;td&gt;物価&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Unemployment Rate&lt;/td&gt;
+&lt;td&gt;UNRATE&lt;/td&gt;
+&lt;td&gt;雇用関連&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;3-Month Treasury Bill&lt;/td&gt;
+&lt;td&gt;TB3MS&lt;/td&gt;
+&lt;td&gt;短期金利&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Industrial Production Index&lt;/td&gt;
+&lt;td&gt;INDPRO&lt;/td&gt;
+&lt;td&gt;景気&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;Breakeven Inflation Rate&lt;/td&gt;
+&lt;td&gt;T10YIEM&lt;/td&gt;
+&lt;td&gt;物価&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Trade Weighted Dollar Index&lt;/td&gt;
+&lt;td&gt;TWEXBMTH&lt;/td&gt;
+&lt;td&gt;為替&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;Recession Probabilities&lt;/td&gt;
+&lt;td&gt;RECPROUSM156N&lt;/td&gt;
+&lt;td&gt;景気&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Moody’s Seasoned Baa Corporate Bond Yield&lt;/td&gt;
+&lt;td&gt;BAA&lt;/td&gt;
+&lt;td&gt;リスクプレミアム&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;Inflation Expectation Rate&lt;/td&gt;
+&lt;td&gt;T5YIFRM&lt;/td&gt;
+&lt;td&gt;物価&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Personal Consumption Expenditures&lt;/td&gt;
+&lt;td&gt;PCE&lt;/td&gt;
+&lt;td&gt;景気&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;Economic Policy Uncertainty Index&lt;/td&gt;
+&lt;td&gt;USEPUINDXD&lt;/td&gt;
+&lt;td&gt;政治&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;かなり適当な変数選択ではあるんですが、マクロモデリング的に長期金利ってどうやってモデル化するかというとちゃんとやってない場合が多いです。DSGEでは効率市場仮説に従って10年先までの短期金利のパスをリンクしたものと長期金利が等しくなると定式化するのが院生時代のモデリングでした（マクロファイナンスの界隈ではちゃんとやってそう）。そういうわけで、短期金利を説明変数に加えています。そして、短期金利に影響を与えるであろう物価にかかる指標も3つ追加しました。加えて、景気との相関が強いことはよく知られているので景気に関するデータも追加しました。これらはそもそもマクロモデルでは短期金利は以下のようなテイラールールに従うとモデリングすることが一般的であることが背景にあります。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+r_t = \rho r_{t-1} + \alpha \pi_{t} + \beta y_{t}
+\]&lt;/span&gt;
+ここで、&lt;span class=&#34;math inline&#34;&gt;\(r_t\)&lt;/span&gt;は政策金利（短期金利）、&lt;span class=&#34;math inline&#34;&gt;\(\pi_t\)&lt;/span&gt;はインフレ率、&lt;span class=&#34;math inline&#34;&gt;\(y_t\)&lt;/span&gt;はoutputです。&lt;span class=&#34;math inline&#34;&gt;\(\rho, \alpha, \beta\)&lt;/span&gt;はdeep parameterと呼ばれるもので、それぞれ慣性、インフレ率への金利の感応度、outputに対する感応度を表しています。&lt;span class=&#34;math inline&#34;&gt;\(\rho=0,\beta=0\)&lt;/span&gt;の時、&lt;span class=&#34;math inline&#34;&gt;\(\alpha&amp;gt;=1\)&lt;/span&gt;でなければ合理的期待均衡解が得られないことは「テイラーの原理」として有名です。
+その他、Corporate bondとの裁定関係も存在しそうな&lt;code&gt;Moody&#39;s Seasoned Baa Corporate Bond Yield&lt;/code&gt;も説明変数に追加しています。また、欲を言えば&lt;code&gt;VIX&lt;/code&gt;指数と財政に関する指標を追加したいところです。財政に関する指数はQuateryかAnnualyなので今回のようなmonthlyの推計には使用することができません。この部分は最もネックなところです。なにか考え付いたら再推計します。&lt;/p&gt;
+&lt;p&gt;では、推計に入ります。今回は説明変数が多いので&lt;code&gt;lasso&lt;/code&gt;回帰を行い、有効な変数を絞り込みたいと思います。また、比較のために&lt;code&gt;OLS&lt;/code&gt;もやります。説明変数は被説明変数の1期前の値を使用します。おそらく、1期前でもデータの公表時期によっては翌月の推計に間に合わない可能性もありますが、とりあえずこれでやってみます。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# make dataset
+traindata &amp;lt;- na.omit(merge(macro_indicator[&amp;quot;2003-01-01::2015-12-31&amp;quot;][,1],stats::lag(macro_indicator[&amp;quot;2003-01-01::2015-12-31&amp;quot;][,-1],1)))
+testdata  &amp;lt;- na.omit(merge(macro_indicator[&amp;quot;2016-01-01::&amp;quot;][,1],stats::lag(macro_indicator[&amp;quot;2016-01-01::&amp;quot;][,-1],1)))
+
+# fitting OLS
+trial1 &amp;lt;- lm(GS10~.,data = traindata)
+summary(trial1)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 
+## Call:
+## lm(formula = GS10 ~ ., data = traindata)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.76208 -0.21234  0.00187  0.21595  0.70493 
+## 
+## Coefficients:
+##                 Estimate Std. Error t value Pr(&amp;gt;|t|)    
+## (Intercept)   14.3578405  4.3524691   3.299 0.001226 ** 
+## FEDFUNDS      -0.2011132  0.1438774  -1.398 0.164335    
+## CPIAUCSL      -0.0702011  0.0207761  -3.379 0.000938 ***
+## UNRATE        -0.2093502  0.0796052  -2.630 0.009477 ** 
+## TB3MS          0.2970160  0.1413796   2.101 0.037410 *  
+## INDPRO        -0.0645376  0.0260343  -2.479 0.014339 *  
+## T10YIEM        1.1484487  0.1769925   6.489 1.32e-09 ***
+## TWEXBMTH      -0.0317345  0.0118155  -2.686 0.008091 ** 
+## RECPROUSM156N -0.0099083  0.0021021  -4.713 5.72e-06 ***
+## BAA            0.7793520  0.0868628   8.972 1.49e-15 ***
+## T5YIFRM       -0.4551318  0.1897695  -2.398 0.017759 *  
+## PCE            0.0009087  0.0002475   3.672 0.000339 ***
+## ---
+## Signif. codes:  0 &amp;#39;***&amp;#39; 0.001 &amp;#39;**&amp;#39; 0.01 &amp;#39;*&amp;#39; 0.05 &amp;#39;.&amp;#39; 0.1 &amp;#39; &amp;#39; 1
+## 
+## Residual standard error: 0.2981 on 143 degrees of freedom
+## Multiple R-squared:  0.9203, Adjusted R-squared:  0.9142 
+## F-statistic: 150.1 on 11 and 143 DF,  p-value: &amp;lt; 2.2e-16&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;自由度修正済み決定係数高めですね。2015/12/31までのモデルを使って、アウトサンプルのデータ(2016/01/01~)を予測し、平均二乗誤差を計算します。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;est.OLS.Y &amp;lt;- predict(trial1,testdata[,-1])
+Y &amp;lt;- as.matrix(testdata[,1])
+mse.OLS &amp;lt;- sum((Y - est.OLS.Y)^2) / length(Y)
+mse.OLS&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 0.1431734&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;次に&lt;code&gt;lasso&lt;/code&gt;回帰です。Cross Validationを行い、&lt;span class=&#34;math inline&#34;&gt;\(\lambda\)&lt;/span&gt;を決める&lt;code&gt;glmnet&lt;/code&gt;パッケージの&lt;code&gt;cv.glmnet&lt;/code&gt;関数を使用します。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# fitting lasso regression
+library(glmnet)
+trial2 &amp;lt;- cv.glmnet(as.matrix(traindata[,-1]),as.matrix(traindata[,1]),family=&amp;quot;gaussian&amp;quot;,alpha=1)
+plot(trial2)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-4-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;trial2$lambda.min&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 0.000436523&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;coef(trial2,s=trial2$lambda.min)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 12 x 1 sparse Matrix of class &amp;quot;dgCMatrix&amp;quot;
+##                           1
+## (Intercept)   12.0180676188
+## FEDFUNDS      -0.1041665345
+## CPIAUCSL      -0.0574470880
+## UNRATE        -0.1919723880
+## TB3MS          0.2110222475
+## INDPRO        -0.0610115260
+## T10YIEM        1.1688912397
+## TWEXBMTH      -0.0242324285
+## RECPROUSM156N -0.0095154487
+## BAA            0.7600115062
+## T5YIFRM       -0.4575241038
+## PCE            0.0007486169&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;Unemployment Rate&lt;/code&gt;、&lt;code&gt;3-Month Treasury Bill&lt;/code&gt;、&lt;code&gt;Breakeven Inflation Rate、Moody&#39;s Seasoned Baa Corporate Bond Yield&lt;/code&gt;、&lt;code&gt;Inflation Expectation Rate&lt;/code&gt;の回帰係数が大きくなるという結果ですね。失業率以外は想定内の結果です。ただ、今回の結果を見る限り景気との相関は低そうです（逆向きにしか効かない？）。MSEを計算します。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;est.lasso.Y &amp;lt;- predict(trial2, newx = as.matrix(testdata[,-1]), s = trial2$lambda.min, type = &amp;#39;response&amp;#39;)
+mse.lasso &amp;lt;- sum((Y - est.lasso.Y)^2) / length(Y)
+mse.lasso&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 0.1318541&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;lasso&lt;/code&gt;回帰のほうが良い結果になりました。&lt;code&gt;lasso&lt;/code&gt;回帰で計算した予測値と実績値を時系列プロットしてみます。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(tidyverse)
+
+ggplot(gather(data.frame(actual=Y[,1],lasso_prediction=est.lasso.Y[,1],OLS_prediction=est.OLS.Y,date=as.POSIXct(rownames(Y))),key=data,value=rate,-date),aes(x=date,y=rate, colour=data)) +
+  geom_line(size=1.5) +
+  scale_x_datetime(breaks = &amp;quot;6 month&amp;quot;,date_labels = &amp;quot;%Y-%m&amp;quot;) +
+  scale_y_continuous(breaks=c(1,1.5,2,2.5,3,3.5),limits = c(1.25,3.5))&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-6-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;方向感はいい感じです。一方で、2016年1月からや2018年12月以降の急激な金利低下は予測できていません。この部分については何か変数を考えるorローリング推計を実施する、のいずれかをやってみないと精度が上がらなそうです。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;日次解析パート&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;3. 日次解析パート&lt;/h2&gt;
+&lt;p&gt;月次での解析に加えて日次での解析もやりたいとおもいます。日次データであればデータの公表は市場が閉まり次第の場合が多いので、いわゆる&lt;code&gt;jagged edge&lt;/code&gt;の問題が起こりにくいと思います。まずは日次データの収集から始めます。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# data name collected
+symbols.name &amp;lt;- c(&amp;quot;10-Year Treasury Constant Maturity Rate&amp;quot;,&amp;quot;Effective Federal Funds Rate&amp;quot;,&amp;quot;
+6-Month London Interbank Offered Rate (LIBOR), based on U.S. Dollar&amp;quot;,&amp;quot;NASDAQ Composite Index&amp;quot;,&amp;quot;3-Month Treasury Bill: Secondary Market Rate&amp;quot;,&amp;quot;Economic Policy Uncertainty Index for United States&amp;quot;,&amp;quot;
+10-Year Breakeven Inflation Rate&amp;quot;,&amp;quot;Trade Weighted U.S. Dollar Index: Broad, Goods&amp;quot;,&amp;quot;Moody&amp;#39;s Seasoned Baa Corporate Bond Yield&amp;quot;,&amp;quot;5-Year, 5-Year Forward Inflation Expectation Rate&amp;quot;)
+
+# Collect economic data
+symbols &amp;lt;- c(&amp;quot;DGS10&amp;quot;,&amp;quot;DFF&amp;quot;,&amp;quot;USD6MTD156N&amp;quot;,&amp;quot;NASDAQCOM&amp;quot;,&amp;quot;DTB3&amp;quot;,&amp;quot;USEPUINDXD&amp;quot;,&amp;quot;T10YIE&amp;quot;,&amp;quot;DTWEXB&amp;quot;,&amp;quot;DBAA&amp;quot;,&amp;quot;T5YIFR&amp;quot;)
+getSymbols(symbols, from = &amp;#39;1980-01-01&amp;#39;, src = &amp;quot;FRED&amp;quot;, auto.assign = TRUE)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##  [1] &amp;quot;DGS10&amp;quot;       &amp;quot;DFF&amp;quot;         &amp;quot;USD6MTD156N&amp;quot; &amp;quot;NASDAQCOM&amp;quot;   &amp;quot;DTB3&amp;quot;       
+##  [6] &amp;quot;USEPUINDXD&amp;quot;  &amp;quot;T10YIE&amp;quot;      &amp;quot;DTWEXB&amp;quot;      &amp;quot;DBAA&amp;quot;        &amp;quot;T5YIFR&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;NASDAQCOM.r &amp;lt;- ROC(na.omit(NASDAQCOM))
+macro_indicator.d &amp;lt;- merge(DGS10,DFF,USD6MTD156N,NASDAQCOM.r,DTB3,USEPUINDXD,T10YIE,DTWEXB,DBAA,T5YIFR)
+rm(DGS10,DFF,USD6MTD156N,NASDAQCOM,NASDAQCOM.r,DTB3,USEPUINDXD,T10YIE,DTWEXB,DBAA,T5YIFR)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;次にデータセットを構築します。学習用と訓練用にデータを分けます。実際の予測プロセスを考え、2営業日前のデータを説明変数に用いています。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# make dataset
+traindata.d &amp;lt;- na.omit(merge(macro_indicator.d[&amp;quot;1980-01-01::2010-12-31&amp;quot;][,1],stats::lag(macro_indicator.d[&amp;quot;1980-01-01::2010-12-31&amp;quot;][,-1],2)))
+testdata.d  &amp;lt;- na.omit(merge(macro_indicator.d[&amp;quot;2010-01-01::&amp;quot;][,1],stats::lag(macro_indicator.d[&amp;quot;2010-01-01::&amp;quot;][,-1],2)))
+
+# fitting OLS
+trial1.d &amp;lt;- lm(DGS10~.,data = traindata.d)
+summary(trial1.d)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 
+## Call:
+## lm(formula = DGS10 ~ ., data = traindata.d)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.82445 -0.12285  0.00469  0.14332  0.73789 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(&amp;gt;|t|)    
+## (Intercept) -3.5051208  0.1690503 -20.734  &amp;lt; 2e-16 ***
+## DFF          0.0818269  0.0239371   3.418 0.000653 ***
+## USD6MTD156N -0.0135771  0.0233948  -0.580 0.561799    
+## NASDAQCOM   -0.3880217  0.4367334  -0.888 0.374483    
+## DTB3         0.1227984  0.0280283   4.381 1.29e-05 ***
+## USEPUINDXD  -0.0006611  0.0001086  -6.087 1.58e-09 ***
+## T10YIE       0.6980971  0.0355734  19.624  &amp;lt; 2e-16 ***
+## DTWEXB       0.0270128  0.0012781  21.135  &amp;lt; 2e-16 ***
+## DBAA         0.2988122  0.0182590  16.365  &amp;lt; 2e-16 ***
+## T5YIFR       0.3374944  0.0381111   8.856  &amp;lt; 2e-16 ***
+## ---
+## Signif. codes:  0 &amp;#39;***&amp;#39; 0.001 &amp;#39;**&amp;#39; 0.01 &amp;#39;*&amp;#39; 0.05 &amp;#39;.&amp;#39; 0.1 &amp;#39; &amp;#39; 1
+## 
+## Residual standard error: 0.2173 on 1114 degrees of freedom
+## Multiple R-squared:  0.8901, Adjusted R-squared:  0.8892 
+## F-statistic:  1002 on 9 and 1114 DF,  p-value: &amp;lt; 2.2e-16&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;依然決定係数は高めです。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;est.OLS.Y.d &amp;lt;- predict(trial1.d,testdata.d[,-1])
+Y.d &amp;lt;- as.matrix(testdata.d[,1])
+mse.OLS.d &amp;lt;- sum((Y.d - est.OLS.Y.d)^2) / length(Y.d)
+mse.OLS.d&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 0.8003042&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;次に&lt;code&gt;lasso&lt;/code&gt;回帰です。&lt;code&gt;CV&lt;/code&gt;で&lt;span class=&#34;math inline&#34;&gt;\(\lambda\)&lt;/span&gt;を決定。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# fitting lasso regression
+trial2.d &amp;lt;- cv.glmnet(as.matrix(traindata.d[,-1]),as.matrix(traindata.d[,1]),family=&amp;quot;gaussian&amp;quot;,alpha=1)
+plot(trial2.d)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-10-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;trial2.d$lambda.min&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 0.001472377&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;coef(trial2.d,s=trial2.d$lambda.min)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 10 x 1 sparse Matrix of class &amp;quot;dgCMatrix&amp;quot;
+##                         1
+## (Intercept) -3.4186530904
+## DFF          0.0707022021
+## USD6MTD156N  .           
+## NASDAQCOM   -0.2675513858
+## DTB3         0.1204092358
+## USEPUINDXD  -0.0006506183
+## T10YIE       0.6915446819
+## DTWEXB       0.0270389569
+## DBAA         0.2861031504
+## T5YIFR       0.3376304446&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;libor&lt;/code&gt;の係数値が0になりました。MSEは&lt;code&gt;OLS&lt;/code&gt;の方が高い結果に。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;est.lasso.Y.d &amp;lt;- predict(trial2.d, newx = as.matrix(testdata.d[,-1]), s = trial2.d$lambda.min, type = &amp;#39;response&amp;#39;)
+mse.lasso.d &amp;lt;- sum((Y.d - est.lasso.Y.d)^2) / length(Y.d)
+mse.lasso.d&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 0.8378427&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;予測値をプロットします。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggplot(gather(data.frame(actual=Y.d[,1],lasso_prediction=est.lasso.Y.d[,1],OLS_prediction=est.OLS.Y.d,date=as.POSIXct(rownames(Y.d))),key=data,value=rate,-date),aes(x=date,y=rate, colour=data)) +
+  geom_line(size=1.5) +
+  scale_x_datetime(breaks = &amp;quot;2 year&amp;quot;,date_labels = &amp;quot;%Y-%m&amp;quot;) +
+  scale_y_continuous(breaks=c(1,1.5,2,2.5,3,3.5),limits = c(1.25,5))&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-12-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;月次と同じく、&lt;code&gt;OLS&lt;/code&gt;と&lt;code&gt;lasso&lt;/code&gt;で予測値に差はほとんどありません。なかなかいい感じに変動を捉えることができていますが、2011年の&lt;code&gt;United States federal government credit-rating downgrades&lt;/code&gt;による金利低下や2013年の景気回復に伴う金利上昇は捉えることができていません。日次の景気指標はPOSデータくらいしかないんですが、強いて言うなら最近使用した夜間光の衛星画像データなんかは使えるかもしれません。時間があればやってみます。とりあえず、いったんこれでこの記事は終わりたいと思います。ここまで読み進めていただき、ありがとうございました。&lt;/p&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Google Earth Engine APIで衛星画像データを取得し、景況感をナウキャスティングしてみる</title>
+      <link>/post/post12/</link>
+      <pubDate>Tue, 16 Jul 2019 00:00:00 +0000</pubDate>
+      <guid>/post/post12/</guid>
+      <description>
+&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+
+&lt;div id=&#34;TOC&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#earth-engineを使うための事前準備&#34;&gt;1. Earth Engineを使うための事前準備&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#python-apiを用いた衛星画像データの取得&#34;&gt;2. Python APIを用いた衛星画像データの取得&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#image&#34;&gt;Image…&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#imagecollection&#34;&gt;ImageCollection…&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#featurecollection&#34;&gt;FeatureCollection…&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+
+&lt;p&gt;皆さんおはこんばんにちわ。前回、GPLVMモデルを用いたGDP予測モデルを構築しました。ただ、ナウキャスティングというからにはオルタナティブデータを用いた解析を行いたいところではあります。ふと、以下の記事を見つけました。&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://jp.reuters.com/article/gdp-u-tokyo-idJPKBN15M0NH&#34;&gt;焦点：ナウキャストのＧＤＰ推計、世界初の衛星画像利用　利用拡大も&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;こちらは東京大学の渡辺努先生が人工衛星画像を用いてGDP予測モデルを開発したというものです。記事には&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;米国の海洋大気庁が運営する気象衛星「スオミＮＰＰ」が日本上空を通過する毎日午前１時３０分時点の画像を購入し、縦、横７２０メートル四方のマス目ごとの明るさを計測する。同じ明るさでも、農地、商業用地、工業用地など土地の用途によって経済活動の大きさが異なるため、国土地理院の土地利用調査を参照。土地の用途と、明るさが示す経済活動の相関を弾き出し、この結果を考慮した上で、明るさから経済活動の大きさを試算する。
+（中略）衛星画像のように誰もが入手可能な公表データであれば、政府、民間の区別なく分析が可能であるため、渡辺氏はこれを「統計の民主化」と呼び、世界的な潮流になると予想している。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;と書かれており、衛星写真を用いた分析に興味を惹かれました。 衛星写真って誰でも利用可能か？というところですが、Googleが&lt;code&gt;Earth Engine&lt;/code&gt;というサービスを提供していることがわかりました。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;earthengine3.jpg&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://earthengine.google.com/&#34; class=&#34;uri&#34;&gt;https://earthengine.google.com/&lt;/a&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;（拙訳）Google Earth Engineは、数ペタバイトの衛星画像群と地理空間データセットを惑星規模の解析機能と組み合わせ、科学者、研究者、開発者が変化を検出し、傾向を射影し、地球の変容を定量化することを可能にします。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;研究・教育・非営利目的ならば、なんと&lt;strong&gt;無料&lt;/strong&gt;で衛星写真データを解析することができます。具体的に何ができるのかは以下の動画を見てください。&lt;/p&gt;
+&lt;iframe src=&#34;//www.youtube.com/embed/gKGOeTFHnKY&#34; width=&#34;100%&#34; height=&#34;500&#34; seamless frameborder=&#34;0&#34; allowfullscreen&gt;
+&lt;/iframe&gt;
+&lt;p&gt;今回はそんなEath Engineのpython APIを用いて衛星画像データを取得し、解析していきたいと思います。&lt;/p&gt;
+&lt;div id=&#34;earth-engineを使うための事前準備&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;1. Earth Engineを使うための事前準備&lt;/h2&gt;
+&lt;p&gt;Earth Engineを使用するためには、Google Accountを使って申請を行う必要があります。先ほどの画像の右上の「Sign Up」からできます。申請を行って、Gmailに以下のようなメールが来るととりあえずEarth Engineは使用できるようになります。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;earthengine4.jpg&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;とりあえずというのはWEB上の&lt;code&gt;Earth Engine&lt;/code&gt; コードエディタは使用できるということです。コードエディタというのは以下のようなもので、ブラウザ上でデータを取得したり、解析をしたり、解析結果をMAPに投影したりすることができる便利ツールです。&lt;code&gt;Earth Engine&lt;/code&gt;の本体はむしろこいつで、APIは副次的なものと考えています。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;earthengine5.jpg&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;真ん中のコードエディタにコードを打っていきますが、言語はjavascriptです(APIは&lt;code&gt;python&lt;/code&gt;と&lt;code&gt;javascript&lt;/code&gt;両方あるんですけどね)。解析結果をMAPに投影したり、reference（左）を参照したり、Consoleに吐き出したデータを確認することができるのでかなり便利です。が、データを落とした後で高度な解析を行いたい場合はpythonを使ったほうが慣れているので今回はAPIを使用しています。
+話が脱線しました。さて、&lt;code&gt;Earth Engine&lt;/code&gt;の承認を得たら、&lt;code&gt;pip&lt;/code&gt;で&lt;code&gt;earthengine-api&lt;/code&gt;をインストールしておきます。そして、コマンドプロンプト上で、&lt;code&gt;earthengine authenticate&lt;/code&gt;と打ちます。そうすると、勝手にブラウザが立ち上がり、以下のように&lt;code&gt;python api&lt;/code&gt;のauthenticationを行う画面がでますので「次へ」を押下します。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;earthengine1.jpg&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;次に以下のような画面にいきますので、そのまま承認します。これでauthenticationの完成です。&lt;code&gt;python&lt;/code&gt;からAPIが使えます。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;earthengine2.jpg&#34; /&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;python-apiを用いた衛星画像データの取得&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;2. Python APIを用いた衛星画像データの取得&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;Python&lt;/code&gt; APIを使用する準備ができました。ここからは衛星画像データを取得していきます。以下にあるように&lt;code&gt;Earth Engine&lt;/code&gt;にはたくさんのデータセットが存在します。&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://developers.google.com/earth-engine/datasets/&#34; class=&#34;uri&#34;&gt;https://developers.google.com/earth-engine/datasets/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;今回は&lt;code&gt;VIIRS Stray Light Corrected Nighttime Day/Night Band Composites Version 1&lt;/code&gt;というデータセットを使用します。このデータセットは世界中の夜間光の光量を月次単位で平均し、提供するものです。サンプル期間は2014-01~現在です。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;Earth Engine&lt;/code&gt;にはいくつかの固有なデータ型が存在します。覚えておくべきものは以下の3つです。&lt;/p&gt;
+&lt;div id=&#34;image&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;Image…&lt;/h3&gt;
+&lt;p&gt;ある１時点における&lt;code&gt;raste&lt;/code&gt;rデータです。&lt;code&gt;image&lt;/code&gt;オブジェクトはいくつかの&lt;code&gt;band&lt;/code&gt;で構成されています。この&lt;code&gt;band&lt;/code&gt;はデータによって異なりますが、おおよそのデータは&lt;code&gt;band&lt;/code&gt;それぞれがRGB値を表していたりします。&lt;code&gt;Earth Engine&lt;/code&gt;を使用する上で最も基本的なデータです。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;imagecollection&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;ImageCollection…&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;Image&lt;/code&gt;オブジェクトを時系列に並べたオブジェクトです。今回は時系列解析をするのでこのデータを使用します。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;featurecollection&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;FeatureCollection…&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;GeoJSON Feature&lt;/code&gt;です。地理情報を表す&lt;code&gt;Geometry&lt;/code&gt;オブジェクトやそのデータのプロパティ（国名等）が格納されています。今回は日本の位置情報を取得する際に使用しています。&lt;/p&gt;
+&lt;p&gt;ではコーディングしていきます。まず、日本の地理情報の&lt;code&gt;FeatureCollection&lt;/code&gt;オブジェクトを取得します。地理情報は&lt;code&gt;Fusion Tables&lt;/code&gt;に格納されていますので、IDで引っ張りCountryがJapanのものを抽出します。&lt;code&gt;ee.FeatureCollection()&lt;/code&gt;の引数にIDを入力すれば簡単に取得できます。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import ee
+from dateutil.parser import parse
+
+ee.Initialize()
+
+# get Japan geometory as FeatureCollection from fusion table
+japan = ee.FeatureCollection(&amp;#39;ft:1tdSwUL7MVpOauSgRzqVTOwdfy17KDbw-1d9omPw&amp;#39;).filter(ee.Filter.eq(&amp;#39;Country&amp;#39;, &amp;#39;Japan&amp;#39;))&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;次に夜間光の衛星画像を取得してみます。こちらも&lt;code&gt;ee.ImageCollection()&lt;/code&gt;にデータセットのIDを渡すと取得できます。なお、ここでは&lt;code&gt;band&lt;/code&gt;を月次の平均光量である&lt;code&gt;avg_rad&lt;/code&gt;に抽出しています。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;# get night-light data from earth engine from 2014-01-01 to 2019-01-01
+dataset = ee.ImageCollection(&amp;#39;NOAA/VIIRS/DNB/MONTHLY_V1/VCMSLCFG&amp;#39;).filter(ee.Filter.date(&amp;#39;2014-01-01&amp;#39;,&amp;#39;2019-01-01&amp;#39;)).select(&amp;#39;avg_rad&amp;#39;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;取得した衛星画像を日本周辺に切り出し、画像ファイルとして出力してみましょう。画像ファイルの出力は&lt;code&gt;image&lt;/code&gt;オブジェクトで可能です（そうでないと画像がたくさん出てきてしまいますからね。。。）。今取得したのは&lt;code&gt;ImageCollection&lt;/code&gt;オブジェクトですから&lt;code&gt;Image&lt;/code&gt;オブジェクトへ圧縮してやる必要があります（上が&lt;code&gt;ImageCollection&lt;/code&gt;オブジェクト、下が圧縮された&lt;code&gt;Image&lt;/code&gt;オブジェクト）。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://developers.google.com/earth-engine/images/Reduce_ImageCollection.png&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;ここでは、&lt;code&gt;ImageCollection&lt;/code&gt;オブジェクトの中にあるの&lt;code&gt;Image&lt;/code&gt;オブジェクトの平均値をとってサンプル期間の平均的な画像を出力してみたいと思います。&lt;code&gt;ImageCollection.mean()&lt;/code&gt;でできます。また、&lt;code&gt;.visualize({min:0.5})&lt;/code&gt;でピクセル値が0.5以上でフィルターをかけています。こうしないと雲と思われるものやゴミ？みたいなものがついてしまいます。次に、ここまで加工した画像データをダウンロードするurlを&lt;code&gt;.getDownloadURL&lt;/code&gt;メソッドで取得しています。その際、&lt;code&gt;region&lt;/code&gt;で切り出す範囲をポリゴン値で指定し、&lt;code&gt;scale&lt;/code&gt;でデータの解像度を指定しています（&lt;code&gt;scale&lt;/code&gt;が小さすぎると処理が重すぎるらしくエラーが出て処理できません）。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;dataset.mean().visualize(min=0.5).getDownloadURL(dict(name=&amp;#39;thumbnail&amp;#39;,region=[[[120.3345348936478, 46.853488838010854],[119.8071911436478, 24.598157870729043],[148.6353161436478, 24.75788466523463],[149.3384411436478, 46.61252884462868]]],scale=5000))&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;取得した画像が以下です。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;earthengine6.jpg&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;やはり、東京を中心とした関東圏、大阪を中心とした関西圏、愛知、福岡、北海道（札幌周辺）の光量が多く、経済活動が活発であることがわかります。また、陸内よりも沿岸部で光量が多い地域があることがわかります。これは経済活動とは直接関係しない現象のような気もします。今回は分析対象外ですが、北緯38度を境に北側が真っ暗になるのが印象的です。これは言うまでもなく北朝鮮と韓国の境界線ですから、両国の経済活動水準の差が視覚的にコントラストされているのでしょう。今回使用したデータセットは2014年からのものですが、他のデータセットでは1990年代からのデータが取得できるものもあります（その代わり最近のデータは取れませんが）。それらを用いて朝鮮半島や中国の経済発展を観察するのも面白いかもしれません。&lt;/p&gt;
+&lt;p&gt;さて、画像は取得できましたがこのままでは解析ができません。ここからは夜間光をピクセル値にマッピングしたデータを取得し、数値的な解析を試みます。ただ、先ほどとはデータ取得の手続きが少し変わります。というのも、今度は日本各地で各ピクセル単位ごとにさまざまな値をとる夜間光を&lt;strong&gt;集約&lt;/strong&gt;し、1つの代用値にしなければならないからです。ピクセルごとの数値を手に入れたところで解析するには手に余ってしまいますからね。イメージは以下のような感じです（Earth Engineサイトから引用）。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://developers.google.com/earth-engine/images/Reduce_region_diagram.png&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;先ほど取得した夜間光の&lt;code&gt;ImageCollection&lt;/code&gt;のある1時点の衛星画像が左です。その中に日本という&lt;code&gt;Region&lt;/code&gt;が存在し、それを&lt;code&gt;ee.Reducer&lt;/code&gt;によって定量的に集約（aggregate）します。Earth Engine APIには&lt;code&gt;.reduceRegions()&lt;/code&gt;メソッドが用意されていますのでそれを用いればいいです。引数は、&lt;code&gt;reducer&lt;/code&gt;=集約方法（ここでは合計値）、&lt;code&gt;collection&lt;/code&gt;=集約をかける&lt;code&gt;region&lt;/code&gt;（&lt;code&gt;FeatureCollection&lt;/code&gt;オブジェクト）、&lt;code&gt;scale&lt;/code&gt;=解像度、です。以下では、&lt;code&gt;ImageCollection&lt;/code&gt;（dataset）の中にある1番目の&lt;code&gt;Image&lt;/code&gt;オブジェクトに&lt;code&gt;.reduceRegions()&lt;/code&gt;メソッドをかけています。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;# initialize output box
+time0 = dataset.first().get(&amp;#39;system:time_start&amp;#39;);
+first = dataset.first().reduceRegions(reducer=ee.Reducer.sum(),collection=japan,scale=1000).set(&amp;#39;time_start&amp;#39;, time0)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;我々は時系列データが欲しいわけですから、&lt;code&gt;ImageCollection&lt;/code&gt;内にある&lt;code&gt;Image&lt;/code&gt;それぞれに対して同じ処理を行う必要があります。Earth Engineには&lt;code&gt;iterate&lt;/code&gt;という便利な関数があり、引数に処理したい関数を渡せばfor文いらずでこの処理を行ってくれます。ここでは&lt;code&gt;Image&lt;/code&gt;オブジェクトに&lt;code&gt;reduceRegions&lt;/code&gt;メソッドを処理した&lt;code&gt;Computed Object&lt;/code&gt;を以前に処理したものとmergeする&lt;code&gt;myfunc&lt;/code&gt;という関数を定義し、それを&lt;code&gt;iterate&lt;/code&gt;に渡しています。最後に、先ほどと同じく生成したデータを&lt;code&gt;getDownloadURL&lt;/code&gt;メソッドを用いてurlを取得しています（ファイル形式はcsv）。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;# define reduceRegions function for iteration
+def myfunc(image,first):
+  added = image.reduceRegions(reducer=ee.Reducer.sum(),collection=japan,scale=1000).set(&amp;#39;time_start&amp;#39;, image.get(&amp;#39;system:time_start&amp;#39;))
+  return ee.FeatureCollection(first).merge(added)
+
+# implement iteration
+nightjp = dataset.filter(ee.Filter.date(&amp;#39;2014-02-01&amp;#39;,&amp;#39;2019-01-01&amp;#39;)).iterate(myfunc,first)
+
+# get url to download
+ee.FeatureCollection(nightjp).getDownloadURL(filetype=&amp;#39;csv&amp;#39;,selectors=ee.FeatureCollection(nightjp).first().propertyNames().getInfo())&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;CSVファイルのurlが取得できました。この時系列をプロットして今日は終わりにしたいと思います。
+データを読み込むとこんな感じです。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import pandas as pd
+import matplotlib.pyplot as plt
+import os
+
+os.environ[&amp;#39;QT_QPA_PLATFORM_PLUGIN_PATH&amp;#39;] = &amp;#39;C:/Users/aashi/Anaconda3/Library/plugins/platforms&amp;#39;
+
+plt.style.use(&amp;#39;ggplot&amp;#39;)
+
+nightjp_csv.head()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##   system:index          sum Country  Unnamed: 3  Unnamed: 4
+## 0     2014/1/1  881512.4572   Japan         NaN         NaN
+## 1     2014/2/1  827345.3551   Japan         NaN         NaN
+## 2     2014/3/1  729110.4619   Japan         NaN         NaN
+## 3     2014/4/1  612665.8866   Japan         NaN         NaN
+## 4     2014/5/1  661434.5027   Japan         NaN         NaN&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.plot(pd.to_datetime(nightjp_csv[&amp;#39;system:index&amp;#39;]),nightjp_csv[&amp;#39;sum&amp;#39;])&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-8-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;かなり季節性がありますね。冬場は日照時間が少ないこともあって光量が増えているみたいです。それにしても急激な増え方ですが。次回はこのデータと景況感の代理変数となる経済統計を元に統計解析を行いたいと思います。おたのしみに。&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>GPLVMでマルチファクターモデルを構築してみた</title>
+      <link>/post/post8/</link>
+      <pubDate>Sun, 26 May 2019 00:00:00 +0000</pubDate>
+      <guid>/post/post8/</guid>
+      <description>
+&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+&lt;link href=&#34;index_files/pagedtable/css/pagedtable.css&#34; rel=&#34;stylesheet&#34; /&gt;
+&lt;script src=&#34;index_files/pagedtable/js/pagedtable.js&#34;&gt;&lt;/script&gt;
+
+&lt;div id=&#34;TOC&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#gplvmとは&#34;&gt;1. GPLVMとは&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#最もprimitiveなgp-lvm&#34;&gt;2. &lt;span&gt;最もPrimitiveなGP-LVM&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#rでの実装&#34;&gt;3. Rでの実装&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+
+&lt;p&gt;おはこんばんにちは。
+ずいぶん前にGianonne et al (2008)のマルチファクターモデルで四半期GDPの予想を行いました。
+結果としては、ある程度は予測精度が出ていたものの彼らの論文ほどは満足のいくものではありませんでした。原因としてはクロスセクショナルなデータ不足が大きいと思われ、現在収集方法についてもEXCELを用いて改修中です。しかし一方で、マルチファクターモデルの改善も考えたいと思っています。前回は月次経済統計を主成分分析（実際にはカルマンフィルタ）を用いて次元削減を行い、主成分得点を説明変数としてGDPに回帰しました。今回はこの主成分分析のド発展版である&lt;code&gt;Gaussian Process Latent Variable Model&lt;/code&gt;(GPLVM)を用いてファクターを計算し、それをGDPに回帰したいと思います。&lt;/p&gt;
+&lt;div id=&#34;gplvmとは&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;1. GPLVMとは&lt;/h2&gt;
+&lt;p&gt;GPLVMとは、&lt;code&gt;Gaussian Process&lt;/code&gt; Modelの一種です。以前、&lt;code&gt;Gaussian Process Regression&lt;/code&gt;の記事を書きました。&lt;/p&gt;
+&lt;p&gt;最も基本的な&lt;code&gt;Gaussian Process&lt;/code&gt; Modelは上の記事のようなモデルで、非説明変数&lt;span class=&#34;math inline&#34;&gt;\(Y=(y_{1},y_{2},...,y_{n})\)&lt;/span&gt;と説明変数&lt;span class=&#34;math inline&#34;&gt;\(X=(\textbf{x}_{1},\textbf{x}_{2},...,\textbf{x}_{n})\)&lt;/span&gt;があり、以下のような関係式で表される際にそのモデルを直接推定することなしに新たな説明変数&lt;span class=&#34;math inline&#34;&gt;\(X\)&lt;/span&gt;の入力に対し、非説明変数&lt;span class=&#34;math inline&#34;&gt;\(Y\)&lt;/span&gt;の予測値をはじき出すというものでした。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\displaystyle y_{i}  = \textbf{w}^{T}\phi(\textbf{x}_{i})
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;ここで、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{x}_{i}\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(i\)&lt;/span&gt;番目の説明変数ベクトル、&lt;span class=&#34;math inline&#34;&gt;\(\phi(・)\)&lt;/span&gt;は非線形関数、 &lt;span class=&#34;math inline&#34;&gt;\(\textbf{w}^{T}\)&lt;/span&gt;は各入力データに対する重み係数（回帰係数）ベクトルです。非線形関数としては、&lt;span class=&#34;math inline&#34;&gt;\(\phi(\textbf{x}_{i}) = (x_{1,i}, x_{1,i}^{2},...,x_{1,i}x_{2,i},...)\)&lt;/span&gt;を想定しています（&lt;span class=&#34;math inline&#34;&gt;\(x_{1,i}\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(i\)&lt;/span&gt;番目の入力データ&lt;span class=&#34;math inline&#34;&gt;\(\textbf{x}_{i}\)&lt;/span&gt;の１番目の変数）。詳しくは過去記事を参照してください。&lt;/p&gt;
+&lt;p&gt;今回やるGPLVMは説明変数ベクトルが観測できない潜在変数（Latent Variable）であるところが特徴です。以下のスライドが非常にわかりやすいですが、GP-LVMは確率的主成分分析（PPCA）の非線形版という位置付けになっています。&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://www.slideshare.net/antiplastics/pcagplvm&#34;&gt;資料&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;では具体的な説明に移ります。GPLVMは主成分分析の発展版ですので、主に次元削減のために行われることを想定しています。つまり、データセットがあったとして、サンプルサイズ&lt;span class=&#34;math inline&#34;&gt;\(n\)&lt;/span&gt;よりも変数の次元&lt;span class=&#34;math inline&#34;&gt;\(p\)&lt;/span&gt;が大きいような場合を想定しています。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;最もprimitiveなgp-lvm&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;2. &lt;a href=&#34;http://papers.nips.cc/paper/2540-gaussian-process-latent-variable-models-for-visualisation-of-high-dimensional-data.pdf&#34;&gt;最もPrimitiveなGP-LVM&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;先述したようにGPLVMはPPCAの非線形版です。なので、GPLVMを説明するスタートはPPCAになります。観測可能な&lt;span class=&#34;math inline&#34;&gt;\(D\)&lt;/span&gt;次元データセットを&lt;span class=&#34;math inline&#34;&gt;\(\{\textbf{y}_{n}\}_{n=1}^{N}\)&lt;/span&gt;とします。そして、潜在変数を&lt;span class=&#34;math inline&#34;&gt;\(\textbf{x}_{n}\)&lt;/span&gt;とおきます。今、データセットと潜在変数の間には以下のような関係があるとします。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\textbf{y}_{n} = \textbf{W}\textbf{x}_{n} + \epsilon_{n}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;ここで、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{W}\)&lt;/span&gt;はウェイト行列、&lt;span class=&#34;math inline&#34;&gt;\(\epsilon_{n}\)&lt;/span&gt;はかく乱項で&lt;span class=&#34;math inline&#34;&gt;\(N(0,\beta^{-1}\textbf{I})\)&lt;/span&gt;に従います（被説明変数が多次元になることに注意）。また、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{x}_{n}\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(N(0,\textbf{I})\)&lt;/span&gt;に従います。このとき、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{y}_{n}\)&lt;/span&gt;の尤度を&lt;span class=&#34;math inline&#34;&gt;\(\textbf{x}_{n}\)&lt;/span&gt;を周辺化することで表現すると、&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\begin{eqnarray*}
+\displaystyle p(\textbf{y}_{n}|\textbf{W},\beta) &amp;amp;=&amp;amp; \int p(\textbf{y}_{n}|\textbf{x}_{n},\textbf{W},\beta)N(0,\textbf{I})d\textbf{x}_{n} \\
+\displaystyle &amp;amp;=&amp;amp; \int N(\textbf{W}\textbf{x}_{n},\beta^{-1}\textbf{I})N(0,\textbf{I})d\textbf{x}_{n} \\
+&amp;amp;=&amp;amp; N(0,\textbf{W}\textbf{W}^{T} + \beta^{-1}\textbf{I}) \\
+\displaystyle &amp;amp;=&amp;amp; \frac{1}{(2\pi)^{DN/2}|\textbf{W}\textbf{W}^{T} + \beta^{-1}\textbf{I}|^{N/2}}\exp(\frac{1}{2}\textbf{tr}( (\textbf{W}\textbf{W}^{T} + \beta^{-1}\textbf{I})^{-1}\textbf{YY}^{T}))
+\end{eqnarray*}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;となります。ここで、&lt;span class=&#34;math inline&#34;&gt;\(p(\textbf{y}_{n}|\textbf{x}_{n},\textbf{W},\beta)=N(\textbf{W}\textbf{x}_{n},\beta^{-1}\textbf{I})\)&lt;/span&gt;です。平均と分散は以下から求めました。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\begin{eqnarray*}
+E(\textbf{y}_{n}|\textbf{W},\beta) &amp;amp;=&amp;amp; E(\textbf{W}\textbf{x}_{n} + \epsilon_{n}) \\
+&amp;amp;=&amp;amp; E(\textbf{W}\textbf{x}_{n}) + E(\epsilon_{n}) \\
+&amp;amp;=&amp;amp; \textbf{W}E(\textbf{x}_{n}) + E(\epsilon_{n}) = 0
+\end{eqnarray*}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\begin{eqnarray*}
+E[(\textbf{y}_{n}|\textbf{W},\beta)(\textbf{y}_{n}|\textbf{W},\beta)^{T}] &amp;amp;=&amp;amp; E[ (\textbf{W}\textbf{x}_{n} + \epsilon_{n} - 0)(\textbf{W}\textbf{x}_{n} + \epsilon_{n} - 0)^{T} ] \\
+&amp;amp;=&amp;amp; E[ (\textbf{W}\textbf{x}_{n} + \epsilon_{n})(\textbf{W}\textbf{x}_{n} + \epsilon_{n})^{T} ] \\
+&amp;amp;=&amp;amp; E[ \textbf{W}\textbf{x}_{n}(\textbf{W}\textbf{x}_{n})^{T} + \textbf{W}\textbf{x}_{n}\epsilon_{n}^{T} + \epsilon_{n}\textbf{W}\textbf{x}_{n}^{T} + \epsilon_{n}\epsilon_{n}^{T} ] \\
+&amp;amp;=&amp;amp; E[ \textbf{W}\textbf{x}_{n}(\textbf{W}\textbf{x}_{n})^{T} + \epsilon_{n}\epsilon_{n}^{T} ] \\
+&amp;amp;=&amp;amp; E[ \textbf{W}\textbf{x}_{n}\textbf{x}_{n}^{T}\textbf{W}^{T} + \epsilon_{n}\epsilon_{n}^{T} ] \\
+&amp;amp;=&amp;amp; E[ \textbf{W}\textbf{x}_{n}\textbf{x}_{n}^{T}\textbf{W}^{T}] + E[\epsilon_{n}\epsilon_{n}^{T} ] \\
+&amp;amp;=&amp;amp; \textbf{W}\textbf{W}^{T} + \beta^{-1}\textbf{I}
+\end{eqnarray*}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math inline&#34;&gt;\(\textbf{W}\)&lt;/span&gt;を求めるためには&lt;span class=&#34;math inline&#34;&gt;\(\textbf{y}_{n}\)&lt;/span&gt;がi.i.d.と仮定し、以下のようなデータセット全体の尤度を最大化すれば良いことになります。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\displaystyle p(\textbf{Y}|\textbf{W},\beta) = \prod_{n=1}^{N}p(\textbf{y}_{n}|\textbf{W},\beta)
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;ここで、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{Y}\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(N×D\)&lt;/span&gt;の計画行列です。このように、PPCAでは&lt;span class=&#34;math inline&#34;&gt;\(\textbf{x}_{n}\)&lt;/span&gt;を周辺化し、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{W}\)&lt;/span&gt;を最適化します。逆に、Lawrence(2004)では&lt;span class=&#34;math inline&#34;&gt;\(\textbf{W}\)&lt;/span&gt;を周辺化し、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{x}_{n}\)&lt;/span&gt;します（理由は後述）。&lt;span class=&#34;math inline&#34;&gt;\(\textbf{W}\)&lt;/span&gt;を周辺化するために、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{W}\)&lt;/span&gt;に事前分布を与えましょう。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\displaystyle p(\textbf{W}) = \prod_{i=1}^{D}N(\textbf{w}_{i}|0,\alpha^{-1}\textbf{I})
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;ここで、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{w}_{i}\)&lt;/span&gt;はウェイト行列&lt;span class=&#34;math inline&#34;&gt;\(\textbf{W}\)&lt;/span&gt;の&lt;span class=&#34;math inline&#34;&gt;\(i\)&lt;/span&gt;番目の列です。では、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{W}\)&lt;/span&gt;を周辺化して&lt;span class=&#34;math inline&#34;&gt;\(\textbf{Y}\)&lt;/span&gt;の尤度関数を導出してみます。やり方はさっきとほぼ同じなので省略します。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\displaystyle p(\textbf{Y}|\textbf{X},\beta) = \frac{1}{(2\pi)^{DN/2}|K|^{D/2}}\exp(\frac{1}{2}\textbf{tr}(\textbf{K}^{-1}\textbf{YY}^{T}))
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;ここで、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{K}=\alpha^2\textbf{X}\textbf{X}^{T} + \beta^{-1}\textbf{I}\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(p(\textbf{Y}|\textbf{X},\beta)\)&lt;/span&gt;の分散共分散行列で、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{X}=(\textbf{x}_{1},\textbf{x}_{2},...,\textbf{x}_{N})^{T}\)&lt;/span&gt;は入力ベクトルです。対数尤度は&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\displaystyle L = - \frac{DN}{2}\ln{2\pi} - \frac{1}{2}\ln{|\textbf{K}|} - \frac{1}{2}\textbf{tr}(\textbf{K}^{-1}\textbf{YY}^{T})
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;周辺化のおかげでウェイト&lt;span class=&#34;math inline&#34;&gt;\(\textbf{W}\)&lt;/span&gt;が消えたのでこれを&lt;span class=&#34;math inline&#34;&gt;\(X\)&lt;/span&gt;で微分してみましょう。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\displaystyle\frac{\partial L}{ \partial \textbf{X}} = \alpha^2 \textbf{K}^{-1}\textbf{Y}\textbf{Y}^{T}\textbf{K}^{-1}\textbf{X} - \alpha^2 D\textbf{K}^{-1}\textbf{X}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;ここから、&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\displaystyle \frac{1}{D}\textbf{Y}\textbf{Y}^{T}\textbf{K}^{-1}\textbf{X} = \textbf{X}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;ここで、特異値分解を用いると&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\textbf{X} = \textbf{ULV}^{T}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;となります。&lt;span class=&#34;math inline&#34;&gt;\(\textbf{U} = (\textbf{u}_{1},\textbf{u}_{2},...,\textbf{u}_{q})\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(N×q\)&lt;/span&gt;直交行列、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{L} = diag(l_{1},l_{2},..., l_{q})\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(q×q\)&lt;/span&gt;の特異値を対角成分に並べた行列、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{V}\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(q×q\)&lt;/span&gt;直交行列です。これを先ほどの式に代入すると、&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\begin{eqnarray*}
+\textbf{K}^{-1}\textbf{X} &amp;amp;=&amp;amp; (\alpha^2\textbf{X}\textbf{X}^{T} + \beta^{-1}\textbf{I})^{-1}\textbf{X} \\
+&amp;amp;=&amp;amp; \textbf{X}(\alpha^2\textbf{X}^{T}\textbf{X} + \beta^{-1}\textbf{I})^{-1} \\
+&amp;amp;=&amp;amp; \textbf{ULV}^{T}(\alpha^2\textbf{VLU}^{T}\textbf{ULV}^{T} + \beta^{-1}\textbf{I})^{-1} \\
+&amp;amp;=&amp;amp; \textbf{ULV}^{T}\textbf{V}(\alpha^2\textbf{LU}^{T}\textbf{UL} + \beta^{-1}\textbf{I}^{-1})\textbf{V}^{T} \\
+&amp;amp;=&amp;amp; \textbf{UL}(\alpha^2\textbf{L}^{2} + \beta^{-1}\textbf{I})^{-1}\textbf{V}^{T}
+\end{eqnarray*}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;なので、&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\begin{eqnarray*}
+\displaystyle \frac{1}{D}\textbf{Y}\textbf{Y}^{T}\textbf{UL}(\alpha^2\textbf{L}^{2} + \beta^{-1}\textbf{I})^{-1})\textbf{V}^{T} &amp;amp;=&amp;amp; \textbf{ULV}^{T}\\
+\displaystyle \textbf{Y}\textbf{Y}^{T}\textbf{UL} &amp;amp;=&amp;amp; D\textbf{U}(\alpha^2\textbf{L}^{2} + \beta^{-1}\textbf{I})^{-1}\textbf{L} \\
+\end{eqnarray*}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;となります。&lt;span class=&#34;math inline&#34;&gt;\(l_{j}\)&lt;/span&gt;が0でなければ、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{Y}\textbf{Y}^{T}\textbf{u}_{j} = D(\alpha^2 l_{j}^{2} + \beta^{-1})\textbf{u}_{j}\)&lt;/span&gt;となり、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{U}\)&lt;/span&gt;のそれぞれの列は&lt;span class=&#34;math inline&#34;&gt;\(\textbf{Y}\textbf{Y}^{T}\)&lt;/span&gt;の固有ベクトルであり、対応する固有値&lt;span class=&#34;math inline&#34;&gt;\(\lambda_{j}\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(D(\alpha^2 l_{j}^{2} + \beta^{-1})\)&lt;/span&gt;となります。つまり、未知であった&lt;span class=&#34;math inline&#34;&gt;\(X=ULV\)&lt;/span&gt;が実は&lt;span class=&#34;math inline&#34;&gt;\(\textbf{Y}\textbf{Y}^{T}\)&lt;/span&gt;の固有値問題から求めることが出来るというわけです。&lt;span class=&#34;math inline&#34;&gt;\(l_{j}\)&lt;/span&gt;は上式を利用して、&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\displaystyle l_{j} = (\frac{\lambda_{j}}{D\alpha^2} - \frac{1}{\beta\alpha^2})^{1/2}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;と&lt;span class=&#34;math inline&#34;&gt;\(\textbf{Y}\textbf{Y}^{T}\)&lt;/span&gt;の固有値&lt;span class=&#34;math inline&#34;&gt;\(\lambda_{j}\)&lt;/span&gt;とパラメータから求められることがわかります。よって、&lt;span class=&#34;math inline&#34;&gt;\(X=ULV\)&lt;/span&gt;は&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\textbf{X} = \textbf{U}_{q}\textbf{L}\textbf{V}^{T}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;となります。ここで、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{U}_{q}\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(\textbf{Y}\textbf{Y}^{T}\)&lt;/span&gt;の固有ベクトルを&lt;span class=&#34;math inline&#34;&gt;\(q\)&lt;/span&gt;個取り出したものです。&lt;span class=&#34;math inline&#34;&gt;\(\beta\)&lt;/span&gt;が限りなく大きければ（=観測誤差が限りなく小さければ）通常のPCAと一致します。&lt;/p&gt;
+&lt;p&gt;以上がPPCAです。GPLVMはPPCAで確率モデルとして想定していた以下のモデルを拡張します。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\textbf{y}_{n} = \textbf{W}^{T}\textbf{x}_{n} + \epsilon_{n}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;具体的には、通常のガウス過程と同様、&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\displaystyle \textbf{y}_{n}  = \textbf{W}^{T}\phi(\textbf{x}_{n})+ \epsilon_{n}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;という風に基底関数&lt;span class=&#34;math inline&#34;&gt;\(\phi(\textbf{x}_{n})\)&lt;/span&gt;をかませて拡張します。&lt;span class=&#34;math inline&#34;&gt;\(\phi(・)\)&lt;/span&gt;は平均&lt;span class=&#34;math inline&#34;&gt;\(\textbf{0}\)&lt;/span&gt;、分散共分散行列&lt;span class=&#34;math inline&#34;&gt;\(\textbf{K}_{\textbf{x}}\)&lt;/span&gt;のガウス過程と仮定します。分散共分散行列&lt;span class=&#34;math inline&#34;&gt;\(\textbf{K}_{\textbf{x}}\)&lt;/span&gt;は&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\textbf{K}_{\textbf{x}} = \alpha^2\phi(\textbf{x})\phi(\textbf{x})^T
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;であり、入力ベクトル&lt;span class=&#34;math inline&#34;&gt;\(\textbf{X}\)&lt;/span&gt;を&lt;span class=&#34;math inline&#34;&gt;\(\phi(\textbf{・})\)&lt;/span&gt;で非線形変換した特徴量&lt;span class=&#34;math inline&#34;&gt;\(\phi(\textbf{x})\)&lt;/span&gt;が近いほど、出力値&lt;span class=&#34;math inline&#34;&gt;\(\textbf{Y}\)&lt;/span&gt;も近くなりやすいという性質があることになります。GPLVMではこの性質を逆に利用しています。つまり、出力値&lt;span class=&#34;math inline&#34;&gt;\(Y_i\)&lt;/span&gt;と&lt;span class=&#34;math inline&#34;&gt;\(Y_j\)&lt;/span&gt;が近い→&lt;span class=&#34;math inline&#34;&gt;\(\phi(\textbf{x}_i)\)&lt;/span&gt;と&lt;span class=&#34;math inline&#34;&gt;\(\phi(\textbf{x}_j)\)&lt;/span&gt;が近い（内積が大きい）→&lt;span class=&#34;math inline&#34;&gt;\(\textbf{K}_{x,ij}\)&lt;/span&gt;が大きい→観測不可能なデータ&lt;span class=&#34;math inline&#34;&gt;\(X_{i}\)&lt;/span&gt;と&lt;span class=&#34;math inline&#34;&gt;\(X_{j}\)&lt;/span&gt;は近い値（or同じようなパターン）をとる。
+この議論からもわかるように、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{K}_{\textbf{x}}\)&lt;/span&gt;は入力ベクトル&lt;span class=&#34;math inline&#34;&gt;\(\textbf{X}\)&lt;/span&gt;それぞれの距離を表したものになります。分散共分散行列の計算には入力ベクトル&lt;span class=&#34;math inline&#34;&gt;\(\textbf{X}\)&lt;/span&gt;を基底関数&lt;span class=&#34;math inline&#34;&gt;\(\phi(\textbf{・})\)&lt;/span&gt;で非線形変換した後、内積を求めるといったことをする必要はなく、カーネル関数を計算するのみでOKです。今回は王道中の王道RBFカーネルを使用していますので、これを例説明します。&lt;/p&gt;
+&lt;p&gt;RBFカーネル（スカラーに対する）
+&lt;span class=&#34;math display&#34;&gt;\[
+\theta_{1}\exp(-\frac{1}{\theta_{2}}(x-x^T)^2)
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;このRBFカーネルは以下の基底関数と対応しています。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\phi(x)_h = \tau\exp(-\frac{1}{r}(x-h)^2)
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;例えば、この基底関数で入力&lt;span class=&#34;math inline&#34;&gt;\(x\)&lt;/span&gt;を変換したものを&lt;span class=&#34;math inline&#34;&gt;\(2H^2+1\)&lt;/span&gt;個並べた関数を&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\phi(x) = (\phi(x)_{-H^2}, ..., \phi(x)_{0},...,\phi(x)_{H^2})
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;入力&lt;span class=&#34;math inline&#34;&gt;\(x\)&lt;/span&gt;の特徴量だとすると&lt;span class=&#34;math inline&#34;&gt;\(x&amp;#39;\)&lt;/span&gt;との共分散&lt;span class=&#34;math inline&#34;&gt;\(K_{x}(x,x&amp;#39;)\)&lt;/span&gt;は内積の和なので&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+K_{x}(x,x&amp;#39;) = \sum_{h=-H^2}^{H^2}\phi_{h}(x)\phi_{h}(x&amp;#39;)
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;となります。ここで、&lt;span class=&#34;math inline&#34;&gt;\(H \to \infty\)&lt;/span&gt;とし、グリッドを極限まで細かくしてみます。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\begin{eqnarray*}
+K_{x}(x,x&amp;#39;) &amp;amp;=&amp;amp; \lim_{H \to \infty}\sum_{h=-H^2}^{H^2}\phi_{h}(x)\phi_{h}(x&amp;#39;) \\
+&amp;amp;\to&amp;amp;\int_{-\infty}^{\infty}\tau\exp(-\frac{1}{r}(x-h)^2)\tau\exp(-\frac{1}{r}(x&amp;#39;-h)^2)dh \\
+&amp;amp;=&amp;amp; \tau^2 \int_{-\infty}^{\infty}\exp(-\frac{1}{r}\{(x-h)^2+(x&amp;#39;-h)^2\})dh \\
+&amp;amp;=&amp;amp; \tau^2 \int_{-\infty}^{\infty}\exp(-\frac{1}{r}\{2(h-\frac{x+x&amp;#39;}{2})^2+\frac{1}{2}(x-x&amp;#39;)^2\})dh \\
+\end{eqnarray*}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;となります。&lt;span class=&#34;math inline&#34;&gt;\(h\)&lt;/span&gt;に関係のない部分を積分の外に出します。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\begin{eqnarray*}
+&amp;amp;=&amp;amp; \tau^2 \int_{-\infty}^{\infty}\exp(-\frac{2}{r}(h-\frac{x+x&amp;#39;}{2})^2)dh\exp(-\frac{1}{2r}(x-x&amp;#39;)^2) \\
+\end{eqnarray*}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;残った積分を見ると、正規分布の正規化定数と等しいことがわかります。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\begin{eqnarray*}
+\int_{-\infty}^{\infty}\exp(-\frac{1}{2\sigma}(h-\frac{x+x&amp;#39;}{2})^2)dh &amp;amp;=&amp;amp;  \int_{-\infty}^{\infty}\exp(-\frac{2}{r}(h-\frac{x+x&amp;#39;}{2})^2)dh\\
+\sigma &amp;amp;=&amp;amp; \frac{r}{4}
+\end{eqnarray*}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;となるので、ガウス積分の公式を用いて&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\begin{eqnarray*}
+&amp;amp;=&amp;amp; \tau^2 \sqrt{\frac{\pi r}{2}}\exp(-\frac{1}{2r}(x-x&amp;#39;)^2)　\\
+&amp;amp;=&amp;amp; \theta_{1}\exp(-\frac{1}{\theta_{2}}(x-x’)^2)
+\end{eqnarray*}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;となり、RBFカーネルと等しくなることがわかります。よって、RBFカーネルで計算した共分散は上述した基底関数で入力&lt;span class=&#34;math inline&#34;&gt;\(x\)&lt;/span&gt;を無限次元へ拡張した特徴量ベクトルの内積から計算した共分散と同値になることがわかります。つまり、入力&lt;span class=&#34;math inline&#34;&gt;\(x\)&lt;/span&gt;と&lt;span class=&#34;math inline&#34;&gt;\(x&amp;#39;\)&lt;/span&gt;のスカラーの計算のみで&lt;span class=&#34;math inline&#34;&gt;\(K_{x}(x,x&amp;#39;)\)&lt;/span&gt;ができてしまうという夢のような計算効率化が可能になるわけです。無限次元特徴量ベクトルの回帰問題なんて普通計算できませんからね。。。カーネル関数は偉大です。
+前の記事にも載せましたが、RBFカーネルで分散共分散行列を計算したガウス過程のサンプルパスは以下通りです（&lt;span class=&#34;math inline&#34;&gt;\(\theta_1=1,\theta_2=0.5\)&lt;/span&gt;）。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Define Kernel function
+Kernel_Mat &amp;lt;- function(X,sigma,beta){
+  N &amp;lt;- NROW(X)
+  K &amp;lt;- matrix(0,N,N)
+  for (i in 1:N) {
+    for (k in 1:N) {
+      if(i==k) kdelta = 1 else kdelta = 0
+      K[i,k] &amp;lt;- K[k,i] &amp;lt;- exp(-t(X[i,]-X[k,])%*%(X[i,]-X[k,])/(2*sigma^2)) + beta^{-1}*kdelta
+    }
+  }
+  return(K)
+}
+
+N &amp;lt;- 10 # max value of X
+M &amp;lt;- 1000 # sample size
+X &amp;lt;- matrix(seq(1,N,length=M),M,1) # create X
+testK &amp;lt;- Kernel_Mat(X,0.5,1e+18) # calc kernel matrix
+
+library(MASS)
+
+P &amp;lt;- 6 # num of sample path
+Y &amp;lt;- matrix(0,M,P) # define Y
+
+for(i in 1:P){
+  Y[,i] &amp;lt;- mvrnorm(n=1,rep(0,M),testK) # sample Y
+}
+
+# Plot
+matplot(x=X,y=Y,type = &amp;quot;l&amp;quot;,lwd = 2)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-1-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;非常に滑らかな関数となっていることがわかります。RBFのほかにもカーネル関数は存在します。カーネル関数を変えると基底関数が変わりますから、サンプルパスは大きく変わることになります。&lt;/p&gt;
+&lt;p&gt;GPLVMの推定方法に話を進めましょう。PPCAの時と同じく、以下の尤度関数を最大化する観測不能な入力&lt;span class=&#34;math inline&#34;&gt;\(x\)&lt;/span&gt;を推定値とします。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\displaystyle L = - \frac{DN}{2}\ln{2\pi} - \frac{1}{2}\ln{|\textbf{K}|} - \frac{1}{2}\textbf{tr}(\textbf{K}^{-1}\textbf{YY}^{T})
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;ただ、PPCAとは異なり、その値は解析的に求めることができません。尤度関数の導関数は今や複雑な関数であり、展開することができないからです。よって、共役勾配法を用いて数値的に計算するのが主流なようです（自分は準ニュートン法で実装）。解析的、数値的のどちらにせよ導関数を求めておくことは必要なので、導関数を求めてみます。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\frac{\partial L}{\partial \textbf{K}_x} = \frac{1}{2}(\textbf{K}_x^{-1}\textbf{Y}\textbf{Y}^T\textbf{K}_x^{-1}-D\textbf{K}_x^{-1})
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;なので、チェーンルールから&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\frac{\partial L}{\partial \textbf{x}} = \frac{\partial L}{\partial \textbf{K}_x}\frac{\partial \textbf{K}_x}{\partial \textbf{x}}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;なので、カーネル関数を決め、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{x}\)&lt;/span&gt;に初期値を与えてやれば勾配法によって尤度&lt;span class=&#34;math inline&#34;&gt;\(L\)&lt;/span&gt;が最大となる点を探索することができます。今回使用するRBFカーネルで&lt;span class=&#34;math inline&#34;&gt;\(\frac{\partial \textbf{K}_x}{\partial x_{nj}}\)&lt;/span&gt;を計算してみます。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\begin{eqnarray*}
+\frac{\partial \textbf{K}_x(\textbf{x}_n,\textbf{x}_n&amp;#39;)}{x_{nj}}&amp;amp;=&amp;amp;\frac{\partial\theta_{1}\exp(-\frac{|\textbf{x}_n-\textbf{x}_n&amp;#39;|^2}{\theta_{2}})}{\partial x_{nk}} \\
+&amp;amp;=&amp;amp; \frac{\partial\theta_{1}\exp(-\frac{(\textbf{x}_n-\textbf{x}_n&amp;#39;)^T(\textbf{x}_n-\textbf{x}_n&amp;#39;)}{\theta_{2}})}{\partial x_{nk}} \\
+&amp;amp;=&amp;amp; \frac{\partial\theta_{1}\exp(-\frac{-(\textbf{x}_n^T\textbf{x}_n-2\textbf{x}_n&amp;#39;^T\textbf{x}_n+\textbf{x}_n&amp;#39;^T\textbf{x}_n&amp;#39;)}{\theta_{2}})}{\partial x_{nk}} \\
+&amp;amp;=&amp;amp; -2\textbf{K}_x(\textbf{x}_n\textbf{x}_n&amp;#39;)\frac{(x_{nj}-x_{n&amp;#39;j})}{\theta_2}
+\end{eqnarray*}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math inline&#34;&gt;\(j\)&lt;/span&gt;番目の潜在変数の&lt;span class=&#34;math inline&#34;&gt;\(n\)&lt;/span&gt;番目のサンプルそれぞれに導関数を計算し、それを分散共分散行列と同じ行列に整理したものと&lt;span class=&#34;math inline&#34;&gt;\(\frac{\partial L}{\partial \textbf{K}_x}\)&lt;/span&gt;との要素ごとの積を足し合わせたものが勾配となります。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;rでの実装&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;3. Rでの実装&lt;/h2&gt;
+&lt;p&gt;GPLVMを&lt;code&gt;R&lt;/code&gt;で実装します。使用するデータは以前giannoneの記事で使用したものと同じものです。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ESTIMATE_GPLVM &amp;lt;- function(Y,P,sigma){
+  # 1. Set initial value
+  Y &amp;lt;- as.matrix(Y)
+  eigenvector &amp;lt;- eigen(cov(Y))$vectors
+  X &amp;lt;- Y%*%eigenvector[,1:P] # initial value
+  N &amp;lt;- NROW(Y) # Sample Size
+  D &amp;lt;- NCOL(Y) # Dimention of dataset
+  X0 &amp;lt;- c(as.vector(X))
+  sigma &amp;lt;- var(matrix(Y,dim(Y)[1]*dim(Y)[2],1))
+  
+  # 2. Define log likelihood function
+  loglik &amp;lt;- function(X0,Y,N,P,D,beta,sigma){
+    X &amp;lt;- matrix(X0,N,P)
+    K &amp;lt;- matrix(0,N,N)
+    scale &amp;lt;- diag(sqrt(3/((apply(X, 2, max) -apply(X, 2, min))^2)))
+    X &amp;lt;- X%*%scale
+    for (i in 1:N) {
+      for (k in 1:N) {
+         if(i==k) kdelta = 1 else kdelta = 0
+         K[i,k] &amp;lt;- K[k,i] &amp;lt;- sigma*exp(-t(X[i,]-X[k,])%*%(X[i,]-X[k,])*0.5) + beta^(-1)*kdelta + beta^(-1)
+       }
+     }
+ 
+    L &amp;lt;- - D*N/2*log(2*pi) - D/2*log(det(K)) - 1/2*sum(diag(ginv(K)%*%Y%*%t(Y))) #loglikelihood
+
+    return(L)
+  }
+  
+  # 3. Define derivatives of log likelihood function
+  dloglik &amp;lt;- function(X0,P,D,N,Y,beta,sigma){
+    X &amp;lt;- matrix(X0,N,P)
+    K &amp;lt;- matrix(0,N,N)
+    for (i in 1:N) {
+      for (k in 1:N) {
+        if(i==k) kdelta = 1 else kdelta = 0
+        K[i,k] &amp;lt;- K[k,i] &amp;lt;- exp(-t(X[i,]-X[k,])%*%(X[i,]-X[k,])*0.5) + beta^(-1)*kdelta + beta^(-1)
+      }
+    }
+    invK &amp;lt;- ginv(K)
+    dLdK &amp;lt;- invK%*%Y%*%t(Y)%*%invK - D*invK
+    dLdx &amp;lt;- matrix(0,N,P)
+    
+    for (j in 1:P){
+      for(i in 1:N){
+        dKdx &amp;lt;- matrix(0,N,N)
+        for (k in 1:N){
+          dKdx[i,k] &amp;lt;- dKdx[k,i] &amp;lt;- -exp(-(t(X[i,]-X[k,])%*%(X[i,]-X[k,]))*0.5)*((X[i,j]-X[k,j])*0.5)
+        }
+        dLdx[i,j] &amp;lt;- sum(dLdK*dKdx)
+      }
+    }
+    
+    return(dLdx)
+  }
+  
+  # 4. Optimization
+  res &amp;lt;- optim(X0, loglik, dloglik, Y = Y, N=N, P=P, D=D, beta = exp(2), sigma = sigma,
+               method = &amp;quot;BFGS&amp;quot;, control = list(fnscale = -1,trace=1000,maxit=10000))
+  output &amp;lt;- matrix(res$par,N,P)
+  result &amp;lt;- list(output,res,P)
+  names(result) &amp;lt;- c(&amp;quot;output&amp;quot;,&amp;quot;res&amp;quot;,&amp;quot;P&amp;quot;)
+  return(result)
+}
+
+GPLVM_SELECT &amp;lt;- function(Y){
+  D &amp;lt;- NCOL(Y)
+  library(stringr)
+  for (i in 1:D){
+    if (i == 1){
+      result &amp;lt;- ESTIMATE_GPLVM(Y,i)
+      P &amp;lt;- 2
+      print(str_c(&amp;quot;STEP&amp;quot;, i, &amp;quot; loglikelihood &amp;quot;, as.numeric(result$res$value)))
+    }else{
+      temp &amp;lt;- ESTIMATE_GPLVM(Y,i)
+      print(str_c(&amp;quot;STEP&amp;quot;, i, &amp;quot; loglikelihood &amp;quot;, as.numeric(temp$res$value)))
+      if (result$res$value &amp;lt; temp$res$value){
+        result &amp;lt;- temp
+        P &amp;lt;- i
+      }
+    }
+  }
+  print(str_c(&amp;quot;The optimal number of X is &amp;quot;, P))
+  print(str_c(&amp;quot;loglikelihood &amp;quot;, as.numeric(result$res$value)))
+  return(result)
+}
+
+result &amp;lt;- ESTIMATE_GPLVM(scale(Y),5)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## initial  value 613.864608 
+## final  value 609.080329 
+## converged&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(tidyverse)
+
+ggplot(gather(as.data.frame(result$output),key = name,value = value),
+       aes(x=rep(dataset1$publication,5),y=value,colour=name)) + 
+  geom_line(size=1) +
+  xlab(&amp;quot;Date&amp;quot;) +
+  ggtitle(&amp;quot;5 economic factors&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-3-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(xts)
+X.xts &amp;lt;- xts(result$output,order.by = dataset1$publication)
+X.q.xts &amp;lt;- apply.quarterly(X.xts,mean)
+X.3m.xts &amp;lt;- X.xts[endpoints(X.xts,on=&amp;quot;quarters&amp;quot;),]
+
+if (months(index(X.q.xts)[NROW(X.q.xts)]) %in% c(&amp;quot;3月&amp;quot;,&amp;quot;6月&amp;quot;,&amp;quot;9月&amp;quot;,&amp;quot;12月&amp;quot;)){
+} else X.q.xts &amp;lt;- X.q.xts[-NROW(X.q.xts),]
+if (months(index(X.3m.xts)[NROW(X.3m.xts)]) %in% c(&amp;quot;3月&amp;quot;,&amp;quot;6月&amp;quot;,&amp;quot;9月&amp;quot;,&amp;quot;12月&amp;quot;)){
+} else X.3m.xts &amp;lt;- X.3m.xts[-NROW(X.3m.xts),]
+
+colnames(X.xts) &amp;lt;- c(&amp;quot;factor1&amp;quot;,&amp;quot;factor2&amp;quot;,&amp;quot;factor3&amp;quot;,&amp;quot;factor4&amp;quot;,&amp;quot;factor5&amp;quot;) 
+
+GDP$publication &amp;lt;- GDP$publication + months(2)
+GDP.q &amp;lt;- GDP[GDP$publication&amp;gt;=index(X.q.xts)[1] &amp;amp; GDP$publication&amp;lt;=index(X.q.xts)[NROW(X.q.xts)],]
+
+rg &amp;lt;- lm(scale(GDP.q$GDP)~X.q.xts[-54])
+rg2 &amp;lt;- lm(scale(GDP.q$GDP)~X.3m.xts[-54])
+
+summary(rg)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 
+## Call:
+## lm(formula = scale(GDP.q$GDP) ~ X.q.xts[-54])
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.31774 -0.06927 -0.03224  0.06690  0.31062 
+## 
+## Coefficients:
+##                   Estimate Std. Error t value Pr(&amp;gt;|t|)    
+## (Intercept)      0.0445000  0.0317777   1.400    0.177    
+## X.q.xts[-54]X.1 -0.3181108  0.0106335 -29.916  &amp;lt; 2e-16 ***
+## X.q.xts[-54]X.2  0.0004621  0.0175913   0.026    0.979    
+## X.q.xts[-54]X.3  0.1737612  0.0249186   6.973 9.09e-07 ***
+## X.q.xts[-54]X.4 -0.0060035  0.0376324  -0.160    0.875    
+## X.q.xts[-54]X.5  0.0646009  0.0430678   1.500    0.149    
+## ---
+## Signif. codes:  0 &amp;#39;***&amp;#39; 0.001 &amp;#39;**&amp;#39; 0.01 &amp;#39;*&amp;#39; 0.05 &amp;#39;.&amp;#39; 0.1 &amp;#39; &amp;#39; 1
+## 
+## Residual standard error: 0.1617 on 20 degrees of freedom
+## Multiple R-squared:  0.9791, Adjusted R-squared:  0.9739 
+## F-statistic: 187.3 on 5 and 20 DF,  p-value: 4.402e-16&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;summary(rg2)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 
+## Call:
+## lm(formula = scale(GDP.q$GDP) ~ X.3m.xts[-54])
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.35613 -0.11430  0.00258  0.15171  0.36506 
+## 
+## Coefficients:
+##                 Estimate Std. Error t value Pr(&amp;gt;|t|)    
+## (Intercept)    -0.003798   0.041789  -0.091    0.928    
+## X.3m.xts[-54]1 -0.312411   0.014008 -22.303 1.34e-15 ***
+## X.3m.xts[-54]2  0.022873   0.025672   0.891    0.384    
+## X.3m.xts[-54]3  0.152350   0.031080   4.902 8.62e-05 ***
+## X.3m.xts[-54]4 -0.019237   0.047809  -0.402    0.692    
+## X.3m.xts[-54]5 -0.032419   0.055662  -0.582    0.567    
+## ---
+## Signif. codes:  0 &amp;#39;***&amp;#39; 0.001 &amp;#39;**&amp;#39; 0.01 &amp;#39;*&amp;#39; 0.05 &amp;#39;.&amp;#39; 0.1 &amp;#39; &amp;#39; 1
+## 
+## Residual standard error: 0.21 on 20 degrees of freedom
+## Multiple R-squared:  0.9647, Adjusted R-squared:  0.9559 
+## F-statistic: 109.3 on 5 and 20 DF,  p-value: 8.102e-14&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;決定係数が大幅に改善しました。
+3ヶ月の平均をとったファクターの方がパフォーマンスが良さそうなので、こちらで実際のGDPと予測値のプロットを行ってみます。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggplot(gather(data.frame(fit=rg$fitted.values,actual=scale(GDP.q$GDP),Date=GDP.q$publication),key,value,-Date),aes(y=value,x=Date,colour=key)) +
+  geom_line(size=1) +
+  ggtitle(&amp;quot;fit v.s. actual GDP&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-4-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;いかがでしょうか。個人的にはかなりフィッティングできている印象があります（もはや経済理論など不要なのでしょうか）。ただ、最も新しい値を除いては未来の値が情報量として加味された上で推計されていることになりますから、フェアではありません。正しく予測能力を検証するためには四半期ごとに逐次的に回帰を行う必要があります。&lt;/p&gt;
+&lt;p&gt;というわけで、アウトサンプルの予測力がどれほどあるのかをテストしてみたいと思います。まず、2005年4月から2007年3月までの月次統計データでファクターを計算し、データ頻度を四半期に集約します。そして、2007年1Qのデータを除いて、GDPに回帰します。回帰したモデルの係数を用いて、2007年1Qのファクターデータで同時点のGDPの予測値を計算し、それを実績値と比較します。次は2005年4月から2007年6月までのデータを用いて･･･という感じでアウトサンプルの予測を行ってみます。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(lubridate)
+test_df &amp;lt;- data.frame()
+for (i in as.list(seq(as.Date(&amp;quot;2015-04-01&amp;quot;),as.Date(&amp;quot;2019-03-01&amp;quot;),by=&amp;quot;quarter&amp;quot;))){
+  day(i) &amp;lt;- days_in_month(i)
+  traindata &amp;lt;- dataset1[dataset1$publication&amp;lt;=i,]
+  X_train &amp;lt;- ESTIMATE_GPLVM(scale(traindata[,-2]),5)
+  X_train.xts &amp;lt;- xts(X_train$output,order.by = traindata$publication)
+  X_train.q.xts &amp;lt;- apply.quarterly(X_train.xts,mean)
+  
+  if (months(index(X_train.q.xts)[NROW(X_train.q.xts)]) %in% c(&amp;quot;3月&amp;quot;,&amp;quot;6月&amp;quot;,&amp;quot;9月&amp;quot;,&amp;quot;12月&amp;quot;)){
+  } else X_train.q.xts &amp;lt;- X_train.q.xts[-NROW(X_train.q.xts),]
+  
+  colnames(X_train.q.xts) &amp;lt;- c(&amp;quot;factor1&amp;quot;,&amp;quot;factor2&amp;quot;,&amp;quot;factor3&amp;quot;,&amp;quot;factor4&amp;quot;,&amp;quot;factor5&amp;quot;) 
+
+  GDP_train.q &amp;lt;- scale(GDP[GDP$publication&amp;gt;=index(X_train.q.xts)[1] &amp;amp; GDP$publication&amp;lt;=index(X_train.q.xts)[NROW(X_train.q.xts)],2])
+
+  rg_train &amp;lt;- lm(GDP_train.q[-NROW(GDP_train.q)]~.,data=X_train.q.xts[-NROW(X_train.q.xts)])
+  summary(rg_train)
+  test_df &amp;lt;- rbind(test_df,data.frame(predict(rg_train,X_train.q.xts[NROW(X_train.q.xts)],interval = &amp;quot;prediction&amp;quot;,level=0.90),GDP=GDP_train.q[NROW(GDP_train.q)]))
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;計算できました。グラフにしてみましょう。先ほどのグラフよりは精度が悪くなりました。特にリーマンの後は予測値の信頼区間（90%）が大きく拡大しており、不確実性が増大していることもわかります。2010年以降に関しては実績値は信頼区間にほど入っており、予測モデルとしての性能はまあまあなのかなと思います。ただ、リーマンのような金融危機もズバッと当てるところにロマンがあると思うので元データの改善を図りたいと思います。この記事はいったんここで終了です。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggplot(gather(data.frame(test_df,Date=as.Date(rownames(test_df))),,,-c(lwr,upr,Date)),aes(y=value,x=Date,colour=key)) +
+  geom_ribbon(aes(ymax=upr,ymin=lwr,fill=&amp;quot;band&amp;quot;),alpha=0.1,linetype=&amp;quot;blank&amp;quot;) +
+  geom_line(size=1) +
+  ggtitle(&amp;quot;out-sample test&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-6-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>カルマンフィルタの実装</title>
+      <link>/post/post3/</link>
+      <pubDate>Sun, 10 Feb 2019 00:00:00 +0000</pubDate>
+      <guid>/post/post3/</guid>
+      <description>
+&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+&lt;link href=&#34;index_files/pagedtable/css/pagedtable.css&#34; rel=&#34;stylesheet&#34; /&gt;
+&lt;script src=&#34;index_files/pagedtable/js/pagedtable.js&#34;&gt;&lt;/script&gt;
+
+&lt;div id=&#34;TOC&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#カルマンフィルタとは&#34;&gt;1. カルマンフィルタとは？&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#カルマンフィルタアルゴリズムの導出&#34;&gt;2. カルマンフィルタアルゴリズムの導出&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#rで実装する&#34;&gt;3. &lt;code&gt;R&lt;/code&gt;で実装する。&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#カルマンスムージング&#34;&gt;4. カルマンスムージング&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+
+&lt;p&gt;おはこんばんにちは。かなり久しぶりの投稿となってしまいました。決して研究をさぼっていたのではなく、&lt;code&gt;BVAR&lt;/code&gt;のコーディングに手こずっていました。あと少しで完成します。さて、今回は&lt;code&gt;BVAR&lt;/code&gt;やこの前のGiannnone et a (2008)のような分析でも大活躍のカルマンフィルタを実装してしまいたいと思います。このブログではパッケージソフトに頼らず、基本的に自分で一から実装を行い、研究することをポリシーとしていますので、これから頻繁に使用するであろうカルマンフィルタを関数として実装してしまうことは非常に有益であると考えます。今回はRで実装をしましたので、そのご報告をします。&lt;/p&gt;
+&lt;div id=&#34;カルマンフィルタとは&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;1. カルマンフィルタとは？&lt;/h2&gt;
+&lt;p&gt;まず、カルマンフィルタに関する簡単な説明を行います。非常にわかりやすい記事があるので、&lt;a href=&#34;https://qiita.com/MoriKen/items/0c80ef75749977767b43&#34;&gt;こちら&lt;/a&gt;を読んでいただいたほうがより分かりやすいかと思います。&lt;/p&gt;
+&lt;p&gt;カルマンフィルタとは、状態空間モデルを解くアルゴリズムの一種です。状態空間モデルとは、手元の観測可能な変数から観測できない変数を推定するモデルであり、以下のような形をしています。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+Y_{t} = Z_{t}\alpha_{t} + d_{t} + S_{t}\epsilon_{t} \\
+\alpha_{t} = T_{t}\alpha_{t-1} + c_{t} + R_{t}\eta_{t}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;ここで、&lt;span class=&#34;math inline&#34;&gt;\(Y_{t}\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(g×1\)&lt;/span&gt;ベクトルの観測可能な変数(観測変数)、&lt;span class=&#34;math inline&#34;&gt;\(Z_{t}\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(g×k\)&lt;/span&gt;係数行列、&lt;span class=&#34;math inline&#34;&gt;\(\alpha_{t}\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(k×1\)&lt;/span&gt;ベクトルの観測不可能な変数(状態変数)、&lt;span class=&#34;math inline&#34;&gt;\(T_{t}\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(k×k\)&lt;/span&gt;係数行列です。また、&lt;span class=&#34;math inline&#34;&gt;\(\epsilon_{t}\)&lt;/span&gt;は観測変数の誤差項、&lt;span class=&#34;math inline&#34;&gt;\(\eta_{t}\)&lt;/span&gt;は状態変数の誤差項です。これらの誤差項はそれぞれ&lt;span class=&#34;math inline&#34;&gt;\(N(0,H_{t})\)&lt;/span&gt;, &lt;span class=&#34;math inline&#34;&gt;\(N(0,Q_{t})\)&lt;/span&gt;に従います（&lt;span class=&#34;math inline&#34;&gt;\(H_{t},Q_{t}\)&lt;/span&gt;は分散共分散行列）。&lt;span class=&#34;math inline&#34;&gt;\(d_{t}\)&lt;/span&gt;, &lt;span class=&#34;math inline&#34;&gt;\(c_{t}\)&lt;/span&gt;は定数項です。1本目の式は観測方程式、2本目の式は遷移方程式と呼ばれます。
+状態空間モデルを使用する例として、しばしば池の魚の数を推定する問題が使用されます。今、池の中の魚の全数が知りたいとして、その推定を考えます。観測時点毎に池の中の魚をすべて捕まえてその数を調べるのは現実的に困難なので、一定期間釣りをして釣れた魚をサンプルに全数を推定することを考えます。ここで、釣れた魚は観測変数、池にいる魚の全数は状態変数と考えることができます。今、経験的に釣れた魚の数と全数の間に以下のような関係があるとします。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+Y_{t} = 0.01\alpha_{t} + 5 + \epsilon_{t}
+\]&lt;/span&gt;
+これが観測方程式になります。また、魚の全数は過去の値からそれほど急速には変化しないと考えられるため、以下のようなランダムウォークに従うと仮定します。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\alpha_{t} = \alpha_{t-1}  + 500 + \eta_{t}
+\]&lt;/span&gt;
+これが遷移方程式になります。あとは、これをカルマンフィルタアルゴリズムを用いて計算すれば、観測できない魚の全数を推定することができます。
+このように状態空間モデルは非常に便利なモデルであり、また応用範囲も広いです。例えば、販売額から潜在顧客数を推定したり、クレジットスプレッドやトービンのQ等経済モデル上の概念として存在する変数を推定する、&lt;code&gt;BVAR&lt;/code&gt;のように&lt;code&gt;VAR&lt;/code&gt;や回帰式の時変パラメータ推定などにも使用されます。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;カルマンフィルタアルゴリズムの導出&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;2. カルマンフィルタアルゴリズムの導出&lt;/h2&gt;
+&lt;p&gt;さて、非常に便利な状態空間モデルの説明はこれくらいにして、カルマンフィルタの説明に移りたいと思います。カルマンフィルタは状態空間モデルを解くアルゴリズムの一種であると先述しました。つまり、他にも状態空間モデルを解くアルゴリズムは存在します。カルマンフィルタアルゴリズムは一般に誤差項の正規性の仮定を必要としないフィルタリングアルゴリズムであり、観測方程式と遷移方程式の線形性の仮定さえあれば、線形最小分散推定量となります。カルマンフィルタアルゴリズムの導出にはいくつかの方法がありますが、今回はこの線形最小分散推定量としての導出を行います。まず、以下の３つの仮定を置きます。&lt;/p&gt;
+&lt;ol style=&#34;list-style-type: decimal&#34;&gt;
+&lt;li&gt;初期値&lt;span class=&#34;math inline&#34;&gt;\(\alpha_{0}\)&lt;/span&gt;は正規分布&lt;span class=&#34;math inline&#34;&gt;\(N(a_{0},\Sigma_{0})\)&lt;/span&gt;に従う確率ベクトルである(&lt;span class=&#34;math inline&#34;&gt;\(a_{t}\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(\alpha_{t}\)&lt;/span&gt;の推定値)。&lt;/li&gt;
+&lt;li&gt;誤差項&lt;span class=&#34;math inline&#34;&gt;\(\epsilon_{t}\)&lt;/span&gt;,&lt;span class=&#34;math inline&#34;&gt;\(\eta_{s}\)&lt;/span&gt;は全ての&lt;span class=&#34;math inline&#34;&gt;\(t\)&lt;/span&gt;,&lt;span class=&#34;math inline&#34;&gt;\(s\)&lt;/span&gt;で互いに独立で、初期値ベクトル&lt;span class=&#34;math inline&#34;&gt;\(\alpha_{0}\)&lt;/span&gt;と無相関である（&lt;span class=&#34;math inline&#34;&gt;\(E(\epsilon_{t}\eta_{s})=0\)&lt;/span&gt;, &lt;span class=&#34;math inline&#34;&gt;\(E(\epsilon_{t}\alpha_{0})=0\)&lt;/span&gt;, &lt;span class=&#34;math inline&#34;&gt;\(E(\eta_{t}\alpha_{0})=0\)&lt;/span&gt;）。&lt;/li&gt;
+&lt;li&gt;2より、&lt;span class=&#34;math inline&#34;&gt;\(E(\epsilon_{t}\alpha_{t}&amp;#39;)=0\)&lt;/span&gt;、&lt;span class=&#34;math inline&#34;&gt;\(E(\eta_{t}\alpha_{t-1}&amp;#39;)=0\)&lt;/span&gt;。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;まず、&lt;span class=&#34;math inline&#34;&gt;\(t-1\)&lt;/span&gt;期の情報集合&lt;span class=&#34;math inline&#34;&gt;\(\Omega_{t-1}\)&lt;/span&gt;が既知の状態での&lt;span class=&#34;math inline&#34;&gt;\(\alpha_{t}\)&lt;/span&gt;と&lt;span class=&#34;math inline&#34;&gt;\(Y_{t}\)&lt;/span&gt;の期待値（予測値）を求めてみましょう。上述した状態空間モデルと誤差項の期待値がどちらもゼロである事実を用いると、以下のように計算することができます。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+E(\alpha_{t}|\Omega_{t-1}) = a_{t|t-1} = T_{t}a_{t-1|t-1} + c_{t}
+E(Y_{t}|\Omega_{t-1}) = Y_{t|t-1} = Z_{t}a_{t|t-1} + d_{t}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;ここで、次に、これらの分散を求めます。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\begin{eqnarray}
+E( (\alpha_{t}-a_{t|t-1})(\alpha_{t}-a_{t|t-1})&amp;#39;|\Omega_{t-1}) &amp;amp;=&amp;amp; E( (T_{t}\alpha_{t-1} + c_{t} + R_{t}\eta_{t}-a_{t|t-1})(T_{t}\alpha_{t-1} + c_{t} + R_{t}\eta_{t}-a_{t|t-1})&amp;#39;|\Omega_{t-1}) \\ 
+&amp;amp;=&amp;amp; E(T_{t}\alpha_{t-1}\alpha_{t-1}&amp;#39;T_{t}&amp;#39; + R_{t}\eta_{t}\eta_{t}&amp;#39;R_{t}&amp;#39;|\Omega_{t-1}) \\
+&amp;amp;=&amp;amp; E(T_{t}\alpha_{t-1}\alpha_{t-1}&amp;#39;T_{t}&amp;#39;|\Omega_{t-1}) + E(R_{t}\eta_{t}\eta_{t}&amp;#39;R_{t}&amp;#39;|\Omega_{t-1}) \\
+&amp;amp;=&amp;amp; T_{t}E(\alpha_{t-1}\alpha_{t-1}&amp;#39;|\Omega_{t-1})T_{t}&amp;#39; + R_{t}E(\eta_{t}\eta_{t}&amp;#39;|\Omega_{t-1})R_{t}&amp;#39; \\
+&amp;amp;=&amp;amp; T_{t}\Sigma_{t-1|t-1}T_{t}&amp;#39; + R_{t}Q_{t}R_{t}&amp;#39; \\
+&amp;amp;=&amp;amp; \Sigma_{t|t-1}
+\end{eqnarray}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\begin{eqnarray}
+E( (Y_{t}-Y_{t|t-1})(Y_{t}-Y_{t|t-1})&amp;#39;|\Omega_{t-1}) &amp;amp;=&amp;amp; E( (Z_{t}\alpha_{t} + d_{t} + S_{t}\epsilon_{t}-Y_{t|t-1})(Z_{t}\alpha_{t} + d_{t} + S_{t}\epsilon_{t}-Y_{t|t-1})&amp;#39;|\Omega_{t-1}) \\
+&amp;amp;=&amp;amp; E(Z_{t}\alpha_{t}\alpha_{t}&amp;#39;Z_{t}&amp;#39; + S_{t}\epsilon_{t}\epsilon_{t}&amp;#39;S_{t}&amp;#39;|\Omega_{t-1}) \\
+&amp;amp;=&amp;amp; E(Z_{t}\alpha_{t}\alpha_{t}&amp;#39;Z_{t}&amp;#39;|\Omega_{t-1}) + E(S_{t}\epsilon_{t}\epsilon_{t}&amp;#39;S_{t}&amp;#39;|\Omega_{t-1}) \\
+&amp;amp;=&amp;amp; Z_{t}E(\alpha_{t}\alpha_{t}&amp;#39;|\Omega_{t-1})Z_{t}&amp;#39; + S_{t}E(\epsilon_{t}\epsilon_{t}&amp;#39;|\Omega_{t-1})S_{t}&amp;#39; \\
+&amp;amp;=&amp;amp; Z_{t}\Sigma_{t|t-1}Z_{t}&amp;#39; + S_{t}H_{t}S_{t}&amp;#39; \\
+&amp;amp;=&amp;amp; F_{t|t-1}
+\end{eqnarray}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;ここで、&lt;span class=&#34;math inline&#34;&gt;\(t\)&lt;/span&gt;期の情報集合&lt;span class=&#34;math inline&#34;&gt;\(\Omega_{t}\)&lt;/span&gt;が得られたとします（つまり、観測値&lt;span class=&#34;math inline&#34;&gt;\(Y_{t}\)&lt;/span&gt;を入手）。カルマンフィルタでは、&lt;span class=&#34;math inline&#34;&gt;\(t\)&lt;/span&gt;期の情報である観測値&lt;span class=&#34;math inline&#34;&gt;\(Y_{t}\)&lt;/span&gt;を用いて&lt;span class=&#34;math inline&#34;&gt;\(a_{t|t-1}\)&lt;/span&gt;を以下の方程式で更新します。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+E(\alpha_{t}|\Omega_{t}) = a_{t|t} = a_{t|t-1} + k_{t}(Y_{t} - Y_{t|t-1})
+\]&lt;/span&gt;
+つまり、観測値と&lt;span class=&#34;math inline&#34;&gt;\(Y_{t}\)&lt;/span&gt;の期待値（予測値）の差をあるウェイト&lt;span class=&#34;math inline&#34;&gt;\(k_{t}\)&lt;/span&gt;（&lt;span class=&#34;math inline&#34;&gt;\(k×g\)&lt;/span&gt;行列）でかけたもので補正をかけるわけです。よって、観測値と予測値が完全に一致していた場合は補正は行われないことになります。ここで重要なのは、ウエイト&lt;span class=&#34;math inline&#34;&gt;\(k_{t}\)&lt;/span&gt;をどのように決めるのかです。&lt;span class=&#34;math inline&#34;&gt;\(k_{t}\)&lt;/span&gt;は更新後の状態変数の分散&lt;span class=&#34;math inline&#34;&gt;\(E( (\alpha_{t} - a_{t|t})(\alpha_{t} - a_{t|t})&amp;#39;)= \Sigma_{t|t}\)&lt;/span&gt;を最小化するよう決定します。これが、カルマンフィルタが線形最小分散推定量である根拠です。最小化にあたっては以下のベクトル微分が必要になりますので、おさらいをしておきましょう。今回使用するのは以下の事実です。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\displaystyle \frac{\partial a&amp;#39;b}{\partial b} = \frac{\partial b&amp;#39;a}{\partial b} = a \\
+\displaystyle \frac{\partial b&amp;#39;Ab}{\partial b} = 2Ab
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;ここで、&lt;span class=&#34;math inline&#34;&gt;\(a,b\)&lt;/span&gt;はベクトル（それぞれ&lt;span class=&#34;math inline&#34;&gt;\(n×1\)&lt;/span&gt;ベクトル、&lt;span class=&#34;math inline&#34;&gt;\(1×n\)&lt;/span&gt;ベクトル）、&lt;span class=&#34;math inline&#34;&gt;\(A\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(n×n\)&lt;/span&gt;の対称行列です。まず、１つ目から証明していきます。&lt;span class=&#34;math inline&#34;&gt;\(\displaystyle y = a&amp;#39;b = b&amp;#39;a = \sum_{i=1}^{n}a_{i}b_{i}\)&lt;/span&gt;とします。
+このとき、&lt;span class=&#34;math inline&#34;&gt;\(\frac{\partial y}{\partial b_{i}}=a_{i}\)&lt;/span&gt;なので、&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\displaystyle \frac{\partial a&amp;#39;b}{\partial b} = \frac{\partial b&amp;#39;a}{\partial b} = a
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;次に２つ目です。&lt;span class=&#34;math inline&#34;&gt;\(y = b&amp;#39;Ab = \sum_{i=1}^{n}\sum_{j=1}^{n}a_{ij}b_{i}b_{j}\)&lt;/span&gt;とします。このとき、&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\displaystyle \frac{\partial y}{\partial b_{i}} = \sum_{j=1}^{n}a_{ij}b_{j} + \sum_{j=1}^{n}a_{ji}b_{j} = 2\sum_{j=1}^{n}a_{ij}b_{j} = 2a_{i}&amp;#39;b
+\]&lt;/span&gt;
+よって、&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\displaystyle \frac{\partial y}{\partial b} =
+\left(
+    \begin{array}{cccc}
+      \frac{\partial y}{\partial b_{1}} \\
+      \vdots \\
+      \frac{\partial y}{\partial b_{n}} \\
+    \end{array}
+  \right) = 2
+\left(
+    \begin{array}{cccc}
+      \sum_{j=1}^{n}a_{1j}b_{j} \\
+      \vdots \\
+      \sum_{j=1}^{n}a_{nj}b_{j} \\
+    \end{array}
+  \right) = 2
+\left(
+    \begin{array}{cccc}
+      a_{1}&amp;#39;b \\
+      \vdots \\
+      a_{n}&amp;#39;b \\
+    \end{array}
+  \right)
+= 2Ab
+\]&lt;/span&gt;
+さて、準備ができたので、更新後の状態変数の分散&lt;span class=&#34;math inline&#34;&gt;\(E( (\alpha_{t} - a_{t|t})(\alpha_{t} - a_{t|t})&amp;#39;)\)&lt;/span&gt;を求めてみましょう。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\begin{eqnarray}
+E( (\alpha_{t} - a_{t|t})(\alpha_{t} - a_{t|t})&amp;#39;) &amp;amp;=&amp;amp; \Sigma_{t|t} \\
+&amp;amp;=&amp;amp; E\{ (\alpha_{t} - a_{t|t-1} + k_{t}(Y_{t} - Y_{t|t-1}))(\alpha_{t} - a_{t|t-1} + k_{t}(Y_{t} - Y_{t|t-1}))&amp;#39;\} \\
+&amp;amp;=&amp;amp; E\{ ( (\alpha_{t} - a_{t|t-1}) - k_{t}(Z_{t}\alpha_{t} + d_{t} + S_{t}\epsilon_{t} - Z_{t}a_{t|t-1} - d_{t}) )( (\alpha_{t} - a_{t|t-1}) - k_{t}(Z_{t}\alpha_{t} + d_{t} + S_{t}\epsilon_{t} - Z_{t}a_{t|t-1} - d_{t}) )\} \\
+&amp;amp;=&amp;amp; E\{ ( (\alpha_{t} - a_{t|t-1}) - k_{t}(Z_{t}\alpha_{t} + S_{t}\epsilon_{t} - Z_{t}a_{t|t-1}) )( (\alpha_{t} - a_{t|t-1}) - k_{t}(Z_{t}\alpha_{t} + S_{t}\epsilon_{t} - Z_{t}a_{t|t-1}) )&amp;#39;\} \\
+&amp;amp;=&amp;amp; E\{ ( (I - k_{t}Z_{t})\alpha_{t} - k_{t}S_{t}\epsilon_{t} - (I - k_{t}Z_{t})a_{t|t-1})( (I - k_{t}Z_{t})\alpha_{t} - k_{t}S_{t}\epsilon_{t} - (I - k_{t}Z_{t})a_{t|t-1})&amp;#39; \} \\
+&amp;amp;=&amp;amp; E\{( (I - k_{t}Z_{t})(\alpha_{t}-a_{t|t-1}) - k_{t}S_{t}\epsilon_{t})( (I - k_{t}Z_{t})(\alpha_{t}-a_{t|t-1}) - k_{t}S_{t}\epsilon_{t})&amp;#39;\} \\
+&amp;amp;=&amp;amp; (I - k_{t}Z_{t})\Sigma_{t|t-1}(I - k_{t}Z_{t})&amp;#39; + k_{t}S_{t}H_{t}S_{t}&amp;#39;k_{t}&amp;#39; \\
+&amp;amp;=&amp;amp; (\Sigma_{t|t-1} - k_{t}Z_{t}\Sigma_{t|t-1})(I - k_{t}Z_{t})&amp;#39; + k_{t}S_{t}H_{t}S_{t}&amp;#39;k_{t}&amp;#39; \\
+&amp;amp;=&amp;amp; \Sigma_{t|t-1} - \Sigma_{t|t-1}(k_{t}Z_{t})&amp;#39; - k_{t}Z_{t}\Sigma_{t|t-1} + k_{t}Z_{t}\Sigma_{t|t-1}Z_{t}&amp;#39;k_{t}&amp;#39; + k_{t}S_{t}H_{t}S_{t}&amp;#39;k_{t}&amp;#39; \\
+&amp;amp;=&amp;amp; \Sigma_{t|t-1} - \Sigma_{t|t-1}Z_{t}&amp;#39;k_{t}&amp;#39; - k_{t}Z_{t}\Sigma_{t|t-1} + k_{t}(Z_{t}\Sigma_{t|t-1}Z_{t}&amp;#39; + S_{t}H_{t}S_{t}&amp;#39;)k_{t}&amp;#39; \\
+\end{eqnarray}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;１回目の式変形で、&lt;span class=&#34;math inline&#34;&gt;\(a_{t|t}\)&lt;/span&gt;に上述した更新式を代入し、２回目の式変形で観測方程式と上で計算した&lt;span class=&#34;math inline&#34;&gt;\(E(Y_{t}|\Omega_{t-1})\)&lt;/span&gt;を代入しています。さて、更新後の状態変数の分散&lt;span class=&#34;math inline&#34;&gt;\(\Sigma_{t|t}\)&lt;/span&gt;を&lt;span class=&#34;math inline&#34;&gt;\(k_{t}\)&lt;/span&gt;の関数として書き表すことができたので、これを&lt;span class=&#34;math inline&#34;&gt;\(k_{t}\)&lt;/span&gt;で微分し、0と置き、&lt;span class=&#34;math inline&#34;&gt;\(\Sigma_{t|t}\)&lt;/span&gt;を最小化する&lt;span class=&#34;math inline&#34;&gt;\(k_{t}\)&lt;/span&gt;を求めます。先述した公式で、&lt;span class=&#34;math inline&#34;&gt;\(a=\Sigma_{t|t-1}Z_{t}&amp;#39;\)&lt;/span&gt;、&lt;span class=&#34;math inline&#34;&gt;\(b=k_{t}&amp;#39;\)&lt;/span&gt;、&lt;span class=&#34;math inline&#34;&gt;\(A=(Z_{t}\Sigma_{t|t-1}Z_{t}&amp;#39; + S_{t}H_{t}S_{t}&amp;#39;)\)&lt;/span&gt;とすると（&lt;span class=&#34;math inline&#34;&gt;\(A\)&lt;/span&gt;は分散共分散行列の和なので対称行列）、&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\frac{\partial \Sigma_{t|t}}{\partial k_{t}&amp;#39;} = -2(Z_{t}\Sigma_{t|t-1})&amp;#39; + 2(Z_{t}\Sigma_{t|t-1}Z_{t}&amp;#39; + S_{t}H_{t}S_{t}&amp;#39;)k_{t} = 0
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;ここから、&lt;span class=&#34;math inline&#34;&gt;\(k_{t}\)&lt;/span&gt;を解きなおすと、&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\begin{eqnarray}
+k_{t} &amp;amp;=&amp;amp; \Sigma_{t|t-1}Z_{t}&amp;#39;(Z_{t}\Sigma_{t|t-1}Z_{t}&amp;#39; + S_{t}H_{t}S_{t}&amp;#39;)^{-1} \\
+&amp;amp;=&amp;amp; \Sigma_{t|t-1}Z_{t}&amp;#39;F_{t|t-1}^{-1}
+\end{eqnarray}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;突然、&lt;span class=&#34;math inline&#34;&gt;\(F_{t|t-1}\)&lt;/span&gt;が出てきました。これは観測変数の予測値の分散&lt;span class=&#34;math inline&#34;&gt;\(E((Y_{t}-Y_{t|t-1})(Y_{t}-Y_{t|t-1})&amp;#39;|\Omega_{t-1})\)&lt;/span&gt;でした。一方、&lt;span class=&#34;math inline&#34;&gt;\(\Sigma_{t|t-1}Z_{t}\)&lt;/span&gt;は状態変数の予測値の分散を観測変数のスケールに調整したものです（観測空間に写像したもの）。つまり、カルマンゲイン&lt;span class=&#34;math inline&#34;&gt;\(k_{t}\)&lt;/span&gt;は状態変数と観測変数の予測値の分散比となっているのです。観測変数にはノイズがあり、観測方程式はいつも誤差０で満たされるわけではありません。また、状態方程式にも誤差項が存在します。状態の遷移も100%モデル通りにはいかないということです。&lt;span class=&#34;math inline&#34;&gt;\(t\)&lt;/span&gt;期の観測変数&lt;span class=&#34;math inline&#34;&gt;\(Y_{t}\)&lt;/span&gt;が得られたとして、それをどれほど信頼して状態変数を更新するかは観測変数のノイズが状態変数のノイズに比べてどれほど小さいかによります。つまり、相対的に観測方程式が遷移方程式よりも信頼できる場合には状態変数を大きく更新するのです。このように、カルマンフィルタでは、観測方程式と遷移方程式の相対的な信頼度によって、更新の度合いを毎期調整しています。その度合いが分散比であり、カルマンゲインだというわけです。ちなみに欠損値が発生した場合には、観測変数の分散を無限大にし、状態変数の更新を全く行わないという対処を行います。観測変数に信頼がないので当たり前の処置です。この場合は遷移方程式を100%信頼します。これがカルマンフィルタのコアの考え方になります。
+更新後の分散を計算しておきます。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\begin{eqnarray}
+\Sigma_{t|t} &amp;amp;=&amp;amp; \Sigma_{t|t-1} - \Sigma_{t|t-1}Z_{t}&amp;#39;k_{t}&amp;#39; - k_{t}Z_{t}\Sigma_{t|t-1} + k_{t}F_{t|t-1}k_{t}&amp;#39; \\
+&amp;amp;=&amp;amp; \Sigma_{t|t-1} - \Sigma_{t|t-1}Z_{t}&amp;#39;k_{t}&amp;#39; - k_{t}Z_{t}\Sigma_{t|t-1} + (\Sigma_{t|t-1}Z_{t}&amp;#39;F_{t|t-1}^{-1})F_{t|t-1}k_{t}&amp;#39; \\
+&amp;amp;=&amp;amp; \Sigma_{t|t-1} - \Sigma_{t|t-1}Z_{t}&amp;#39;k_{t}&amp;#39; - k_{t}Z_{t}\Sigma_{t|t-1} + \Sigma_{t|t-1}Z_{t}&amp;#39;k_{t}&amp;#39; \\
+&amp;amp;=&amp;amp; \Sigma_{t|t-1} - k_{t}Z_{t}\Sigma_{t|t-1} \\
+&amp;amp;=&amp;amp; \Sigma_{t|t-1} - k_{t}F_{t|t-1}F_{t|t-1}^{-1}Z_{t}\Sigma_{t|t-1} \\
+&amp;amp;=&amp;amp; \Sigma_{t|t-1} - k_{t}F_{t|t-1}k_{t}&amp;#39;
+\end{eqnarray}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;では、最終的に導出されたアルゴリズムをまとめたいと思います。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\begin{eqnarray}
+a_{t|t-1} &amp;amp;=&amp;amp; T_{t}a_{t-1|t-1} + c_{t} \\
+\Sigma_{t|t-1} &amp;amp;=&amp;amp; T_{t}\Sigma_{t-1|t-1}T_{t}&amp;#39; + R_{t}Q_{t}R_{t}&amp;#39; \\
+Y_{t|t-1} &amp;amp;=&amp;amp; Z_{t}a_{t|t-1} + d_{t} \\
+F_{t|t-1} &amp;amp;=&amp;amp;  Z_{t}\Sigma_{t|t-1}Z_{t}&amp;#39; + S_{t}H_{t}S_{t}&amp;#39; \\
+k_{t} &amp;amp;=&amp;amp; \Sigma_{t|t-1}Z_{t}&amp;#39;F_{t|t-1}^{-1} \\
+a_{t|t} &amp;amp;=&amp;amp; a_{t|t-1} + k_{t}(Y_{t} - Y_{t|t-1}) \\
+\Sigma_{t|t} &amp;amp;=&amp;amp;  \Sigma_{t|t-1} - k_{t}F_{t|t-1}k_{t}&amp;#39;
+\end{eqnarray}
+\]&lt;/span&gt;
+初期値&lt;span class=&#34;math inline&#34;&gt;\(a_{0},\Sigma_{0}\)&lt;/span&gt;が所与の元で、まず状態変数の予測値&lt;span class=&#34;math inline&#34;&gt;\(a_{1|0},\Sigma_{1|0}\)&lt;/span&gt;を計算します。その結果を用いて、次は観測変数の予測値&lt;span class=&#34;math inline&#34;&gt;\(Y_{t|t-1},F_{t|t-1}\)&lt;/span&gt;を計算し、カルマンゲイン&lt;span class=&#34;math inline&#34;&gt;\(k_{t}\)&lt;/span&gt;を得ます。&lt;span class=&#34;math inline&#34;&gt;\(t\)&lt;/span&gt;期の観測可能なデータを入手したら、更新方程式を用いて&lt;span class=&#34;math inline&#34;&gt;\(a_{t|t},\Sigma_{t|t}\)&lt;/span&gt;を更新します。これをサンプル期間繰り返していくことになります。ちなみに、遷移方程式の誤差項&lt;span class=&#34;math inline&#34;&gt;\(\eta_{t}\)&lt;/span&gt;と定数項&lt;span class=&#34;math inline&#34;&gt;\(c_{t}\)&lt;/span&gt;がなく、遷移方程式のパラメータが単位行列のカルマンフィルタは逐次最小自乗法と一致します。つまり、新しいサンプルを入手するたびに&lt;code&gt;OLS&lt;/code&gt;をやり直す推計方法ということです（今回はその証明は勘弁してください）。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;rで実装する&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;3. &lt;code&gt;R&lt;/code&gt;で実装する。&lt;/h2&gt;
+&lt;p&gt;以下が&lt;code&gt;R&lt;/code&gt;での実装コードです。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;kalmanfiter &amp;lt;- function(y,I,t,z,c=0,R=NA,Q=NA,d=0,S=NA,h=NA,a_int=NA,sig_int=NA){
+  #-------------------------------------------------------------------
+  # Implemention of Kalman filter
+  #   y - observed variable
+  #   I - the number of unobserved variable
+  #   t - parameter of endogenous variable in state equation
+  #   z - parameter of endogenous variable in observable equation
+  #   c - constant in state equaion
+  #   R - parameter of exogenous variable in state equation
+  #   Q - var-cov matrix of exogenous variable in state equation
+  #   d - constant in observable equaion
+  #   S - parameter of exogenous variable in observable equation
+  #   h - var-cov matrix of exogenous variable in observable equation
+  #   a_int - initial value of endogenous variable
+  #   sig_int - initial value of variance of endogenous variable
+  #-------------------------------------------------------------------
+  
+  library(MASS)
+  
+  # 1.Define Variable
+  if (class(y)!=&amp;quot;matrix&amp;quot;){
+    y &amp;lt;- as.matrix(y)
+  }
+  N &amp;lt;- NROW(y) # sample size
+  L &amp;lt;- NCOL(y) # the number of observable variable 
+  a_pre &amp;lt;- array(0,dim = c(I,1,N)) # prediction of unobserved variable
+  a_fil &amp;lt;- array(0,dim = c(I,1,N+1)) # filtered of unobserved variable
+  sig_pre &amp;lt;- array(0,dim = c(I,I,N)) # prediction of var-cov mat. of unobserved variable
+  sig_fil &amp;lt;- array(0,dim = c(I,I,N+1)) # filtered of var-cov mat. of unobserved variable
+  y_pre &amp;lt;- array(0,dim = c(L,1,N)) # prediction of observed variable
+  F_pre &amp;lt;- array(0,dim = c(L,L,N)) # prediction of var-cov mat. of observable variable 
+  F_inv &amp;lt;- array(0,dim = c(L,L,N)) # inverse of F_pre
+  k &amp;lt;- array(0,dim = c(I,L,N)) # kalman gain
+  
+  if (any(is.na(a_int))==TRUE){
+    a_int &amp;lt;- matrix(0,nrow = I,ncol = 1)
+  }
+  if (any(is.na(sig_int))==TRUE){
+    sig_int &amp;lt;- diag(1,nrow = I,ncol = I)
+  }
+  if (any(is.na(R))==TRUE){
+    R &amp;lt;- diag(1,nrow = I,ncol = I)
+  }
+  if (any(is.na(Q))==TRUE){
+    Q &amp;lt;- diag(1,nrow = I,ncol = I)
+  }
+  if (any(is.na(S))==TRUE){
+    S &amp;lt;- matrix(1,nrow = L,ncol = L)
+  }
+  if (any(is.na(h))==TRUE){
+    H &amp;lt;- array(0,dim = c(L,L,N))
+    for(i in 1:N){
+      diag(H[,,i]) = 1
+    }
+  }else if (class(h)!=&amp;quot;array&amp;quot;){
+    H &amp;lt;- array(h,dim = c(NROW(h),NCOL(h),N))
+  }
+  
+  # fill infinite if observed data is NA
+  for(i in 1:N){
+    miss &amp;lt;- is.na(y[i,])
+    diag(H[,,i])[miss] &amp;lt;- 1e+32
+  }
+  y[is.na(y)] &amp;lt;- 0
+  
+  # 2.Set Initial Value
+  a_fil[,,1] &amp;lt;- a_int
+  sig_fil[,,1] &amp;lt;- sig_int
+  
+  # 3.Implement Kalman filter
+  for (i in 1:N){
+    if(class(z)==&amp;quot;array&amp;quot;){
+      Z &amp;lt;- z[,,i]
+    }else{
+      Z &amp;lt;- z
+    }
+    a_pre[,,i] &amp;lt;- t%*%a_fil[,,i] + c
+    sig_pre[,,i] &amp;lt;- t%*%sig_fil[,,i]%*%t(t) + R%*%Q%*%t(R)
+    y_pre[,,i] &amp;lt;- Z%*%a_pre[,,i] + d
+    F_pre[,,i] &amp;lt;- Z%*%sig_pre[,,i]%*%t(Z) + S%*%H[,,i]%*%t(S)
+    k[,,i] &amp;lt;- sig_pre[,,i]%*%t(Z)%*%ginv(F_pre[,,i])
+    a_fil[,,i+1] &amp;lt;- a_pre[,,i] + k[,,i]%*%(y[i,]-y_pre[,,i])
+    sig_fil[,,i+1] &amp;lt;- sig_pre[,,i] - k[,,i]%*%F_pre[,,i]%*%t(k[,,i])
+  }
+  
+  # 4.Aggregate results
+  result &amp;lt;- list(a_pre,a_fil,sig_pre,sig_fil,y_pre,k,t,z)
+  names(result) &amp;lt;- c(&amp;quot;state prediction&amp;quot;, &amp;quot;state filtered&amp;quot;, &amp;quot;state var prediction&amp;quot;, 
+                     &amp;quot;state var filtered&amp;quot;, &amp;quot;observable prediction&amp;quot;, &amp;quot;kalman gain&amp;quot;,
+                     &amp;quot;parameter of state eq&amp;quot;, &amp;quot;parameter of observable eq&amp;quot;)
+  return(result)
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;案外簡単に書けるもんですね。これを使って、Giannone et al (2008)をやり直してみます。データセットは前回記事と変わりません。&lt;/p&gt;
+&lt;p&gt;以下、分析用の&lt;code&gt;R&lt;/code&gt;コードです。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;#------------------------
+# Giannone et. al. 2008 
+#------------------------
+
+library(MASS)
+library(xts)
+
+# ファクターを計算
+f &amp;lt;- 3
+z &amp;lt;- scale(dataset1)
+for (i in 1:nrow(z)){
+  eval(parse(text = paste(&amp;quot;S_i &amp;lt;- z[i,]%*%t(z[i,])&amp;quot;,sep = &amp;quot;&amp;quot;)))
+  if (i==1){
+    S &amp;lt;- S_i
+  }else{
+    S &amp;lt;- S + S_i
+  }
+}
+S &amp;lt;- (1/nrow(z))*S
+gamma &amp;lt;- eigen(S)
+D &amp;lt;- diag(gamma$values[1:f])
+V &amp;lt;- gamma$vectors[,1:f]
+F_t &amp;lt;- matrix(0,nrow(z),f)
+for (i in 1:nrow(z)){
+  eval(parse(text = paste(&amp;quot;F_t[&amp;quot;,i,&amp;quot;,]&amp;lt;- z[&amp;quot;,i,&amp;quot;,]%*%V&amp;quot;,sep = &amp;quot;&amp;quot;)))
+}
+lambda_hat &amp;lt;- V
+psi &amp;lt;- diag(diag(S-V%*%D%*%t(V)))
+R &amp;lt;- diag(diag(cov(z-z%*%V%*%t(V))))
+
+a &amp;lt;- matrix(0,f,f)
+b &amp;lt;- matrix(0,f,f)
+for(t in 2:nrow(z)){
+  a &amp;lt;- a + F_t[t,]%*%t(F_t[t-1,])
+  b &amp;lt;- b + F_t[t-1,]%*%t(F_t[t-1,])
+}
+b_inv &amp;lt;- solve(b)
+A_hat &amp;lt;- a%*%b_inv
+
+e &amp;lt;- numeric(f)
+for (t in 2:nrow(F_t)){
+  e &amp;lt;- e + F_t[t,]-F_t[t-1,]%*%A_hat
+}
+H &amp;lt;- t(e)%*%e
+Q &amp;lt;- diag(1,f,f)
+Q[1:f,1:f] &amp;lt;- H
+
+p &amp;lt;- ginv(diag(nrow(kronecker(A_hat,A_hat)))-kronecker(A_hat,A_hat))
+
+result1 &amp;lt;- kalmanfiter(z,f,A_hat,lambda_hat,c=0,R=NA,Q=Q,d=0,S=NA,h=R,a_int=F_t[1,],sig_int=matrix(p,f,f))&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;プロットしてみます。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(ggplot2)
+library(tidyverse)
+
+ggplot(gather(data.frame(factor1=result1$`state filtered`[1,1,-dim(result1$`state filtered`)[3]],factor2=result1$`state filtered`[2,1,-dim(result1$`state filtered`)[3]],factor3=result1$`state filtered`[3,1,-dim(result1$`state filtered`)[3]],time=as.Date(rownames(dataset1))),key = factor,value = value,-time),aes(x=time,y=value,colour=factor)) + geom_line()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-7-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;giannoneの記事を書いた際は、元論文の&lt;code&gt;MATLAB&lt;/code&gt;コードを参考にRで書いたのですが、通常のカルマンフィルタとは観測変数の分散共分散行列の逆数の計算方法が違うらしくグラフの形が異なっています。まあでも、概形はほとんど同じですが（なので、ちゃんと動いているはず）。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;カルマンスムージング&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;4. カルマンスムージング&lt;/h2&gt;
+&lt;p&gt;カルマンフィルタの実装は以上で終了なのですが、誤差項の正規性を仮定すれば&lt;span class=&#34;math inline&#34;&gt;\(T\)&lt;/span&gt;期までの情報集合&lt;span class=&#34;math inline&#34;&gt;\(\Omega_{T}\)&lt;/span&gt;を用いて、&lt;span class=&#34;math inline&#34;&gt;\(a_{i|i}, \Sigma_{i|i}(i = 1:T)\)&lt;/span&gt;を&lt;span class=&#34;math inline&#34;&gt;\(a_{i|T}, \Sigma_{i|T}(i = 1:T)\)&lt;/span&gt;へ更新することができます。これをカルマンスムージングと呼びます。これを導出してみましょう。その準備として、以下のような&lt;span class=&#34;math inline&#34;&gt;\(\alpha_{t|t}\)&lt;/span&gt;と&lt;span class=&#34;math inline&#34;&gt;\(\alpha_{t+1|t}\)&lt;/span&gt;の混合分布を計算しておきます。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\begin{eqnarray}
+(\alpha_{t|t},\alpha_{t+1|t}) &amp;amp;=&amp;amp; N(
+\left(
+    \begin{array}{cccc}
+      E(\alpha_{t|t}) \\
+      E(\alpha_{t+1|t})
+    \end{array}
+  \right),
+\left(
+    \begin{array}{cccc}
+      Var(\alpha_{t|t}), Cov(\alpha_{t|t},\alpha_{t+1|t}) \\
+      Cov(\alpha_{t+1|t},\alpha_{t|t}), Var(\alpha_{t+1|t})
+    \end{array}
+  \right)
+) \\
+&amp;amp;=&amp;amp; N(
+\left(
+    \begin{array}{cccc}
+      a_{t|t} \\
+      a_{t+1|t}
+    \end{array}
+  \right),
+\left(
+    \begin{array}{cccc}
+      \Sigma_{t|t}, \Sigma_{t|t}T_{t}&amp;#39; \\
+      T_{t}\Sigma_{t|t}, \Sigma_{t+1|t} 
+    \end{array}
+  \right)
+)
+\end{eqnarray}
+\]&lt;/span&gt;
+ここで、&lt;span class=&#34;math inline&#34;&gt;\(Cov(\alpha_{t|t},\alpha_{t+1|t})\)&lt;/span&gt;は&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\begin{eqnarray}
+Cov(\alpha_{t+1|t},\alpha_{t|t}) &amp;amp;=&amp;amp; Cov(T_{t}\alpha_{t-1} + c_{t} + R_{t}\eta_{t}, \alpha_{t|t}) \\
+&amp;amp;=&amp;amp; T_{t}Cov(\alpha_{t|t},\alpha_{t|t}) + Cov(c_{t},\alpha_{t|t}) + Cov(R_{t}\eta_{t},\alpha_{t|t}) \\
+&amp;amp;=&amp;amp; T_{t}Var(\alpha_{t|t}) = T_{t}\Sigma_{t|t}
+\end{eqnarray}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;ここで、条件付き多変量正規分布は以下のような分布をしていることを思い出しましょう（
+&lt;a href=&#34;https://mathwords.net/gaussjoken&#34;&gt;参考&lt;/a&gt;
+）。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+(X_{1},X_{2}) = N(
+\left(
+    \begin{array}{cccc}
+      \mu_{1} \\
+      \mu_{2}
+    \end{array}
+  \right),
+\left(
+    \begin{array}{cccc}
+      \Sigma_{11}, \Sigma_{12} \\
+      \Sigma_{21}, \Sigma_{22}
+    \end{array}
+  \right)
+) \\
+\]&lt;/span&gt;
+&lt;span class=&#34;math display&#34;&gt;\[
+(X_{1}|X_{2}=x_{2}) = N(\mu_{1} + \Sigma_{12}\Sigma_{22}^{-1}(x_{2}-\mu_{2}),\Sigma_{11}-\Sigma_{12}\Sigma_{22}^{-1}\Sigma_{21})
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;これを用いて、&lt;span class=&#34;math inline&#34;&gt;\((\alpha_{t|t}|\alpha_{t+1|t}=a_{t+1})\)&lt;/span&gt;を計算してみましょう。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\begin{eqnarray}
+(\alpha_{t|t}|\alpha_{t+1|t}=a_{t+1}) &amp;amp;=&amp;amp; N(a_{t|t} + \Sigma_{t|t}T_{t}&amp;#39;\Sigma_{t+1|t}^{-1}(a_{t+1}-a_{t+1|t}), \Sigma_{t|t}-\Sigma_{t|t}T_{t}&amp;#39;\Sigma_{t+1|t}^{-1}T_{t}\Sigma_{t|t}) \\
+&amp;amp;=&amp;amp;N(a_{t|t} + L_{t}(a_{t+1}-a_{t+1|t}), \Sigma_{t|t}-L_{t}\Sigma_{t+1|t}L_{t}&amp;#39;)
+\end{eqnarray}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;ただし、&lt;span class=&#34;math inline&#34;&gt;\(a_{t+1}\)&lt;/span&gt;の値は観測不可能なので、上式を用いて状態変数を更新することはできません。今、わかるのは&lt;span class=&#34;math inline&#34;&gt;\(T\)&lt;/span&gt;期における&lt;span class=&#34;math inline&#34;&gt;\(a_{t+1|T}\)&lt;/span&gt;の分布のみです。ということで、&lt;span class=&#34;math inline&#34;&gt;\(a_{t+1}\)&lt;/span&gt;を&lt;span class=&#34;math inline&#34;&gt;\(a_{t+1|T}\)&lt;/span&gt;で代用し、&lt;span class=&#34;math inline&#34;&gt;\(\alpha_{t|T}\)&lt;/span&gt;の分布を求めてみます。では、計算していきます。&lt;span class=&#34;math inline&#34;&gt;\(\alpha_{t|T} = N(E(\alpha_{t|T}),Var(\alpha_{t|T}))\)&lt;/span&gt;ですが、&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\begin{eqnarray}
+E(\alpha_{t|T}) &amp;amp;=&amp;amp; E_{\alpha_{t+1|T}}(E(\alpha_{t|t}|\alpha_{t+1|t}=\alpha_{t+1|T})) \\
+Var(\alpha_{t|T}) &amp;amp;=&amp;amp; E_{\alpha_{t+1|T}}(Var(\alpha_{t|t}|\alpha_{t+1|t} = \alpha_{t+1|T})) + Var_{\alpha_{t+1|T}}(E(\alpha_{t|t}|\alpha_{t+1|t}=\alpha_{t+1|T}))
+\end{eqnarray}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;というように、&lt;span class=&#34;math inline&#34;&gt;\(\alpha_{t+1|T}\)&lt;/span&gt;も確率変数となるので、繰り返し期待値の法則と繰り返し分散の法則を使用します（&lt;a href=&#34;https://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-041-probabilistic-systems-analysis-and-applied-probability-fall-2010/video-lectures/lecture-12-iterated-expectations-sum-of-a-random-number-of-random-variables/MIT6_041F10_L12.pdf&#34;&gt;こちら&lt;/a&gt;を参照）。&lt;/p&gt;
+&lt;p&gt;*繰り返し期待値の法則
+&lt;span class=&#34;math inline&#34;&gt;\(E(x) = E_{Z}(E(X|Y=Z))\)&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;*繰り返し分散の法則
+&lt;span class=&#34;math inline&#34;&gt;\(Var(X) = E_{Z}(Var(X|Y=Z))+Var_{Z}(E(X|Y=Z))\)&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;よって、&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\begin{eqnarray}
+E(\alpha_{t|T}) &amp;amp;=&amp;amp; E_{\alpha_{t+1|T}}(E(\alpha_{t|t}|\alpha_{t+1|t}=\alpha_{t+1|T})) \\
+&amp;amp;=&amp;amp; a_{t|t} + L_{t}(a_{t+1|T}-a_{t+1|t}) \\
+Var(\alpha_{t|T}) &amp;amp;=&amp;amp; E_{\alpha_{t+1|T}}(Var(\alpha_{t|t}|\alpha_{t+1|t}=\alpha_{t+1|T})) + Var_{\alpha_{t+1|T}}(E(\alpha_{t|t}|\alpha_{t+1|t}=\alpha_{t+1|T})) \\
+&amp;amp;=&amp;amp; \Sigma_{t|t} - L_{t}\Sigma_{t+1|t}L_{t}&amp;#39; + E( (a_{t|t} + L_{t}(\alpha_{t+1|T}-a_{t+1|t}) - a_{t|t} - L_{t}(a_{t+1|T}-a_{t+1|t}))(a_{t|t} + L_{t}(\alpha_{t+1|T}-a_{t+1|t}) - a_{t|t} - L_{t}(a_{t+1|T}-a_{t+1|t}))&amp;#39;) \\
+&amp;amp;=&amp;amp; \Sigma_{t|t} - L_{t}\Sigma_{t+1|t}L_{t}&amp;#39; + E( (L_{t}(\alpha_{t+1|T}-a_{t+1|t}) - L_{t}(a_{t+1|T}-a_{t+1|t}))(L_{t}(\alpha_{t+1|T}-a_{t+1|t}) - L_{t}(a_{t+1|T}-a_{t+1|t}))&amp;#39;) \\
+&amp;amp;=&amp;amp; \Sigma_{t|t} - L_{t}\Sigma_{t+1|t}L_{t}&amp;#39; + E( (L_{t}\alpha_{t+1|T} - L_{t}a_{t+1|T})(L_{t}\alpha_{t+1|T} - L_{t}(a_{t+1|T})&amp;#39;) \\
+&amp;amp;=&amp;amp; \Sigma_{t|t} - L_{t}\Sigma_{t+1|t}L_{t}&amp;#39; + E( L_{t}(\alpha_{t+1|T} - a_{t+1|T})(\alpha_{t+1|T} - a_{t+1|T})&amp;#39;L_{t}&amp;#39;) \\
+&amp;amp;=&amp;amp; \Sigma_{t|t} - L_{t}\Sigma_{t+1|t}L_{t}&amp;#39; + L_{t}E( (\alpha_{t+1|T} - a_{t+1|T})(\alpha_{t+1|T} - a_{t+1|T})&amp;#39;)L_{t}&amp;#39; \\
+&amp;amp;=&amp;amp; \Sigma_{t|t} - L_{t}\Sigma_{t+1|t}L_{t}&amp;#39; + L_{t}\Sigma_{t+1|T}L_{t}&amp;#39;
+\end{eqnarray}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;となります。カルマンスムージングのアルゴリズムをまとめておきます。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\begin{eqnarray}
+L_{t} &amp;amp;=&amp;amp; \Sigma_{t|t}T_{t}\Sigma_{t+1|t}^{-1} \\
+a_{t|T} &amp;amp;=&amp;amp; a_{t|t} + L_{t}(a_{t+1|T} - a_{t+1|t}) \\
+\Sigma_{t|T} &amp;amp;=&amp;amp; \Sigma_{t+1|t} + L_{t}(\Sigma_{t+1|T}-\Sigma_{t+1|t})L_{t}&amp;#39;
+\end{eqnarray}
+\]&lt;/span&gt;
+カルマンスムージングの特徴的な点は後ろ向きに計算をしていく点です。つまり、&lt;span class=&#34;math inline&#34;&gt;\(T\)&lt;/span&gt;期から1期に向けて計算を行っていきます。&lt;span class=&#34;math inline&#34;&gt;\(L_{t}\)&lt;/span&gt;に関してはそもそもカルマンフィルタを回した時点で計算可能ですが、&lt;span class=&#34;math inline&#34;&gt;\(\alpha_{t|T}\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(T\)&lt;/span&gt;期までのデータが手元にないと計算できません。今、&lt;span class=&#34;math inline&#34;&gt;\(T\)&lt;/span&gt;期まで観測可能なデータが入手できたとしましょう。すると、２番目の方程式を用いて、&lt;span class=&#34;math inline&#34;&gt;\(a_{T-1|T}\)&lt;/span&gt;を計算します。ちなみに&lt;span class=&#34;math inline&#34;&gt;\(a_{T|T}\)&lt;/span&gt;はカルマンフィルタを回した時点ですでに手に入っているので、計算する必要はありません。同時に、３番目の式を用いて&lt;span class=&#34;math inline&#34;&gt;\(\Sigma_{T-1|T}\)&lt;/span&gt;を計算します。そして、&lt;span class=&#34;math inline&#34;&gt;\(a_{T-1|T},\Sigma_{T-1|T}\)&lt;/span&gt;と&lt;span class=&#34;math inline&#34;&gt;\(L_{T-1}\)&lt;/span&gt;を用いて&lt;span class=&#34;math inline&#34;&gt;\(a_{T-2|T},\Sigma_{T-2|T}\)&lt;/span&gt;を計算、というように1期に向けて後ろ向きに計算をしていくのです。さきほど、遷移方程式の誤差項&lt;span class=&#34;math inline&#34;&gt;\(\eta_{t}\)&lt;/span&gt;と定数項&lt;span class=&#34;math inline&#34;&gt;\(c_{t}\)&lt;/span&gt;がなく、遷移方程式のパラメータが単位行列のカルマンフィルタは逐次最小自乗法と一致すると書きましたが、カルマンスムージングの場合は&lt;span class=&#34;math inline&#34;&gt;\(T\)&lt;/span&gt;期までのサンプルで&lt;code&gt;OLS&lt;/code&gt;を行った結果と一致します。
+&lt;code&gt;R&lt;/code&gt;で実装してみます。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;kalmansmoothing &amp;lt;- function(filter){
+  #-------------------------------------------------------------------
+  # Implemention of Kalman smoothing
+  #   t - parameter of endogenous variable in state equation
+  #   z - parameter of endogenous variable in observable equation
+  #   a_pre - prediction of state
+  #   a_fil - filtered value of state
+  #   sig_pre - prediction of var of state
+  #   sig_fil - filtered value of state
+  #-------------------------------------------------------------------
+  
+  library(MASS)
+  
+  # 1.Define variable
+  a_pre &amp;lt;- filter$`state prediction`
+  a_fil &amp;lt;- filter$`state filtered`
+  sig_pre &amp;lt;- filter$`state var prediction`
+  sig_fil &amp;lt;- filter$`state var filtered`
+  t &amp;lt;- filter$`parameter of state eq`
+  C &amp;lt;- array(0,dim = dim(sig_pre))
+  a_sm &amp;lt;- array(0,dim = dim(a_pre))
+  sig_sm &amp;lt;- array(0,dim = dim(sig_pre))
+  N &amp;lt;- dim(C)[3]
+  a_sm[,,N] &amp;lt;- a_fil[,,N]
+  sig_sm[,,N] &amp;lt;- sig_fil[,,N]
+  
+  for (i in N:2){
+    C[,,i-1] &amp;lt;- sig_fil[,,i-1]%*%t(t)%*%ginv(sig_pre[,,i])
+    a_sm[,,i-1] &amp;lt;- a_fil[,,i-1] + C[,,i-1]%*%(a_sm[,,i]-a_pre[,,i])
+    sig_sm[,,i-1] &amp;lt;- sig_fil[,,i-1] + C[,,i-1]%*%(sig_sm[,,i]-sig_pre[,,i])%*%t(C[,,i-1])
+  }
+  
+  
+  result &amp;lt;- list(a_sm,sig_sm,C)
+  names(result) &amp;lt;- c(&amp;quot;state smoothed&amp;quot;, &amp;quot;state var smoothed&amp;quot;, &amp;quot;c&amp;quot;)
+  return(result)
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;先ほどのコードの続きで&lt;code&gt;R&lt;/code&gt;コードを書いてみます。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;result2 &amp;lt;- kalmansmoothing(result1)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;かなりシンプルですね。ちなみにグラフにしましたが、１個目とほぼ変わりませんでした。とりあえず、今日はここまで。&lt;/p&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>ガウス回帰の実装をやってみた</title>
+      <link>/post/post1/</link>
+      <pubDate>Sun, 02 Dec 2018 00:00:00 +0000</pubDate>
+      <guid>/post/post1/</guid>
+      <description>
+&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+&lt;link href=&#34;index_files/pagedtable/css/pagedtable.css&#34; rel=&#34;stylesheet&#34; /&gt;
+&lt;script src=&#34;index_files/pagedtable/js/pagedtable.js&#34;&gt;&lt;/script&gt;
+
+&lt;div id=&#34;TOC&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#gprとは&#34;&gt;1. &lt;code&gt;GPR&lt;/code&gt;とは&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#gprの実装&#34;&gt;2. &lt;code&gt;GPR&lt;/code&gt;の実装&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+
+&lt;p&gt;　おはこんばんにちは。昨日、&lt;code&gt;Bayesian Vector Autoregression&lt;/code&gt;の記事を書きました。&lt;br /&gt;
+　その中でハイパーパラメータのチューニングの話が出てきて、なにか効率的にチューニングを行う方法はないかと探していた際に&lt;code&gt;Bayesian Optimization&lt;/code&gt;を発見しました。日次GDPでも機械学習の手法を利用しようと思っているので、&lt;code&gt;Bayesian Optimization&lt;/code&gt;はかなり使える手法ではないかと思い、昨日徹夜で理解しました。&lt;br /&gt;
+　その内容をここで実装しようとは思うのですが、&lt;code&gt;Bayesian Optimization&lt;/code&gt;ではガウス回帰（&lt;code&gt;Gaussian Pocess Regression&lt;/code&gt;,以下&lt;code&gt;GPR&lt;/code&gt;）を使用しており、まずその実装を行おうと持ったのがこのエントリを書いた動機です。&lt;code&gt;Bayesian Optimization&lt;/code&gt;の実装はこのエントリの後にでも書こうかなと思っています。&lt;/p&gt;
+&lt;div id=&#34;gprとは&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;1. &lt;code&gt;GPR&lt;/code&gt;とは&lt;/h2&gt;
+&lt;p&gt;　&lt;code&gt;GRP&lt;/code&gt;とは簡単に言ってしまえば「&lt;strong&gt;ベイズ推定を用いた非線形回帰手法の１種&lt;/strong&gt;」です。モデル自体は線形ですが、&lt;strong&gt;カーネルトリックを用いて入力変数を無限個非線形変換したもの&lt;/strong&gt;を説明変数として推定できるところが特徴です（カーネルになにを選択するかによります）。&lt;br /&gt;
+　&lt;code&gt;GPR&lt;/code&gt;が想定しているのは、学習データとして入力データと教師データがそれぞれN個得られており、また入力データに関しては&lt;span class=&#34;math inline&#34;&gt;\(N+1\)&lt;/span&gt;個目のデータも得られている状況です。この状況から、&lt;span class=&#34;math inline&#34;&gt;\(N+1\)&lt;/span&gt;個目の教師データを予測します。&lt;br /&gt;
+　教師データにはノイズが含まれており、以下のような確率モデルに従います。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+t_{i} = y_{i} + \epsilon_{i}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;ここで、&lt;span class=&#34;math inline&#34;&gt;\(t_{i}\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(i\)&lt;/span&gt;番目の観測可能な教師データ（スカラー）、&lt;span class=&#34;math inline&#34;&gt;\(y_{i}\)&lt;/span&gt;は観測できない出力データ（スカラー）、&lt;span class=&#34;math inline&#34;&gt;\(\epsilon_{i}\)&lt;/span&gt;は測定誤差で正規分布&lt;span class=&#34;math inline&#34;&gt;\(N(0,\beta^{-1})\)&lt;/span&gt;に従います。&lt;span class=&#34;math inline&#34;&gt;\(y_{i}\)&lt;/span&gt;は以下のような確率モデルに従います。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\displaystyle y_{i}  = \textbf{w}^{T}\phi(x_{i})
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;ここで、&lt;span class=&#34;math inline&#34;&gt;\(x_{i}\)&lt;/span&gt;はi番目の入力データベクトル、&lt;span class=&#34;math inline&#34;&gt;\(\phi(・)\)&lt;/span&gt;は非線形関数、 &lt;span class=&#34;math inline&#34;&gt;\(\textbf{w}^{T}\)&lt;/span&gt;は各入力データに対する重み係数（回帰係数）ベクトルです。非線形関数としては、&lt;span class=&#34;math inline&#34;&gt;\(\phi(x_{i}) = (x_{1,i}, x_{1,i}^{2},...,x_{1,i}x_{2,i},...)\)&lt;/span&gt;を想定しています（&lt;span class=&#34;math inline&#34;&gt;\(x_{1,i}\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(i\)&lt;/span&gt;番目の入力データ&lt;span class=&#34;math inline&#34;&gt;\(x_{i}\)&lt;/span&gt;の１番目の変数）。教師データの確率モデルから、&lt;span class=&#34;math inline&#34;&gt;\(i\)&lt;/span&gt;番目の出力データ&lt;span class=&#34;math inline&#34;&gt;\(y_{i}\)&lt;/span&gt;が得られたうえで&lt;span class=&#34;math inline&#34;&gt;\(t_{i}\)&lt;/span&gt;が得られる条件付確率は、&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+ p(t_{i}|y_{i}) = N(t_{i}|y_{i},\beta^{-1})
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;となります。&lt;span class=&#34;math inline&#34;&gt;\(\displaystyle \textbf{t} = (t_{1},...,t_{n})^{T}\)&lt;/span&gt;、&lt;span class=&#34;math inline&#34;&gt;\(\displaystyle \textbf{y} = (y_{1},...,y_{n})^{T}\)&lt;/span&gt;とすると、上式を拡張することで&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\displaystyle p(\textbf{t}|\textbf{y}) = N(\textbf{t}|\textbf{y},\beta^{-1}\textbf{I}_{N})
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;と書けます。また、事前分布として&lt;span class=&#34;math inline&#34;&gt;\(\textbf{w}\)&lt;/span&gt;の期待値は0、分散は全て&lt;span class=&#34;math inline&#34;&gt;\(\alpha\)&lt;/span&gt;と仮定します。&lt;span class=&#34;math inline&#34;&gt;\(\displaystyle \textbf{y}\)&lt;/span&gt;はガウス過程に従うと仮定します。ガウス過程とは、&lt;span class=&#34;math inline&#34;&gt;\(\displaystyle \textbf{y}\)&lt;/span&gt;の同時分布が多変量ガウス分布に従うもののことです。コードで書くと以下のようになります。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Define Kernel function
+Kernel_Mat &amp;lt;- function(X,sigma,beta){
+  N &amp;lt;- NROW(X)
+  K &amp;lt;- matrix(0,N,N)
+  for (i in 1:N) {
+    for (k in 1:N) {
+      if(i==k) kdelta = 1 else kdelta = 0
+      K[i,k] &amp;lt;- K[k,i] &amp;lt;- exp(-t(X[i,]-X[k,])%*%(X[i,]-X[k,])/(2*sigma^2)) + beta^{-1}*kdelta
+    }
+  }
+  return(K)
+}
+
+N &amp;lt;- 10 # max value of X
+M &amp;lt;- 1000 # sample size
+X &amp;lt;- matrix(seq(1,N,length=M),M,1) # create X
+testK &amp;lt;- Kernel_Mat(X,0.5,1e+18) # calc kernel matrix
+
+library(MASS)
+
+P &amp;lt;- 6 # num of sample path
+Y &amp;lt;- matrix(0,M,P) # define Y
+
+for(i in 1:P){
+  Y[,i] &amp;lt;- mvrnorm(n=1,rep(0,M),testK) # sample Y
+}
+
+# Plot
+matplot(x=X,y=Y,type = &amp;quot;l&amp;quot;,lwd = 2)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-1-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;　Kernel_Matについては後述しますが、&lt;span class=&#34;math inline&#34;&gt;\(\displaystyle \textbf{y}\)&lt;/span&gt;の各要素&lt;span class=&#34;math inline&#34;&gt;\(\displaystyle y_{i} = \textbf{w}^{T}\phi(x_{i})\)&lt;/span&gt;の間の共分散行列&lt;span class=&#34;math inline&#34;&gt;\(K\)&lt;/span&gt;を入力&lt;span class=&#34;math inline&#34;&gt;\(x\)&lt;/span&gt;からカーネル法を用いて計算しています。そして、この&lt;span class=&#34;math inline&#34;&gt;\(K\)&lt;/span&gt;と平均0から、多変量正規乱数を6系列生成し、それをプロットしています。&lt;/p&gt;
+&lt;p&gt;　これらの系列は共分散行列から計算されるので、&lt;strong&gt;各要素の共分散が正に大きくなればなるほど同じ値をとりやすくなる&lt;/strong&gt;ようモデリングされていることになります。また、グラフを見ればわかるように非常になめらかなグラフが生成されており、かつ非常に柔軟な関数を表現できていることがわかります。コードでは計算コストの関係上、入力を0から10に限定して1000個の入力点をサンプルし、作図を行っていますが、原理的には&lt;span class=&#34;math inline&#34;&gt;\(x\)&lt;/span&gt;は実数空間で定義されるものであるので、&lt;span class=&#34;math inline&#34;&gt;\(p(\textbf{y})\)&lt;/span&gt;は無限次元の多変量正規分布に従います。
+以上のように、&lt;span class=&#34;math inline&#34;&gt;\(\displaystyle \textbf{y}\)&lt;/span&gt;はガウス過程に従うと仮定するので同時確率&lt;span class=&#34;math inline&#34;&gt;\(p(\textbf{y})\)&lt;/span&gt;は平均0、分散共分散行列が&lt;span class=&#34;math inline&#34;&gt;\(K\)&lt;/span&gt;の多変量正規分布&lt;span class=&#34;math inline&#34;&gt;\(N(\textbf{y}|0,K)\)&lt;/span&gt;に従います。ここで、&lt;span class=&#34;math inline&#34;&gt;\(K\)&lt;/span&gt;の各要素&lt;span class=&#34;math inline&#34;&gt;\(K_{i,j}\)&lt;/span&gt;は、&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\begin{eqnarray}
+K_{i,j} &amp;amp;=&amp;amp; cov[y_{i},y_{j}] = cov[\textbf{w}\phi(x_{i}),\textbf{w}\phi(x_{j})] \\
+&amp;amp;=&amp;amp;\phi(x_{i})\phi(x_{j})cov[\textbf{w},\textbf{w}]=\phi(x_{i})\phi(x_{j})\alpha
+\end{eqnarray}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;です。ここで、&lt;span class=&#34;math inline&#34;&gt;\(\phi(x_{i})\phi(x_{j})\alpha\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(\phi(x_{i})\)&lt;/span&gt;の&lt;strong&gt;次元が大きくなればなるほど計算量が多く&lt;/strong&gt;なります（つまり、非線形変換をかければかけるほど計算が終わらない）。しかし、カーネル関数&lt;span class=&#34;math inline&#34;&gt;\(k(x,x&amp;#39;)\)&lt;/span&gt;を用いると、計算量は高々入力データ&lt;span class=&#34;math inline&#34;&gt;\(x_{i},x_{j}\)&lt;/span&gt;のサンプルサイズの次元になるので、計算がしやすくなります。カーネル関数を用いて&lt;span class=&#34;math inline&#34;&gt;\(K_{i,j} = k(x_{i},x_{j})\)&lt;/span&gt;となります。カーネル関数としてはいくつか種類がありますが、以下のガウスカーネルがよく使用されます。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+k(x,x&amp;#39;) = a \exp(-b(x-x&amp;#39;)^{2})
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math inline&#34;&gt;\(\displaystyle \textbf{y}\)&lt;/span&gt;の同時確率が定義できたので、&lt;span class=&#34;math inline&#34;&gt;\(\displaystyle \textbf{t}\)&lt;/span&gt;の同時確率を求めることができます。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\begin{eqnarray}
+\displaystyle p(\textbf{t}) &amp;amp;=&amp;amp; \int p(\textbf{t}|\textbf{y})p(\textbf{y}) d\textbf{y} \\
+ \displaystyle &amp;amp;=&amp;amp; \int N(\textbf{t}|\textbf{y},\beta^{-1}\textbf{I}_{N})N(\textbf{y}|0,K)d\textbf{y} \\
+ &amp;amp;=&amp;amp; N(\textbf{y}|0,\textbf{C}_{N})
+\end{eqnarray}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;ここで、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{C}_{N} = K + \beta^{-1}\textbf{I}_{N}\)&lt;/span&gt;です。なお、最後の式展開は正規分布の再生性を利用しています（証明は正規分布の積率母関数から容易に導けます）。要は、両者は独立なので共分散は2つの分布の共分散の和となると言っているだけです。個人的には、&lt;span class=&#34;math inline&#34;&gt;\(p(\textbf{y})\)&lt;/span&gt;が先ほど説明したガウス過程の事前分布であり、&lt;span class=&#34;math inline&#34;&gt;\(p(\textbf{t}|\textbf{y})\)&lt;/span&gt;が尤度関数で、&lt;span class=&#34;math inline&#34;&gt;\(p(\textbf{t})\)&lt;/span&gt;は事後分布をというようなイメージです。事前分布&lt;span class=&#34;math inline&#34;&gt;\(p(\textbf{y})\)&lt;/span&gt;は制約の緩い分布でなめらかであることのみが唯一の制約です。
+&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;個の観測可能な教師データ&lt;span class=&#34;math inline&#34;&gt;\(\textbf{t}\)&lt;/span&gt;と&lt;span class=&#34;math inline&#34;&gt;\(t_{N+1}\)&lt;/span&gt;の同時確率は、&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+ p(\textbf{t},t_{N+1}) = N(\textbf{t},t_{N+1}|0,\textbf{C}_{N+1})
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;ここで、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{C}_{N+1}\)&lt;/span&gt;は、&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+ \textbf{C}_{N+1} = \left(
+    \begin{array}{cccc}
+      \textbf{C}_{N} &amp;amp; \textbf{k} \\
+      \textbf{k}^{T} &amp;amp; c \\
+    \end{array}
+  \right)
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;です。ここで、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{k} = (k(x_{1},x_{N+1}),...,k(x_{N},x_{N+1}))\)&lt;/span&gt;、&lt;span class=&#34;math inline&#34;&gt;\(c = k(x_{N+1},x_{N+1})\)&lt;/span&gt;です。&lt;span class=&#34;math inline&#34;&gt;\(\textbf{t}\)&lt;/span&gt;と&lt;span class=&#34;math inline&#34;&gt;\(t_{N+1}\)&lt;/span&gt;の同時分布から条件付分布&lt;span class=&#34;math inline&#34;&gt;\(p(t_{N+1}|\textbf{t})\)&lt;/span&gt;を求めることができます。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+p(t_{N+1}|\textbf{t}) = N(t_{N+1}|\textbf{k}^{T}\textbf{C}_{N+1}^{-1}\textbf{t},c-\textbf{k}^{T}\textbf{C}_{N+1}^{-1}\textbf{k})
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;条件付分布の計算においては、&lt;a href=&#34;https://qiita.com/kilometer/items/34249479dc2ac3af5706:title&#34;&gt;条件付多変量正規分布の性質&lt;/a&gt;を利用しています。上式を見ればわかるように、条件付分布&lt;span class=&#34;math inline&#34;&gt;\(p(t_{N+1}|\textbf{t})\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(N+1\)&lt;/span&gt;個の入力データ、&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;個の教師データ、カーネル関数のパラメータ&lt;span class=&#34;math inline&#34;&gt;\(a,b\)&lt;/span&gt;が既知であれば計算可能となっていますので、任意の点を入力データとして与えてやれば、元のData Generating Processを近似することが可能になります。&lt;code&gt;GPR&lt;/code&gt;の良いところは上で定義した確率モデル&lt;span class=&#34;math inline&#34;&gt;\(\displaystyle y_{i} = \textbf{w}^{T}\phi(x_{i})\)&lt;/span&gt;を直接推定しなくても予測値が得られるところです。確率モデルには&lt;span class=&#34;math inline&#34;&gt;\(\phi(x_{i})\)&lt;/span&gt;があり、非線形変換により入力データを高次元ベクトルへ変換しています。よって、次元が高くなればなるほど&lt;span class=&#34;math inline&#34;&gt;\(\phi(x_{i})\phi(x_{j})\alpha\)&lt;/span&gt;の計算量は大きくなっていきますが、&lt;code&gt;GPR&lt;/code&gt;ではカーネルトリックを用いているので高々入力データベクトルのサンプルサイズの次元の計算量で事足りることになります。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;gprの実装&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;2. &lt;code&gt;GPR&lt;/code&gt;の実装&lt;/h2&gt;
+&lt;p&gt;　とりあえずここまでを&lt;code&gt;R&lt;/code&gt;で実装してみましょう。PRMLのテストデータで実装しているものがあったので、それをベースにいじってみました。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(ggplot2)
+library(grid)
+
+# 1.Gaussian Process Regression
+
+# PRML&amp;#39;s synthetic data set
+curve_fitting &amp;lt;- data.frame(
+  x=c(0.000000,0.111111,0.222222,0.333333,0.444444,0.555556,0.666667,0.777778,0.888889,1.000000),
+  t=c(0.349486,0.830839,1.007332,0.971507,0.133066,0.166823,-0.848307,-0.445686,-0.563567,0.261502))
+
+f &amp;lt;- function(beta, sigma, xmin, xmax, input, train) {
+  kernel &amp;lt;- function(x1, x2) exp(-(x1-x2)^2/(2*sigma^2)); # define Kernel function
+  K &amp;lt;- outer(input, input, kernel); # calc gram matrix
+  C_N &amp;lt;- K + diag(length(input))/beta
+  m &amp;lt;- function(x) (outer(x, input, kernel) %*% solve(C_N) %*% train) # coditiona mean 
+  m_sig &amp;lt;- function(x)(kernel(x,x) - diag(outer(x, input, kernel) %*% solve(C_N) %*% t(outer(x, input, kernel)))) #conditional variance
+  x &amp;lt;- seq(xmin,xmax,length=100)
+  output &amp;lt;- ggplot(data.frame(x1=x,m=m(x),sig1=m(x)+1.96*sqrt(m_sig(x)),sig2=m(x)-1.96*sqrt(m_sig(x)),
+                              tx=input,ty=train),
+                   aes(x=x1,y=m)) + 
+    geom_line() +
+    geom_ribbon(aes(ymin=sig1,ymax=sig2),alpha=0.2) +
+    geom_point(aes(x=tx,y=ty))
+  return(output)
+}
+
+grid.newpage() # make a palet
+pushViewport(viewport(layout=grid.layout(2, 2))) # divide the palet into 2 by 2
+print(f(100,0.1,0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=1, layout.pos.col=1))
+print(f(4,0.10,0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=1, layout.pos.col=2))
+print(f(25,0.30,0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=2, layout.pos.col=1))
+print(f(25,0.030,0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=2, layout.pos.col=2)) &lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-2-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math inline&#34;&gt;\(\beta^{-1}\)&lt;/span&gt;は測定誤差を表しています。&lt;strong&gt;&lt;span class=&#34;math inline&#34;&gt;\(\beta\)&lt;/span&gt;が大きい（つまり、測定誤差が小さい）とすでに得られているデータとの誤差が少なくなるように予測値をはじき出すので、over fitting しやすくなります。&lt;/strong&gt;上図の左上がそうなっています。左上は&lt;span class=&#34;math inline&#34;&gt;\(\beta=400\)&lt;/span&gt;で、現時点で得られているデータに過度にfitしていることがわかります。逆に&lt;span class=&#34;math inline&#34;&gt;\(\beta\)&lt;/span&gt;が小さいと教師データとの誤差を無視するように予測値をはじき出しますが、汎化性能は向上するかもしれません。右上の図がそれです。&lt;span class=&#34;math inline&#34;&gt;\(\beta=4\)&lt;/span&gt;で、得られているデータ点を平均はほとんど通っていません。&lt;span class=&#34;math inline&#34;&gt;\(b\)&lt;/span&gt;は現時点で得られているデータが周りに及ぼす影響の広さを表しています。&lt;span class=&#34;math inline&#34;&gt;\(b\)&lt;/span&gt;が小さいと、隣接する点が互いに強く影響を及ぼし合うため、精度は下がるが汎化性能は上がるかもしれません。逆に、&lt;span class=&#34;math inline&#34;&gt;\(b\)&lt;/span&gt;が大きいと、個々の点にのみフィットする不自然な結果になります。これは右下の図になります（&lt;span class=&#34;math inline&#34;&gt;\(b=\frac{1}{0.03},\beta=25\)&lt;/span&gt;）。御覧の通り、&lt;span class=&#34;math inline&#34;&gt;\(\beta\)&lt;/span&gt;が大きいのでoverfitting気味であり、なおかつ&lt;span class=&#34;math inline&#34;&gt;\(b\)&lt;/span&gt;も大きいので個々の点のみにfitし、無茶苦茶なグラフになっています。左下のグラフが最もよさそうです。&lt;span class=&#34;math inline&#34;&gt;\(b=\frac{1}{0.3},\beta=2\)&lt;/span&gt;となっています。試しに、このグラフのx区間を[0,2]へ伸ばしてみましょう。すると、以下のようなグラフがかけます。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;grid.newpage() # make a palet
+pushViewport(viewport(layout=grid.layout(2, 2))) # divide the palet into 2 by 2
+print(f(100,0.1,0,2,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=1, layout.pos.col=1)) 
+print(f(4,0.10,0,2,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=1, layout.pos.col=2)) 
+print(f(25,0.30,0,2,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=2, layout.pos.col=1))
+print(f(25,0.030,0,2,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=2, layout.pos.col=2)) &lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-3-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;これを見ればわかるように、左下以外のグラフはすぐに95%信頼区間のバンドが広がり、データ点がないところではまったく使い物にならないことがわかります。一方、左下のグラフは1.3~1.4ぐらいまではそこそこのバンドがかけており、我々が直感的に理解する関数とも整合的な点を平均値が通っているように思えます。また、観測可能なデータ点から離れすぎるとパラメータに何を与えようと平均０、分散１の正規分布になることもわかるがわかります。
+さて、このようにパラメータの値に応じて、アウトサンプルの予測精度が異なることを示したわけですが、ここで問題となるのはこれらハイパーパラメータをどのようにして推計するかです。これは対数尤度関数&lt;span class=&#34;math inline&#34;&gt;\(\ln p(\textbf{t}|a,b)\)&lt;/span&gt;を最大にするハイパーパラメータを勾配法により求めます((&lt;span class=&#34;math inline&#34;&gt;\(\beta\)&lt;/span&gt;は少しタイプが異なるようで、発展的な議論では他のチューニング方法をとる模様。まだ、そのレベルにはいけていないのでここではカリブレートすることにします。))。&lt;span class=&#34;math inline&#34;&gt;\(p(\textbf{t}) = N(\textbf{y}|0,\textbf{C}_{N})\)&lt;/span&gt;なので、対数尤度関数は&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\displaystyle \ln p(\textbf{t}|a,b,\beta) = -\frac{1}{2}\ln|\textbf{C}_{N}| - \frac{N}{2}\ln(2\pi) - \frac{1}{2}\textbf{t}^{T}\textbf{C}_{N}^{-1}\textbf{k}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;となります。あとは、これをパラメータで微分し、得られた連立方程式を解くことで最尤推定量が得られます。ではまず導関数を導出してみます。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\displaystyle \frac{\partial}{\partial \theta_{i}} \ln p(\textbf{t}|\theta) = -\frac{1}{2}Tr(\textbf{C}_{N}^{-1}\frac{\partial \textbf{C}_{N}}{\partial \theta_{i}}) + \frac{1}{2}\textbf{t}^{T}\textbf{C}_{N}^{-1}
+\frac{\partial\textbf{C}_{N}}{\partial\theta_{i}}\textbf{C}_{N}^{-1}\textbf{t}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;ここで、&lt;span class=&#34;math inline&#34;&gt;\(\theta\)&lt;/span&gt;はパラメータセットで、&lt;span class=&#34;math inline&#34;&gt;\(\theta_{i}\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(i\)&lt;/span&gt;番目のパラメータを表しています。この導関数が理解できない方は&lt;a href=&#34;http://users.isr.ist.utl.pt/~wurmd/Livros/school/Bishop%20-%20Pattern%20Recognition%20And%20Machine%20Learning%20-%20Springer%20%202006.pdf:title=PRML&#34;&gt;こちら&lt;/a&gt;の補論にある(C.21)式と(C.22)式をご覧になると良いと思います。今回はガウスカーネルを用いているため、&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\displaystyle \frac{\partial k(x,x&amp;#39;)}{\partial a} = \exp(-b(x-x&amp;#39;)^{2}) \\
+\displaystyle \frac{\partial k(x,x&amp;#39;)}{\partial b} = -a(x-x&amp;#39;)^{2}\exp(-b(x-x&amp;#39;)^{2})
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;を上式に代入すれば良いだけです。ただ、今回は勾配法により最適なパラメータを求めます。以下、実装のコードです（かなり迷走しています）。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;g &amp;lt;- function(xmin, xmax, input, train){
+  # initial value
+  beta = 100
+  b = 1
+  a = 1
+  learning_rate = 0.1
+  itermax &amp;lt;- 1000
+  if (class(input) == &amp;quot;numeric&amp;quot;){
+    N &amp;lt;- length(input)
+  } else
+  {
+    N &amp;lt;- NROW(input)
+  }
+  kernel &amp;lt;- function(x1, x2) a*exp(-0.5*b*(x1-x2)^2); # define kernel
+  derivative_a &amp;lt;- function(x1,x2) exp(-0.5*b*(x1-x2)^2)
+  derivative_b &amp;lt;- function(x1,x2) -0.5*a*(x1-x2)^2*exp(-0.5*b*(x1-x2)^2)
+  dloglik_a &amp;lt;- function(C_N,y,x1,x2) {
+    -sum(diag(solve(C_N)%*%outer(input, input, derivative_a)))+t(y)%*%solve(C_N)%*%outer(input, input, derivative_a)%*%solve(C_N)%*%y 
+  }
+  dloglik_b &amp;lt;- function(C_N,y,x1,x2) {
+    -sum(diag(solve(C_N)%*%outer(input, input, derivative_b)))+t(y)%*%solve(C_N)%*%outer(input, input, derivative_b)%*%solve(C_N)%*%y 
+  }
+  # loglikelihood function
+  likelihood &amp;lt;- function(b,a,x,y){
+    kernel &amp;lt;- function(x1, x2) a*exp(-0.5*b*(x1-x2)^2)
+    K &amp;lt;- outer(x, x, kernel)
+    C_N &amp;lt;- K + diag(N)/beta
+    itermax &amp;lt;- 1000
+    l &amp;lt;- -1/2*log(det(C_N)) - N/2*(2*pi) - 1/2*t(y)%*%solve(C_N)%*%y
+    return(l)
+  }
+  K &amp;lt;- outer(input, input, kernel) 
+  C_N &amp;lt;- K + diag(N)/beta
+  for (i in 1:itermax){
+    kernel &amp;lt;- function(x1, x2) a*exp(-b*(x1-x2)^2)
+    derivative_b &amp;lt;- function(x1,x2) -0.5*a*(x1-x2)^2*exp(-0.5*b*(x1-x2)^2)
+    dloglik_b &amp;lt;- function(C_N,y,x1,x2) {
+      -sum(diag(solve(C_N)%*%outer(input, input, derivative_b)))+t(y)%*%solve(C_N)%*%outer(input, input, derivative_b)%*%solve(C_N)%*%y 
+    }
+    K &amp;lt;- outer(input, input, kernel) # calc gram matrix
+    C_N &amp;lt;- K + diag(N)/beta
+    l &amp;lt;- 0
+    if(abs(l-likelihood(b,a,input,train))&amp;lt;0.0001&amp;amp;i&amp;gt;2){
+      break
+    }else{
+      a &amp;lt;- as.numeric(a + learning_rate*dloglik_a(C_N,train,input,input))
+      b &amp;lt;- as.numeric(b + learning_rate*dloglik_b(C_N,train,input,input))
+    }
+    l &amp;lt;- likelihood(b,a,input,train)
+  }
+  K &amp;lt;- outer(input, input, kernel)
+  C_N &amp;lt;- K + diag(length(input))/beta
+  m &amp;lt;- function(x) (outer(x, input, kernel) %*% solve(C_N) %*% train)  
+  m_sig &amp;lt;- function(x)(kernel(x,x) - diag(outer(x, input, kernel) %*% solve(C_N) %*% t(outer(x, input, kernel))))
+  x &amp;lt;- seq(xmin,xmax,length=100)
+  output &amp;lt;- ggplot(data.frame(x1=x,m=m(x),sig1=m(x)+1.96*sqrt(m_sig(x)),sig2=m(x)-1.96*sqrt(m_sig(x)),
+                              tx=input,ty=train),
+                   aes(x=x1,y=m)) + 
+    geom_line() +
+    geom_ribbon(aes(ymin=sig1,ymax=sig2),alpha=0.2) +
+    geom_point(aes(x=tx,y=ty))
+  return(output)
+}
+
+print(g(0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=1, layout.pos.col=1))&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-4-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;たしかに、良さそうな感じがします（笑）
+とりあえず、今日はここまで。&lt;/p&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Gianonne et. al. (2008)のマルチファクターモデルで四半期GDPを予想してみた</title>
+      <link>/post/post6/</link>
+      <pubDate>Mon, 16 Jul 2018 00:00:00 +0000</pubDate>
+      <guid>/post/post6/</guid>
+      <description>
+&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+&lt;link href=&#34;index_files/pagedtable/css/pagedtable.css&#34; rel=&#34;stylesheet&#34; /&gt;
+&lt;script src=&#34;index_files/pagedtable/js/pagedtable.js&#34;&gt;&lt;/script&gt;
+
+&lt;div id=&#34;TOC&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#gianonne-et.-al.-2008版マルチファクターモデル&#34;&gt;1. Gianonne et. al. (2008)版マルチファクターモデル&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#rで実装する&#34;&gt;2. Rで実装する&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+
+&lt;p&gt;おはこんばんにちは。
+前回、統計ダッシュボードからAPI接続で統計データを落とすという記事を投稿しました。
+今回はそのデータを、Gianonne et. al. (2008)のマルチファクターモデルにかけ、四半期GDPの予測を行いたいと思います。&lt;/p&gt;
+&lt;div id=&#34;gianonne-et.-al.-2008版マルチファクターモデル&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;1. Gianonne et. al. (2008)版マルチファクターモデル&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;http://dept.ku.edu/~empirics/Courses/Econ844/papers/Nowcasting%20GDP.pdf&#34;&gt;元論文&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;前回の投稿でも書きましたが、この論文はGiannoneらが2008年にパブリッシュした論文です(JME)。彼らはアメリカの経済指標を用いて四半期GDPを日次で推計し、予測指標としての有用性を示しました。指標間の連動性(colinearity)を利用して、多数ある経済指標を2つのファクターに圧縮し、そのファクターを四半期GDPにフィッティングさせることによって高い予測性を実現しています。
+まず、このモデルについてご紹介します。このモデルでは2段階推計を行います。まず主成分分析により経済統計を統計間の相関が0となるファクターへ変換します（&lt;a href=&#34;https://datachemeng.com/principalcomponentanalysis/&#34;&gt;参考&lt;/a&gt;）。そして、その後の状態空間モデルでの推計で必要になるパラメータを&lt;code&gt;OLS&lt;/code&gt;推計し、そのパラメータを使用してカルマンフィルタ＆カルマンスムーザーを回し、ファクターを推計しています。では、具体的な説明に移ります。
+統計データを&lt;span class=&#34;math inline&#34;&gt;\(x_{i,t|v_j}\)&lt;/span&gt;と定義します。ここで、&lt;span class=&#34;math inline&#34;&gt;\(i=1,...,n\)&lt;/span&gt;は経済統計を表し（つまり&lt;span class=&#34;math inline&#34;&gt;\(n\)&lt;/span&gt;が全統計数）、&lt;span class=&#34;math inline&#34;&gt;\(t=1,...,T_{iv_j}\)&lt;/span&gt;は統計&lt;span class=&#34;math inline&#34;&gt;\(i\)&lt;/span&gt;のサンプル期間の時点を表しています（つまり、&lt;span class=&#34;math inline&#34;&gt;\(T_{iv_j}\)&lt;/span&gt;は統計&lt;span class=&#34;math inline&#34;&gt;\(i\)&lt;/span&gt;のその時点での最新データ日付を表す）。また、&lt;span class=&#34;math inline&#34;&gt;\(v_j\)&lt;/span&gt;はある時点&lt;span class=&#34;math inline&#34;&gt;\(j\)&lt;/span&gt;（2005年など）で得られる情報集合（vintage）を表しています。統計データ&lt;span class=&#34;math inline&#34;&gt;\(x_{i,t|v_j}\)&lt;/span&gt;は以下のようにファクター&lt;span class=&#34;math inline&#34;&gt;\(f_{r,t}\)&lt;/span&gt;の線形結合で表すことができます（ここで&lt;span class=&#34;math inline&#34;&gt;\(r\)&lt;/span&gt;はファクターの数を表す）。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+x_{i,t|v\_j} = \mu_i + \lambda_{i1}f_{1,t} + ... + \lambda_{ir}f_{r,t} + \xi_{i,t|v_j} \tag{1}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math inline&#34;&gt;\(\mu\_i\)&lt;/span&gt;は定数項、&lt;span class=&#34;math inline&#34;&gt;\(\lambda\_{ir}\)&lt;/span&gt;はファクターローディング、&lt;span class=&#34;math inline&#34;&gt;\(\xi\_{i,t|v\_j}\)&lt;/span&gt;はホワイトノイズの誤差項を表しています。これを行列形式で書くと以下のようになります。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+x_{t|v_j}  = \mu + \Lambda F_t + \xi_{t|v_j} = \mu + \chi_t + \xi_{t|v_j} \tag{2}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;ここで、&lt;span class=&#34;math inline&#34;&gt;\(x_{t|v_j} = (x_{1,t|v_j}, ..., x_{n,t|v_j} )^{\mathrm{T}}\)&lt;/span&gt;、&lt;span class=&#34;math inline&#34;&gt;\(\xi_{t|v_j}=(\xi_{1,t|v_j}, ..., \xi_{n,t|v_j})^{\mathrm{T}}\)&lt;/span&gt;、&lt;span class=&#34;math inline&#34;&gt;\(F_t = (f_{1,t}, ..., f_{r,t})^{\mathrm{T}}\)&lt;/span&gt;であり、&lt;span class=&#34;math inline&#34;&gt;\(\Lambda\)&lt;/span&gt;は各要素が$ _{ij}&lt;span class=&#34;math inline&#34;&gt;\(の\)&lt;/span&gt;nr&lt;span class=&#34;math inline&#34;&gt;\(行列のファクターローディングを表しています。また、\)&lt;/span&gt;&lt;em&gt;t = F_t&lt;span class=&#34;math inline&#34;&gt;\(です。よって、ファクター\)&lt;/span&gt; F_t&lt;span class=&#34;math inline&#34;&gt;\(を推定するためには、データ\)&lt;/span&gt;x&lt;/em&gt;{i,t|v_j}$を以下のように基準化したうえで、分散共分散行列を計算し、その固有値問題を解けばよいという事になります。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\displaystyle z_{it} = \frac{1}{\hat{\sigma}_i}(x_{it} - \hat{\mu}_{it}) \tag{3}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;ここで、&lt;span class=&#34;math inline&#34;&gt;\(\displaystyle \hat{\mu}_{it} = 1/T \sum_{t=1}^T x_{it}\)&lt;/span&gt;であり、&lt;span class=&#34;math inline&#34;&gt;\(\hat{\sigma}_i = \sqrt{1/T \sum_{t=1}^T (x_{it}-\hat{\mu_{it}})^2}\)&lt;/span&gt;です（ここで&lt;span class=&#34;math inline&#34;&gt;\(T\)&lt;/span&gt;はサンプル期間）。分散共分散行列&lt;span class=&#34;math inline&#34;&gt;\(S\)&lt;/span&gt;を以下のように定義します。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\displaystyle S = \frac{1}{T} \sum_{t=1}^T z_t z_t^{\mathrm{T}} \tag{4}
+\]&lt;/span&gt;
+次に、&lt;span class=&#34;math inline&#34;&gt;\(S\)&lt;/span&gt;のうち、固有値を大きい順に&lt;span class=&#34;math inline&#34;&gt;\(r\)&lt;/span&gt;個取り出し、それを要素にした$ r r&lt;span class=&#34;math inline&#34;&gt;\(対角行列を\)&lt;/span&gt; D&lt;span class=&#34;math inline&#34;&gt;\(、それに対応する固有ベクトルを\)&lt;/span&gt;n r&lt;span class=&#34;math inline&#34;&gt;\(行列にしたものを\)&lt;/span&gt; V&lt;span class=&#34;math inline&#34;&gt;\(と定義します。ファクター\)&lt;/span&gt; _t$は以下のように推計できます。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\tilde{F}_t = V^{\mathrm{T}} z_t \tag{5}
+\]&lt;/span&gt;
+ファクターローディング&lt;span class=&#34;math inline&#34;&gt;\(\Lambda\)&lt;/span&gt;と誤差項の共分散行列&lt;span class=&#34;math inline&#34;&gt;\(\Psi = \mathop{\mathbb{E}} [\xi_t\xi^{\mathrm{T}}_t]\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(\tilde{F}_t\)&lt;/span&gt;を&lt;span class=&#34;math inline&#34;&gt;\(z_t\)&lt;/span&gt;に回帰することで推計します。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\displaystyle \hat{\Lambda} = \sum_{t=1}^T z_t \tilde{F}^{\mathrm{T}}_t (\sum_{t=1}^T\tilde{F}_t\tilde{F}^{\mathrm{T}}_t)^{-1} = V \tag{6}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\hat{\Psi} = diag(S - VDV) \tag{7}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;注意して頂きたいのは、ここで推計した&lt;span class=&#34;math inline&#34;&gt;\(\tilde{F}_t\)&lt;/span&gt;は、以下の状態空間モデルでの推計に必要なパラメータを計算するための一時的な推計値であるという事です（２段階推計の１段階目という事）。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+x_{t|v_j}  = \mu + \Lambda F\_t + \xi_{t|v_j} = \mu + \chi_t + \xi_{t|v_j} \tag{2}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+F\_t = AF\_{t-1} + u\_t \tag{8}
+\]&lt;/span&gt;
+ここで、&lt;span class=&#34;math inline&#34;&gt;\(u_t\)&lt;/span&gt;は平均0、分散&lt;span class=&#34;math inline&#34;&gt;\(H\)&lt;/span&gt;のホワイトノイズです。再掲している(2)式が観測方程式、(8)式が遷移方程式となっています。推定すべきパラメータは&lt;span class=&#34;math inline&#34;&gt;\(\Lambda\)&lt;/span&gt;、&lt;span class=&#34;math inline&#34;&gt;\(\Psi\)&lt;/span&gt;以外に&lt;span class=&#34;math inline&#34;&gt;\(A\)&lt;/span&gt;と&lt;span class=&#34;math inline&#34;&gt;\(H\)&lt;/span&gt;があります（&lt;span class=&#34;math inline&#34;&gt;\(\mu=0\)&lt;/span&gt;としています）。&lt;span class=&#34;math inline&#34;&gt;\(A\)&lt;/span&gt;は主成分分析により計算した&lt;span class=&#34;math inline&#34;&gt;\(\tilde{F}_t\)&lt;/span&gt;を&lt;code&gt;VAR(1)&lt;/code&gt;にかけることで推定します。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\hat{A} = \sum_{t=2}^T\tilde{F}_t\tilde{F}_{t-1}^{\mathrm{T}} (\sum_{t=2}^T\tilde{F}_{t-1}\tilde{F}_{t-1}^{\mathrm{T}})^{-1} \tag{9}
+\]&lt;/span&gt;
+&lt;span class=&#34;math inline&#34;&gt;\(H\)&lt;/span&gt;は今推計した&lt;code&gt;VAR(1)&lt;/code&gt;の誤差項の共分散行列から計算します。これで必要なパラメータの推定が終わりました。次にカルマンフィルタを回します。カルマンフィルタに関しては&lt;a href=&#34;https://qiita.com/MoriKen/items/0c80ef75749977767b43&#34;&gt;こちら&lt;/a&gt;を参考にしてください。わかりやすいです。これで最終的に&lt;span class=&#34;math inline&#34;&gt;\(\hat{F}_{t|v_j}\)&lt;/span&gt;の推計ができるわけです。
+GDPがこれらのファクターで説明可能であり（つまり固有の変動がない）、GDPと月次経済指標がjointly normalであれば以下のような単純なOLS推計でGDPを予測することができます。もちろん月次経済指標の方が早く公表されるので、内生性の問題はないと考えられます。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\hat{y}_{3k|v_j} = \alpha + \beta^{\mathrm{T}} \hat{F}_{3k|v_j} \tag{10}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;ここで、&lt;span class=&#34;math inline&#34;&gt;\(3k\)&lt;/span&gt;は四半期の最終月を示しています（3月、6月など）&lt;span class=&#34;math inline&#34;&gt;\(\hat{y}_{3k|v_j}\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(j\)&lt;/span&gt;時点で得られる情報集合&lt;span class=&#34;math inline&#34;&gt;\(v_j\)&lt;/span&gt;での四半期GDPを表しており、&lt;span class=&#34;math inline&#34;&gt;\(\hat{F}_{3k|v_j}\)&lt;/span&gt;はその時点で推定したファクターを表しています（四半期最終月の値だけを使用している点に注意）。これで推計方法の説明は終わりです。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;rで実装する&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;2. Rで実装する&lt;/h2&gt;
+&lt;p&gt;では実装します。前回記事で得られたデータ（dataset）が読み込まれている状態からスタートします。まず、主成分分析でファクターを計算します。なお、前回の記事で3ファクターの累積寄与度が80%を超えたため、今回もファクター数は3にしています。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;#------------------------
+# Giannone et. al. 2008 
+#------------------------
+
+library(xts)
+library(MASS)
+library(tidyverse)
+
+# 主成分分析でファクターを計算
+f &amp;lt;- 3 # ファクター数を定義
+a &amp;lt;- which(dataset1$publication == &amp;quot;2012-04-01&amp;quot;) # サンプル開始期間を2012年に設定。
+dataset2 &amp;lt;- dataset1[a:nrow(dataset1),]
+rownames(dataset2) &amp;lt;- dataset2$publication
+dataset2 &amp;lt;- dataset2[,-2]
+z &amp;lt;- scale(dataset2) # zは基準化されたサンプルデータ
+for (i in 1:nrow(z)){
+  eval(parse(text = paste(&amp;quot;S_i &amp;lt;- z[i,]%*%t(z[i,])&amp;quot;,sep = &amp;quot;&amp;quot;)))
+  if (i==1){
+    S &amp;lt;- S_i
+  }else{
+    S &amp;lt;- S + S_i
+  }
+}
+S &amp;lt;- (1/nrow(z))*S # 分散共分散行列を計算 (4)式
+gamma &amp;lt;- eigen(S) 
+D &amp;lt;- diag(gamma$values[1:f])
+V &amp;lt;- gamma$vectors[,1:f]
+F_t &amp;lt;- matrix(0,nrow(z),f)
+for (i in 1:nrow(z)){
+  eval(parse(text = paste(&amp;quot;F_t[&amp;quot;,i,&amp;quot;,]&amp;lt;- z[&amp;quot;,i,&amp;quot;,]%*%V&amp;quot;,sep = &amp;quot;&amp;quot;))) # (5)式を実行
+}
+F_t.xts &amp;lt;- xts(F_t,order.by = as.Date(row.names(z)))
+plot.zoo(F_t.xts,col = c(&amp;quot;red&amp;quot;,&amp;quot;blue&amp;quot;,&amp;quot;green&amp;quot;,&amp;quot;yellow&amp;quot;,&amp;quot;purple&amp;quot;),plot.type = &amp;quot;single&amp;quot;) # 時系列プロット&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-2-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;lambda_hat &amp;lt;- V
+psi &amp;lt;- diag(S-V%*%D%*%t(V)) # (7)式
+R &amp;lt;- diag(diag(cov(z-z%*%V%*%t(V)))) &lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;推計したファクター&lt;span class=&#34;math inline&#34;&gt;\(\tilde{F}\_t\)&lt;/span&gt;の時系列プロットは以下のようになり、前回&lt;code&gt;princomp&lt;/code&gt;関数で計算したファクターと完全一致します（じゃあ&lt;code&gt;princomp&lt;/code&gt;でいいやんと思われるかもしれませんが実装しないと勉強になりませんので）。&lt;/p&gt;
+&lt;p&gt;次に、&lt;code&gt;VAR(1)&lt;/code&gt;を推計し、パラメータを取り出します。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# VAR(1)モデルを推計
+a &amp;lt;- matrix(0,f,f)
+b &amp;lt;- matrix(0,f,f)
+for(t in 2:nrow(z)){
+  a &amp;lt;- a + F_t[t,]%*%t(F_t[t-1,])
+  b &amp;lt;- b + F_t[t-1,]%*%t(F_t[t-1,])
+}
+b_inv &amp;lt;- solve(b)
+A_hat &amp;lt;- a%*%b_inv # (9)式
+
+e &amp;lt;- numeric(f)
+for (t in 2:nrow(F_t)){
+  e &amp;lt;- e + F_t[t,]-F_t[t-1,]%*%A_hat
+}
+H &amp;lt;- t(e)%*%e
+Q &amp;lt;- diag(1,f,f)
+Q[1:f,1:f] &amp;lt;- H&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;VAR(1)&lt;/code&gt;に関しても&lt;code&gt;var&lt;/code&gt;関数とパラメータの数値が一致することを確認済みです。いよいよカルマンフィルタを実行します。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# カルマンフィルタを実行
+RR &amp;lt;- array(0,dim = c(ncol(z),ncol(z),nrow(z))) # RRは観測値の分散行列（相関はないと仮定）
+for(i in 1:nrow(z)){
+  miss &amp;lt;- is.na(z[i,])
+  R_temp &amp;lt;- diag(R)
+  R_temp[miss] &amp;lt;- 1e+32 # 欠損値の分散は無限大にする
+  RR[,,i] &amp;lt;- diag(R_temp)
+}
+zz &amp;lt;- z; zz[is.na(z)] &amp;lt;- 0 # 欠損値（NA）に0を代入（計算結果にはほとんど影響しない）。
+a_t &amp;lt;- matrix(0,nrow(zz),f) # a_tは状態変数の予測値
+a_tt &amp;lt;- matrix(0,nrow(zz),f) # a_ttは状態変数の更新後の値
+a_tt[1,] &amp;lt;- F_t[1,] # 状態変数の初期値には主成分分析で推計したファクターを使用
+sigma_t &amp;lt;- array(0,dim = c(f,f,nrow(zz))) # sigma_tは状態変数の分散の予測値
+sigma_tt &amp;lt;- array(0,dim = c(f,f,nrow(zz))) # sigma_tは状態変数の分散の更新値
+p &amp;lt;- ginv(diag(nrow(kronecker(A_hat,A_hat)))-kronecker(A_hat,A_hat))
+sigma_tt[,,1] &amp;lt;- matrix(p,3,3) # 状態変数の分散の初期値はVAR(1)の推計値から計算
+y_t &amp;lt;- matrix(0,nrow(zz),ncol(zz)) # y_tは観測値の予測値
+K_t &amp;lt;- array(0,dim = c(f,ncol(zz),nrow(zz))) # K_tはカルマンゲイン
+data.m &amp;lt;- as.matrix(dataset2)
+# カルマンフィルタを実行
+for (t in 2:nrow(zz)){
+  a_t[t,] &amp;lt;- A_hat%*%a_tt[t-1,]
+  sigma_t[,,t] &amp;lt;- A_hat%*%sigma_tt[,,t-1]%*%t(A_hat) + Q
+  y_t[t,] &amp;lt;- as.vector(V%*%a_t[t,])
+  S_t &amp;lt;- V%*%sigma_tt[,,t-1]%*%t(V)+RR[,,t]
+  GG &amp;lt;- t(V)%*%diag(1/diag(RR[,,t]))%*%V
+  Sinv &amp;lt;- diag(1/diag(RR[,,t])) - diag(1/diag(RR[,,t]))%*%V%*%ginv(diag(nrow(A_hat))+sigma_t[,,t]%*%GG)%*%sigma_t[,,t]%*%t(V)%*%diag(1/diag(RR[,,t]))
+  K_t[,,t] &amp;lt;- sigma_t[,,t]%*%t(V)%*%Sinv
+  a_tt[t,] &amp;lt;- a_t[t,] + K_t[,,t]%*%(zz[t,]-y_t[t,])
+  sigma_tt[,,t] &amp;lt;- sigma_t[,,t] - K_t[,,t]%*%V%*%sigma_tt[,,t-1]%*%t(V)%*%t(K_t[,,t])
+  }
+
+F.xts &amp;lt;- xts(a_tt,order.by = as.Date(rownames(data.m)))
+plot.zoo(F.xts, col = c(&amp;quot;red&amp;quot;,&amp;quot;blue&amp;quot;,&amp;quot;green&amp;quot;,&amp;quot;yellow&amp;quot;,&amp;quot;purple&amp;quot;),plot.type = &amp;quot;single&amp;quot;) # 得られた推計値を時系列プロット&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-4-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;カルマンフィルタにより推計したファクターの時系列プロットが以下です。遷移方程式がAR(1)だったからかかなり平準化された値となっています。&lt;/p&gt;
+&lt;p&gt;では、この得られたファクターをOLSにかけます。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# 得られたファクターとGDPをOLSにかける
+F_q &amp;lt;- as.data.frame(a_tt[seq(3,nrow(a_tt),3),]) # 四半期の終わり月の値だけを引っ張ってくる 
+colnames(F_q) &amp;lt;- c(&amp;quot;factor1&amp;quot;,&amp;quot;factor2&amp;quot;,&amp;quot;factor3&amp;quot;)
+colnames(GDP) &amp;lt;- c(&amp;quot;publication&amp;quot;,&amp;quot;GDP&amp;quot;)
+t &amp;lt;- which(GDP$publication==&amp;quot;2012-04-01&amp;quot;)
+t2 &amp;lt;- which(GDP$publication==&amp;quot;2015-01-01&amp;quot;) # 2012-2q~2015-1qまでのデータが学習データ、それ以降がテストデータ
+GDP_q &amp;lt;- GDP[t:nrow(GDP),]
+dataset.q &amp;lt;- cbind(GDP_q[1:(t2-t),],F_q[1:(t2-t),])
+test &amp;lt;- lm(GDP~factor1 + factor2 + factor3,data=dataset.q)
+summary(test)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 
+## Call:
+## lm(formula = GDP ~ factor1 + factor2 + factor3, data = dataset.q)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -1350.34  -361.67   -31.63   375.61  1105.07 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&amp;gt;|t|)    
+## (Intercept) 125729.4     4134.2  30.412 1.07e-08 ***
+## factor1       -199.0     1651.3  -0.121    0.907    
+## factor2      -1699.7      960.2  -1.770    0.120    
+## factor3      -2097.6     3882.5  -0.540    0.606    
+## ---
+## Signif. codes:  0 &amp;#39;***&amp;#39; 0.001 &amp;#39;**&amp;#39; 0.01 &amp;#39;*&amp;#39; 0.05 &amp;#39;.&amp;#39; 0.1 &amp;#39; &amp;#39; 1
+## 
+## Residual standard error: 897.5 on 7 degrees of freedom
+## Multiple R-squared:  0.783,  Adjusted R-squared:   0.69 
+## F-statistic: 8.419 on 3 and 7 DF,  p-value: 0.0101&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;out_of_sample &amp;lt;- cbind(GDP_q[(t2-t+1):nrow(GDP_q),],F_q[(t2-t+1):nrow(GDP_q),]) # out of sampleのデータセットを作成
+test.pred &amp;lt;-  predict(test, out_of_sample, interval=&amp;quot;prediction&amp;quot;)
+pred.GDP.xts &amp;lt;- xts(cbind(test.pred[,1],out_of_sample$GDP),order.by = out_of_sample$publication)
+plot.zoo(pred.GDP.xts,col = c(&amp;quot;red&amp;quot;,&amp;quot;blue&amp;quot;),plot.type = &amp;quot;single&amp;quot;) # 予測値と実績値を時系列プロット&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-5-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;OLSの推計結果はfactor1（赤）とfactor2（青）が有意との結果。前回の投稿でも言及したように、factor1（赤）はリスクセンチメントを表していそうなので、係数の符号が負であることは頷ける。ただし、factor2（青）も符号が負なのではなぜなのか…。このファクターは生産年齢人口など経済の潜在能力を表していると思っていたのに。かなり謎。まあとりあえず予測に移りましょう。このモデルを使用したGDPの予測値と実績値の推移はいかのようになりました。直近の精度は悪くない？&lt;/p&gt;
+&lt;p&gt;というか、これ完全に単位根の問題を無視してOLSしてしまっているな。ファクターもGDPも完全に単位根を持つけど念のため単位根検定をかけてみます。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(tseries)
+
+adf.test(F_q$factor1)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 
+##  Augmented Dickey-Fuller Test
+## 
+## data:  F_q$factor1
+## Dickey-Fuller = -2.8191, Lag order = 2, p-value = 0.2603
+## alternative hypothesis: stationary&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;adf.test(F_q$factor2)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 
+##  Augmented Dickey-Fuller Test
+## 
+## data:  F_q$factor2
+## Dickey-Fuller = -2.6749, Lag order = 2, p-value = 0.3153
+## alternative hypothesis: stationary&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;adf.test(F_q$factor3)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 
+##  Augmented Dickey-Fuller Test
+## 
+## data:  F_q$factor3
+## Dickey-Fuller = -2.8928, Lag order = 2, p-value = 0.2323
+## alternative hypothesis: stationary&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;adf.test(GDP_q$GDP)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 
+##  Augmented Dickey-Fuller Test
+## 
+## data:  GDP_q$GDP
+## Dickey-Fuller = 1.5034, Lag order = 3, p-value = 0.99
+## alternative hypothesis: stationary&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;はい。全部単位根もってました…。階差をとったのち、単位根検定を行います。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;GDP_q &amp;lt;- GDP_q %&amp;gt;% mutate(growth.rate=(GDP/lag(GDP)-1)*100)
+F_q &amp;lt;- F_q %&amp;gt;% mutate(f1.growth.rate=(factor1/lag(factor1)-1)*100,
+                      f2.growth.rate=(factor2/lag(factor2)-1)*100,
+                      f3.growth.rate=(factor3/lag(factor3)-1)*100)
+
+adf.test(GDP_q$growth.rate[2:NROW(GDP_q$growth.rate)])&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 
+##  Augmented Dickey-Fuller Test
+## 
+## data:  GDP_q$growth.rate[2:NROW(GDP_q$growth.rate)]
+## Dickey-Fuller = -0.31545, Lag order = 3, p-value = 0.9838
+## alternative hypothesis: stationary&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;adf.test(F_q$f1.growth.rate[2:NROW(F_q$f1.growth.rate)])&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 
+##  Augmented Dickey-Fuller Test
+## 
+## data:  F_q$f1.growth.rate[2:NROW(F_q$f1.growth.rate)]
+## Dickey-Fuller = -2.7762, Lag order = 2, p-value = 0.2767
+## alternative hypothesis: stationary&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;adf.test(F_q$f2.growth.rate[2:NROW(F_q$f2.growth.rate)])&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 
+##  Augmented Dickey-Fuller Test
+## 
+## data:  F_q$f2.growth.rate[2:NROW(F_q$f2.growth.rate)]
+## Dickey-Fuller = -2.6156, Lag order = 2, p-value = 0.3379
+## alternative hypothesis: stationary&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;adf.test(F_q$f3.growth.rate[2:NROW(F_q$f3.growth.rate)])&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 
+##  Augmented Dickey-Fuller Test
+## 
+## data:  F_q$f3.growth.rate[2:NROW(F_q$f3.growth.rate)]
+## Dickey-Fuller = -2.9893, Lag order = 2, p-value = 0.1955
+## alternative hypothesis: stationary&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;factor1だけは5%有意水準で帰無仮説を棄却できない…。困りました。有意水準を10%ということにして、とりあえず階差で&lt;code&gt;OLS&lt;/code&gt;してみます。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;dataset.q &amp;lt;- cbind(GDP_q[1:(t2-t),],F_q[1:(t2-t),])
+colnames(dataset.q) &amp;lt;- c(&amp;quot;publication&amp;quot;,&amp;quot;GDP&amp;quot;,&amp;quot;growth.rate&amp;quot;,&amp;quot;factor1&amp;quot;,&amp;quot;factor2&amp;quot;,&amp;quot;factor3&amp;quot;,&amp;quot;f1.growth.rate&amp;quot;,&amp;quot;f2.growth.rate&amp;quot;,&amp;quot;f3.growth.rate&amp;quot;)
+test1 &amp;lt;- lm(growth.rate~f1.growth.rate + f2.growth.rate + f3.growth.rate,data=dataset.q)
+summary(test1)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 
+## Call:
+## lm(formula = growth.rate ~ f1.growth.rate + f2.growth.rate + 
+##     f3.growth.rate, data = dataset.q)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -1.6940 -0.2411  0.2041  0.4274  1.0904 
+## 
+## Coefficients:
+##                  Estimate Std. Error t value Pr(&amp;gt;|t|)
+## (Intercept)     8.978e-02  4.588e-01   0.196    0.851
+## f1.growth.rate -6.353e-03  1.375e-02  -0.462    0.660
+## f2.growth.rate  6.155e-04  6.026e-03   0.102    0.922
+## f3.growth.rate -9.249e-05  5.152e-04  -0.180    0.863
+## 
+## Residual standard error: 0.956 on 6 degrees of freedom
+##   (1 observation deleted due to missingness)
+## Multiple R-squared:  0.04055,    Adjusted R-squared:  -0.4392 
+## F-statistic: 0.08452 on 3 and 6 DF,  p-value: 0.966&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;推計結果がわるくなりました…。予測値を計算し、実績値とプロットしてみます。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;out_of_sample1 &amp;lt;- cbind(GDP_q[(t2-t+1):nrow(GDP_q),],F_q[(t2-t+1):nrow(GDP_q),]) # out of sampleのデータセットを作成
+test1.pred &amp;lt;- predict(test1, out_of_sample1, interval=&amp;quot;prediction&amp;quot;)
+pred1.GDP.xts &amp;lt;- xts(cbind(test1.pred[,1],out_of_sample1$growth.rate),order.by = out_of_sample1$publication)
+plot.zoo(pred1.GDP.xts,col = c(&amp;quot;red&amp;quot;,&amp;quot;blue&amp;quot;),plot.type = &amp;quot;single&amp;quot;) # 予測値と実績値を時系列プロット&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-9-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;ん～、これはやり直しですね。今日はここまでで勘弁してください…。&lt;/p&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>日次GDP推計に使用する経済統計を統計ダッシュボードから集めてみた</title>
+      <link>/post/post7/</link>
+      <pubDate>Sat, 14 Jul 2018 00:00:00 +0000</pubDate>
+      <guid>/post/post7/</guid>
+      <description>
+&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+&lt;link href=&#34;index_files/pagedtable/css/pagedtable.css&#34; rel=&#34;stylesheet&#34; /&gt;
+&lt;script src=&#34;index_files/pagedtable/js/pagedtable.js&#34;&gt;&lt;/script&gt;
+
+&lt;div id=&#34;TOC&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#先行研究と具体的にやりたいこと&#34;&gt;1. 先行研究と具体的にやりたいこと&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#統計ダッシュボードからのデータの収集&#34;&gt;2. 統計ダッシュボードからのデータの収集&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#得られたデータを主成分分析にかけてみる&#34;&gt;3. 得られたデータを主成分分析にかけてみる&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+
+&lt;p&gt;おはこんばんちわ。&lt;/p&gt;
+&lt;p&gt;最近、競馬ばっかりやってましたが、そろそろ本業のマクロの方もやらないとなということで今回は日次GDP推計に使用するデータを総務省が公開している統計ダッシュボードから取ってきました。
+そもそも、前の記事では四半期GDP速報の精度が低いことをモチベーションに高頻度データを用いてより精度の高い予測値をはじき出すモデルを作れないかというテーマで研究を進めていました。しかし、先行研究を進めていくうちに、どうやら大規模な経済指標を利用することで日次で四半期GDPの予測値を計算することが可能であることが判明しました。しかも、精度も良い(米国ですが)ということで、なんとかこの方向で研究を進めていけないかということになりました。&lt;/p&gt;
+&lt;div id=&#34;先行研究と具体的にやりたいこと&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;1. 先行研究と具体的にやりたいこと&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;http://dept.ku.edu/~empirics/Courses/Econ844/papers/Nowcasting%20GDP.pdf&#34;&gt;先行研究&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Giannoneらが2008年にパブリッシュした論文です(JME)。彼らはアメリカの経済指標を用いて四半期GDPを日次で推計し、予測指標としての有用性を示しました。指標間の連動性(colinearity)を利用して、多数ある経済指標をいくつかのファクターに圧縮し、そのファクターを四半期GDPにフィッティングさせることによって高い予測性を実現しました。なお、ファクターの計算にはカルマンスムージングを用いています(詳しい推計方法は論文&amp;amp;Technical Appendixを参照)。理論的な定式化は無いのですが、なかなか当たります。そもそも私がこの研究に興味を持ったのは、以下の本を立ち読みした際に参考文献として出てきたからで、いよいよ運用機関などでも使用され始めるのかと思い、やっておこうと思った次第です。&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;http://www.amazon.co.jp/exec/obidos/ASIN/4532134811/hatena-blog-22/&#34;&gt;実践 金融データサイエンス 隠れた構造をあぶり出す6つのアプローチ&lt;/a&gt;
+&lt;img src=&#34;https://images-na.ssl-images-amazon.com/images/I/51KIE5GeV+L._SX350_BO1,204,203,200_.jpg&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;とりあえずはGiannoneの日本版をやろうかなと思っています。実はこの後に、ファクターモデルとDSGEを組み合わせたモデルがありましてそこまで発展させたいなーなんて思っておりますが。とにかく、ファクターを計算するための経済統計が必要ですので、今回はそれを集めてきたというのがこの記事の趣旨です。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;統計ダッシュボードからのデータの収集&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;2. 統計ダッシュボードからのデータの収集&lt;/h2&gt;
+&lt;p&gt;政府や日銀が公表しているデータの一部は統計ダッシュボードから落とすことができます。これは総務省統計局が提供しているもので、これまで利用しにくかった経済統計をより身近に使用してもらおうというのが一応のコンセプトとなっています。似たものに総務省統計局が提供しているestatがありますが、日銀の公表データがなかったり、メールアドレスの登録が必要だったりと非常に使い勝手が悪いです(個人的感想)。ただ、estatにはestatapiというRパッケージがあり、データを整形するのは比較的容易であると言えます。今回、統計ダッシュボードを選択した理由はそうは言っても日銀のデータがないのはダメだろうという理由で、データの整形に関しては関数を組みました。
+そもそも統計ダッシュボードは経済統計をグラフなどで見て楽しむ？ものですが、私のような研究をしたい者を対象にAPIを提供してくれています。取得できるデータは大きく分けて6つあります。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;20180714160029.png&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;やり方は簡単で、ベースのurlと欲しい統計のIDをGET関数で渡すことによって、データを取得することができます。公式にも以下のように書かれています。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;基本的な使い方としては、まず①「統計メタ情報（系列）取得」で取得したいデータの[系列コード]を検索し、 その後⑥「統計データ取得」で[系列コード]を検索条件に指定し、その系列の情報を取得します。
+（②③④⑤は補助的な情報として独立して取得できるようにしています。データのみ必要な場合は当該機能は不要です。）
+具体的な使い方は、以下の「WebAPIの詳細仕様」に記載する[ベースURL]に検索条件となる[パラメータ]を“&amp;amp;”で連結し、HTTPリクエスト（GET）を送信することで目的のデータを取得できます。
+各パラメータは「パラメータ名=値」のように名称と値を’=‘で結合し、複数のパラメータを指定する場合は「パラメータ名=値&amp;amp;パラメータ名=値&amp;amp;…」のようにそれぞれのパラメータ指定を’&amp;amp;’で結合してください。
+また、パラメータ値は必ずURLエンコード(文字コードUTF-8)してから結合してください。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;今回も以下の文献を参考にデータを取ってきたいと思います。&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://www.amazon.co.jp/dp/486354216X&#34;&gt;Rによるスクレイピング入門&lt;/a&gt;
+&lt;img src=&#34;https://images-na.ssl-images-amazon.com/images/I/51ZBnu8oSvL._SX350_BO1,204,203,200_.jpg&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;まず、最初にこのAPIからデータを取得し、得られた結果を分析しやすいように整形する関数を定義したいと思います。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(httr)
+library(estatapi)
+library(dplyr)
+library(XML)
+library(stringr)
+library(xts)
+library(GGally)
+library(ggplot2)
+library(seasonal)
+library(dlm)
+library(vars)
+library(MASS)
+
+# 関数を定義
+get_dashboard &amp;lt;- function(ID){
+  base_url &amp;lt;- &amp;quot;https://dashboard.e-stat.go.jp/api/1.0/JsonStat/getData?&amp;quot;
+  res &amp;lt;- GET(
+    url = base_url,
+    query = list(
+      IndicatorCode=ID
+    )
+  )
+  result &amp;lt;- content(res)
+  x &amp;lt;- result$link$item[[1]]$value
+  x &amp;lt;- t(do.call(&amp;quot;data.frame&amp;quot;,x))
+  date_x &amp;lt;- result$link$item[[1]]$dimension$Time$category$label
+  date_x &amp;lt;- t(do.call(&amp;quot;data.frame&amp;quot;,date_x))
+  date_x &amp;lt;- str_replace_all(date_x, pattern=&amp;quot;年&amp;quot;, replacement=&amp;quot;/&amp;quot;)
+  date_x &amp;lt;- str_replace_all(date_x, pattern=&amp;quot;月&amp;quot;, replacement=&amp;quot;&amp;quot;)
+  date_x &amp;lt;- as.Date(gsub(&amp;quot;([0-9]+)/([0-9]+)&amp;quot;, &amp;quot;\\1/\\2/1&amp;quot;, date_x))
+  date_x &amp;lt;- as.Date(date_x, format = &amp;quot;%m/%d/%Y&amp;quot;)
+  date_x &amp;lt;- as.numeric(date_x)
+  date_x &amp;lt;- as.Date(date_x, origin=&amp;quot;1970-01-01&amp;quot;)
+  #x &amp;lt;- cbind(x,date_x)
+  x &amp;lt;- data.frame(x)
+  x[,1] &amp;lt;- as.character(x[,1])%&amp;gt;%as.numeric(x[,1])
+  colnames(x) &amp;lt;- c(result$link$item[[1]]$label)
+  x &amp;lt;- x %&amp;gt;% mutate(&amp;quot;publication&amp;quot; = date_x)
+  return(x)
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;まずベースのurlを定義しています。今回はデータが欲しいので⑥統計データのベースurlを使用します（
+&lt;a href=&#34;https://dashboard.e-stat.go.jp/static/api&#34;&gt;参考&lt;/a&gt;）。次にベースurlと統計ID（IndicatorCode）を&lt;code&gt;GET&lt;/code&gt;関数で渡し、結果を取得しています。統計IDについてはエクセルファイルで公開されています。得られた結果の中身（リスト形式）をresultに格納し、リストの深層にある原数値データ（value）をxに格納します。原数値データもリスト形式なので、それを&lt;code&gt;do.call&lt;/code&gt;でデータフレームに変換しています。次に、データ日付を取得します。resultの中を深くたどるとTime→category→labelというデータがあり、そこに日付データが保存されているので、それをdate_xに格納し、同じようにデータフレームへ変換します。データの仕様上、日付は「yyyy年mm月」になっていますが、これだと&lt;code&gt;R&lt;/code&gt;は日付データとして読み取ってくれないので、&lt;code&gt;str_replace_all&lt;/code&gt;等で変換したのち、&lt;code&gt;Date&lt;/code&gt;型に変換しています。列名にデータ名（result→link→item[[1]]→label）をつけ、データ日付をxに追加したら完成です。
+そのほか、&lt;code&gt;data_connect&lt;/code&gt;という関数も定義しています。これはデータ系列によれば、たとえば推計方法の変更などで1980年～2005年の系列と2003年～2018年までの系列の2系列があるようなデータも存在し、この2系列を接続するための関数です。これは単純に接続しているだけなので、説明は省略します。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;data_connect &amp;lt;- function(x){
+  a &amp;lt;- min(which(x[,ncol(x)] != &amp;quot;NA&amp;quot;))
+  b &amp;lt;- x[a,ncol(x)]/x[a,1]
+  c &amp;lt;- x[1:a-1,1]*b
+  return(c)
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;では、実際にデータを取得していきます。今回取得するデータは月次データとなっています。これは統計dashboardが月次以下のデータがとれないからです。なので、例えば日経平均などは月末の終値を引っ張っています。ただし、GDPは四半期データとなっています。さきほど定義したget_dashboardの使用方法は簡単で、引数に統計ダッシュボードで公開されている統計IDを入力するだけでデータが取れます。今回使用するデータを以下の表にまとめました。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;20180714212330.png&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# データを取得
+Nikkei &amp;lt;- get_dashboard(&amp;quot;0702020501000010010&amp;quot;)
+callrate &amp;lt;- get_dashboard(&amp;quot;0702020300000010010&amp;quot;)
+TOPIX &amp;lt;- get_dashboard(&amp;quot;0702020590000090010&amp;quot;)
+kikai &amp;lt;- get_dashboard(&amp;quot;0701030000000010010&amp;quot;)
+kigyo.bukka &amp;lt;- get_dashboard(&amp;quot;0703040300000090010&amp;quot;)
+money.stock1 &amp;lt;- get_dashboard(&amp;quot;0702010201000010030&amp;quot;)
+money.stock2 &amp;lt;- get_dashboard(&amp;quot;0702010202000010030&amp;quot;)
+money.stock &amp;lt;- dplyr::full_join(money.stock1,money.stock2,by=&amp;quot;publication&amp;quot;)
+c &amp;lt;- data_connect(money.stock)
+a &amp;lt;- min(which(money.stock[,ncol(money.stock)] != &amp;quot;NA&amp;quot;))
+money.stock[1:a-1,ncol(money.stock)] &amp;lt;- c
+money.stock &amp;lt;- money.stock[,c(2,3)]
+cpi &amp;lt;- get_dashboard(&amp;quot;0703010401010090010&amp;quot;)
+export.price &amp;lt;- get_dashboard(&amp;quot;0703050301000090010&amp;quot;)
+import.price &amp;lt;- get_dashboard(&amp;quot;0703060301000090010&amp;quot;)
+import.price$`輸出物価指数（総平均）（円ベース）2015年基準` &amp;lt;- NULL
+public.expenditure1 &amp;lt;- get_dashboard(&amp;quot;0802020200000010010&amp;quot;)
+public.expenditure2 &amp;lt;- get_dashboard(&amp;quot;0802020201000010010&amp;quot;)
+public.expenditure &amp;lt;- dplyr::full_join(public.expenditure1,public.expenditure2,by=&amp;quot;publication&amp;quot;)
+c &amp;lt;- data_connect(public.expenditure)
+a &amp;lt;- min(which(public.expenditure[,ncol(public.expenditure)] != &amp;quot;NA&amp;quot;))
+public.expenditure[1:a-1,ncol(public.expenditure)] &amp;lt;- c
+public.expenditure &amp;lt;- public.expenditure[,c(2,3)]
+export.service &amp;lt;- get_dashboard(&amp;quot;1601010101000010010&amp;quot;)
+working.population &amp;lt;- get_dashboard(&amp;quot;0201010010000010020&amp;quot;)
+yukoukyuujinn &amp;lt;- get_dashboard(&amp;quot;0301020001000010010&amp;quot;)
+hours_worked &amp;lt;- get_dashboard(&amp;quot;0302010000000010000&amp;quot;)
+nominal.wage &amp;lt;- get_dashboard(&amp;quot;0302020000000010000&amp;quot;) 
+iip &amp;lt;- get_dashboard(&amp;quot;0502070101000090010&amp;quot;)
+shukka.shisu &amp;lt;- get_dashboard(&amp;quot;0502070102000090010&amp;quot;)
+zaiko.shisu &amp;lt;- get_dashboard(&amp;quot;0502070103000090010&amp;quot;)
+sanji.sangyo &amp;lt;- get_dashboard(&amp;quot;0603100100000090010&amp;quot;)
+retail.sells &amp;lt;- get_dashboard(&amp;quot;0601010201010010000&amp;quot;)
+GDP1 &amp;lt;- get_dashboard(&amp;quot;0705020101000010000&amp;quot;)
+GDP2 &amp;lt;- get_dashboard(&amp;quot;0705020301000010000&amp;quot;)
+GDP &amp;lt;- dplyr::full_join(GDP1,GDP2,by=&amp;quot;publication&amp;quot;)
+c &amp;lt;- data_connect(GDP)
+a &amp;lt;- min(which(GDP[,ncol(GDP)] != &amp;quot;NA&amp;quot;))
+GDP[1:a-1,ncol(GDP)] &amp;lt;- c
+GDP &amp;lt;- GDP[,c(2,3)]
+yen &amp;lt;- get_dashboard(&amp;quot;0702020401000010010&amp;quot;)
+household.consumption &amp;lt;- get_dashboard(&amp;quot;0704010101000010001&amp;quot;)
+JGB10y &amp;lt;- get_dashboard(&amp;quot;0702020300000010020&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;今取得したデータは原数値系列のデータが多いので、それらは季節調整をかけます。なぜ季節調整済みのデータを取得しないのかというとそれらのデータは何故か極端にサンプル期間が短くなってしまうからです。ここらへんは使い勝手が悪いです。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# 季節調整をかける
+Sys.setenv(X13_PATH = &amp;quot;C:\\Program Files\\WinX13\\x13as&amp;quot;)
+checkX13()
+seasoning &amp;lt;- function(data,i,start.y,start.m){
+  timeseries &amp;lt;- ts(data[,i],frequency = 12,start=c(start.y,start.m))
+  m &amp;lt;- seas(timeseries)
+  summary(m$data)
+  return(m$series$s11)
+}
+k &amp;lt;- seasoning(kikai,1,2005,4)
+kikai$`機械受注額（船舶・電力を除く民需）` &amp;lt;- as.numeric(k)
+k &amp;lt;- seasoning(kigyo.bukka,1,1960,1)
+kigyo.bukka$`国内企業物価指数（総平均）2015年基準` &amp;lt;- as.numeric(k)
+k &amp;lt;- seasoning(cpi,1,1970,1)
+cpi$`消費者物価指数（生鮮食品を除く総合）2015年基準` &amp;lt;- as.numeric(k)
+k &amp;lt;- seasoning(export.price,1,1960,1)
+export.price$`輸出物価指数（総平均）（円ベース）2015年基準` &amp;lt;- as.numeric(k)
+k &amp;lt;- seasoning(import.price,1,1960,1)
+import.price$`輸入物価指数（総平均）（円ベース）2015年基準` &amp;lt;- as.numeric(k)
+k &amp;lt;- seasoning(public.expenditure,2,2004,4)
+public.expenditure$公共工事受注額 &amp;lt;- as.numeric(k)
+k &amp;lt;- seasoning(export.service,1,1996,1)
+export.service$`貿易・サービス収支` &amp;lt;- as.numeric(k)
+k &amp;lt;- seasoning(yukoukyuujinn,1,1963,1)
+yukoukyuujinn$有効求人倍率 &amp;lt;- as.numeric(k)
+k &amp;lt;- seasoning(hours_worked,1,1990,1)
+hours_worked$総実労働時間 &amp;lt;- as.numeric(k)
+k &amp;lt;- seasoning(nominal.wage,1,1990,1)
+nominal.wage$現金給与総額 &amp;lt;- as.numeric(k)
+k &amp;lt;- seasoning(iip,1,1978,1)
+iip$`鉱工業生産指数　2010年基準` &amp;lt;- as.numeric(k)
+k &amp;lt;- seasoning(shukka.shisu,1,1990,1)
+shukka.shisu$`鉱工業出荷指数　2010年基準` &amp;lt;- as.numeric(k)
+k &amp;lt;- seasoning(zaiko.shisu,1,1990,1)
+zaiko.shisu$`鉱工業在庫指数　2010年基準` &amp;lt;- as.numeric(k)
+k &amp;lt;- seasoning(sanji.sangyo,1,1988,1)
+sanji.sangyo$`第３次産業活動指数　2010年基準` &amp;lt;- as.numeric(k)
+k &amp;lt;- seasoning(retail.sells,1,1980,1)
+retail.sells$`小売業販売額（名目）` &amp;lt;- as.numeric(k)
+k &amp;lt;- seasoning(household.consumption,1,2010,1)
+household.consumption$`二人以上の世帯　消費支出（除く住居等）` &amp;lt;- as.numeric(k)
+GDP.ts &amp;lt;- ts(GDP[,2],frequency = 4,start=c(1980,1))
+m &amp;lt;- seas(GDP.ts)
+GDP$`国内総生産（支出側）（実質）2011年基準` &amp;lt;- m$series$s11&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;ここでは詳しく季節調整のかけ方は説明しません。x13arimaを使用しています。上述のコードを回す際はx13arimaがインストールされている必要があります。以下の記事を参考にしてください。&lt;/p&gt;
+&lt;p&gt;[&lt;a href=&#34;http://sinhrks.hatenablog.com/entry/2014/11/09/003632&#34; class=&#34;uri&#34;&gt;http://sinhrks.hatenablog.com/entry/2014/11/09/003632&lt;/a&gt;]&lt;/p&gt;
+&lt;p&gt;では、データ日付を基準に落としてきたデータを結合し、データセットを作成します。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# データセットに結合
+dataset &amp;lt;- dplyr::full_join(kigyo.bukka,callrate,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,kikai,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,Nikkei,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,money.stock,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,cpi,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,export.price,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,import.price,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,public.expenditure,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,export.service,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,working.population,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,yukoukyuujinn,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,hours_worked,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,nominal.wage,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,iip,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,shukka.shisu,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,zaiko.shisu,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,sanji.sangyo,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,retail.sells,by=&amp;quot;publication&amp;quot;)
+dataset &amp;lt;- dplyr::full_join(dataset,yen,by=&amp;quot;publication&amp;quot;)
+colnames(dataset) &amp;lt;- c(&amp;quot;DCGPI&amp;quot;,&amp;quot;publication&amp;quot;,&amp;quot;callrate&amp;quot;,&amp;quot;Machinery_Orders&amp;quot;,
+                       &amp;quot;Nikkei225&amp;quot;,&amp;quot;money_stock&amp;quot;,&amp;quot;CPI&amp;quot;,&amp;quot;export_price&amp;quot;,
+                       &amp;quot;import_price&amp;quot;,&amp;quot;public_works_order&amp;quot;,
+                       &amp;quot;trade_service&amp;quot;,&amp;quot;working_population&amp;quot;,
+                       &amp;quot;active_opening_ratio&amp;quot;,&amp;quot;hours_worked&amp;quot;,
+                       &amp;quot;wage&amp;quot;,&amp;quot;iip_production&amp;quot;,&amp;quot;iip_shipment&amp;quot;,&amp;quot;iip_inventory&amp;quot;,
+                       &amp;quot;ITIA&amp;quot;,&amp;quot;retail_sales&amp;quot;,&amp;quot;yen&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;最後に列名をつけています。datasetはそれぞれのデータの公表開始時期が異なるために大量の&lt;code&gt;NA&lt;/code&gt;を含むデータフレームとなっているので、&lt;code&gt;NA&lt;/code&gt;を削除するために最もデータの開始時期が遅い機械受注統計に合わせてデータセットを再構築します。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;a &amp;lt;- min(which(dataset$Machinery_Orders != &amp;quot;NA&amp;quot;))
+dataset1 &amp;lt;- dataset[a:nrow(dataset),]
+dataset1 &amp;lt;- na.omit(dataset1)
+rownames(dataset1) &amp;lt;- dataset1$publication
+dataset1 &amp;lt;- dataset1[,-2]
+dataset1.xts &amp;lt;- xts(dataset1,order.by = as.Date(rownames(dataset1)))&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;これでとりあえずデータの収集は終わりました。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;得られたデータを主成分分析にかけてみる&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;3. 得られたデータを主成分分析にかけてみる&lt;/h2&gt;
+&lt;p&gt;本格的な分析はまた今後にしたいのですが、データを集めるだけでは面白くないので、Gianonneらのように主成分分析を行いたいと思います。主成分分析をこれまでに学んだことのない方は以下を参考にしてください。個人的にはわかりやすいと思っています。&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://datachemeng.com/principalcomponentanalysis/&#34;&gt;主成分分析(Principal Component Analysis, PCA)～データセットの見える化・可視化といったらまずはこれ！～&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;では主成分分析を実行してみます。&lt;code&gt;R&lt;/code&gt;では&lt;code&gt;princomp&lt;/code&gt;関数を使用することで非常に簡単に主成分分析を行うことができます。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# 主成分分析を実行
+factor.pca &amp;lt;- princomp(~.,cor = TRUE,data = dataset1) # cor = TRUEでデータの基準化を自動で行ってくれる。
+summary(factor.pca)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Importance of components:
+##                           Comp.1    Comp.2    Comp.3     Comp.4     Comp.5
+## Standard deviation     3.2538097 1.8606047 1.5142917 1.05061250 0.88155352
+## Proportion of Variance 0.5293639 0.1730925 0.1146540 0.05518933 0.03885683
+## Cumulative Proportion  0.5293639 0.7024563 0.8171103 0.87229965 0.91115648
+##                           Comp.6     Comp.7     Comp.8      Comp.9     Comp.10
+## Standard deviation     0.7504599 0.63476742 0.48794520 0.413374289 0.358909911
+## Proportion of Variance 0.0281595 0.02014648 0.01190453 0.008543915 0.006440816
+## Cumulative Proportion  0.9393160 0.95946246 0.97136699 0.979910904 0.986351721
+##                            Comp.11     Comp.12     Comp.13      Comp.14
+## Standard deviation     0.296125594 0.254294037 0.233119328 0.1394055697
+## Proportion of Variance 0.004384518 0.003233273 0.002717231 0.0009716956
+## Cumulative Proportion  0.990736239 0.993969512 0.996686743 0.9976584386
+##                             Comp.15      Comp.16      Comp.17     Comp.18
+## Standard deviation     0.1356026290 0.1104356585 0.0861468897 0.070612034
+## Proportion of Variance 0.0009194036 0.0006098017 0.0003710643 0.000249303
+## Cumulative Proportion  0.9985778423 0.9991876440 0.9995587083 0.999808011
+##                            Comp.19      Comp.20
+## Standard deviation     0.053565104 3.115371e-02
+## Proportion of Variance 0.000143461 4.852767e-05
+## Cumulative Proportion  0.999951472 1.000000e+00&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;screeplot(factor.pca)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-7-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;pc &amp;lt;- predict(factor.pca,dataset1)[,1:3] # 主成分を計算
+pc.xts &amp;lt;- xts(pc,order.by = as.Date(rownames(dataset1)))
+plot.zoo(pc.xts,col=c(&amp;quot;red&amp;quot;,&amp;quot;blue&amp;quot;,&amp;quot;green&amp;quot;,&amp;quot;purple&amp;quot;,&amp;quot;yellow&amp;quot;),plot.type = &amp;quot;single&amp;quot;) # 主成分を時系列プロット&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-7-2.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;第3主成分まででデータの約80％が説明できる結果を得たので、第3主成分までのプロットをお見せします。第1主成分（赤）はリーマンショックや東日本大震災、消費税増税のあたりで急上昇しています。ゆえに経済全体のリスクセンチメントを表しているのではないかと思っています。第2主成分（青）と第3主成分（緑）はリーマンショックのあたりで大きく落ち込んでいることは共通していますが2015年～現在の動きが大きく異なっています。また、第2主成分（青）はサンプル期間を通して過去トレンドを持つことから日本経済の潜在能力のようなものを表しているのではないでしょうか（そうするとリーマンショックまで上昇傾向にあることが疑問なのですが）。第3主成分（緑）はいまだ解読不能です（物価＆為替動向を表しているのではないかと思っています）。とりあえず今日はこれまで。次回はGianonne et. al.(2008)の日本版の再現を行いたいと思います。&lt;/p&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
