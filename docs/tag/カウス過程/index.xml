@@ -5,12 +5,195 @@
     <link>/tag/%E3%82%AB%E3%82%A6%E3%82%B9%E9%81%8E%E7%A8%8B/</link>
       <atom:link href="/tag/%E3%82%AB%E3%82%A6%E3%82%B9%E9%81%8E%E7%A8%8B/index.xml" rel="self" type="application/rss+xml" />
     <description>ガウス過程</description>
-    <generator>Wowchemy (https://wowchemy.com)</generator><language>ja</language><lastBuildDate>Sun, 26 May 2019 00:00:00 +0000</lastBuildDate>
+    <generator>Wowchemy (https://wowchemy.com)</generator><language>ja</language><lastBuildDate>Mon, 19 Oct 2020 00:00:00 +0000</lastBuildDate>
     <image>
       <url>/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
       <title>ガウス過程</title>
       <link>/tag/%E3%82%AB%E3%82%A6%E3%82%B9%E9%81%8E%E7%A8%8B/</link>
     </image>
+    
+    <item>
+      <title>OECD.orgからマクロパネルデータをAPIで取得する</title>
+      <link>/post/post22/</link>
+      <pubDate>Mon, 19 Oct 2020 00:00:00 +0000</pubDate>
+      <guid>/post/post22/</guid>
+      <description>
+&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+
+&lt;div id=&#34;TOC&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#oecd.stat-web-api&#34;&gt;1.OECD.Stat Web API&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#pandasdmx&#34;&gt;2.pandasdmx&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#実装&#34;&gt;3.実装&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#別件ですが&#34;&gt;4.別件ですが。。。&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+
+&lt;p&gt;おはこんばんにちは。マクロ経済データを集める方法はいくつかありますが、各国のデータを集めるとなると一苦労です。ですが、OECDからAPI経由でデータ取得すれば面倒な処理を自動化できます。今日はその方法をご紹介します。&lt;/p&gt;
+&lt;div id=&#34;oecd.stat-web-api&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;1.OECD.Stat Web API&lt;/h2&gt;
+&lt;p&gt;OECD.orgでは&lt;a href=&#34;https://stats.oecd.org/&#34;&gt;OECD.Stat&lt;/a&gt;というサービスを提供しており、OECD加盟国と特定の非加盟国の様々な経済データが提供されています。WEBサイトに行けば手動でcsvデータをダウンロードすることもできますが、定期的にデータを取得し、分析する必要があるならばデータ取得処理を自動化したい衝動に駆られます。OECDはWeb APIを提供しているので、&lt;code&gt;Python&lt;/code&gt;や&lt;code&gt;R&lt;/code&gt;さえ使えればこれを実現できます。&lt;/p&gt;
+&lt;p&gt;&lt;OECD実施の具体的な内容&gt;&lt;/p&gt;
+&lt;p&gt;以下は、現時点での特定のOECD REST SDMXインターフェースの実装詳細のリストです。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;匿名クエリのみがサポートされ、認証はありません。&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;各レスポンスは1,000,000件のオブザベーションに制限されています。&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;リクエストURLの最大長は1000文字です。&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;クロスオリジンリクエストは、&lt;code&gt;CORS&lt;/code&gt; ヘッダでサポートされています (&lt;code&gt;CORS&lt;/code&gt;についての詳細は &lt;a href=&#34;http://www.html5rocks.com/en/tutorials/cors/&#34;&gt;こちら&lt;/a&gt;を参照)。&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;エラーは結果には返されませんが、HTTP ステータスコードとメッセージは Web サービスガイドラインに従って設定されます。&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;存在しないデータセットが要求された場合は、401 Unauthorizedが返されます。&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;code&gt;REST&lt;/code&gt; クエリの source (または Agency ID) パラメータは必須ですが、「ALL」キーワードはサポートされています。&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;バージョニングはサポートされていません: 常に最新の実装バージョンが使用されます。&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;データの並べ替えはサポートされていません。&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;code&gt;lastNObservations&lt;/code&gt;パラメータはサポートされていません。&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;code&gt;dimensionAtObservation=AllDimensions&lt;/code&gt; が使用されている場合でも、観測は時系列 (またはインポート固有) の順序に従います。&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;現時点では、参照メタデータの検索はサポートされていません。&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div id=&#34;pandasdmx&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;2.pandasdmx&lt;/h2&gt;
+&lt;p&gt;Web APIは&lt;code&gt;sdmx-json&lt;/code&gt;という形式で提供されます。&lt;code&gt;Python&lt;/code&gt;ではこれを使用するための便利なパッケージが存在します。それが&lt;code&gt;**pandasdmx**&lt;/code&gt;です。データをダウンロードする方法は以下の通りです。&lt;/p&gt;
+&lt;ol style=&#34;list-style-type: decimal&#34;&gt;
+&lt;li&gt;&lt;code&gt;pandasdmx&lt;/code&gt;を&lt;code&gt;import&lt;/code&gt;し、&lt;code&gt;Request&lt;/code&gt;メソッドに引数として’OECD’を渡し、&lt;code&gt;api.Request&lt;/code&gt;オブジェクトを作成する。&lt;/li&gt;
+&lt;li&gt;作成した&lt;code&gt;api.Request&lt;/code&gt;オブジェクトのdataメソッドにクエリ条件を渡し、OECD.orgから&lt;code&gt;sdmx-json&lt;/code&gt;形式のデータをダウンロードする。&lt;/li&gt;
+&lt;li&gt;ダウンロードしたデータを&lt;code&gt;to_pandas()&lt;/code&gt;メソッドで&lt;code&gt;pandas&lt;/code&gt;データフレームへ整形する。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;
+&lt;div id=&#34;実装&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;3.実装&lt;/h2&gt;
+&lt;p&gt;では、実際にやってみましょう。取得するのは、「&lt;code&gt;**Revisions Analysis Dataset -- Infra-annual Economic Indicators**&lt;/code&gt;」というデータセットです。OECDのデータセットの一つである&lt;code&gt;Monthly Ecnomic Indicator&lt;/code&gt;(MEI)の修正を含む全てのデータにアクセスしているので、主要な経済変数(国内総生産とその支出項目、鉱工業生産と建設生産指数、国際収支、複合主要指標、消費者物価指数、小売取引高、失業率、就業者数、時間当たり賃金、貨マネーサプライ、貿易統計など)について、初出時の速報データから修正が加えられた確報データまで確認することができます。このデータセットでは、1999年2月から毎月の間隔で、過去に主要経済指標データベースで分析可能だったデータのスナップショットが提供されています。つまり、各時点で入手可能なデータに基づく、予測モデルの構築ができるデータセットになっています。最新のデータは有用ですが速報値なので不確実性がつきまといます。バックテストを行う際にはこの状況が再現できず実際の運用よりも良い環境で分析してしまうことが問題になったりします。いわゆる&lt;code&gt;Jagged edge&lt;/code&gt;問題です。このデータセットでは実運用の状況が再現できるため非常に有用であると思います。今回は以下のデータ項目を取得します。&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th&gt;統計概要&lt;/th&gt;
+&lt;th&gt;統計ID&lt;/th&gt;
+&lt;th&gt;頻度&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;GDP&lt;/td&gt;
+&lt;td&gt;101&lt;/td&gt;
+&lt;td&gt;四半期&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;鉱工業生産指数&lt;/td&gt;
+&lt;td&gt;201&lt;/td&gt;
+&lt;td&gt;月次&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;小売業取引高&lt;/td&gt;
+&lt;td&gt;202&lt;/td&gt;
+&lt;td&gt;月次&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;マネーサプライ - 広義流動性&lt;/td&gt;
+&lt;td&gt;601&lt;/td&gt;
+&lt;td&gt;月次&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;貿易統計&lt;/td&gt;
+&lt;td&gt;702+703&lt;/td&gt;
+&lt;td&gt;月次&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;経常収支&lt;/td&gt;
+&lt;td&gt;701&lt;/td&gt;
+&lt;td&gt;四半期&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;就業者数&lt;/td&gt;
+&lt;td&gt;502&lt;/td&gt;
+&lt;td&gt;月次&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;失業率&lt;/td&gt;
+&lt;td&gt;501&lt;/td&gt;
+&lt;td&gt;月次&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;時間当たり賃金（製造業）&lt;/td&gt;
+&lt;td&gt;503&lt;/td&gt;
+&lt;td&gt;月次&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;単位あたり労働コスト&lt;/td&gt;
+&lt;td&gt;504&lt;/td&gt;
+&lt;td&gt;四半期&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;建築生産指数&lt;/td&gt;
+&lt;td&gt;203&lt;/td&gt;
+&lt;td&gt;月次&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;まず、関数を定義します。引数はデータベースID、その他ID(国IDや統計ID)、開始地点、終了地点です。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import pandasdmx as sdmx&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## C:\Users\aashi\Anaconda3\lib\site-packages\pandasdmx\remote.py:13: RuntimeWarning: optional dependency requests_cache is not installed; cache options to Session() have no effect
+##   RuntimeWarning,&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;oecd = sdmx.Request(&amp;#39;OECD&amp;#39;)
+def resp_OECD(dsname,dimensions,start,end):
+    dim_args = [&amp;#39;+&amp;#39;.join(d) for d in dimensions]
+    dim_str = &amp;#39;.&amp;#39;.join(dim_args)
+    resp = oecd.data(resource_id=dsname, key=dim_str + &amp;quot;/all?startTime=&amp;quot; + start + &amp;quot;&amp;amp;endTime=&amp;quot; + end)
+    df = resp.to_pandas().reset_index()
+    return(df)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;データを取得する次元を指定します。以下では、①国、②統計項目、③入手時点、④頻度をタプルで指定しています。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;dimensions = ((&amp;#39;USA&amp;#39;,&amp;#39;JPN&amp;#39;,&amp;#39;GBR&amp;#39;,&amp;#39;FRA&amp;#39;,&amp;#39;DEU&amp;#39;,&amp;#39;ITA&amp;#39;,&amp;#39;CAN&amp;#39;,&amp;#39;NLD&amp;#39;,&amp;#39;BEL&amp;#39;,&amp;#39;SWE&amp;#39;,&amp;#39;CHE&amp;#39;),(&amp;#39;201&amp;#39;,&amp;#39;202&amp;#39;,&amp;#39;601&amp;#39;,&amp;#39;702&amp;#39;,&amp;#39;703&amp;#39;,&amp;#39;701&amp;#39;,&amp;#39;502&amp;#39;,&amp;#39;503&amp;#39;,&amp;#39;504&amp;#39;,&amp;#39;203&amp;#39;),(&amp;quot;202001&amp;quot;,&amp;quot;202002&amp;quot;,&amp;quot;202003&amp;quot;,&amp;quot;202004&amp;quot;,&amp;quot;202005&amp;quot;,&amp;quot;202006&amp;quot;,&amp;quot;202007&amp;quot;,&amp;quot;202008&amp;quot;),(&amp;quot;M&amp;quot;,&amp;quot;Q&amp;quot;))&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;関数を実行します。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;result = resp_OECD(&amp;#39;MEI_ARCHIVE&amp;#39;,dimensions,&amp;#39;2019-Q1&amp;#39;,&amp;#39;2020-Q2&amp;#39;)
+result.count()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## LOCATION       8266
+## VAR            8266
+## EDI            8266
+## FREQUENCY      8266
+## TIME_PERIOD    8266
+## value          8266
+## dtype: int64&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;データの最初数件を見てみます。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;result.head()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##   LOCATION  VAR     EDI FREQUENCY TIME_PERIOD  value
+## 0      BEL  201  202001         M     2019-01  112.5
+## 1      BEL  201  202001         M     2019-02  111.8
+## 2      BEL  201  202001         M     2019-03  109.9
+## 3      BEL  201  202001         M     2019-04  113.5
+## 4      BEL  201  202001         M     2019-05  112.1&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;データがTidyな形(Long型)で入っているのがわかります。一番右側の&lt;code&gt;value&lt;/code&gt;が値として格納されており、その他インデックスは&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;LOCATION - 国&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;VAR - 統計項目&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;EDI - 入手時点(MEI_ARCHIVEの場合)&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;FREQUENCY - 頻度(月次、四半期等)&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;TIME_PERIOD - 統計の基準時点&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;となっています。よって、&lt;code&gt;EDI&lt;/code&gt;が異なる行で同じ&lt;code&gt;TIME_PERIOD&lt;/code&gt;が存在します。例えば、上ではベルギー(&lt;code&gt;BEL&lt;/code&gt;)の鉱工業生産指数(201)の2020/01時点で利用可能な2019-01~2019-05のデータが表示されています。可視化や回帰も行いやすいLongフォーマットでの提供なので非常にありがたいですね。鉱工業生産指数がアップデートされていく様子を可視化してみました。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+result = result[result[&amp;#39;FREQUENCY&amp;#39;]==&amp;#39;M&amp;#39;]
+result[&amp;#39;TIME_PERIOD&amp;#39;] = pd.to_datetime(result[&amp;#39;TIME_PERIOD&amp;#39;],format=&amp;#39;%Y-%m&amp;#39;)
+sns.relplot(data=result[lambda df: (df.VAR==&amp;#39;201&amp;#39;) &amp;amp; (pd.to_numeric(df.EDI) &amp;gt; 202004)],x=&amp;#39;TIME_PERIOD&amp;#39;,y=&amp;#39;value&amp;#39;,hue=&amp;#39;LOCATION&amp;#39;,kind=&amp;#39;line&amp;#39;,col=&amp;#39;EDI&amp;#39;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## &amp;lt;seaborn.axisgrid.FacetGrid object at 0x00000000316C0188&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.show()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-6-1.png&#34; width=&#34;2035&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;コロナの経済的な被害が大きくなるにつれて折れ線グラフが落ち込んでいく様子が見て取れる一方、微妙にですが過去値についても速報値→確報値へと修正が行われています。また、国によって統計データの公表にラグがあることも分かります。ベルギーは最も公表が遅いようです。時間があるときに、このデータを使った簡単な予測モデルの分析を追記したいと思います。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;別件ですが&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;4.別件ですが。。。&lt;/h2&gt;
+&lt;p&gt;Python 3 エンジニア認定データ分析試験に合格しました。合格率70%だけあって、かなり簡単でしたが&lt;code&gt;Python&lt;/code&gt;を基礎から見返すいい機会になりました。今やっている業務ではデータ分析はおろか&lt;code&gt;Python&lt;/code&gt;や&lt;code&gt;R&lt;/code&gt;を使う機会すらないので、転職も含めた可能性を考えています。とりあえず、以下の資格を今年度中に取得する予定で、金融にこだわらずにスキルを活かせるポストを探していこうと思います。ダイエットと同じで宣言して自分を追い込まないと。。。&lt;/p&gt;
+&lt;ol style=&#34;list-style-type: decimal&#34;&gt;
+&lt;li&gt;G検定&lt;/li&gt;
+&lt;li&gt;Oracle Database Master Silver SQL&lt;/li&gt;
+&lt;li&gt;Linuc レベル 1&lt;/li&gt;
+&lt;li&gt;基本情報技術者&lt;/li&gt;
+&lt;li&gt;AWS 認定ソリューションアーキテクト - アソシエイト&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;合格状況は都度ブログで報告していきたいと思います。&lt;/p&gt;
+&lt;/div&gt;
+</description>
+    </item>
     
     <item>
       <title>GPLVMでマルチファクターモデルを構築してみた</title>
