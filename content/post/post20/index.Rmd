@@ -113,7 +113,7 @@ for i, folder in enumerate(folders):
 ```{python,include=FALSE}
 img = Image.open(r'C:\Users\aashi\Documents\myblog_multi\content\post\post20\ＮＨＫマイルＣ_レシステンシア　評価Ｂ.jpg')
 mask = Image.open(r'C:\Users\aashi\Documents\myblog_multi\content\post\post20\mask.jpg')
-outImage = Image.open(r'C:\Users\aashi\Documents\myblog_multi\content\post\post21\ＮＨＫマイルＣ_レシステンシア　評価Ｂ削除.jpg')
+outImage = Image.open(r'C:\Users\aashi\Documents\myblog_multi\content\post\post20\ＮＨＫマイルＣ_レシステンシア　評価Ｂ削除.jpg')
 ```
 ```{python}
 plt.gray()
