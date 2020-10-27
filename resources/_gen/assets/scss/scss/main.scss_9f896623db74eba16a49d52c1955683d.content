@@ -9273,4 +9273,5 @@ h2 {
   margin-bottom: 0rem; }
 
 .hljs {
-  font-size: 120%; }
+  font-size: 120%;
+  background: #f8f8f8; }
