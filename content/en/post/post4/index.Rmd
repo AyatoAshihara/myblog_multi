@@ -1,0 +1,48 @@
+---
+title: "It's nice to meet you."
+author: admin
+date: 2018-05-18T00:00:00Z
+categories: []
+tags: []
+draft : false
+featured: false
+image:
+  caption: ''
+  focal_point: ""
+  placement: 2
+  preview_only: false
+lastmod: ""
+projects: []
+summary: Nice to meet you. I'd like to start this blog by introducing myself.
+output: 
+  blogdown::html_page:
+    number_sections: false
+    toc: true
+    df_print: "paged"
+---
+
+It's nice to meet you.
+My name is Ayato Ashihara, and I'm a first-year graduate of an asset management company in Tokyo.
+ 
+I'd like to introduce myself briefly.
+I'm 24 years old and graduated from a graduate school.
+I majored in macroeconomics, especially DSGE models, state space models, Kalman filters, Bayesian estimation, and MCMC.
+I also did some natural language processing as research support for my advisor.
+I originally wanted to be an academic researcher, but due to financial problems, I had to find a job.
+Now I'm doing menial work in sales support.
+ 
+I think this blog will be a memorandum of my research hobby as I cannot give up my interest in research.
+ 
+I am currently working on the following two research projects.  
+
+1. horse betting version of the factor model
+2. quarterly GDP projection model
+ 
+The first question is whether it is possible to create a model for constructing a horse betting portfolio that aims for a collection rate of over 100%, from the perspective that the horse betting market is more speculatively attractive than the stock market. For stocks, there is a factor model like Pharma French, but I would like to see if we can apply it to create a horse-trading version of the factor model.
+ 
+Secondly, we are aware of the problem of the low accuracy of the recent preliminary quarterly GDP report, so we wondered if it would be possible to construct a new, highly accurate forecasting model. In particular, I would like to use machine learning to create a model that incorporates data that is not normally used in macroeconomic research, rather than a model based on macroeconomic theory.
+ 
+We've only just begun our research.
+I'll do my best to keep you interested...
+ 
+Best regards.

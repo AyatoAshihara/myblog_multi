@@ -1,0 +1,261 @@
+---
+title: "Implementing Gaussian regression."
+author: admin
+date: 2018-12-02T00:00:00Z
+categories: ["macroeconomics"]
+tags: ["R"]
+draft: false
+featured: false
+slug: ["Gaussian_Regression"]
+image:
+  caption: ''
+  focal_point: ""
+  placement: 2
+  preview_only: false
+lastmod: ""
+projects: []
+summary: I implemented the much talked about Gauss regression, which is too versatile to be fun in reverse.
+output: 
+  blogdown::html_page:
+    number_sections: false
+    toc: true
+    df_print: "paged"
+---
+
+<script src="index_files/header-attrs/header-attrs.js"></script>
+<link href="index_files/pagedtable/css/pagedtable.css" rel="stylesheet" />
+<script src="index_files/pagedtable/js/pagedtable.js"></script>
+
+<div id="TOC">
+<ul>
+<li><a href="#what-is-gpr">1. What is <code>GPR</code>?</a></li>
+<li><a href="#implementation-of-the-gpr">2. Implementation of the `GPR’</a></li>
+</ul>
+</div>
+
+<p>　Hi. Yesterday, I wrote an article about <code>Bayesian Vector Autoregression</code>.
+　In the article, the topic of hyperparameter tuning came up, and looking for some efficient way to tune it, I found <code>Bayesian Optimization</code>. Since I am planning to use machine learning methods in daily GDP, I thought that <code>Bayesian Optimization</code> could be quite useful, and I spent all night yesterday to understand it.<br />
+　I will implement it here, but <code>Bayesian Optimization</code> uses <code>Gaussian Pocess Regression</code> (<code>GPR</code>), and my motivation for writing this entry was to implement it first. I will write about the implementation of <code>Bayesian Optimization</code> after this entry.</p>
+<div id="what-is-gpr" class="section level2">
+<h2>1. What is <code>GPR</code>?</h2>
+<p>　The <code>GRP</code> is, simply put, <strong>a type of nonlinear regression method using Bayesian estimation</strong>. Although the model itself is linear, it is characterized by its ability to estimate <strong>infinite nonlinear transformations of input variables using a kernel trick</strong> as explanatory variables (depending on what you choose for the kernel).
+　The <code>GPR</code> assumes that <span class="math inline">\(N\)</span> input and teacher data are available for training, and the <span class="math inline">\(N+1\)</span> of input data are also available. From this situation, we can predict the <span class="math inline">\(N+1\)</span>th teacher data.<br />
+　The data contains noise and follows the following probability model.
+　
+<span class="math display">\[
+t_{i} = y_{i} + \epsilon_{i}
+\]</span>
+where <span class="math inline">\(t_{i}\)</span> is the <span class="math inline">\(i\)</span>th observable teacher data (scalar), <span class="math inline">\(y_{i}\)</span> is the unobservable output data (scalar), and <span class="math inline">\(\beta_{i}\)</span> follows a normal distribution <span class="math inline">\(N(0, \beta^{-1})\)</span> with measurement error. <span class="math inline">\(y_{i}\)</span> follows the following probability model.</p>
+<p><span class="math display">\[
+\displaystyle y_{i}  = \textbf{w}^{T}\phi(x_{i})
+\]</span></p>
+<p>where <span class="math inline">\(x_{i}\)</span> is the ith input data vector, <span class="math inline">\(\phi(・)\)</span> is the non-linear function and <span class="math inline">\(\bf{w}^{T}\)</span> is the weight coefficient (regression coefficient) vector for each input data. As a nonlinear function, I assume <span class="math inline">\(\psi(x_{i}) = (x_{1,i}, x_{1,i}^{2},... ,x_{1,i}x_{2,i},...)\)</span>. (<span class="math inline">\(x_{1,i}\)</span> is the first variable in the <span class="math inline">\(i\)</span>th input data <span class="math inline">\(x_{i}\)</span>). The conditional probability of obtaining <span class="math inline">\(t_{i}\)</span> from the probabilistic model of the teacher data, with the <span class="math inline">\(i\)</span>th output data <span class="math inline">\(y_{i}\)</span> obtained, is</p>
+<p><span class="math display">\[
+ p(t_{i}|y_{i}) = N(t_{i}|y_{i},\beta^{-1})
+\]</span></p>
+<p><span class="math inline">\(\displaystyle \textbf{t} = (t_{1},... ,t_{n})^{T}\)</span> and <span class="math inline">\(\displaystyle \textbf{y} = (y_{1},... ,y_{n})^{T}\)</span>, then by extending the above equation, we have</p>
+<p><span class="math display">\[
+\displaystyle p(\textbf{t}|\textbf{y}) = N(\textbf{t}|\textbf{y},\beta^{-1}\textbf{I}_{N})
+\]</span></p>
+<p>We assume that the expected value of <span class="math inline">\(\textbf{w}\)</span> as a prior distribution is 0, and all variances are <span class="math inline">\(\alpha\)</span>. We also assume that <span class="math inline">\(\displaystyle \textbf{y}\)</span> follows a Gaussian process. A Gaussian process is one where the simultaneous distribution of <span class="math inline">\(\displaystyle \textbf{y}\)</span> follows a multivariate Gaussian distribution. In code, it looks like this</p>
+<pre class="r"><code># Define Kernel function
+Kernel_Mat &lt;- function(X,sigma,beta){
+  N &lt;- NROW(X)
+  K &lt;- matrix(0,N,N)
+  for (i in 1:N) {
+    for (k in 1:N) {
+      if(i==k) kdelta = 1 else kdelta = 0
+      K[i,k] &lt;- K[k,i] &lt;- exp(-t(X[i,]-X[k,])%*%(X[i,]-X[k,])/(2*sigma^2)) + beta^{-1}*kdelta
+    }
+  }
+  return(K)
+}
+
+N &lt;- 10 # max value of X
+M &lt;- 1000 # sample size
+X &lt;- matrix(seq(1,N,length=M),M,1) # create X
+testK &lt;- Kernel_Mat(X,0.5,1e+18) # calc kernel matrix
+
+library(MASS)
+
+P &lt;- 6 # num of sample path
+Y &lt;- matrix(0,M,P) # define Y
+
+for(i in 1:P){
+  Y[,i] &lt;- mvrnorm(n=1,rep(0,M),testK) # sample Y
+}
+
+# Plot
+matplot(x=X,y=Y,type = &quot;l&quot;,lwd = 2)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
+<p>　The covariance matrix <span class="math inline">\(K\)</span> between the elements of <span class="math inline">\(\displaystyle \textbf{y}\)</span>, <span class="math inline">\(\displaystyle y_{i} = \textbf{w}^{T}\phi(x_{i})\)</span> is calculated using the kernel method from the input <span class="math inline">\(x\)</span>. Then, from this <span class="math inline">\(K\)</span> and average 0, we generate six series of multivariate normal random numbers and plot them.As these series are computed from a covariance matrix, we model that <strong>the more positive the covariance of each element, the more likely they are to be the same</strong>. Also, as you can see in the graphs, the graphs are very smooth and very flexible in their representation. The code samples and plots 1000 input points, limiting the input to 0 to 10 due to computational cost, but in principle, <span class="math inline">\(x\)</span> is defined in the real number space, so <span class="math inline">\(p(\textbf{y})\)</span> follows an infinite dimensional multivariate normal distribution.</p>
+<p>As described above, since <span class="math inline">\(\displaystyle \textbf{y}\)</span> is assumed to follow a Gaussian process, <span class="math inline">\(p(\textbf{y})\)</span> follows a multivariate normal distribution <span class="math inline">\(N(\textbf{y}|0,K)\)</span> with simultaneous probability <span class="math inline">\(p(\textbf{y})\)</span> averaging 0 and the variance covariance matrix <span class="math inline">\(K\)</span>. Each element <span class="math inline">\(K_{i,j}\)</span> of <span class="math inline">\(K\)</span> is</p>
+<p><span class="math display">\[
+\begin{eqnarray}
+K_{i,j} &amp;=&amp; cov[y_{i},y_{j}] = cov[\textbf{w}\phi(x_{i}),\textbf{w}\phi(x_{j})] \\
+&amp;=&amp;\phi(x_{i})\phi(x_{j})cov[\textbf{w},\textbf{w}]=\phi(x_{i})\phi(x_{j})\alpha
+\end{eqnarray}
+\]</span></p>
+<p>Here, the <span class="math inline">\(\phi(x_{i})\phi(x_{j})\alpha\)</span> is more expensive <strong>as the dimensionality of the <span class="math inline">\(\phi(x_{i})\)</span> is increased</strong> (i.e., the more non-linear transformation is applied, the less the calculation is completed). However, when the kernel function <span class="math inline">\(k(x,x&#39;)\)</span> is used, the computational complexity is higher in the dimensions of the sample size of the input data <span class="math inline">\(x_{i},x_{j}\)</span>, so the computation becomes easier. There are several types of kernel functions, but the following Gaussian kernels are commonly used.</p>
+<p><span class="math display">\[
+k(x,x&#39;) = a \exp(-b(x-x&#39;)^{2})
+\]</span></p>
+<p>Now that we have defined the concurrent probability of <span class="math inline">\(\displaystyle \textbf{y}\)</span>, we can find the joint probability of <span class="math inline">\(\displaystyle \textbf{t}\)</span>.</p>
+<p><span class="math display">\[
+\begin{eqnarray}
+\displaystyle p(\textbf{t}) &amp;=&amp; \int p(\textbf{t}|\textbf{y})p(\textbf{y}) d\textbf{y} \\
+ \displaystyle &amp;=&amp; \int N(\textbf{t}|\textbf{y},\beta^{-1}\textbf{I}_{N})N(\textbf{y}|0,K)d\textbf{y} \\
+ &amp;=&amp; N(\textbf{y}|0,\textbf{C}_{N})
+\end{eqnarray}
+\]</span></p>
+<p>where <span class="math inline">\(\textbf{C}_{N} = K + \beta^{-1}\beta^{I}_{N}\)</span>. Note that the last expression expansion uses the regenerative nature of the normal distribution (the proof can be easily derived from the moment generating function of the normal distribution). The point is just to say that the covariance is the sum of the covariances of the two distributions, since they are independent. Personally, I imagine that <span class="math inline">\(p(\textbf{y})\)</span> is the prior distribution of the Gaussian process I just described, <span class="math inline">\(p(\textbf{t}|\textbf{y})\)</span> is the likelihood function, and <span class="math inline">\(p(\textbf{t})\)</span> is the posterior distribution. The only constraint on the prior distribution <span class="math inline">\(p(\textbf{y})\)</span> is that it is smooth with a loosely constrained distribution.
+The joint probability of <span class="math inline">\(N\)</span> observable teacher data <span class="math inline">\(\textbf{t}\)</span> and <span class="math inline">\(t_{N+1}\)</span> is</p>
+<p><span class="math display">\[
+ p(\textbf{t},t_{N+1}) = N(\textbf{t},t_{N+1}|0,\textbf{C}_{N+1})
+\]</span></p>
+<p>where <span class="math inline">\(\textbf{C}_{N+1}\)</span> is</p>
+<p><span class="math display">\[
+ \textbf{C}_{N+1} = \left(
+    \begin{array}{cccc}
+      \textbf{C}_{N} &amp; \textbf{k} \\
+      \textbf{k}^{T} &amp; c \\
+    \end{array}
+  \right)
+\]</span></p>
+<p>where <span class="math inline">\(\textbf{k} = (k(x_{1},x_{N+1}),...,k(x_{N},x_{N+1}))\)</span> and <span class="math inline">\(c = k(x_{N+1},x_{N+1})\)</span>. The conditional distribution <span class="math inline">\(p(t_{N+1}|\textbf{t})\)</span> can be obtained from the joint distribution of <span class="math inline">\(\textbf{t}\)</span> and <span class="math inline">\(t_{N+1}\)</span>.</p>
+<p><span class="math display">\[
+p(t_{N+1}|\textbf{t}) = N(t_{N+1}|\textbf{k}^{T}\textbf{C}_{N+1}^{-1}\textbf{t},c-\textbf{k}^{T}\textbf{C}_{N+1}^{-1}\textbf{k})
+\]</span></p>
+<p>In calculating the conditional distribution, we use <a href="https://qiita.com/kilometer/items/34249479dc2ac3af5706">Properties of the conditional multivariate normal distribution</a>. As you can see from the above equation, the conditional distribution <span class="math inline">\(p(t_{N+1}|\textbf{t})\)</span> can be calculated if <span class="math inline">\(N+1\)</span> input data, <span class="math inline">\(N\)</span> teacher data, and parameters <span class="math inline">\(a,b\)</span> of the kernel function are known, so if any point is given as input data, it is possible to approximate the Generating Process. The nice thing about the <code>GPR</code> is that it gives predictions without the direct estimation of the above defined probabilistic model <span class="math inline">\(\displaystyle y_{i} = \textbf{w}^{T}\phi(x_{i})\)</span>. The stochastic model has <span class="math inline">\(\phi(x_{i})\)</span>, which converts the input data to a high-dimensional vector through a nonlinear transformation. Therefore, the higher the dimensionality, the larger the computational complexity of the <span class="math inline">\(\phi(x_{i})\phi(x_{j})\alpha\)</span> will be, but the <code>GPR</code> uses a kernel trick, so the computational complexity of the sample size dimension of the input data vector will be sufficient.</p>
+</div>
+<div id="implementation-of-the-gpr" class="section level2">
+<h2>2. Implementation of the `GPR’</h2>
+<p>　For now, let’s implement this in <code>R</code>, which I’ve implemented in PRML test data, so I tweaked it.
+　
+</p>
+<pre class="r"><code>library(ggplot2)
+library(grid)
+
+# 1.Gaussian Process Regression
+
+# PRML&#39;s synthetic data set
+curve_fitting &lt;- data.frame(
+  x=c(0.000000,0.111111,0.222222,0.333333,0.444444,0.555556,0.666667,0.777778,0.888889,1.000000),
+  t=c(0.349486,0.830839,1.007332,0.971507,0.133066,0.166823,-0.848307,-0.445686,-0.563567,0.261502))
+
+f &lt;- function(beta, sigma, xmin, xmax, input, train) {
+  kernel &lt;- function(x1, x2) exp(-(x1-x2)^2/(2*sigma^2)); # define Kernel function
+  K &lt;- outer(input, input, kernel); # calc gram matrix
+  C_N &lt;- K + diag(length(input))/beta
+  m &lt;- function(x) (outer(x, input, kernel) %*% solve(C_N) %*% train) # coditiona mean 
+  m_sig &lt;- function(x)(kernel(x,x) - diag(outer(x, input, kernel) %*% solve(C_N) %*% t(outer(x, input, kernel)))) #conditional variance
+  x &lt;- seq(xmin,xmax,length=100)
+  output &lt;- ggplot(data.frame(x1=x,m=m(x),sig1=m(x)+1.96*sqrt(m_sig(x)),sig2=m(x)-1.96*sqrt(m_sig(x)),
+                              tx=input,ty=train),
+                   aes(x=x1,y=m)) + 
+    geom_line() +
+    geom_ribbon(aes(ymin=sig1,ymax=sig2),alpha=0.2) +
+    geom_point(aes(x=tx,y=ty))
+  return(output)
+}
+
+grid.newpage() # make a palet
+pushViewport(viewport(layout=grid.layout(2, 2))) # divide the palet into 2 by 2
+print(f(100,0.1,0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=1, layout.pos.col=1))
+print(f(4,0.10,0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=1, layout.pos.col=2))
+print(f(25,0.30,0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=2, layout.pos.col=1))
+print(f(25,0.030,0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=2, layout.pos.col=2)) </code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<p>The <span class="math inline">\(beta^{-1}\)</span> represents the measurement error. The higher the value of <strong><span class="math inline">\(\beta\)</span> (i.e., the smaller the measurement error), the easier it is to overfit, since the error of the predictions is less than that of the data already available.</strong> This is the case in the top left corner of the figure above. The top left corner is <span class="math inline">\(\beta=400\)</span>, which means that it overfits the current data available. Conversely, a small value of <span class="math inline">\(\beta\)</span> will produce predictions that ignore the errors with the teacher data, but may improve the generalization performance. The top right figure shows this. For <span class="math inline">\(beta=4\)</span>, the average barely passes through the data points we have, and <span class="math inline">\(b\)</span> is currently available. <span class="math inline">\(b\)</span> represents the magnitude of the effect of the data we have at the moment on the surroundings. If <span class="math inline">\(b\)</span> is small, the adjacent points will interact strongly with each other, which may reduce the accuracy but increase the generalization performance. Conversely, if <span class="math inline">\(b\)</span> is large, the result will be unnatural, fitting only individual points. This is illustrated in the figure below right (<span class="math inline">\(b=\frac{1}{0.03}, \beta=25\)</span>). As you can see, the graph is overfitting because of the large <span class="math inline">\(\beta\)</span> and because <span class="math inline">\(b\)</span> is also large, so it fits only individual points, resulting in an absurdly large graph. The bottom left graph is the best. It has <span class="math inline">\(b=\frac{1}{0.3}\)</span>, and <span class="math inline">\(b=2\)</span>. Let’s try extending the x interval of this graph to [0,2]. Then we get the following graph.</p>
+<pre class="r"><code>grid.newpage() # make a palet
+pushViewport(viewport(layout=grid.layout(2, 2))) # divide the palet into 2 by 2
+print(f(100,0.1,0,2,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=1, layout.pos.col=1)) 
+print(f(4,0.10,0,2,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=1, layout.pos.col=2)) 
+print(f(25,0.30,0,2,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=2, layout.pos.col=1))
+print(f(25,0.030,0,2,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=2, layout.pos.col=2)) </code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p>As you can see, all the graphs except the bottom left one have a band of 95% confidence intervals that immediately widen and are completely useless where there are no data points. On the other hand, the lower left graph has a decent band up to 1.3 to 1.4, and the average value seems to pass through a point that is consistent with our intuitive understanding of the function. You can also see that if you are too far away from the observable data points, you will get a normal distribution with a mean of 0 and a variance of 1 no matter what you give to the parameters.
+Now that we have shown that the accuracy of the prediction of the out-sample varies depending on the value of the parameters, the question here is how to estimate these hyperparameters. This is done by using the gradient method to find the hyperparameters that maximize the log-likelihood function <span class="math inline">\(\ln p(\bf{t}|a,b)\)</span> ((<span class="math inline">\(\beta\)</span> seems to be of a slightly different type, and the developmental discussion appears to take other tuning methods. We haven’t gotten to that level yet, so we’ll calibrate it here). Since <span class="math inline">\(p(\textbf{t}) = N(\textbf{y}|0, \textbf{C}_{N})\)</span>, the log-likelihood function is</p>
+<p><span class="math display">\[
+\displaystyle \ln p(\textbf{t}|a,b,\beta) = -\frac{1}{2}\ln|\textbf{C}_{N}| - \frac{N}{2}\ln(2\pi) - \frac{1}{2}\textbf{t}^{T}\textbf{C}_{N}^{-1}\textbf{k}
+\]</span></p>
+<p>After that, we can differentiate this with the parameters and solve the obtained simultaneous equations to get the maximum likelihood estimator. Now let’s get the derivatives.</p>
+<p><span class="math display">\[
+\displaystyle \frac{\partial}{\partial \theta_{i}} \ln p(\textbf{t}|\theta) = -\frac{1}{2}Tr(\textbf{C}_{N}^{-1}\frac{\partial \textbf{C}_{N}}{\partial \theta_{i}}) + \frac{1}{2}\textbf{t}^{T}\textbf{C}_{N}^{-1}
+\frac{\partial\textbf{C}_{N}}{\partial\theta_{i}}\textbf{C}_{N}^{-1}\textbf{t}
+\]</span></p>
+<p>where <span class="math inline">\(theta\)</span> is the parameter set and <span class="math inline">\(theta_{i}\)</span> represents the <span class="math inline">\(i\)</span>th parameter. If you don’t understand this derivative <a href="http://users.isr.ist.utl.pt/~wurmd/Livros/school/Bishop%20-%20Pattern%20Recognition%20And%20Machine%20Learning%20%20-%20Springer%20Springer%20%202006.pdf">here</a> in the supplement to (C.21) and (C.22) equations. Since we are using the Gaussian kernel in this case, we get</p>
+<p><span class="math display">\[
+\displaystyle \frac{\partial k(x,x&#39;)}{\partial a} = \exp(-b(x-x&#39;)^{2}) \\
+\displaystyle \frac{\partial k(x,x&#39;)}{\partial b} = -a(x-x&#39;)^{2}\exp(-b(x-x&#39;)^{2})
+\]</span></p>
+<p>from the above formula. However, this time we will use the gradient method to find the best parameters. Here’s the code for the implementation (it’s pretty much a lost cause).</p>
+<pre class="r"><code>g &lt;- function(xmin, xmax, input, train){
+  # initial value
+  beta = 100
+  b = 1
+  a = 1
+  learning_rate = 0.1
+  itermax &lt;- 1000
+  if (class(input) == &quot;numeric&quot;){
+    N &lt;- length(input)
+  } else
+  {
+    N &lt;- NROW(input)
+  }
+  kernel &lt;- function(x1, x2) a*exp(-0.5*b*(x1-x2)^2); # define kernel
+  derivative_a &lt;- function(x1,x2) exp(-0.5*b*(x1-x2)^2)
+  derivative_b &lt;- function(x1,x2) -0.5*a*(x1-x2)^2*exp(-0.5*b*(x1-x2)^2)
+  dloglik_a &lt;- function(C_N,y,x1,x2) {
+    -sum(diag(solve(C_N)%*%outer(input, input, derivative_a)))+t(y)%*%solve(C_N)%*%outer(input, input, derivative_a)%*%solve(C_N)%*%y 
+  }
+  dloglik_b &lt;- function(C_N,y,x1,x2) {
+    -sum(diag(solve(C_N)%*%outer(input, input, derivative_b)))+t(y)%*%solve(C_N)%*%outer(input, input, derivative_b)%*%solve(C_N)%*%y 
+  }
+  # loglikelihood function
+  likelihood &lt;- function(b,a,x,y){
+    kernel &lt;- function(x1, x2) a*exp(-0.5*b*(x1-x2)^2)
+    K &lt;- outer(x, x, kernel)
+    C_N &lt;- K + diag(N)/beta
+    itermax &lt;- 1000
+    l &lt;- -1/2*log(det(C_N)) - N/2*(2*pi) - 1/2*t(y)%*%solve(C_N)%*%y
+    return(l)
+  }
+  K &lt;- outer(input, input, kernel) 
+  C_N &lt;- K + diag(N)/beta
+  for (i in 1:itermax){
+    kernel &lt;- function(x1, x2) a*exp(-b*(x1-x2)^2)
+    derivative_b &lt;- function(x1,x2) -0.5*a*(x1-x2)^2*exp(-0.5*b*(x1-x2)^2)
+    dloglik_b &lt;- function(C_N,y,x1,x2) {
+      -sum(diag(solve(C_N)%*%outer(input, input, derivative_b)))+t(y)%*%solve(C_N)%*%outer(input, input, derivative_b)%*%solve(C_N)%*%y 
+    }
+    K &lt;- outer(input, input, kernel) # calc gram matrix
+    C_N &lt;- K + diag(N)/beta
+    l &lt;- 0
+    if(abs(l-likelihood(b,a,input,train))&lt;0.0001&amp;i&gt;2){
+      break
+    }else{
+      a &lt;- as.numeric(a + learning_rate*dloglik_a(C_N,train,input,input))
+      b &lt;- as.numeric(b + learning_rate*dloglik_b(C_N,train,input,input))
+    }
+    l &lt;- likelihood(b,a,input,train)
+  }
+  K &lt;- outer(input, input, kernel)
+  C_N &lt;- K + diag(length(input))/beta
+  m &lt;- function(x) (outer(x, input, kernel) %*% solve(C_N) %*% train)  
+  m_sig &lt;- function(x)(kernel(x,x) - diag(outer(x, input, kernel) %*% solve(C_N) %*% t(outer(x, input, kernel))))
+  x &lt;- seq(xmin,xmax,length=100)
+  output &lt;- ggplot(data.frame(x1=x,m=m(x),sig1=m(x)+1.96*sqrt(m_sig(x)),sig2=m(x)-1.96*sqrt(m_sig(x)),
+                              tx=input,ty=train),
+                   aes(x=x1,y=m)) + 
+    geom_line() +
+    geom_ribbon(aes(ymin=sig1,ymax=sig2),alpha=0.2) +
+    geom_point(aes(x=tx,y=ty))
+  return(output)
+}
+
+print(g(0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=1, layout.pos.col=1))</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p>Yes, it does sound like good (lol).
+That’s it for today, for now.</p>
+</div>
