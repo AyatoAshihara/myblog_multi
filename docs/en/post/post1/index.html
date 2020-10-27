@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en-us" >
+<!DOCTYPE html><html lang="ja" >
 
 <head>
 
@@ -34,12 +34,12 @@
   
     
   
-  <meta name="description" content="I implemented the much talked about Gauss regression, which is too versatile to be fun in reverse.">
+  <meta name="description" content="万能すぎて逆に面白くないと話題のガウス回帰を実装してみました。">
 
   
-  <link rel="alternate" hreflang="ja" href="../../../post/post1/">
+  <link rel="alternate" hreflang="en" href="../../en/post/post1/">
   
-  <link rel="alternate" hreflang="en-us" href="../../../en/post/post1/">
+  <link rel="alternate" hreflang="ja" href="../../post/post1/">
 
   
 
@@ -68,7 +68,7 @@
   
   
   
-  <script src="../../../js/mathjax-config.js"></script>
+  <script src="../../js/mathjax-config.js"></script>
   
 
   
@@ -241,7 +241,7 @@
   
   
   
-  <link rel="stylesheet" href="../../../css/wowchemy.css">
+  <link rel="stylesheet" href="../../css/wowchemy.css">
 
   
 
@@ -294,11 +294,11 @@
 
   
 
-  <link rel="manifest" href="../../../en/index.webmanifest">
-  <link rel="icon" type="image/png" href="../../../images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
-  <link rel="apple-touch-icon" type="image/png" href="../../../images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
+  <link rel="manifest" href="../../index.webmanifest">
+  <link rel="icon" type="image/png" href="../../images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
+  <link rel="apple-touch-icon" type="image/png" href="../../images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
 
-  <link rel="canonical" href="../../../en/post/post1/">
+  <link rel="canonical" href="../../post/post1/">
 
   
   
@@ -313,10 +313,10 @@
   <meta property="twitter:card" content="summary_large_image">
   
   <meta property="og:site_name" content="東京の資産運用会社で働く社会人が研究に没頭するブログ">
-  <meta property="og:url" content="/en/post/post1/">
-  <meta property="og:title" content="Implementing Gaussian regression. | 東京の資産運用会社で働く社会人が研究に没頭するブログ">
-  <meta property="og:description" content="I implemented the much talked about Gauss regression, which is too versatile to be fun in reverse."><meta property="og:image" content="/en/post/post1/featured.png">
-  <meta property="twitter:image" content="/en/post/post1/featured.png"><meta property="og:locale" content="en-us">
+  <meta property="og:url" content="/post/post1/">
+  <meta property="og:title" content="ガウス回帰の実装をやってみた | 東京の資産運用会社で働く社会人が研究に没頭するブログ">
+  <meta property="og:description" content="万能すぎて逆に面白くないと話題のガウス回帰を実装してみました。"><meta property="og:image" content="/post/post1/featured.png">
+  <meta property="twitter:image" content="/post/post1/featured.png"><meta property="og:locale" content="ja">
   
     
       <meta property="article:published_time" content="2018-12-02T00:00:00&#43;00:00">
@@ -345,12 +345,12 @@
   "@type": "BlogPosting",
   "mainEntityOfPage": {
     "@type": "WebPage",
-    "@id": "/en/post/post1/"
+    "@id": "/post/post1/"
   },
-  "headline": "Implementing Gaussian regression.",
+  "headline": "ガウス回帰の実装をやってみた",
   
   "image": [
-    "/en/post/post1/featured.png"
+    "/post/post1/featured.png"
   ],
   
   "datePublished": "2018-12-02T00:00:00Z",
@@ -369,7 +369,7 @@
       "url": "/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png"
     }
   },
-  "description": "I implemented the much talked about Gauss regression, which is too versatile to be fun in reverse."
+  "description": "万能すぎて逆に面白くないと話題のガウス回帰を実装してみました。"
 }
 </script>
 
@@ -387,7 +387,7 @@
 
 
 
-  <title>Implementing Gaussian regression. | 東京の資産運用会社で働く社会人が研究に没頭するブログ</title>
+  <title>ガウス回帰の実装をやってみた | 東京の資産運用会社で働く社会人が研究に没頭するブログ</title>
 
 </head>
 
@@ -403,7 +403,7 @@
     <script>const isSiteThemeDark = false;</script>
   
   
-  <script src="../../../js/load-theme.js"></script>
+  <script src="../../js/load-theme.js"></script>
 
   <aside class="search-results" id="search">
   <div class="container">
@@ -420,7 +420,7 @@
 
       <div id="search-box">
         
-        <input name="q" id="search-query" placeholder="Search..." autocapitalize="off"
+        <input name="q" id="search-query" placeholder="検索..." autocapitalize="off"
         autocomplete="off" autocorrect="off" spellcheck="false" type="search" class="form-control">
         
       </div>
@@ -455,20 +455,20 @@
 
     
     <div class="d-none d-lg-inline-flex">
-      <a class="navbar-brand" href="../../../en">東京の資産運用会社で働く社会人が研究に没頭するブログ</a>
+      <a class="navbar-brand" href="../../">東京の資産運用会社で働く社会人が研究に没頭するブログ</a>
     </div>
     
 
     
     <button type="button" class="navbar-toggler" data-toggle="collapse"
-            data-target="#navbar-content" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+            data-target="#navbar-content" aria-controls="navbar" aria-expanded="false" aria-label="ナビゲーションの切り替え">
     <span><i class="fas fa-bars"></i></span>
     </button>
     
 
     
     <div class="navbar-brand-mobile-wrapper d-inline-flex d-lg-none">
-      <a class="navbar-brand" href="../../../en">東京の資産運用会社で働く社会人が研究に没頭するブログ</a>
+      <a class="navbar-brand" href="../../">東京の資産運用会社で働く社会人が研究に没頭するブログ</a>
     </div>
     
 
@@ -511,7 +511,7 @@
         
 
         <li class="nav-item">
-          <a class="nav-link " href="../../../en/#about"><span>About</span></a>
+          <a class="nav-link " href="../../#about"><span>About</span></a>
         </li>
 
         
@@ -541,7 +541,7 @@
         
 
         <li class="nav-item">
-          <a class="nav-link  active" href="../../../en/post"><span>Posts</span></a>
+          <a class="nav-link  active" href="../../post"><span>Posts</span></a>
         </li>
 
         
@@ -571,7 +571,7 @@
         
 
         <li class="nav-item">
-          <a class="nav-link " href="../../../en/publication"><span>Publications</span></a>
+          <a class="nav-link " href="../../publication"><span>Publications</span></a>
         </li>
 
         
@@ -608,7 +608,7 @@
         
 
         <li class="nav-item">
-          <a class="nav-link " href="../../../en/#contact"><span>Contact</span></a>
+          <a class="nav-link " href="../../#contact"><span>Contact</span></a>
         </li>
 
         
@@ -651,14 +651,14 @@
       
       <li class="nav-item dropdown i18n-dropdown">
         <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true">
-          <i class="fas fa-globe mr-1" aria-hidden="true"></i><span class="d-none d-lg-inline">English</span></a>
+          <i class="fas fa-globe mr-1" aria-hidden="true"></i><span class="d-none d-lg-inline">日本語</span></a>
         <div class="dropdown-menu">
           <div class="dropdown-item dropdown-item-active">
-            <span>English</span>
+            <span>日本語</span>
           </div>
           
-          <a class="dropdown-item" href="../../../post/post1/">
-            <span>日本語</span>
+          <a class="dropdown-item" href="../../en/post/post1/">
+            <span>English</span>
           </a>
           
         </div>
@@ -700,7 +700,7 @@
 
 
 <div class="article-container pt-3">
-  <h1>Implementing Gaussian regression.</h1>
+  <h1>ガウス回帰の実装をやってみた</h1>
 
   
 
@@ -727,7 +727,7 @@
   
   <span class="middot-divider"></span>
   <span class="article-reading-time">
-    10 min read
+    11 分で読める
   </span>
   
 
@@ -735,14 +735,14 @@
   
   
   <span class="middot-divider"></span>
-  <a href="../../../en/post/post1/#disqus_thread"></a>
+  <a href="../../post/post1/#disqus_thread"></a>
   
 
   
   
   <span class="middot-divider"></span>
   <span class="article-categories">
-    <i class="fas fa-folder mr-1"></i><a href="../../../en/category/macroeconomics/">macroeconomics</a></span>
+    <i class="fas fa-folder mr-1"></i><a href="../../category/%E3%83%9E%E3%82%AF%E3%83%AD%E7%B5%8C%E6%B8%88%E5%AD%A6/">マクロ経済学</a></span>
   
 
 </div>
@@ -767,7 +767,7 @@
 
 <div class="article-header container featured-image-wrapper mt-4 mb-4" style="max-width: 1155px; max-height: 645px;">
   <div style="position: relative">
-    <img src="../../../en/post/post1/featured.png" alt="" class="featured-image">
+    <img src="../../post/post1/featured.png" alt="" class="featured-image">
     
   </div>
 </div>
@@ -784,36 +784,35 @@
 
 <div id="TOC">
 <ul>
-<li><a href="#what-is-gpr">1. What is <code>GPR</code>?</a></li>
-<li><a href="#implementation-of-the-gpr">2. Implementation of the `GPR’</a></li>
+<li><a href="#gprとは">1. <code>GPR</code>とは</a></li>
+<li><a href="#gprの実装">2. <code>GPR</code>の実装</a></li>
 </ul>
 </div>
 
-<p>　Hi. Yesterday, I wrote an article about <code>Bayesian Vector Autoregression</code>.
-　In the article, the topic of hyperparameter tuning came up, and looking for some efficient way to tune it, I found <code>Bayesian Optimization</code>. Since I am planning to use machine learning methods in daily GDP, I thought that <code>Bayesian Optimization</code> could be quite useful, and I spent all night yesterday to understand it.<br />
-　I will implement it here, but <code>Bayesian Optimization</code> uses <code>Gaussian Pocess Regression</code> (<code>GPR</code>), and my motivation for writing this entry was to implement it first. I will write about the implementation of <code>Bayesian Optimization</code> after this entry.</p>
-<div id="what-is-gpr" class="section level2">
-<h2>1. What is <code>GPR</code>?</h2>
-<p>　The <code>GRP</code> is, simply put, <strong>a type of nonlinear regression method using Bayesian estimation</strong>. Although the model itself is linear, it is characterized by its ability to estimate <strong>infinite nonlinear transformations of input variables using a kernel trick</strong> as explanatory variables (depending on what you choose for the kernel).
-　The <code>GPR</code> assumes that <span class="math inline">\(N\)</span> input and teacher data are available for training, and the <span class="math inline">\(N+1\)</span> of input data are also available. From this situation, we can predict the <span class="math inline">\(N+1\)</span>th teacher data.<br />
-　The data contains noise and follows the following probability model.
-　
-<span class="math display">\[
+<p>　おはこんばんにちは。昨日、<code>Bayesian Vector Autoregression</code>の記事を書きました。<br />
+　その中でハイパーパラメータのチューニングの話が出てきて、なにか効率的にチューニングを行う方法はないかと探していた際に<code>Bayesian Optimization</code>を発見しました。日次GDPでも機械学習の手法を利用しようと思っているので、<code>Bayesian Optimization</code>はかなり使える手法ではないかと思い、昨日徹夜で理解しました。<br />
+　その内容をここで実装しようとは思うのですが、<code>Bayesian Optimization</code>ではガウス回帰（<code>Gaussian Pocess Regression</code>,以下<code>GPR</code>）を使用しており、まずその実装を行おうと持ったのがこのエントリを書いた動機です。<code>Bayesian Optimization</code>の実装はこのエントリの後にでも書こうかなと思っています。</p>
+<div id="gprとは" class="section level2">
+<h2>1. <code>GPR</code>とは</h2>
+<p>　<code>GRP</code>とは簡単に言ってしまえば「<strong>ベイズ推定を用いた非線形回帰手法の１種</strong>」です。モデル自体は線形ですが、<strong>カーネルトリックを用いて入力変数を無限個非線形変換したもの</strong>を説明変数として推定できるところが特徴です（カーネルになにを選択するかによります）。<br />
+　<code>GPR</code>が想定しているのは、学習データとして入力データと教師データがそれぞれN個得られており、また入力データに関しては<span class="math inline">\(N+1\)</span>個目のデータも得られている状況です。この状況から、<span class="math inline">\(N+1\)</span>個目の教師データを予測します。<br />
+　教師データにはノイズが含まれており、以下のような確率モデルに従います。</p>
+<p><span class="math display">\[
 t_{i} = y_{i} + \epsilon_{i}
-\]</span>
-where <span class="math inline">\(t_{i}\)</span> is the <span class="math inline">\(i\)</span>th observable teacher data (scalar), <span class="math inline">\(y_{i}\)</span> is the unobservable output data (scalar), and <span class="math inline">\(\beta_{i}\)</span> follows a normal distribution <span class="math inline">\(N(0, \beta^{-1})\)</span> with measurement error. <span class="math inline">\(y_{i}\)</span> follows the following probability model.</p>
+\]</span></p>
+<p>ここで、<span class="math inline">\(t_{i}\)</span>は<span class="math inline">\(i\)</span>番目の観測可能な教師データ（スカラー）、<span class="math inline">\(y_{i}\)</span>は観測できない出力データ（スカラー）、<span class="math inline">\(\epsilon_{i}\)</span>は測定誤差で正規分布<span class="math inline">\(N(0,\beta^{-1})\)</span>に従います。<span class="math inline">\(y_{i}\)</span>は以下のような確率モデルに従います。</p>
 <p><span class="math display">\[
 \displaystyle y_{i}  = \textbf{w}^{T}\phi(x_{i})
 \]</span></p>
-<p>where <span class="math inline">\(x_{i}\)</span> is the ith input data vector, <span class="math inline">\(\phi(・)\)</span> is the non-linear function and <span class="math inline">\(\bf{w}^{T}\)</span> is the weight coefficient (regression coefficient) vector for each input data. As a nonlinear function, I assume <span class="math inline">\(\psi(x_{i}) = (x_{1,i}, x_{1,i}^{2},... ,x_{1,i}x_{2,i},...)\)</span>. (<span class="math inline">\(x_{1,i}\)</span> is the first variable in the <span class="math inline">\(i\)</span>th input data <span class="math inline">\(x_{i}\)</span>). The conditional probability of obtaining <span class="math inline">\(t_{i}\)</span> from the probabilistic model of the teacher data, with the <span class="math inline">\(i\)</span>th output data <span class="math inline">\(y_{i}\)</span> obtained, is</p>
+<p>ここで、<span class="math inline">\(x_{i}\)</span>はi番目の入力データベクトル、<span class="math inline">\(\phi(・)\)</span>は非線形関数、 <span class="math inline">\(\textbf{w}^{T}\)</span>は各入力データに対する重み係数（回帰係数）ベクトルです。非線形関数としては、<span class="math inline">\(\phi(x_{i}) = (x_{1,i}, x_{1,i}^{2},...,x_{1,i}x_{2,i},...)\)</span>を想定しています（<span class="math inline">\(x_{1,i}\)</span>は<span class="math inline">\(i\)</span>番目の入力データ<span class="math inline">\(x_{i}\)</span>の１番目の変数）。教師データの確率モデルから、<span class="math inline">\(i\)</span>番目の出力データ<span class="math inline">\(y_{i}\)</span>が得られたうえで<span class="math inline">\(t_{i}\)</span>が得られる条件付確率は、</p>
 <p><span class="math display">\[
  p(t_{i}|y_{i}) = N(t_{i}|y_{i},\beta^{-1})
 \]</span></p>
-<p><span class="math inline">\(\displaystyle \textbf{t} = (t_{1},... ,t_{n})^{T}\)</span> and <span class="math inline">\(\displaystyle \textbf{y} = (y_{1},... ,y_{n})^{T}\)</span>, then by extending the above equation, we have</p>
+<p>となります。<span class="math inline">\(\displaystyle \textbf{t} = (t_{1},...,t_{n})^{T}\)</span>、<span class="math inline">\(\displaystyle \textbf{y} = (y_{1},...,y_{n})^{T}\)</span>とすると、上式を拡張することで</p>
 <p><span class="math display">\[
 \displaystyle p(\textbf{t}|\textbf{y}) = N(\textbf{t}|\textbf{y},\beta^{-1}\textbf{I}_{N})
 \]</span></p>
-<p>We assume that the expected value of <span class="math inline">\(\textbf{w}\)</span> as a prior distribution is 0, and all variances are <span class="math inline">\(\alpha\)</span>. We also assume that <span class="math inline">\(\displaystyle \textbf{y}\)</span> follows a Gaussian process. A Gaussian process is one where the simultaneous distribution of <span class="math inline">\(\displaystyle \textbf{y}\)</span> follows a multivariate Gaussian distribution. In code, it looks like this</p>
+<p>と書けます。また、事前分布として<span class="math inline">\(\textbf{w}\)</span>の期待値は0、分散は全て<span class="math inline">\(\alpha\)</span>と仮定します。<span class="math inline">\(\displaystyle \textbf{y}\)</span>はガウス過程に従うと仮定します。ガウス過程とは、<span class="math inline">\(\displaystyle \textbf{y}\)</span>の同時分布が多変量ガウス分布に従うもののことです。コードで書くと以下のようになります。</p>
 <pre class="r"><code># Define Kernel function
 Kernel_Mat &lt;- function(X,sigma,beta){
   N &lt;- NROW(X)
@@ -844,19 +843,20 @@ for(i in 1:P){
 # Plot
 matplot(x=X,y=Y,type = &quot;l&quot;,lwd = 2)</code></pre>
 <p><img src="index_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
-<p>　The covariance matrix <span class="math inline">\(K\)</span> between the elements of <span class="math inline">\(\displaystyle \textbf{y}\)</span>, <span class="math inline">\(\displaystyle y_{i} = \textbf{w}^{T}\phi(x_{i})\)</span> is calculated using the kernel method from the input <span class="math inline">\(x\)</span>. Then, from this <span class="math inline">\(K\)</span> and average 0, we generate six series of multivariate normal random numbers and plot them.As these series are computed from a covariance matrix, we model that <strong>the more positive the covariance of each element, the more likely they are to be the same</strong>. Also, as you can see in the graphs, the graphs are very smooth and very flexible in their representation. The code samples and plots 1000 input points, limiting the input to 0 to 10 due to computational cost, but in principle, <span class="math inline">\(x\)</span> is defined in the real number space, so <span class="math inline">\(p(\textbf{y})\)</span> follows an infinite dimensional multivariate normal distribution.</p>
-<p>As described above, since <span class="math inline">\(\displaystyle \textbf{y}\)</span> is assumed to follow a Gaussian process, <span class="math inline">\(p(\textbf{y})\)</span> follows a multivariate normal distribution <span class="math inline">\(N(\textbf{y}|0,K)\)</span> with simultaneous probability <span class="math inline">\(p(\textbf{y})\)</span> averaging 0 and the variance covariance matrix <span class="math inline">\(K\)</span>. Each element <span class="math inline">\(K_{i,j}\)</span> of <span class="math inline">\(K\)</span> is</p>
+<p>　Kernel_Matについては後述しますが、<span class="math inline">\(\displaystyle \textbf{y}\)</span>の各要素<span class="math inline">\(\displaystyle y_{i} = \textbf{w}^{T}\phi(x_{i})\)</span>の間の共分散行列<span class="math inline">\(K\)</span>を入力<span class="math inline">\(x\)</span>からカーネル法を用いて計算しています。そして、この<span class="math inline">\(K\)</span>と平均0から、多変量正規乱数を6系列生成し、それをプロットしています。</p>
+<p>　これらの系列は共分散行列から計算されるので、<strong>各要素の共分散が正に大きくなればなるほど同じ値をとりやすくなる</strong>ようモデリングされていることになります。また、グラフを見ればわかるように非常になめらかなグラフが生成されており、かつ非常に柔軟な関数を表現できていることがわかります。コードでは計算コストの関係上、入力を0から10に限定して1000個の入力点をサンプルし、作図を行っていますが、原理的には<span class="math inline">\(x\)</span>は実数空間で定義されるものであるので、<span class="math inline">\(p(\textbf{y})\)</span>は無限次元の多変量正規分布に従います。
+以上のように、<span class="math inline">\(\displaystyle \textbf{y}\)</span>はガウス過程に従うと仮定するので同時確率<span class="math inline">\(p(\textbf{y})\)</span>は平均0、分散共分散行列が<span class="math inline">\(K\)</span>の多変量正規分布<span class="math inline">\(N(\textbf{y}|0,K)\)</span>に従います。ここで、<span class="math inline">\(K\)</span>の各要素<span class="math inline">\(K_{i,j}\)</span>は、</p>
 <p><span class="math display">\[
 \begin{eqnarray}
 K_{i,j} &amp;=&amp; cov[y_{i},y_{j}] = cov[\textbf{w}\phi(x_{i}),\textbf{w}\phi(x_{j})] \\
 &amp;=&amp;\phi(x_{i})\phi(x_{j})cov[\textbf{w},\textbf{w}]=\phi(x_{i})\phi(x_{j})\alpha
 \end{eqnarray}
 \]</span></p>
-<p>Here, the <span class="math inline">\(\phi(x_{i})\phi(x_{j})\alpha\)</span> is more expensive <strong>as the dimensionality of the <span class="math inline">\(\phi(x_{i})\)</span> is increased</strong> (i.e., the more non-linear transformation is applied, the less the calculation is completed). However, when the kernel function <span class="math inline">\(k(x,x&#39;)\)</span> is used, the computational complexity is higher in the dimensions of the sample size of the input data <span class="math inline">\(x_{i},x_{j}\)</span>, so the computation becomes easier. There are several types of kernel functions, but the following Gaussian kernels are commonly used.</p>
+<p>です。ここで、<span class="math inline">\(\phi(x_{i})\phi(x_{j})\alpha\)</span>は<span class="math inline">\(\phi(x_{i})\)</span>の<strong>次元が大きくなればなるほど計算量が多く</strong>なります（つまり、非線形変換をかければかけるほど計算が終わらない）。しかし、カーネル関数<span class="math inline">\(k(x,x&#39;)\)</span>を用いると、計算量は高々入力データ<span class="math inline">\(x_{i},x_{j}\)</span>のサンプルサイズの次元になるので、計算がしやすくなります。カーネル関数を用いて<span class="math inline">\(K_{i,j} = k(x_{i},x_{j})\)</span>となります。カーネル関数としてはいくつか種類がありますが、以下のガウスカーネルがよく使用されます。</p>
 <p><span class="math display">\[
 k(x,x&#39;) = a \exp(-b(x-x&#39;)^{2})
 \]</span></p>
-<p>Now that we have defined the concurrent probability of <span class="math inline">\(\displaystyle \textbf{y}\)</span>, we can find the joint probability of <span class="math inline">\(\displaystyle \textbf{t}\)</span>.</p>
+<p><span class="math inline">\(\displaystyle \textbf{y}\)</span>の同時確率が定義できたので、<span class="math inline">\(\displaystyle \textbf{t}\)</span>の同時確率を求めることができます。</p>
 <p><span class="math display">\[
 \begin{eqnarray}
 \displaystyle p(\textbf{t}) &amp;=&amp; \int p(\textbf{t}|\textbf{y})p(\textbf{y}) d\textbf{y} \\
@@ -864,12 +864,12 @@ k(x,x&#39;) = a \exp(-b(x-x&#39;)^{2})
  &amp;=&amp; N(\textbf{y}|0,\textbf{C}_{N})
 \end{eqnarray}
 \]</span></p>
-<p>where <span class="math inline">\(\textbf{C}_{N} = K + \beta^{-1}\beta^{I}_{N}\)</span>. Note that the last expression expansion uses the regenerative nature of the normal distribution (the proof can be easily derived from the moment generating function of the normal distribution). The point is just to say that the covariance is the sum of the covariances of the two distributions, since they are independent. Personally, I imagine that <span class="math inline">\(p(\textbf{y})\)</span> is the prior distribution of the Gaussian process I just described, <span class="math inline">\(p(\textbf{t}|\textbf{y})\)</span> is the likelihood function, and <span class="math inline">\(p(\textbf{t})\)</span> is the posterior distribution. The only constraint on the prior distribution <span class="math inline">\(p(\textbf{y})\)</span> is that it is smooth with a loosely constrained distribution.
-The joint probability of <span class="math inline">\(N\)</span> observable teacher data <span class="math inline">\(\textbf{t}\)</span> and <span class="math inline">\(t_{N+1}\)</span> is</p>
+<p>ここで、<span class="math inline">\(\textbf{C}_{N} = K + \beta^{-1}\textbf{I}_{N}\)</span>です。なお、最後の式展開は正規分布の再生性を利用しています（証明は正規分布の積率母関数から容易に導けます）。要は、両者は独立なので共分散は2つの分布の共分散の和となると言っているだけです。個人的には、<span class="math inline">\(p(\textbf{y})\)</span>が先ほど説明したガウス過程の事前分布であり、<span class="math inline">\(p(\textbf{t}|\textbf{y})\)</span>が尤度関数で、<span class="math inline">\(p(\textbf{t})\)</span>は事後分布をというようなイメージです。事前分布<span class="math inline">\(p(\textbf{y})\)</span>は制約の緩い分布でなめらかであることのみが唯一の制約です。
+<span class="math inline">\(N\)</span>個の観測可能な教師データ<span class="math inline">\(\textbf{t}\)</span>と<span class="math inline">\(t_{N+1}\)</span>の同時確率は、</p>
 <p><span class="math display">\[
  p(\textbf{t},t_{N+1}) = N(\textbf{t},t_{N+1}|0,\textbf{C}_{N+1})
 \]</span></p>
-<p>where <span class="math inline">\(\textbf{C}_{N+1}\)</span> is</p>
+<p>ここで、<span class="math inline">\(\textbf{C}_{N+1}\)</span>は、</p>
 <p><span class="math display">\[
  \textbf{C}_{N+1} = \left(
     \begin{array}{cccc}
@@ -878,17 +878,15 @@ The joint probability of <span class="math inline">\(N\)</span> observable teach
     \end{array}
   \right)
 \]</span></p>
-<p>where <span class="math inline">\(\textbf{k} = (k(x_{1},x_{N+1}),...,k(x_{N},x_{N+1}))\)</span> and <span class="math inline">\(c = k(x_{N+1},x_{N+1})\)</span>. The conditional distribution <span class="math inline">\(p(t_{N+1}|\textbf{t})\)</span> can be obtained from the joint distribution of <span class="math inline">\(\textbf{t}\)</span> and <span class="math inline">\(t_{N+1}\)</span>.</p>
+<p>です。ここで、<span class="math inline">\(\textbf{k} = (k(x_{1},x_{N+1}),...,k(x_{N},x_{N+1}))\)</span>、<span class="math inline">\(c = k(x_{N+1},x_{N+1})\)</span>です。<span class="math inline">\(\textbf{t}\)</span>と<span class="math inline">\(t_{N+1}\)</span>の同時分布から条件付分布<span class="math inline">\(p(t_{N+1}|\textbf{t})\)</span>を求めることができます。</p>
 <p><span class="math display">\[
 p(t_{N+1}|\textbf{t}) = N(t_{N+1}|\textbf{k}^{T}\textbf{C}_{N+1}^{-1}\textbf{t},c-\textbf{k}^{T}\textbf{C}_{N+1}^{-1}\textbf{k})
 \]</span></p>
-<p>In calculating the conditional distribution, we use <a href="https://qiita.com/kilometer/items/34249479dc2ac3af5706">Properties of the conditional multivariate normal distribution</a>. As you can see from the above equation, the conditional distribution <span class="math inline">\(p(t_{N+1}|\textbf{t})\)</span> can be calculated if <span class="math inline">\(N+1\)</span> input data, <span class="math inline">\(N\)</span> teacher data, and parameters <span class="math inline">\(a,b\)</span> of the kernel function are known, so if any point is given as input data, it is possible to approximate the Generating Process. The nice thing about the <code>GPR</code> is that it gives predictions without the direct estimation of the above defined probabilistic model <span class="math inline">\(\displaystyle y_{i} = \textbf{w}^{T}\phi(x_{i})\)</span>. The stochastic model has <span class="math inline">\(\phi(x_{i})\)</span>, which converts the input data to a high-dimensional vector through a nonlinear transformation. Therefore, the higher the dimensionality, the larger the computational complexity of the <span class="math inline">\(\phi(x_{i})\phi(x_{j})\alpha\)</span> will be, but the <code>GPR</code> uses a kernel trick, so the computational complexity of the sample size dimension of the input data vector will be sufficient.</p>
+<p>条件付分布の計算においては、<a href="https://qiita.com/kilometer/items/34249479dc2ac3af5706:title">条件付多変量正規分布の性質</a>を利用しています。上式を見ればわかるように、条件付分布<span class="math inline">\(p(t_{N+1}|\textbf{t})\)</span>は<span class="math inline">\(N+1\)</span>個の入力データ、<span class="math inline">\(N\)</span>個の教師データ、カーネル関数のパラメータ<span class="math inline">\(a,b\)</span>が既知であれば計算可能となっていますので、任意の点を入力データとして与えてやれば、元のData Generating Processを近似することが可能になります。<code>GPR</code>の良いところは上で定義した確率モデル<span class="math inline">\(\displaystyle y_{i} = \textbf{w}^{T}\phi(x_{i})\)</span>を直接推定しなくても予測値が得られるところです。確率モデルには<span class="math inline">\(\phi(x_{i})\)</span>があり、非線形変換により入力データを高次元ベクトルへ変換しています。よって、次元が高くなればなるほど<span class="math inline">\(\phi(x_{i})\phi(x_{j})\alpha\)</span>の計算量は大きくなっていきますが、<code>GPR</code>ではカーネルトリックを用いているので高々入力データベクトルのサンプルサイズの次元の計算量で事足りることになります。</p>
 </div>
-<div id="implementation-of-the-gpr" class="section level2">
-<h2>2. Implementation of the `GPR’</h2>
-<p>　For now, let’s implement this in <code>R</code>, which I’ve implemented in PRML test data, so I tweaked it.
-　
-</p>
+<div id="gprの実装" class="section level2">
+<h2>2. <code>GPR</code>の実装</h2>
+<p>　とりあえずここまでを<code>R</code>で実装してみましょう。PRMLのテストデータで実装しているものがあったので、それをベースにいじってみました。</p>
 <pre class="r"><code>library(ggplot2)
 library(grid)
 
@@ -922,7 +920,7 @@ print(f(4,0.10,0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=
 print(f(25,0.30,0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=2, layout.pos.col=1))
 print(f(25,0.030,0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=2, layout.pos.col=2)) </code></pre>
 <p><img src="index_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
-<p>The <span class="math inline">\(beta^{-1}\)</span> represents the measurement error. The higher the value of <strong><span class="math inline">\(\beta\)</span> (i.e., the smaller the measurement error), the easier it is to overfit, since the error of the predictions is less than that of the data already available.</strong> This is the case in the top left corner of the figure above. The top left corner is <span class="math inline">\(\beta=400\)</span>, which means that it overfits the current data available. Conversely, a small value of <span class="math inline">\(\beta\)</span> will produce predictions that ignore the errors with the teacher data, but may improve the generalization performance. The top right figure shows this. For <span class="math inline">\(beta=4\)</span>, the average barely passes through the data points we have, and <span class="math inline">\(b\)</span> is currently available. <span class="math inline">\(b\)</span> represents the magnitude of the effect of the data we have at the moment on the surroundings. If <span class="math inline">\(b\)</span> is small, the adjacent points will interact strongly with each other, which may reduce the accuracy but increase the generalization performance. Conversely, if <span class="math inline">\(b\)</span> is large, the result will be unnatural, fitting only individual points. This is illustrated in the figure below right (<span class="math inline">\(b=\frac{1}{0.03}, \beta=25\)</span>). As you can see, the graph is overfitting because of the large <span class="math inline">\(\beta\)</span> and because <span class="math inline">\(b\)</span> is also large, so it fits only individual points, resulting in an absurdly large graph. The bottom left graph is the best. It has <span class="math inline">\(b=\frac{1}{0.3}\)</span>, and <span class="math inline">\(b=2\)</span>. Let’s try extending the x interval of this graph to [0,2]. Then we get the following graph.</p>
+<p><span class="math inline">\(\beta^{-1}\)</span>は測定誤差を表しています。<strong><span class="math inline">\(\beta\)</span>が大きい（つまり、測定誤差が小さい）とすでに得られているデータとの誤差が少なくなるように予測値をはじき出すので、over fitting しやすくなります。</strong>上図の左上がそうなっています。左上は<span class="math inline">\(\beta=400\)</span>で、現時点で得られているデータに過度にfitしていることがわかります。逆に<span class="math inline">\(\beta\)</span>が小さいと教師データとの誤差を無視するように予測値をはじき出しますが、汎化性能は向上するかもしれません。右上の図がそれです。<span class="math inline">\(\beta=4\)</span>で、得られているデータ点を平均はほとんど通っていません。<span class="math inline">\(b\)</span>は現時点で得られているデータが周りに及ぼす影響の広さを表しています。<span class="math inline">\(b\)</span>が小さいと、隣接する点が互いに強く影響を及ぼし合うため、精度は下がるが汎化性能は上がるかもしれません。逆に、<span class="math inline">\(b\)</span>が大きいと、個々の点にのみフィットする不自然な結果になります。これは右下の図になります（<span class="math inline">\(b=\frac{1}{0.03},\beta=25\)</span>）。御覧の通り、<span class="math inline">\(\beta\)</span>が大きいのでoverfitting気味であり、なおかつ<span class="math inline">\(b\)</span>も大きいので個々の点のみにfitし、無茶苦茶なグラフになっています。左下のグラフが最もよさそうです。<span class="math inline">\(b=\frac{1}{0.3},\beta=2\)</span>となっています。試しに、このグラフのx区間を[0,2]へ伸ばしてみましょう。すると、以下のようなグラフがかけます。</p>
 <pre class="r"><code>grid.newpage() # make a palet
 pushViewport(viewport(layout=grid.layout(2, 2))) # divide the palet into 2 by 2
 print(f(100,0.1,0,2,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=1, layout.pos.col=1)) 
@@ -930,22 +928,22 @@ print(f(4,0.10,0,2,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=
 print(f(25,0.30,0,2,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=2, layout.pos.col=1))
 print(f(25,0.030,0,2,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=2, layout.pos.col=2)) </code></pre>
 <p><img src="index_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
-<p>As you can see, all the graphs except the bottom left one have a band of 95% confidence intervals that immediately widen and are completely useless where there are no data points. On the other hand, the lower left graph has a decent band up to 1.3 to 1.4, and the average value seems to pass through a point that is consistent with our intuitive understanding of the function. You can also see that if you are too far away from the observable data points, you will get a normal distribution with a mean of 0 and a variance of 1 no matter what you give to the parameters.
-Now that we have shown that the accuracy of the prediction of the out-sample varies depending on the value of the parameters, the question here is how to estimate these hyperparameters. This is done by using the gradient method to find the hyperparameters that maximize the log-likelihood function <span class="math inline">\(\ln p(\bf{t}|a,b)\)</span> ((<span class="math inline">\(\beta\)</span> seems to be of a slightly different type, and the developmental discussion appears to take other tuning methods. We haven’t gotten to that level yet, so we’ll calibrate it here). Since <span class="math inline">\(p(\textbf{t}) = N(\textbf{y}|0, \textbf{C}_{N})\)</span>, the log-likelihood function is</p>
+<p>これを見ればわかるように、左下以外のグラフはすぐに95%信頼区間のバンドが広がり、データ点がないところではまったく使い物にならないことがわかります。一方、左下のグラフは1.3~1.4ぐらいまではそこそこのバンドがかけており、我々が直感的に理解する関数とも整合的な点を平均値が通っているように思えます。また、観測可能なデータ点から離れすぎるとパラメータに何を与えようと平均０、分散１の正規分布になることもわかるがわかります。
+さて、このようにパラメータの値に応じて、アウトサンプルの予測精度が異なることを示したわけですが、ここで問題となるのはこれらハイパーパラメータをどのようにして推計するかです。これは対数尤度関数<span class="math inline">\(\ln p(\textbf{t}|a,b)\)</span>を最大にするハイパーパラメータを勾配法により求めます((<span class="math inline">\(\beta\)</span>は少しタイプが異なるようで、発展的な議論では他のチューニング方法をとる模様。まだ、そのレベルにはいけていないのでここではカリブレートすることにします。))。<span class="math inline">\(p(\textbf{t}) = N(\textbf{y}|0,\textbf{C}_{N})\)</span>なので、対数尤度関数は</p>
 <p><span class="math display">\[
 \displaystyle \ln p(\textbf{t}|a,b,\beta) = -\frac{1}{2}\ln|\textbf{C}_{N}| - \frac{N}{2}\ln(2\pi) - \frac{1}{2}\textbf{t}^{T}\textbf{C}_{N}^{-1}\textbf{k}
 \]</span></p>
-<p>After that, we can differentiate this with the parameters and solve the obtained simultaneous equations to get the maximum likelihood estimator. Now let’s get the derivatives.</p>
+<p>となります。あとは、これをパラメータで微分し、得られた連立方程式を解くことで最尤推定量が得られます。ではまず導関数を導出してみます。</p>
 <p><span class="math display">\[
 \displaystyle \frac{\partial}{\partial \theta_{i}} \ln p(\textbf{t}|\theta) = -\frac{1}{2}Tr(\textbf{C}_{N}^{-1}\frac{\partial \textbf{C}_{N}}{\partial \theta_{i}}) + \frac{1}{2}\textbf{t}^{T}\textbf{C}_{N}^{-1}
 \frac{\partial\textbf{C}_{N}}{\partial\theta_{i}}\textbf{C}_{N}^{-1}\textbf{t}
 \]</span></p>
-<p>where <span class="math inline">\(theta\)</span> is the parameter set and <span class="math inline">\(theta_{i}\)</span> represents the <span class="math inline">\(i\)</span>th parameter. If you don’t understand this derivative <a href="http://users.isr.ist.utl.pt/~wurmd/Livros/school/Bishop%20-%20Pattern%20Recognition%20And%20Machine%20Learning%20%20-%20Springer%20Springer%20%202006.pdf">here</a> in the supplement to (C.21) and (C.22) equations. Since we are using the Gaussian kernel in this case, we get</p>
+<p>ここで、<span class="math inline">\(\theta\)</span>はパラメータセットで、<span class="math inline">\(\theta_{i}\)</span>は<span class="math inline">\(i\)</span>番目のパラメータを表しています。この導関数が理解できない方は<a href="http://users.isr.ist.utl.pt/~wurmd/Livros/school/Bishop%20-%20Pattern%20Recognition%20And%20Machine%20Learning%20-%20Springer%20%202006.pdf:title=PRML">こちら</a>の補論にある(C.21)式と(C.22)式をご覧になると良いと思います。今回はガウスカーネルを用いているため、</p>
 <p><span class="math display">\[
 \displaystyle \frac{\partial k(x,x&#39;)}{\partial a} = \exp(-b(x-x&#39;)^{2}) \\
 \displaystyle \frac{\partial k(x,x&#39;)}{\partial b} = -a(x-x&#39;)^{2}\exp(-b(x-x&#39;)^{2})
 \]</span></p>
-<p>from the above formula. However, this time we will use the gradient method to find the best parameters. Here’s the code for the implementation (it’s pretty much a lost cause).</p>
+<p>を上式に代入すれば良いだけです。ただ、今回は勾配法により最適なパラメータを求めます。以下、実装のコードです（かなり迷走しています）。</p>
 <pre class="r"><code>g &lt;- function(xmin, xmax, input, train){
   # initial value
   beta = 100
@@ -1012,8 +1010,8 @@ Now that we have shown that the accuracy of the prediction of the out-sample var
 
 print(g(0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=1, layout.pos.col=1))</code></pre>
 <p><img src="index_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
-<p>Yes, it does sound like good (lol).
-That’s it for today, for now.</p>
+<p>たしかに、良さそうな感じがします（笑）
+とりあえず、今日はここまで。</p>
 </div>
 
     </div>
@@ -1027,7 +1025,7 @@ That’s it for today, for now.</p>
 
 <div class="article-tags">
   
-  <a class="badge badge-light" href="../../../en/tag/r/">R</a>
+  <a class="badge badge-light" href="../../tag/r/">R</a>
   
 </div>
 
@@ -1044,7 +1042,7 @@ That’s it for today, for now.</p>
       
       
       <li>
-        <a href="https://twitter.com/intent/tweet?url=../../../en/post/post1/&amp;text=Implementing%20Gaussian%20regression." target="_blank" rel="noopener" class="share-btn-twitter">
+        <a href="https://twitter.com/intent/tweet?url=../../post/post1/&amp;text=%e3%82%ac%e3%82%a6%e3%82%b9%e5%9b%9e%e5%b8%b0%e3%81%ae%e5%ae%9f%e8%a3%85%e3%82%92%e3%82%84%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%9f" target="_blank" rel="noopener" class="share-btn-twitter">
           <i class="fab fa-twitter"></i>
         </a>
       </li>
@@ -1057,7 +1055,7 @@ That’s it for today, for now.</p>
       
       
       <li>
-        <a href="https://www.facebook.com/sharer.php?u=/en/post/post1/&amp;t=Implementing%20Gaussian%20regression." target="_blank" rel="noopener" class="share-btn-facebook">
+        <a href="https://www.facebook.com/sharer.php?u=/post/post1/&amp;t=%e3%82%ac%e3%82%a6%e3%82%b9%e5%9b%9e%e5%b8%b0%e3%81%ae%e5%ae%9f%e8%a3%85%e3%82%92%e3%82%84%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%9f" target="_blank" rel="noopener" class="share-btn-facebook">
           <i class="fab fa-facebook"></i>
         </a>
       </li>
@@ -1070,7 +1068,7 @@ That’s it for today, for now.</p>
       
       
       <li>
-        <a href="mailto:?subject=Implementing%20Gaussian%20regression.&amp;body=/en/post/post1/" target="_blank" rel="noopener" class="share-btn-email">
+        <a href="mailto:?subject=%e3%82%ac%e3%82%a6%e3%82%b9%e5%9b%9e%e5%b8%b0%e3%81%ae%e5%ae%9f%e8%a3%85%e3%82%92%e3%82%84%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%9f&amp;body=/post/post1/" target="_blank" rel="noopener" class="share-btn-email">
           <i class="fas fa-envelope"></i>
         </a>
       </li>
@@ -1083,7 +1081,7 @@ That’s it for today, for now.</p>
       
       
       <li>
-        <a href="https://www.linkedin.com/shareArticle?url=../../../en/post/post1/&amp;title=Implementing%20Gaussian%20regression." target="_blank" rel="noopener" class="share-btn-linkedin">
+        <a href="https://www.linkedin.com/shareArticle?url=../../post/post1/&amp;title=%e3%82%ac%e3%82%a6%e3%82%b9%e5%9b%9e%e5%b8%b0%e3%81%ae%e5%ae%9f%e8%a3%85%e3%82%92%e3%82%84%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%9f" target="_blank" rel="noopener" class="share-btn-linkedin">
           <i class="fab fa-linkedin-in"></i>
         </a>
       </li>
@@ -1096,7 +1094,7 @@ That’s it for today, for now.</p>
       
       
       <li>
-        <a href="whatsapp://send?text=Implementing%20Gaussian%20regression.%20/en/post/post1/" target="_blank" rel="noopener" class="share-btn-whatsapp">
+        <a href="whatsapp://send?text=%e3%82%ac%e3%82%a6%e3%82%b9%e5%9b%9e%e5%b8%b0%e3%81%ae%e5%ae%9f%e8%a3%85%e3%82%92%e3%82%84%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%9f%20/post/post1/" target="_blank" rel="noopener" class="share-btn-whatsapp">
           <i class="fab fa-whatsapp"></i>
         </a>
       </li>
@@ -1109,7 +1107,7 @@ That’s it for today, for now.</p>
       
       
       <li>
-        <a href="https://service.weibo.com/share/share.php?url=../../../en/post/post1/&amp;title=Implementing%20Gaussian%20regression." target="_blank" rel="noopener" class="share-btn-weibo">
+        <a href="https://service.weibo.com/share/share.php?url=../../post/post1/&amp;title=%e3%82%ac%e3%82%a6%e3%82%b9%e5%9b%9e%e5%b8%b0%e3%81%ae%e5%ae%9f%e8%a3%85%e3%82%92%e3%82%84%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%9f" target="_blank" rel="noopener" class="share-btn-weibo">
           <i class="fab fa-weibo"></i>
         </a>
       </li>
@@ -1142,13 +1140,13 @@ That’s it for today, for now.</p>
   <div class="media author-card content-widget-hr">
     
       
-      <a href="../../../"><img class="avatar mr-3 avatar-circle" src="../../../en/author/ayato-ashihara/avatar_hu77c0c0affdebd3b9cbda9c39412092b5_245163_270x270_fill_q90_lanczos_center.jpg" alt="Ayato Ashihara"></a>
+      <a href="../../"><img class="avatar mr-3 avatar-circle" src="../../author/ayato-ashihara/avatar_hu77c0c0affdebd3b9cbda9c39412092b5_245163_270x270_fill_q90_lanczos_center.jpg" alt="Ayato Ashihara"></a>
     
 
     <div class="media-body">
-      <h5 class="card-title"><a href="../../../">Ayato Ashihara</a></h5>
-      <h6 class="card-subtitle">company employee</h6>
-      <p class="card-text">This blog is a nightly update by a man who is working in his third year of graduate school. The content of this blog has nothing to do with the official position of the author&rsquo;s organization.</p>
+      <h5 class="card-title"><a href="../../">Ayato Ashihara</a></h5>
+      <h6 class="card-subtitle">会社員3年目</h6>
+      <p class="card-text">院卒3年目の社会人が夜な夜な更新中。本ブログの内容は筆者が所属する組織の公式見解とは全く関係ありません。</p>
       <ul class="network-icon" aria-hidden="true">
   
     
@@ -1163,7 +1161,7 @@ That’s it for today, for now.</p>
       
     
     <li>
-      <a href="../../../en/#contact" >
+      <a href="../../#contact" >
         <i class="fas fa-envelope"></i>
       </a>
     </li>
@@ -1267,6 +1265,23 @@ That’s it for today, for now.</p>
 
   
   
+  <div class="article-widget content-widget-hr">
+    <h3>関連項目</h3>
+    <ul>
+      
+      <li><a href="../../post/post14/">10年物長期金利をフィッティングしてみる</a></li>
+      
+      <li><a href="../../post/post8/">GPLVMでマルチファクターモデルを構築してみた</a></li>
+      
+      <li><a href="../../post/post3/">カルマンフィルタの実装</a></li>
+      
+      <li><a href="../../post/post6/">Gianonne et. al. (2008)のマルチファクターモデルで四半期GDPを予想してみた</a></li>
+      
+      <li><a href="../../post/post7/">日次GDP推計に使用する経済統計を統計ダッシュボードから集めてみた</a></li>
+      
+    </ul>
+  </div>
+  
 
 
 
@@ -1321,13 +1336,13 @@ That’s it for today, for now.</p>
     
     
     <script>
-      const search_config = {"indexURI":"/en/index.json","minLength":1,"threshold":0.3};
-      const i18n = {"no_results":"No results found","placeholder":"Search...","results":"results found"};
+      const search_config = {"indexURI":"/index.json","minLength":1,"threshold":0.3};
+      const i18n = {"no_results":"結果が見つかりませんでした","placeholder":"検索...","results":"results found"};
       const content_type = {
-        'post': "Posts",
-        'project': "Projects",
-        'publication' : "Publications",
-        'talk' : "Talks",
+        'post': "投稿",
+        'project': "プロジェクト",
+        'publication' : "発表文献",
+        'talk' : "登壇",
         'slides' : "Slides"
         };
     </script>
@@ -1385,7 +1400,7 @@ That’s it for today, for now.</p>
     
     
     
-    <script src="../../../js/wowchemy.min.4c2bca31150ce93c5a5e43b8a50f22fd.js"></script>
+    <script src="../../js/wowchemy.min.4c2bca31150ce93c5a5e43b8a50f22fd.js"></script>
 
     
 
@@ -1440,7 +1455,7 @@ That’s it for today, for now.</p>
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Cite</h5>
+        <h5 class="modal-title">引用</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -1450,10 +1465,10 @@ That’s it for today, for now.</p>
       </div>
       <div class="modal-footer">
         <a class="btn btn-outline-primary my-1 js-copy-cite" href="#" target="_blank">
-          <i class="fas fa-copy"></i> Copy
+          <i class="fas fa-copy"></i> コピー
         </a>
         <a class="btn btn-outline-primary my-1 js-download-cite" href="#" target="_blank">
-          <i class="fas fa-download"></i> Download
+          <i class="fas fa-download"></i> ダウンロード
         </a>
         <div id="modal-error"></div>
       </div>
