@@ -763,16 +763,6 @@
       
 <script src="index_files/header-attrs/header-attrs.js"></script>
 
-<div id="TOC">
-<ul>
-<li><a href="#やりたいこと">0. やりたいこと</a></li>
-<li><a href="#データの読み込み">1. データの読み込み</a></li>
-<li><a href="#前処理">2. 前処理</a></li>
-<li><a href="#jump統計量の計算">3. Jump統計量の計算</a></li>
-<li><a href="#ggplot2を用いた可視化">4. ggplot2を用いた可視化</a></li>
-<li><a href="#まとめ">5. まとめ</a></li>
-</ul>
-</div>
 
 <div id="やりたいこと" class="section level2">
 <h2>0. やりたいこと</h2>
@@ -924,7 +914,7 @@ DataFrame Rolling_r_cpp(
 <p><code>Rcpp::sourceCpp</code>でコンパイルしたら、以下のように<code>R</code>の関数として実行します。</p>
 <pre class="r"><code>system.time(results &lt;- Rolling_r_cpp(JPYUSD,from))</code></pre>
 <pre><code>##    ユーザ   システム       経過  
-##       0.03       0.00       0.03</code></pre>
+##       0.01       0.00       0.01</code></pre>
 <p>はい。1200万件のデータの処理に1秒かかりません。便利ー。</p>
 <pre class="r"><code>summary(results)</code></pre>
 <pre><code>##       from                           r         
@@ -1034,7 +1024,7 @@ DataFrame Rolling_rbv_cpp(
 <p>では、これもコンパイルし、<code>R</code>で実行します。</p>
 <pre class="r"><code>system.time(results &lt;- results %&gt;% Rolling_rbv_cpp(na_remove = FALSE))</code></pre>
 <pre><code>##    ユーザ   システム       経過  
-##       0.24       0.08       0.31</code></pre>
+##       0.22       0.10       0.33</code></pre>
 <p>こちらも一瞬ですね。</p>
 </div>
 <div id="jump統計量の計算" class="section level2">
@@ -1510,12 +1500,9 @@ results %&gt;%
     
     
     
-    <script src="../../js/wowchemy.min.acc9ffdc28e7ee2df1130f958921be37.js"></script>
+    <script src="../../js/wowchemy.min.8139e5044a74e2e05dca886f99332759.js"></script>
 
-    <nav class="js-toc"></nav>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.11.1/tocbot.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.11.1/tocbot.css">
+    
 
 
   

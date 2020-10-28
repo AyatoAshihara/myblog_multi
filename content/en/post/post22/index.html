@@ -1,0 +1,201 @@
+---
+title: "Get macro panel data from OECD.org via API"
+author: admin
+date: 2020-10-19T00:00:00Z
+categories: ["macroeconomics","single-shot"]
+tags: ["Python","Gaussian-regression","preprocessing","Web_scraping","API"]
+draft: false
+featured: false
+slug: ["OECD"]
+image:
+  caption: ''
+  focal_point: ""
+  placement: 2
+  preview_only: false
+lastmod: ""
+projects: []
+summary: I used the OECD.org API to obtain macroeconomic data.
+output: 
+  blogdown::html_page:
+    number_sections: false
+    toc: true
+---
+
+<script src="index_files/header-attrs/header-attrs.js"></script>
+
+<div id="TOC">
+<ul>
+<li><a href="#oecd.stat-web-api">1.OECD.Stat Web API</a></li>
+<li><a href="#pandasdmx">2.pandasdmx</a></li>
+<li><a href="#implementation">3.implementation</a></li>
+<li><a href="#another-matter">4. Another matter…</a></li>
+</ul>
+</div>
+
+<p>Hi. There are several ways to collect macroeconomic data, but collecting data for each country can be a challenge. However, you can automate the tedious process of collecting data from the OECD via API. Today, I will introduce the method.</p>
+<div id="oecd.stat-web-api" class="section level2">
+<h2>1.OECD.Stat Web API</h2>
+<p>OECD.org offers a service called <a href="https://stats.oecd.org/">OECD.Stat</a>, which provides a variety of economic data for OECD and certain non-member countries. You can also download the csv data manually by going to the website. Since OECD provides a web API, you only need to use <code>Python</code> or <code>R</code> to do this.</p>
+<p><Specifics of the OECD implementation></p>
+<p>Below is a list of implementation details for specific OECD REST SDMX interfaces at this time.</p>
+<ul>
+<li><p>Only anonymous queries are supported and there is no authentication.</p></li>
+<li><p>Each response is limited to 1,000,000 observations.</p></li>
+<li><p>The maximum length of the request URL is 1000 characters.</p></li>
+<li><p>Cross-origin requests are supported in the <code>CORS</code> header (see <a href="http://www.html5rocks.com/en/tutorials/cors/">here</a> for more information about <code>CORS</code>).</p></li>
+<li><p>Errors are not returned in the results, but HTTP status codes and messages are set according to the Web Service Guidelines.</p></li>
+<li><p>If a nonexistent dataset is requested, <code>401 Unauthorized</code> is returned.</p></li>
+<li><p>The source (or Agency ID) parameter of the <code>REST</code> query is required, but the <code>ALL</code> keyword is supported.</p></li>
+<li><p>Versioning is not supported: the latest implementation version is always used.</p></li>
+<li><p>Sorting of data is not supported.</p></li>
+<li><p>The <code>lastNObservations</code> parameter is not supported.</p></li>
+<li><p>Even when <code>dimensionAtObservation=AllDimensions</code> is used, the observations follow a chronological (or import-specific) order.</p></li>
+<li><p>Searching for reference metadata is not supported at this time.</p></li>
+</ul>
+</div>
+<div id="pandasdmx" class="section level2">
+<h2>2.pandasdmx</h2>
+<p>The Web API is provided in the form of <code>sdmx-json</code>. There is a useful package for using it in <code>Python</code>, which is called <code>pandasdmx**</code>. Here’s how to download the data.</p>
+<ol style="list-style-type: decimal">
+<li>Import <code>pandasdmx</code>, pass <code>OECD</code> to <code>Request</code> method as an argument and create <code>api.Request</code> object.</li>
+<li>Pass the query condition to the data method of the <code>api.Request</code> object, and download the data of <code>sdmx-json</code> format from OECD.org.</li>
+<li>Format the downloaded data into a <code>pandas</code> data frame with the method <code>to_pandas()</code>.</li>
+</ol>
+</div>
+<div id="implementation" class="section level2">
+<h2>3.implementation</h2>
+<p>Let’s do this in practice. What we’ll get is the <code>**Revisions Analysis Dataset -- Infra-annual Economic Indicators**</code>, one of the OECD datasets, the <code>Monthly Ecnomic Indicator</code> (MEI). We have access to all data, including revisions to the preliminary data on key economic variables (such as gross domestic product and its expenditure items, industrial production and construction output indices, balance of payments, composite key indicators, consumer price index, retail trade volume, unemployment rate, number of workers, hourly wages, money supply, and trade statistics), as first published You can see everything from data to confirmed data with corrections. The dataset provides a snapshot of data that were previously available for analysis in the Leading Economic Indicators database at monthly intervals beginning in February 1999. In other words, the dataset allows us to build predictive models based on the data available at each point in time. The most recent data is useful, but it is preliminary and therefore subject to uncertainty. The problem is that this situation cannot be replicated when backtesting, and the analysis is often done under a better environment than the actual operation. This is the so-called <code>Jagged Edge</code> problem. In this dataset, we think it is very useful because we can reproduce the situation of actual operation. This time, you will get the following data items.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Indicators</th>
+<th>Statistical ID</th>
+<th>Frequency</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Gross Domestic Product</td>
+<td>101</td>
+<td>Quarterly</td>
+</tr>
+<tr class="even">
+<td>Index of Industrial Production</td>
+<td>201</td>
+<td>Monthly</td>
+</tr>
+<tr class="odd">
+<td>Retail Trade Volume</td>
+<td>202</td>
+<td>Monthly</td>
+</tr>
+<tr class="even">
+<td>Monetary Aggregates</td>
+<td>601</td>
+<td>Monthly</td>
+</tr>
+<tr class="odd">
+<td>International Trade in Goods</td>
+<td>702+703</td>
+<td>Monthly</td>
+</tr>
+<tr class="even">
+<td>Balance of Payments</td>
+<td>701</td>
+<td>Quarterly</td>
+</tr>
+<tr class="odd">
+<td>Employment</td>
+<td>502</td>
+<td>Monthly</td>
+</tr>
+<tr class="even">
+<td>Harmonised Unemployment Rates</td>
+<td>501</td>
+<td>Monthly</td>
+</tr>
+<tr class="odd">
+<td>Hourly Earnings in Manufacturing</td>
+<td>503</td>
+<td>Monthly</td>
+</tr>
+<tr class="even">
+<td>Early Estimates of Unit Labor Cost</td>
+<td>504</td>
+<td>Quarterly</td>
+</tr>
+<tr class="odd">
+<td>Production of Construction</td>
+<td>203</td>
+<td>Monthly</td>
+</tr>
+</tbody>
+</table>
+<p>First, we define the functions. The arguments are database ID, other IDs (country IDs and statistical IDs), start point and end point.</p>
+<pre class="python"><code>import pandasdmx as sdmx</code></pre>
+<pre><code>## C:\Users\aashi\Anaconda3\lib\site-packages\pandasdmx\remote.py:13: RuntimeWarning: optional dependency requests_cache is not installed; cache options to Session() have no effect
+##   RuntimeWarning,</code></pre>
+<pre class="python"><code>oecd = sdmx.Request(&#39;OECD&#39;)
+def resp_OECD(dsname,dimensions,start,end):
+    dim_args = [&#39;+&#39;.join(d) for d in dimensions]
+    dim_str = &#39;.&#39;.join(dim_args)
+    resp = oecd.data(resource_id=dsname, key=dim_str + &quot;/all?startTime=&quot; + start + &quot;&amp;endTime=&quot; + end)
+    df = resp.to_pandas().reset_index()
+    return(df)</code></pre>
+<p>Specify the dimension from which the data will be obtained. Below, (1) country, (2) statistical items, (3) time of acquisition, and (4) frequency are specified with a tuple.</p>
+<pre class="python"><code>dimensions = ((&#39;USA&#39;,&#39;JPN&#39;,&#39;GBR&#39;,&#39;FRA&#39;,&#39;DEU&#39;,&#39;ITA&#39;,&#39;CAN&#39;,&#39;NLD&#39;,&#39;BEL&#39;,&#39;SWE&#39;,&#39;CHE&#39;),(&#39;201&#39;,&#39;202&#39;,&#39;601&#39;,&#39;702&#39;,&#39;703&#39;,&#39;701&#39;,&#39;502&#39;,&#39;503&#39;,&#39;504&#39;,&#39;203&#39;),(&quot;202001&quot;,&quot;202002&quot;,&quot;202003&quot;,&quot;202004&quot;,&quot;202005&quot;,&quot;202006&quot;,&quot;202007&quot;,&quot;202008&quot;),(&quot;M&quot;,&quot;Q&quot;))</code></pre>
+<p>Let’s execute the function.</p>
+<pre class="python"><code>result = resp_OECD(&#39;MEI_ARCHIVE&#39;,dimensions,&#39;2019-Q1&#39;,&#39;2020-Q2&#39;)
+result.count()</code></pre>
+<pre><code>## LOCATION       8266
+## VAR            8266
+## EDI            8266
+## FREQUENCY      8266
+## TIME_PERIOD    8266
+## value          8266
+## dtype: int64</code></pre>
+<p>Let’s look at the first few cases of data.</p>
+<pre class="python"><code>result.head()</code></pre>
+<pre><code>##   LOCATION  VAR     EDI FREQUENCY TIME_PERIOD  value
+## 0      BEL  201  202001         M     2019-01  112.5
+## 1      BEL  201  202001         M     2019-02  111.8
+## 2      BEL  201  202001         M     2019-03  109.9
+## 3      BEL  201  202001         M     2019-04  113.5
+## 4      BEL  201  202001         M     2019-05  112.1</code></pre>
+<p>You can see that the data is stored in tidy form (long type). The most right value is stored as a value, and the other indexes are</p>
+<ul>
+<li>LOCATION - Country</li>
+</ul>
+<!-- -->
+<ul>
+<li><p>VAR - Items</p></li>
+<li><p>EDI - At the time of acquisition (in the case of MEI_ARCHIVE)</p></li>
+<li><p>FREQUENCY - Frequency (monthly, quarterly, etc.)</p></li>
+<li><p>TIME_PERIOD - Reference point</p></li>
+</ul>
+<p>Therefore, the same ` exists in rows with different EDIs. For example, above you can see the data for 2019-01~2019-05 available as of 2020/01 for the Belgian (BEL) Industrial Production Index (201). This is very much appreciated as it is provided in Long format, which is also easy to visualize and regress. Here’s a visualization of the industrial production index as it is updated.</p>
+<pre class="python"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+result = result[result[&#39;FREQUENCY&#39;]==&#39;M&#39;]
+result[&#39;TIME_PERIOD&#39;] = pd.to_datetime(result[&#39;TIME_PERIOD&#39;],format=&#39;%Y-%m&#39;)
+sns.relplot(data=result[lambda df: (df.VAR==&#39;201&#39;) &amp; (pd.to_numeric(df.EDI) &gt; 202004)],x=&#39;TIME_PERIOD&#39;,y=&#39;value&#39;,hue=&#39;LOCATION&#39;,kind=&#39;line&#39;,col=&#39;EDI&#39;)</code></pre>
+<pre><code>## &lt;seaborn.axisgrid.FacetGrid object at 0x00000000316BC3C8&gt;</code></pre>
+<pre class="python"><code>plt.show()</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-6-1.png" width="2035" /></p>
+<p>While we can see that the line graphs are depressed as the economic damage from the corona increases, there have been subtle but significant revisions to the historical values from preliminary to confirmed. We can also see that there is a lag in the release of statistical data by country. Belgium seems to be the slowest to release the data. When I have time, I would like to add a simple analysis of the forecasting model using this data.</p>
+</div>
+<div id="another-matter" class="section level2">
+<h2>4. Another matter…</h2>
+<p>Python 3 エンジニア認定データ分析試験に合格しました。合格率70%だけあって、かなり簡単でしたが<code>Python</code>を基礎から見返すいい機会になりました。今やっている業務ではデータ分析はおろか<code>Python</code>や<code>R</code>を使う機会すらないので、転職も含めた可能性を考えています。とりあえず、以下の資格を今年度中に取得する予定で、金融にこだわらずにスキルを活かせるポストを探していこうと思います。ダイエットと同じで宣言して自分を追い込まないと。。。</p>
+<p>I passed the Python 3 Engineer Certification Data Analysis exam. It was pretty easy, with only a 70% pass rate, but it was a good opportunity to revisit the basics of <code>Python</code>. I haven’t even had the opportunity to use <code>Python</code> or <code>R</code>, let alone data analysis, in the work I’m doing now, so I’m considering the possibility of a career change. In the meantime, I plan to get the following qualifications by the end of this year, and I’ll be looking for a post where I can use my skills without focusing on finance. Like a diet, I need to declare and push myself.</p>
+<ol style="list-style-type: decimal">
+<li>G Test</li>
+<li>Oracle Database Master Silver SQL</li>
+<li>Linuc level 1</li>
+<li>Fundamental Information Technology Engineer Examination</li>
+<li>AWS Certified Solutions Architect - Associate</li>
+</ol>
+<p>I will report on the status of my acceptance on my blog each time.</p>
+</div>

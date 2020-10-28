@@ -20,16 +20,6 @@
       <description>
 &lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
 
-&lt;div id=&#34;TOC&#34;&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;#やりたいこと&#34;&gt;0. やりたいこと&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#データの読み込み&#34;&gt;1. データの読み込み&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#前処理&#34;&gt;2. 前処理&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#jump統計量の計算&#34;&gt;3. Jump統計量の計算&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#ggplot2を用いた可視化&#34;&gt;4. ggplot2を用いた可視化&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#まとめ&#34;&gt;5. まとめ&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/div&gt;
 
 &lt;div id=&#34;やりたいこと&#34; class=&#34;section level2&#34;&gt;
 &lt;h2&gt;0. やりたいこと&lt;/h2&gt;
@@ -181,7 +171,7 @@ DataFrame Rolling_r_cpp(
 &lt;p&gt;&lt;code&gt;Rcpp::sourceCpp&lt;/code&gt;でコンパイルしたら、以下のように&lt;code&gt;R&lt;/code&gt;の関数として実行します。&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;system.time(results &amp;lt;- Rolling_r_cpp(JPYUSD,from))&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;##    ユーザ   システム       経過  
-##       0.03       0.00       0.03&lt;/code&gt;&lt;/pre&gt;
+##       0.01       0.00       0.01&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;はい。1200万件のデータの処理に1秒かかりません。便利ー。&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;summary(results)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;##       from                           r         
@@ -291,7 +281,7 @@ DataFrame Rolling_rbv_cpp(
 &lt;p&gt;では、これもコンパイルし、&lt;code&gt;R&lt;/code&gt;で実行します。&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;system.time(results &amp;lt;- results %&amp;gt;% Rolling_rbv_cpp(na_remove = FALSE))&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;##    ユーザ   システム       経過  
-##       0.24       0.08       0.31&lt;/code&gt;&lt;/pre&gt;
+##       0.22       0.10       0.33&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;こちらも一瞬ですね。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div id=&#34;jump統計量の計算&#34; class=&#34;section level2&#34;&gt;
