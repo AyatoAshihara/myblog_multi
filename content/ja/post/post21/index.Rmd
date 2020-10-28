@@ -18,7 +18,7 @@ summary: おはこんばんにちは。為替のTickデータを使った解析�
 output: 
   blogdown::html_page:
     number_sections: false
-    toc: true
+    keep_md: true
 ---
 
 ## 0. やりたいこと
