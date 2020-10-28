@@ -17,7 +17,7 @@ subtitle:
 
 # Date format
 #   Refer to https://sourcethemes.com/academic/docs/customization/#date-format
-date_format: 2006 jan
+date_format: 2006 Jan
 
 # Experiences.
 #   Add/remove as many `experience` blocks below as you like.

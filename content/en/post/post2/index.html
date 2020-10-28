@@ -1,0 +1,420 @@
+---
+title: "I built the Asset Allocation Model in R."
+author: admin
+date: 2019-02-17T00:00:00Z
+categories: ["Work-related"]
+tags: ["R"]
+draft : false
+featured: false
+image:
+  caption: ''
+  focal_point: ""
+  placement: 2
+  preview_only: false
+lastmod: 2019-03-03T00:00:00Z
+projects: []
+summary: We had an in-house workshop and spent the holidays locked up in the Library of Congress, fishing for prior research, which allowed us to build a subtle asset allocation model.
+output: 
+  blogdown::html_page:
+    number_sections: false
+    toc: true
+    df_print: "paged"
+---
+
+<script src="index_files/header-attrs/header-attrs.js"></script>
+<link href="index_files/pagedtable/css/pagedtable.css" rel="stylesheet" />
+<script src="index_files/pagedtable/js/pagedtable.js"></script>
+
+<div id="TOC">
+<ul>
+<li><a href="#minimum-variance-portfolio">1. Minimum Variance Portfolio</a></li>
+<li><a href="#how-to-predict-the-variance-covariance-matrix">2. How to predict the variance-covariance matrix</a>
+<ul>
+<li><a href="#a.-constant-conditional-correlation-ccc-model">A. Constant conditional correlation (CCC) model</a></li>
+<li><a href="#b.-dynamic-conditional-correlation-dcc-model">B. Dynamic Conditional Correlation (DCC) model</a></li>
+<li><a href="#c.-dynamic-equicorrelation-deco-model">C. Dynamic Equicorrelation (DECO) model</a></li>
+</ul></li>
+<li><a href="#collection-of-data-for-testing">3. Collection of data for testing</a></li>
+</ul>
+</div>
+
+<p>Hi. I attended a workshop on asset allocation at my place of work, so I’d like to run some simulations here, even though this field is completely outside my expertise. In this article, I would like to do an exercise on how to estimate the variance-covariance matrix (predictions) of a minimum variance portfolio as the base portfolio, referring to previous studies. The reference research is in the following paper (in the Journal of Operations Research).</p>
+<p><a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2947643">Asset Allocation with Correlation: A Composite Trade-Off</a></p>
+<div id="minimum-variance-portfolio" class="section level2">
+<h2>1. Minimum Variance Portfolio</h2>
+<p>I won’t go into a detailed explanation of the minimum variance portfolio here, but it is a portfolio that calculates the average return and variance of each asset (domestic stocks, foreign stocks, domestic bonds, foreign bonds, and alternatives), plots them on a quadratic plane of average return vertical and variance horizontal axes, calculates the range of possible investments, and then calculates the smallest variance in the set (see the chart below).</p>
+<div class="figure">
+<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/Minimum_variance_flontier_of_MPT.svg/1280px-Minimum_variance_flontier_of_MPT.svg.png" alt="" />
+<p class="caption">minimum variance portfolio</p>
+</div>
+<p>In an earlier study, Carroll et. al. (2017), the following is stated</p>
+<blockquote>
+<p>this paper focusses on minimum-variance portfolios requiring only estimates of asset covariance, hence bypassing the well-known problem of estimation error in forecasting expected asset returns.</p>
+</blockquote>
+<p>Even at present, it is difficult to estimate expected returns, and a minimum variance portfolio, which does not require it, is a useful and practical technique. The objective function of a minimum variance portfolio is, as the name implies, <strong>to minimize diversification</strong>. If we now denote the vector of collected returns for each asset by <span class="math inline">\(r\)</span>, the holding weight of each asset by <span class="math inline">\(\theta\)</span>, and the portfolio return by <span class="math inline">\(R_{p}\)</span>, then the overall portfolio variance <span class="math inline">\(var(R_{p})\)</span> can be written as follows.</p>
+<p><span class="math display">\[
+var(R_{p}) = var(r^{T}\theta) = E( (r^{T}\theta)(r^{T}\theta)^{T}) = \theta^{T}\Sigma\theta
+\]</span></p>
+<p>where <span class="math inline">\(Sigma\)</span> is the variance-covariance matrix of <span class="math inline">\(r\)</span>. Thus, the minimization problem is as follows</p>
+<p><span class="math display">\[
+\min_{\theta}(\theta^{T}\Sigma\theta) \\
+s.t 1^{T}\theta = 1
+\]</span></p>
+<p>Here we have added full investment as a constraint. Let’s use the Lagrangian to solve this problem. The Lagrange function <span class="math inline">\(L\)</span> is as follows</p>
+<p><span class="math display">\[
+L = \theta^{T}\Sigma\theta + \lambda(1^{T}\theta - 1)
+\]</span></p>
+<p>The first condition is</p>
+<p><span class="math display">\[
+\displaystyle\frac{\partial L}{\partial \theta} = 2\Sigma\theta + 1\lambda = 0 \\
+\displaystyle \frac{\partial L}{\partial \lambda} = 1^{T} \theta = 1
+\]</span></p>
+<p>Solving the first equation for <span class="math inline">\(\theta\)</span>, we find that</p>
+<p><span class="math display">\[
+\theta = \Sigma^{-1}1\lambda^{*}
+\]</span></p>
+<p>where <span class="math inline">\(\lambda^{*}=-1/2\lambda\)</span>. Substitute this into the second formula and solve for <span class="math inline">\(\lambda^{*}\)</span></p>
+<p><span class="math display">\[
+1^{T}\Sigma1\lambda^{*} = 1 \\
+\displaystyle \lambda^{*} = \frac{1}{1^{T}\Sigma^{-1}1}
+\]</span></p>
+<p>Since <span class="math inline">\(\theta = \Sigma^{-1}1\lambda^{*}\)</span>, erasing <span class="math inline">\(\lambda^{*}\)</span> will cause it to be</p>
+<p><span class="math display">\[
+\displaystyle \theta_{gmv} = \frac{\Sigma^{-1}1}{1^{T}\Sigma^{-1}1}
+\]</span></p>
+<p>and we can now find the optimal weight. For now, I’ll implement this in R.</p>
+<pre class="r"><code>gmv &lt;- function(r_dat,r_cov){
+  library(MASS)
+  i &lt;- matrix(1,NCOL(r_dat),1)
+  r_weight &lt;- (ginv(r_cov)%*%i)/as.numeric(t(i)%*%ginv(r_cov)%*%i)
+  wr_dat &lt;- r_dat*as.numeric(r_weight)
+  portfolio &lt;- apply(wr_dat,1,sum)
+  pr_dat &lt;- data.frame(wr_dat,portfolio)
+  sd &lt;- sd(portfolio)
+  result &lt;- list(r_weight,pr_dat,sd)
+  names(result) &lt;- c(&quot;weight&quot;,&quot;return&quot;,&quot;portfolio risk&quot;) 
+  return(result)
+}
+
+nlgmv &lt;- function(r_dat,r_cov){
+  qp.out &lt;- solve.QP(Dmat=r_cov,dvec=rep(0,NCOL(r_dat)),Amat=cbind(rep(1,NCOL(r_dat)),diag(NCOL(r_dat))),
+           bvec=c(1,rep(0,NCOL(r_dat))),meq=1)
+  r_weight &lt;- qp.out$solution
+  wr_dat &lt;- r_dat*r_weight
+  portfolio &lt;- apply(wr_dat,1,sum)
+  pr_dat &lt;- data.frame(wr_dat,portfolio)
+  sd &lt;- sd(portfolio)
+  result &lt;- list(r_weight,pr_dat,sd)
+  names(result) &lt;- c(&quot;weight&quot;,&quot;return&quot;,&quot;portfolio risk&quot;)
+  return(result)
+}</code></pre>
+<p>The input is a return and variance-covariance matrix for each asset. The output is the weight, return and risk. <code>nlgmv</code> is a short-sale constrained version of the minimum variance portfolio. Since we cannot get an analytical solution, we are trying to get a numerical solution.</p>
+</div>
+<div id="how-to-predict-the-variance-covariance-matrix" class="section level2">
+<h2>2. How to predict the variance-covariance matrix</h2>
+<p>We have found the formula for the minimum variance portfolio. The next step is to analyze how to find the input, the variance-covariance matrix. I think the most primitive approach would be the historical approach of finding the covariance matrix for a sample of return data available before that point in time, and then finding the minimum variance portfolio by fixing the value of the covariance matrix (i.e., the weights are also fixed). However, since this is just using historical averages for future projections, I’m sure there will be all sorts of problems. As a non-specialist, I can think of a situation where the return on asset A declined significantly the day before, but the variance of this asset is expected to remain high tomorrow, and the effect of yesterday is diluted by using the average. And I feel that not changing the weights from the start would also move away from the optimal point over time. However, there seems to be some trial and error in this area as to how to estimate it then. Also, in Carroll et. al. (2017), it is stated that,</p>
+<blockquote>
+<p>The estimation of covariance matrices for portfolios with a large number of assets still remains a fundamental challenge in portfolio optimization.</p>
+</blockquote>
+<p>The estimates in this paper are based on the following models. All of them are unique in that the variance-covariance matrix is time-varying.</p>
+<div id="a.-constant-conditional-correlation-ccc-model" class="section level3">
+<h3>A. Constant conditional correlation (CCC) model</h3>
+<p>The original paper is <a href="https://www.jstor.org/stable/2109358?read-now=1&amp;seq=3#page_scan_tab_contents">here</a>.</p>
+<p>First, from the relationship between the variance-covariance matrix and the correlation matrix, we have <span class="math inline">\(\Sigma_{t} = D_{t}R_{t}D_{t}\)</span>, where <span class="math inline">\(R_{t}\)</span> is the variance-covariance matrix and <span class="math inline">\(D_{t}\)</span> is <span class="math inline">\(diag(\sigma_{1,t},...,\sigma_{N,t})\)</span>, a matrix whose diagonal components are the standard deviation of each asset in <span class="math inline">\(tt\)</span> period. From here, we estimate <span class="math inline">\(D_{t}\)</span> and <span class="math inline">\(R_{t}\)</span> separately. First, <span class="math inline">\(D_{t}\)</span> is estimated using the following multivariate GARCH model (1,1).</p>
+<p><span class="math display">\[
+r_{t} = \mu + u_{t} \\
+u_{t} = \sigma_{t}\epsilon \\
+\sigma_{t}^{2} = \alpha_{0} + \alpha_{1}u_{t-1}^{2} + \alpha_{2}\sigma_{t-1}^{2} \\
+\epsilon_{t} = NID(0,1) \\
+E(u_{t}|u_{t-1}) = 0
+\]</span>
+where <span class="math inline">\(\mu\)</span> is the sample mean of the returns. <span class="math inline">\(\alpha_{i}\)</span> is the parameter to be estimated. Since we are estimating <span class="math inline">\(D_{t}\)</span> with GARCH, we can say that we are modeling a relationship where the distribution of returns follows a thicker base distribution than the normal distribution and where the change in returns is not constant but depends on the variance of the previous day. We can say that we have estimated <span class="math inline">\(D_{t}\)</span> in this way. The next step in the estimation of <span class="math inline">\(R_{t}\)</span> is to take a historical approach to the estimation of <span class="math inline">\(R_{t}\)</span>, in which the returns are sampled. In other words, <span class="math inline">\(R_{t}\)</span> is a constant. Thus, we are making the assumption that the magnitude of return variation varies with time, but the relative relationship of each asset is invariant.</p>
+</div>
+<div id="b.-dynamic-conditional-correlation-dcc-model" class="section level3">
+<h3>B. Dynamic Conditional Correlation (DCC) model</h3>
+<p>The original paper is <a href="http://www.cass.city.ac.uk/__data/assets/pdf_file/0003/78960/Week7Engle_2002.pdf">here</a>。</p>
+<p>こちらのモデルでは、<span class="math inline">\(D_{t}\)</span>を求めるところまでは①と同じですが、[<span class="math inline">\(R_{t}\)</span>の求め方が異なっており、ARMA(1,1)を用いて推計します。相関行列はやはり定数ではないということで、<span class="math inline">\(tex:t\)</span>期までに利用可能なリターンを用いて推計をかけようということになっています。このモデルの相関行列<span class="math inline">\(R_{t}\)</span>は、</p>
+<p>This model is the same as (1) up to the point of finding <span class="math inline">\(D_{t}\)</span>, but the way of finding <span class="math inline">\(R_{t}\)</span> is different, and we use <code>ARMA(1,1)</code> to estimate it. Since the correlation matrix is still not a constant, we are going to use the available returns up to the <span class="math inline">\(t\)</span> period to make the estimate. The correlation matrix <span class="math inline">\(R_{t}\)</span> in this model is</p>
+<p><span class="math display">\[
+R_{t} = diag(Q_{t})^{-1/2}Q_{t}diag(Q_{t})^{-1/2}
+\]</span></p>
+<p>where <span class="math inline">\(Q_{t}\)</span> is a conditional variance-covariance matrix in the <span class="math inline">\(t\)</span> period, formulated as follows,</p>
+<p><span class="math display">\[
+Q_{t} = \bar{Q}(1-a-b) + adiag(Q_{t-1})^{1/2}\epsilon_{i,t-1}\epsilon_{i,t-1}diag(Q_{t-1})^{1/2} + bQ_{t-1}
+\]</span></p>
+<p>where <span class="math inline">\(\bar{Q}\)</span> is the variance-covariance matrix calculated in a historical way and <span class="math inline">\(a,b\)</span> is the parameter. This method differs from the previous one in that it assumes that not only does the magnitude of return variation vary with time, but also the relative relationship of each asset changes over time. Since we have observed some events in which the returns of all assets fall and the correlation of each asset becomes positive during a financial crisis, this formulation may be attractive.</p>
+</div>
+<div id="c.-dynamic-equicorrelation-deco-model" class="section level3">
+<h3>C. Dynamic Equicorrelation (DECO) model</h3>
+<p>The original paper is <a href="https://faculty.chicagobooth.edu/bryan.kelly/research/pdf/deco.pdf">here</a>。</p>
+<p>I haven’t read this paper exactly yet, but from the definition of the correlation matrix <span class="math inline">\(R_{t}\)</span> becomes</p>
+<p><span class="math display">\[
+R_{t} = (1-\rho_{t})I_{N} + \rho_{t}1
+\]</span></p>
+<p>Here, <span class="math inline">\(\rho_{t}\)</span> is a scalar and a coefficient for the degree of equicorrelation, and I understand that equicorrelation is an average pair-wise correlation. In other words, if there are no missing values, it’s no different than a normal correlation. However, it seems to be a good estimator in that respect, because as assets increase, such problems need to be addressed. We can calculate <span class="math inline">\(\rho_{t}\)</span> as follows.</p>
+<p><span class="math display">\[
+\displaystyle \rho_{t} = \frac{1}{N(N-1)}(\iota^{T}R_{t}^{DCC}\iota - N) = \frac{2}{N(N-1)}\sum_{i&gt;j}\frac{q_{ij,t}}{\sqrt{q_{ii,t} q_{jj,t}}}
+\]</span></p>
+<p>where <span class="math inline">\(\iota\)</span> is an <span class="math inline">\(N×1\)</span> vector with all elements being 1. And <span class="math inline">\(q_{ij,t}\)</span> is the <span class="math inline">\(i,j\)</span> element of <span class="math inline">\(Q_{t}\)</span>.</p>
+<p>Now that we’ve modeled the variance-covariance matrix, we’ll implement it so far in <code>R</code>.</p>
+<pre class="r"><code>carroll &lt;- function(r_dat,FLG){
+  
+  library(rmgarch)
+  
+  if(FLG == &quot;benchmark&quot;){
+    H &lt;- cov(r_dat)
+  }else{
+    #1. define variables
+    N &lt;- NCOL(r_dat) # the number of assets
+    
+    #2. estimate covariance matrix
+    basic_garch = ugarchspec(mean.model = list(armaOrder = c(0, 0),include.mean=TRUE), variance.model = list(garchOrder = c(1,1), model = &#39;sGARCH&#39;), distribution.model = &#39;norm&#39;)
+    multi_garch = multispec(replicate(N, basic_garch))
+    dcc_set = dccspec(uspec = multi_garch, dccOrder = c(1, 1), distribution = &quot;mvnorm&quot;,model = &quot;DCC&quot;)
+    fit_dcc_garch = dccfit(dcc_set, data = r_dat, fit.control = list(eval.se = TRUE))
+    forecast_dcc_garch &lt;- dccforecast(fit_dcc_garch)
+    if (FLG == &quot;CCC&quot;){
+      #Constant conditional correlation (CCC) model
+      D &lt;- sigma(forecast_dcc_garch)
+      R_ccc &lt;- cor(r_dat)
+      H &lt;- diag(D[,,1])%*%R_ccc%*%diag(D[,,1])
+      colnames(H) &lt;- colnames(r_dat)
+      rownames(H) &lt;- colnames(r_dat)
+    }
+    else{
+      #Dynamic Conditional Correlation (DCC) model
+      H &lt;- as.matrix(rcov(forecast_dcc_garch)[[1]][,,1])
+      if (FLG == &quot;DECO&quot;){
+        #Dynamic Equicorrelation (DECO) model
+        one &lt;- matrix(1,N,N)
+        iota &lt;- rep(1,N)
+        Q_dcc &lt;- rcor(forecast_dcc_garch,type=&quot;Q&quot;)[[1]][,,1]
+        rho &lt;- as.vector((N*(N-1))^(-1)*(t(iota)%*%Q_dcc%*%iota-N))
+        D &lt;- sigma(forecast_dcc_garch)
+        R_deco &lt;- (1-rho)*diag(1,N,N) + rho*one
+        H &lt;- diag(D[,,1])%*%R_deco%*%diag(D[,,1])
+        colnames(H) &lt;- colnames(r_dat)
+        rownames(H) &lt;- colnames(r_dat)
+      }
+    }
+  }
+  return(H)
+}</code></pre>
+<p>I shouldn’t normally use the package, but since it’s an exercise today I’m only going to pursue the results of the estimates, and I’ll be writing a post about GARCH in the next week or so.
+Now we’re ready to go. We can now put the return data into this function to calculate the variance-covariance matrix and use it to calculate the minimum variance portfolio.</p>
+</div>
+</div>
+<div id="collection-of-data-for-testing" class="section level2">
+<h2>3. Collection of data for testing</h2>
+<p>The data was based on the following article.</p>
+<p>(Introduction to Asset Allocation)[<a href="https://www.r-bloggers.com/introduction-to-asset-allocation/" class="uri">https://www.r-bloggers.com/introduction-to-asset-allocation/</a>]</p>
+<p>We used NAV data for an ETF (iShares) that is linked to the following index</p>
+<ul>
+<li>S&amp;P500</li>
+<li>NASDAQ100</li>
+<li>MSCI Emerging Markets</li>
+<li>Russell 2000</li>
+<li>MSCI EAFE</li>
+<li>US 20 Year Treasury(the Barclays Capital 20+ Year Treasury Index)</li>
+<li>U.S. Real Estate(the Dow Jones US Real Estate Index)</li>
+<li>gold bullion market</li>
+</ul>
+<p>The first step is to collect data.</p>
+<pre class="r"><code>library(quantmod)
+
+#**************************
+# ★8 ASSETS SIMULATION
+# SPY - S&amp;P 500 
+# QQQ - Nasdaq 100
+# EEM - Emerging Markets
+# IWM - Russell 2000
+# EFA - EAFE
+# TLT - 20 Year Treasury
+# IYR - U.S. Real Estate
+# GLD - Gold
+#**************************
+
+# load historical prices from Yahoo Finance
+symbol.names = c(&quot;S&amp;P 500&quot;,&quot;Nasdaq 100&quot;,&quot;Emerging Markets&quot;,&quot;Russell 2000&quot;,&quot;EAFE&quot;,&quot;20 Year Treasury&quot;,&quot;U.S. Real Estate&quot;,&quot;Gold&quot;)
+symbols = c(&quot;SPY&quot;,&quot;QQQ&quot;,&quot;EEM&quot;,&quot;IWM&quot;,&quot;EFA&quot;,&quot;TLT&quot;,&quot;IYR&quot;,&quot;GLD&quot;)
+getSymbols(symbols, from = &#39;1980-01-01&#39;, auto.assign = TRUE)
+
+#gn dates for all symbols &amp; convert to monthly
+hist.prices = merge(SPY,QQQ,EEM,IWM,EFA,TLT,IYR,GLD)
+month.ends = endpoints(hist.prices, &#39;day&#39;)
+hist.prices = Cl(hist.prices)[month.ends, ]
+colnames(hist.prices) = symbols
+
+# remove any missing data
+hist.prices = na.omit(hist.prices[&#39;1995::&#39;])
+
+# compute simple returns
+hist.returns = na.omit( ROC(hist.prices, type = &#39;discrete&#39;) )
+
+# compute historical returns, risk, and correlation
+ia = list()
+ia$expected.return = apply(hist.returns, 2, mean, na.rm = T)
+ia$risk = apply(hist.returns, 2, sd, na.rm = T)
+ia$correlation = cor(hist.returns, use = &#39;complete.obs&#39;, method = &#39;pearson&#39;)
+
+ia$symbols = symbols
+ia$symbol.names = symbol.names
+ia$n = length(symbols)
+ia$hist.returns = hist.returns
+
+# convert to annual, year = 12 months
+annual.factor = 12
+ia$expected.return = annual.factor * ia$expected.return
+ia$risk = sqrt(annual.factor) * ia$risk
+
+rm(SPY,QQQ,EEM,IWM,EFA,TLT,IYR,GLD)</code></pre>
+<p>Here’s how the returns are plotted.</p>
+<pre class="r"><code>PerformanceAnalytics::charts.PerformanceSummary(hist.returns, main = &quot;Performance summary&quot;)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p>Next, we’ll code the backtest. We’ll publish the code all at once.</p>
+<pre class="r"><code># BACK TEST
+backtest &lt;- function(r_dat,FLG,start_date,span,learning_term,port){
+  #-----------------------------------------
+  # BACKTEST
+  # r_dat - return data(xts object) 
+  # FLG - flag(CCC,DCC,DECO)
+  # start_date - start date for backtest
+  # span - rebalance frequency
+  # learning_term - learning term (days)
+  # port - method of portfolio optimization
+  #-----------------------------------------
+  
+  library(stringi)
+
+  initial_dat &lt;- r_dat[stri_c(as.Date(start_date)-learning_term,&quot;::&quot;,as.Date(start_date))]
+  for (i in NROW(initial_dat):NROW(r_dat)) {
+    if (i == NROW(initial_dat)){
+      H &lt;- carroll(initial_dat[1:(NROW(initial_dat)-1),],FLG)
+      if (port == &quot;nlgmv&quot;){
+        result &lt;- nlgmv(initial_dat,H)
+      }else if (port == &quot;risk parity&quot;){
+        result &lt;- risk_parity(initial_dat,H)
+      }
+      weight &lt;- t(result$weight)
+      colnames(weight) &lt;- colnames(initial_dat)
+      p_return &lt;- initial_dat[NROW(initial_dat),]*result$weight
+    } else {
+      if (i %in% endpoints(r_dat,span)){
+        H &lt;- carroll(test_dat[1:(NROW(test_dat)-1),],FLG)
+        if (port == &quot;nlgmv&quot;){
+          result &lt;- nlgmv(test_dat,H)
+        }else if (port == &quot;risk parity&quot;){
+          result &lt;- risk_parity(test_dat,H)
+        }
+        
+      }
+      weight &lt;- rbind(weight,t(result$weight))
+      p_return &lt;- rbind(p_return,test_dat[NROW(test_dat),]*result$weight)
+    }
+    if (i != NROW(r_dat)){
+      term &lt;- stri_c(index(r_dat[i+1,])-learning_term,&quot;::&quot;,index(r_dat[i+1,])) 
+      test_dat &lt;- r_dat[term]
+    }
+  }
+  p_return$portfolio &lt;- xts(apply(p_return,1,sum),order.by = index(p_return))
+  weight.xts &lt;- xts(weight,order.by = index(p_return))
+
+  result &lt;- list(p_return,weight.xts)
+  names(result) &lt;- c(&quot;return&quot;,&quot;weight&quot;)
+  return(result)
+}
+
+CCC &lt;- backtest(hist.returns,&quot;CCC&quot;,&quot;2007-01-04&quot;,&quot;months&quot;,365,&quot;risk parity&quot;)
+DCC &lt;- backtest(hist.returns,&quot;DCC&quot;,&quot;2007-01-04&quot;,&quot;months&quot;,365,&quot;risk parity&quot;)
+DECO &lt;- backtest(hist.returns,&quot;DECO&quot;,&quot;2007-01-04&quot;,&quot;months&quot;,365,&quot;risk parity&quot;)
+benchmark &lt;- backtest(hist.returns,&quot;benchmark&quot;,&quot;2007-01-04&quot;,&quot;months&quot;,365,&quot;risk parity&quot;)
+
+result &lt;- merge(CCC$return$portfolio,DCC$return$portfolio,DECO$return$portfolio,benchmark$return$portfolio)
+colnames(result) &lt;- c(&quot;CCC&quot;,&quot;DCC&quot;,&quot;DECO&quot;,&quot;benchmark&quot;)</code></pre>
+<p>Here’s a graph of the calculation results.</p>
+<pre class="r"><code>PerformanceAnalytics::charts.PerformanceSummary(result,main = &quot;BACKTEST&quot;)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p>I did not use the minimum variance portfolio defined above because I imposed a short sale constraint. Apparently it’s difficult to solve analytically with this alone, so I’m going to solve numerically. I used a weekly rebalancing period, so it took me a while to calculate the results on my own PC, but I was able to calculate the results.</p>
+<p>Since Lehman, it appears to have outperformed the benchmark equal weighted portfolio. In particular, DECO is looking good. I would like to rethink the meaning of Equicorrelation. The change in each incorporation ratio is as follows.</p>
+<pre class="r"><code># plot allocation weighting
+d_allocation &lt;- function(ggweight,title){
+  #install.packages(&quot;tidyverse&quot;)
+  library(tidyverse)
+  ggweight &lt;- gather(ggweight,key=ASSET,value=weight,-Date,-method)
+  ggplot(ggweight, aes(x=Date, y=weight,fill=ASSET)) +
+    geom_area(colour=&quot;black&quot;,size=.1) +
+    scale_y_continuous(limits = c(0,1)) +
+    labs(title=title) + facet_grid(method~.)
+}
+
+gmv_weight &lt;- rbind(data.frame(CCC$weight,method=&quot;CCC&quot;,Date=index(CCC$weight)),data.frame(DCC$weight,method=&quot;DCC&quot;,Date=index(DCC$weight)),data.frame(DECO$weight,method=&quot;DECO&quot;,Date=index(DECO$weight)))
+
+# plot allocation weighting
+d_allocation(gmv_weight,&quot;GMV Asset Allocation&quot;)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<p>They seem to have increased their allocation to TLT, or U.S. Treasuries, during Lehman, while CCC and DCC have a high allocation to U.S. Treasuries in other areas as well, and the often-cited problem of a minimally diversified portfolio seems to be occurring here as well. On the other hand, DECO has a unique mix ratio, and I think we need to go back and read the paper again.</p>
+<p>PS（2019/3/3）
+So far, I’ve been doing the analysis with a minimum variance portfolio, but I also wanted to see the results of risk parity, so I wrote the code for that as well.</p>
+<pre class="r"><code>risk_parity &lt;- function(r_dat,r_cov){
+  fn &lt;- function(weight, r_cov) {
+    N &lt;- NROW(r_cov)
+    risks &lt;-  weight * (r_cov %*% weight)
+    g &lt;- rep(risks, times = N) - rep(risks, each = N)
+  return(sum(g^2))
+  }
+  dfn &lt;- function(weight,r_cov){
+    out &lt;- weight
+    for (i in 0:length(weight)) {
+      up &lt;- dn &lt;- weight
+      up[i] &lt;- up[i]+.0001
+      dn[i] &lt;- dn[i]-.0001
+      out[i] = (fn(up,r_cov) - fn(dn,r_cov))/.0002
+    }
+    return(out)
+  }
+  std &lt;- sqrt(diag(r_cov)) 
+  x0 &lt;- 1/std/sum(1/std)
+  res &lt;- nloptr::nloptr(x0=x0,
+                 eval_f=fn,
+                 eval_grad_f=dfn,
+                 eval_g_eq=function(weight,r_cov) { sum(weight) - 1 },
+                 eval_jac_g_eq=function(weight,r_cov) { rep(1,length(std)) },
+                 lb=rep(0,length(std)),ub=rep(1,length(std)),
+                 opts = list(&quot;algorithm&quot;=&quot;NLOPT_LD_SLSQP&quot;,&quot;print_level&quot; = 0,&quot;xtol_rel&quot;=1.0e-8,&quot;maxeval&quot; = 1000),
+                 r_cov = r_cov)
+  r_weight &lt;- res$solution
+  names(r_weight) &lt;- colnames(r_cov)
+  wr_dat &lt;- r_dat*r_weight
+  portfolio &lt;- apply(wr_dat,1,sum)
+  pr_dat &lt;- data.frame(wr_dat,portfolio)
+  sd &lt;- sd(portfolio)
+  result &lt;- list(r_weight,pr_dat,sd)
+  names(result) &lt;- c(&quot;weight&quot;,&quot;return&quot;,&quot;portfolio risk&quot;)
+  return(result)
+  }
+
+CCC &lt;- backtest(hist.returns,&quot;CCC&quot;,&quot;2007-01-04&quot;,&quot;months&quot;,365,&quot;risk parity&quot;)
+DCC &lt;- backtest(hist.returns,&quot;DCC&quot;,&quot;2007-01-04&quot;,&quot;months&quot;,365,&quot;risk parity&quot;)
+DECO &lt;- backtest(hist.returns,&quot;DECO&quot;,&quot;2007-01-04&quot;,&quot;months&quot;,365,&quot;risk parity&quot;)
+benchmark &lt;- backtest(hist.returns,&quot;benchmark&quot;,&quot;2007-01-04&quot;,&quot;months&quot;,365,&quot;risk parity&quot;)
+
+result &lt;- merge(CCC$return$portfolio,DCC$return$portfolio,DECO$return$portfolio,benchmark$return$portfolio)
+colnames(result) &lt;- c(&quot;CCC&quot;,&quot;DCC&quot;,&quot;DECO&quot;,&quot;benchmark&quot;)</code></pre>
+<p>Here’s the result.</p>
+<pre class="r"><code>PerformanceAnalytics::charts.PerformanceSummary(result, main = &quot;BACKTEST COMPARISON&quot;)
+
+library(plotly)
+
+# plot allocation weighting
+riskparity_weight &lt;- rbind(data.frame(CCC$weight,method=&quot;CCC&quot;,Date=index(CCC$weight)),data.frame(DCC$weight,method=&quot;DCC&quot;,Date=index(DCC$weight)),data.frame(DECO$weight,method=&quot;DECO&quot;,Date=index(DECO$weight)),data.frame(benchmark$weight,method=&quot;benchmark&quot;,Date=index(benchmark$weight)))</code></pre>
+<pre class="r"><code>PerformanceAnalytics::charts.PerformanceSummary(result, main = &quot;BACKTEST COMPARISON&quot;)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+<pre class="r"><code>riskparity_weight &lt;- rbind(data.frame(CCC$weight,method=&quot;CCC&quot;,Date=index(CCC$weight)),data.frame(DCC$weight,method=&quot;DCC&quot;,Date=index(DCC$weight)),data.frame(DECO$weight,method=&quot;DECO&quot;,Date=index(DECO$weight)),data.frame(benchmark$weight,method=&quot;benchmark&quot;,Date=index(benchmark$weight)))
+
+# plot allocation weighting
+d_allocation(riskparity_weight, &quot;Risk Parity Asset Allocation&quot;)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-15-2.png" width="672" /></p>
+<p>The results are positive, with all methods outperforming benchmark.
+As expected, the estimation of the variance-covariance matrix seems to be performing well. The good performance of DECO may also be due to the fact that it uses the average of the correlation coefficients of each asset pair in the correlation matrix, which resulted in a greater inclusion of risk assets than the other methods. The weights are as follows</p>
+<p>That’s it for today, for now.</p>
+</div>
