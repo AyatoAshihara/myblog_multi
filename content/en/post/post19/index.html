@@ -1,0 +1,261 @@
+---
+title: "Is that backtest really reproducible?"
+author: admin
+date: 2020-07-08T00:00:00Z
+categories: ["single-shot","work-related","statistics"]
+tags: ["machine-learning","finance","time-series_analysis"]
+draft: false
+featured: false
+slug: ["Backtesting"]
+image:
+  caption: ''
+  focal_point: ""
+  placement: 2
+  preview_only: false
+lastmod: ""
+projects: []
+summary: I'm sure that if you are a quants and are planning a new strategy, you may want to backtest to see its performance. In this post, I've looked at the impact of backtesting overfitting on out-of-sample performance and compiled a reminder.
+output: 
+  blogdown::html_page:
+    number_sections: false
+    toc: true
+---
+
+<script src="index_files/header-attrs/header-attrs.js"></script>
+
+<div id="TOC">
+<ul>
+<li><a href="#what-is-backtesting">1. What is “Backtesting”?</a></li>
+<li><a href="#backtesting-overfits.">2. Backtesting overfits.</a></li>
+<li><a href="#what-is-the-distribution-that-the-sharpe-ratio-follows">3. What is the distribution that the Sharpe ratio follows?</a></li>
+<li><a href="#trying-to-derive-the-minimum-backtest-length">4. Trying to derive <code>the minimum backtest length</code></a></li>
+<li><a href="#at-the-end">4. At the end</a></li>
+</ul>
+</div>
+
+<div id="what-is-backtesting" class="section level2">
+<h2>1. What is “Backtesting”?</h2>
+<p>Backtesting is an algorithmic historical simulation of an investment strategy. Backtesting uses an algorithm to calculate the gains and losses that would have been incurred if the investment strategy you have drafted had been implemented over a period of time. Common statistics that evaluate the performance of an investment strategy, such as the Sharpe ratio and the information ratio, are used. Investors typically examine these back-testing statistics to determine asset allocation to the best performing investment (management) strategies, so asset managers do trial-and-error back-testing of a bloody number of times for good performance and present customer by that materials.</p>
+<p><img src="https://stat.ameba.jp/user_images/20190212/22/nash210/51/5f/j/o0705061514355131242.jpg" alt="Backtest" />
+From an investor’s perspective, it is important to distinguish between in-sample (IS) and out-of-sample (OOS) performance of a back-tested investment strategy; IS performance is defined as the sample used to design the investment strategy (referred to in the machine learning literature as the “training period” or “training set”) It is what is called “OOS”) simulated in a sample (aka “test set”). OOS performance, on the other hand, is simulated on a sample (aka “test set”) that was not used to design the investment strategy. Since backtesting predicts the effectiveness of an investment strategy with its performance, it can be guaranteed to be reproducible and realistic if the IS performance matches the OOS performance. However, it is difficult to judge whether the backtest is reliable when you receive it because the results of the out-sample are future results. It cannot be called a pure out-sample as long as the results of the OOS can be fed back to improve the strategy.</p>
+<p><img src="http://www.triton.biz/blog1/wp-content/uploads/2018/04/pic001.png" /></p>
+<p>So, when you receive a backtest with good results from a fund manager, it is very important that you manage to assess how realistic the simulation is. It is also important for fund managers to understand the uncertainty of their own backtesting results. In this post, we will look at how to evaluate the realism of a backtesting simulation and what to look out for in order to ensure a repeatable backtest.</p>
+</div>
+<div id="backtesting-overfits." class="section level2">
+<h2>2. Backtesting overfits.</h2>
+<p><a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2308659">Bailey, Borwein, López de Prado and Zhu (2015)</a>, which shows that any financial time series can be used to backtest We argue that it is (relatively) easy to overfit (overlearn) a simulation. Here, overfitting is a machine learning concept that describes a situation in which the model focuses on specific observational data (IS data) rather than on the general structure.</p>
+<p>Bailey et. al. (2015) cite a situation where the backtesting results of a stock strategy are not good as an example of this claim. As the name implies, backtesting uses historical data, so it is possible to identify specific stocks that are experiencing losses and design the trading system to improve performance by adding some parameters to remove recommendations for those stocks ( (a technique known as “data snooping”). With a few repetitions of the simulation, you can derive “optimal parameters” that benefit from characteristics that are present in a particular sample but may be rare in the population.</p>
+<p>There is a vast accumulation of research in the machine learning literature to address the problem of overfitting. But Bailey et. al. (2015) argue that the methods proposed in the context of machine learning are generally not applicable to multiple investment problems. The reasons for this seem to be the following four points.</p>
+<ol style="list-style-type: decimal">
+<li><p>Machine learning methods to prevent overfitting require explicit point estimates and confidence intervals in the domain in which the event is defined in order to assess the explanatory power and quality of the prediction, because few investment strategies make such explicit predictions.</p>
+<ul>
+<li>“The E-mini S&amp;P 500 is predicted to close around 1,600 with one standard deviation of 5 points at Friday’s close,” for example, but rather qualitative recommendations such as “buy” or “strong buy” are typically provided. Moreover, these forecasts do not have an explicit expiration date and are subject to change in the event of an unexpected event. On the other hand, the quantitative forecast is stated as Friday’s close.</li>
+</ul></li>
+<li><p>even if a particular investment strategy relies on a prediction formula, other components of the investment strategy may be overfitted.</p>
+<ul>
+<li>In other words, there are many ways to overfit an investment strategy other than simply adjusting the prediction equation.</li>
+</ul></li>
+<li><p>because the methods of regression overfitting are parametric and involve many assumptions about data that are unobservable in the case of finance.</p></li>
+<li><p>because some methods do not control for the number of trials.</p></li>
+</ol>
+<p>Bailey et. al. (2015) show that a <strong>comparatively low number of trials</strong> is needed to identify investment strategies with relatively poor backtesting performance. Think of the number of trials here as the number of trials and errors. It also calculates <code>the minimum backtest length</code> (MinBTL), which is the length of the backtest required for the number of trials. In this paper, the Sharpe ratio is always used to evaluate performance, but it can be applied to other performance measures as well. Let’s take a look at what it does.</p>
+</div>
+<div id="what-is-the-distribution-that-the-sharpe-ratio-follows" class="section level2">
+<h2>3. What is the distribution that the Sharpe ratio follows?</h2>
+<p>To derive the MinBTL, we first derive the (asymptotic) distribution of the Sharpe ratio. To begin with, the design of an investment strategy usually starts with the prior knowledge or belief that a particular pattern may help to predict the future value of a financial variable. For example, if you are aware of the lead-lag effect between bonds of different maturities, you can design a strategy that bets on a return to the equilibrium value if the yield curve rises. This model could take the form of a cointegration equation, a vector error correction model, or a system of stochastic differential equations.</p>
+<p>The number of such model configurations (or trials) is vast, and fund managers naturally want to choose the one that maximizes the performance of their strategy, and to do so they conduct historical simulations (back testing) (see above). Backtesting evaluates the optimal sample size, frequency of signal updates, risk sizing, stop loss, maximum holding period, etc., in combination with other variables.</p>
+<p>The Sharpe ratio used as a measure of performance assessment in this paper is a statistic that assesses the performance of a strategy based on a sample of historical returns, defined as the average excess return/standard deviation (risk) to BM. It is usually interpreted as “return to risk 1 standard deviation” and, depending on the asset class, if it is greater than 1, it can be considered a very good strategy. In the following, we will assume that the excess return <span class="math inline">\(r_t\)</span> of a strategy is a random variable of i.i.d. and follows a normal distribution. That is, we assume that the distribution of <span class="math inline">\(r_t\)</span> is independent of <span class="math inline">\(r_s(t\neq s)\)</span>. It is not a very realistic assumption, though.</p>
+<p><span class="math display">\[
+r_t \sim \mathcal{N}(\mu,\sigma^2)
+\]</span>
+where <span class="math inline">\(\mathcal{N}\)</span> is the normal distribution of the mean <span class="math inline">\(\mu\)</span> and the variance <span class="math inline">\(\sigma^2\)</span>. Now, the excess return <span class="math inline">\(r_{t}(q)\)</span> at time t~t-q+1 is defined (I’m ignoring the compounding part.)</p>
+<p><span class="math display">\[
+r_{t}(q) \equiv r_{t} + r_{t-1} + ... + r_{t-q+1}
+\]</span>
+Then, the annualized Sharpe ratio is represented</p>
+<p><span class="math display">\[
+\begin{eqnarray}
+SR(q) &amp;=&amp; \frac{E[r_{t}(q)]}{\sqrt{Var(r_{t}(q))}}\\
+&amp;=&amp; \frac{q\mu}{\sqrt{q}\sigma}\\
+&amp;=&amp; \frac{\mu}{\sigma}\sqrt{q}
+\end{eqnarray}
+\]</span></p>
+<p>We can express this as where <span class="math inline">\(q\)</span> is the number (frequency) of returns per year. For example, <span class="math inline">\(q=365\)</span> for daily returns (excluding leap years).</p>
+<p>The true value of <span class="math inline">\(SR\)</span> cannot be known because <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\sigma\)</span> are generally unknown. So, let <span class="math inline">\(R_t\)</span> be the sample return and the risk-free rate <span class="math inline">\(R^f\)</span>(constant), we calculate the estimated Sharpe ratio by the sample mean of <span class="math inline">\(\hat{\mu}=1/T\sum_{t=1}^T R_{t}-R^f\)</span> and the sample standard deviation of <span class="math inline">\(\hat{\sigma}=\sqrt{1/T\sum_{t=1}^{T}(R_{t}-\hat{\mu})}\)</span> (where <span class="math inline">\(T\)</span> is the sample size to be back-tested).</p>
+<p><span class="math display">\[
+\hat{SR}(q) = \frac{\hat{\mu}}{\hat{\sigma}}\sqrt{q}
+\]</span>
+As an inevitable consequence, the calculation of <span class="math inline">\(SR\)</span> is likely to be accompanied by considerable estimation errors. Now, let us derive the main topic of this section, the asymptotic distribution of <span class="math inline">\(\hat{SR}\)</span>. First, since the asymptotic distributions of <span class="math inline">\(\hat{\mu}\)</span> and <span class="math inline">\(\hat{\sigma}^2\)</span> are finite and i.i.d., applying the central limit theorem derives</p>
+<p><span class="math display">\[
+\sqrt{T}\hat{\mu}\sim^{a}\mathcal{N}(\mu,\sigma^2), \\
+\sqrt{T}\hat{\sigma}^2\sim^a\mathcal{N}(\sigma^2,2\sigma^4)
+\]</span>
+ince the Sharpe ratio is a random variable which is calculated from this <span class="math inline">\(\hat{\mu}\)</span> and <span class="math inline">\(\hat{\sigma}^2\)</span>, let us denote this function as <span class="math inline">\(g(\hat{{\boldsymbol \theta}})\)</span> where <span class="math inline">\(\hat{{\boldsymbol \theta}}=(\hat{\mu},\hat{\sigma}^2)\)</span>. Now, since it is i.i.d., <span class="math inline">\(\hat{{\boldsymbol \theta}}\)</span> is independent of each other, and, from the above discussion, the asymptotic joint distribution is written as</p>
+<p><span class="math display">\[
+\sqrt{T}\hat{{\boldsymbol \theta}} \sim^a \mathcal{N}({\boldsymbol \theta},{\boldsymbol V_{\boldsymbol \theta}})
+\]</span>
+where <span class="math inline">\({\boldsymbol V_{\boldsymbol \theta}}\)</span> is</p>
+<p><span class="math display">\[
+{\boldsymbol V_{\boldsymbol \theta}} = \left( 
+    \begin{array}{cccc}
+      \sigma^2 &amp; 0\\
+      0 &amp; 2\sigma^4\\
+    \end{array}
+  \right)
+\]</span>
+Since the sharp ratio estimates are now only a function of <span class="math inline">\(g(\hat{{\boldsymbol \theta}})\)</span> and <span class="math inline">\(\hat{{\boldsymbol \theta}}\)</span>, from the delta method, the following</p>
+<p><span class="math display">\[
+\hat{SR} = g(\hat{{\boldsymbol \theta}}) \sim^a \mathcal{N}(g({\boldsymbol \theta}),\boldsymbol V_g)
+\]</span>
+asymptotically follows a normal distribution. where <span class="math inline">\(\boldsymbol V_g\)</span> is</p>
+<p><span class="math display">\[
+\boldsymbol V_g=\frac{\partial g}{\partial{\boldsymbol \theta}}{\boldsymbol V_{\boldsymbol \theta}}\frac{\partial g}{\partial{\boldsymbol \theta}&#39;}
+\]</span>
+<span class="math inline">\(g({\boldsymbol \theta})=\mu/\sigma\)</span>なので、
+Since <span class="math inline">\(g({\boldsymbol \theta})=\mu/\sigma\)</span>, then</p>
+<p><span class="math display">\[
+\frac{\partial g}{\partial{\boldsymbol \theta}&#39;} = \left[ 
+    \begin{array}{cccc}
+      \frac{\partial g}{\partial \mu}\\
+      \frac{\partial g}{\partial \sigma^2}\\
+    \end{array}
+  \right]
+  = \left[ 
+    \begin{array}{cccc}
+      \frac{1}{\sigma}\\
+      -\frac{\mu}{2\sigma^3}\\
+    \end{array}
+  \right]
+\]</span>
+Therefore, you can derive</p>
+<p><span class="math display">\[
+\begin{eqnarray}
+\boldsymbol V_g &amp;=&amp; \left(
+    \begin{array}{cccc}
+      \frac{\partial g}{\partial \mu}, \frac{\partial g}{\partial \sigma}\\
+    \end{array}
+  \right)
+  \left( 
+    \begin{array}{cccc}
+      \sigma^2 &amp; 0\\
+      0 &amp; 2\sigma^4\\
+    \end{array}
+  \right)
+  \left(
+    \begin{array}{cccc}
+      \frac{\partial g}{\partial \mu}\\
+      \frac{\partial g}{\partial \sigma}\\
+    \end{array}
+  \right) \\
+  &amp;=&amp; \left(
+    \begin{array}{cccc}
+      \frac{\partial g}{\partial \mu}\sigma^2, \frac{\partial g}{\partial \sigma}2\sigma^4\\
+    \end{array}
+  \right)
+    \left(
+    \begin{array}{cccc}
+      \frac{\partial g}{\partial \mu}\\
+      \frac{\partial g}{\partial \sigma}\\
+    \end{array}
+  \right) \\
+  &amp;=&amp; (\frac{\partial g}{\partial \mu})^2\sigma^2 + (\frac{\partial g}{\partial \sigma})^2\sigma^4 \\
+  &amp;=&amp; 1 + \frac{\mu^2}{2\sigma^2} \\
+  &amp;=&amp; 1 + \frac{1}{2}SR^2
+\end{eqnarray}
+\]</span>
+You may need to be careful when you see good performance because the variance tends to be exponentially larger as the absolute value of the Sharpe ratio increases. Here’s the distribution that the annualized Sharpe ratio estimate <span class="math inline">\(\hat{SR}(q)\)</span> follows</p>
+<p><span class="math display">\[
+\hat{SR}(q)\sim^a \mathcal{N}(\sqrt{q}SR,\frac{V(q)}{T}) \\
+V(q) = q{\boldsymbol V}_g = q(1 + \frac{1}{2}SR^2)
+\]</span>
+Now, if <span class="math inline">\(y\)</span> is the number of years of backtesting, we can write <span class="math inline">\(T=yq\)</span> and use this to rewrite the above equation as follows (for a 3-year measurement with daily returns, the sample size <span class="math inline">\(T\)</span> is <span class="math inline">\(T=3×365=1095\)</span>).</p>
+<p><span class="math display">\[
+\hat{SR}(q)\sim^a \mathcal{N}(\sqrt{q}SR,\frac{1+\frac{1}{2}SR^2}{y}) \tag{1}
+\]</span>
+The frequency <span class="math inline">\(q\)</span> affects the mean of the Sharpe ratio, but not the variance. We can now derive an asymptotic distribution of the Sharpe ratio estimates. Now, what do we wanted to do with this? We were thinking about the reliability of the backtest. In other words, what is the probability that a backtest of <span class="math inline">\(N\)</span> investment strategy ideas that FM twists and turns to develop a new product will produce a very high (good) value even though the true value of all of those Sharpe ratios is zero. In Bailey et. al. (2015), it was described as follows</p>
+<p><em>How high is the expected maximum Sharpe ratio IS among a set of strategy configurations where the true Sharpe ratio is zero?</em></p>
+<p>We also want to know how long you should be backtesting for in order to reduce the value of the expected maximum Sharpe ratio.</p>
+</div>
+<div id="trying-to-derive-the-minimum-backtest-length" class="section level2">
+<h2>4. Trying to derive <code>the minimum backtest length</code></h2>
+<p>The situation we are considering now is that let <span class="math inline">\(\mu=0\)</span> and <span class="math inline">\(y\)</span> 1 year for simplicity, then from equation (1) <span class="math inline">\(\hat{SR}(q)\)</span> follows the standard normal distribution <span class="math inline">\(\mathcal{N}(0,1)\)</span>. Now, we will consider the expected value of the maximum value <span class="math inline">\(\max[\hat{SR}]_N\)</span> of <span class="math inline">\(\hat{SR}_n(n=1,2,...N)\)</span>, but as those with good instincts will have noticed, the discussion goes into the context of extreme value statistics. Since <span class="math inline">\(\hat{SR}_n\sim\mathcal{N}(0,1)\)</span> is i.i.d., the extreme value distribution of that maximum statistic becomes Gumbel distribution from the Fisher-Tippett-Gnedenko theorem (sorry, I haven’t been able to follow the proof).</p>
+<p><span class="math display">\[
+\lim_{N\rightarrow\infty}prob[\frac{\max[\hat{SR}]_N-\alpha}{\beta}\leq x] = G(x) = e^{-e^{-x}}
+\]</span>
+where <span class="math inline">\(\alpha=Z(x)^{-1}[1-1/N], \beta=Z(x)^{-1}[1-1/Ne^{-1}]-\alpha\)</span>, and <span class="math inline">\(Z(x)\)</span> represents the cumulative distribution function of the standard normal distribution. The moment generating function of the Gumbel distribution <span class="math inline">\(M_x(t)\)</span> is written as</p>
+<p><span class="math display">\[
+\begin{eqnarray}
+M_x(t) &amp;=&amp; E[e^{tx}] = \int_{-\infty}^\infty e^{tx}e^{-x}e^{-e^{-x}}dx \\
+\end{eqnarray}
+\]</span>
+Converting variables with <span class="math inline">\(x=-\log(y)\)</span> gives <span class="math inline">\(dx/dy=-1/y=-(e^{-x})^{-1}\)</span>, so</p>
+<p><span class="math display">\[
+\begin{eqnarray}
+M_x(t) &amp;=&amp; \int_{\infty}^0-e^{-t\log(y)}e^{-y}dy \\
+&amp;=&amp; \int_{0}^\infty y^{-t}e^{-y}dy \\
+&amp;=&amp; \Gamma(1-t)
+\end{eqnarray}
+\]</span>
+where <span class="math inline">\(Gamma(x)\)</span> is a gamma function. From here, the expected value (mean) of the standardized maximum statistic is</p>
+<p><span class="math display">\[
+\begin{eqnarray}
+\lim_{N\rightarrow\infty} E[\frac{\max[\hat{SR}]_N-\alpha}{\beta}] &amp;=&amp; M_x&#39;(t)|_{t=0} \\
+&amp;=&amp; (-1)\Gamma&#39;(1) \\
+&amp;=&amp; (-1)(-\gamma) = \gamma
+\end{eqnarray}
+\]</span>
+Here, $… $ is the Euler-Mascheroni constant. Thus, when <span class="math inline">\(N\)</span> is large, the expected value of the maximum statistic of the standard normal distribution of i.i.d. is approximated as (<span class="math inline">\(N&gt;1\)</span>)</p>
+<p><span class="math display">\[
+E[\max[\hat{SR}]] \approx \alpha + \gamma\beta = (1-\gamma)Z^{-1}[1-\frac{1}{N}]+\gamma Z^{-1}[1-\frac{1}{N}e^{-1}] \tag{2}
+\]</span>
+This is Proposition 1 of Bailey et. al. (2015). We plot <span class="math inline">\(E[\max[\hat{SR}]]\)</span> as a function of the number of strategies (number of trials and errors) <span class="math inline">\(N\)</span>, which is shown below.</p>
+<pre class="r"><code>library(ggplot2)
+ExMaxSR = function(N){
+  gamma_ct = -digamma(1)
+  Z = qnorm(0.99)
+  return((1-gamma_ct)*Z*(1-1/N) + gamma_ct*Z*(1-1/N*exp(1)^{-1}))
+}
+N = list(0:100)
+result = purrr::map(N,ExMaxSR)
+ggplot2::ggplot(data.frame(ExpMaxSR = unlist(result),N = unlist(N)),aes(x=N,y=ExpMaxSR)) +
+  geom_line(size=1) + ylim(0,3)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
+<p>You can see that the expected value of <span class="math inline">\(\max[\hat{SR}]\)</span> is rapidly increasing for the small <span class="math inline">\(N\)</span>. At <span class="math inline">\(N=10\)</span>, we expect to find at least one apparently quite good performing strategy, even though the true value of the Sharpe ratio of all strategies is zero. In finance, hold-out back-testing is often used, but this method does not take into account the number of trials, which is why it does not return reliable results when <span class="math inline">\(N\)</span> is large. Don’t you think it’s very risky to do a lot of simulations in order to improve the backtest results? In the end, only the best performing of the <span class="math inline">\(N\)</span> strategies will show up in the presentation material, so even if you consider 10 strategies, as in this example, any of them will have a Sharpe ratio distributed around 1.87. Of course, we don’t include the number of trials and errors in our materials, so it’s very misleading. When evaluating these materials, you might want to suspect false positives first.</p>
+<p>So, as for what to do, Bailey et. al. (2015) calculate the Minimum Backtest Length. In short, they caution that as the number of trials (errors) <span class="math inline">\(N\)</span> is increased, the number of years of backtesting <span class="math inline">\(y\)</span> should also increase. Let’s show the relationship between <span class="math inline">\(N\)</span> and the Minimum Backtest Length. As before, we will assume that <span class="math inline">\(\mu=0\)</span>, but consider the case with <span class="math inline">\(y\neq 1\)</span>. The expected value of the maximum statistic of the annualized Sharpe ratio is from equation (2)</p>
+<p><span class="math display">\[
+E[\max[\hat{SR}(q)]_N] \approx y^{-1/2}((1-\gamma)Z^{-1}[1-\frac{1}{N}]+\gamma Z^{-1}[1-\frac{1}{N}e^{-1}])
+\]</span>
+By solving this for <span class="math inline">\(y\)</span>, you can get MinBTL.</p>
+<p><span class="math display">\[
+MinBTL \approx (\frac{(1-\gamma)Z^{-1}[1-\frac{1}{N}]+\gamma Z^{-1}[1-\frac{1}{N}e^{-1}]}{\bar{E[\max[\hat{SR}(q)]_N]}})^2
+\]</span>
+Here, <span class="math inline">\(\bar{E[\max[\hat{SR}(q)]_N]}\)</span> is the upper limit of <span class="math inline">\(E[\max[\hat{SR}(q)]_N]\)</span>, and the <span class="math inline">\(N\)</span> strategy, where the true value of the Sharpe ratio is zero, suppresses the value that the maximum Sharpe ratio statistic can take. In doing so, the required backtesting years <span class="math inline">\(y\)</span> are derived as MinBTL. Plotting the MinBTL as a function of <span class="math inline">\(N\)</span>, with <span class="math inline">\(\bar{E[\max[\hat{SR}(q)]_N]}=1\)</span> is shown below.</p>
+<pre class="r"><code>MinBTL &lt;- function(N,MaxSR){
+  return((ExMaxSR(N)/MaxSR)^2)
+}
+N = list(1:100)
+result = purrr::map2(N,1,MinBTL)
+ggplot2::ggplot(data.frame(MinBTL = unlist(result),N = unlist(N)),aes(x=N,y=MinBTL)) +
+  geom_line(size=1) + ylim(0,6)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<pre class="r"><code>simSR &lt;- function(T1){
+    r = rnorm(T1)
+    return(mean(r)/sd(r))
+}</code></pre>
+<p>If your backtesting period is less than 3 years, the number of trials (or errors) <span class="math inline">\(N\)</span> should be limited to one. It is important to note that even if you are backtesting within the MinBTL, it is still possible to overfit. In other words, the MinBTL is a necessary condition, not a sufficient condition.</p>
+</div>
+<div id="at-the-end" class="section level2">
+<h2>4. At the end</h2>
+<p><a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3257497">López de Prado (2018)</a> lists the following as generic means of preventing overfitting</p>
+<ol style="list-style-type: decimal">
+<li><p>Develop models for entire asset classes or investment universes, rather than for specific securities. Investors diversify, hence they do not make mistake X only on security Y. If you find mistake X only on security Y, no matter how apparently profitable, it is likely a false discovery.</p></li>
+<li><p>Apply bagging as a means to both prevent overfitting and reduce the variance of the forecasting error. If bagging deteriorates the performance of a strategy, it was likely overfit to a small number of observations or outliers.</p></li>
+<li><p><strong>Do not backtest until all your research is complete.</strong></p></li>
+<li><p>Record every backtest conducted on a dataset so that the probability of backtest overfitting may be estimated on the final selected result (see <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2326253">Bailey, Borwein, López de Prado and Zhu(2017)</a>), and the Sharpe ratio may be properly deflated by the number of trials carried out (<a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2465675">Bailey and López de Prado(2014.b)</a>).</p></li>
+<li><p>Simulate scenarios rather than history. A standard backtest is a historical simulation, which can be easily overfit. History is just the random path that was realized, and it could have been entirely different. Your strategy should be profitable under a wide range of scenarios, not just the anecdotal historical path. It is harder to overfit the outcome of thousands of “what if” scenarios.</p></li>
+<li><p>Do not research under the influence of a backtest. If the backtest fails to identify a profitable strategy,
+start from scratch. Resist the temptation of reusing those results.</p></li>
+</ol>
+<p>I think 3 and 6 are relevant contexts for today’s post. There is an accumulation of other research in this area, so if you’re going to do backtesting on the job, it’s good to study techniques, but I recommend learning about the proper way to operate backtesting as a primer in the first place.<br />
+In this post, I’ve decided to tackle a slightly different topic from the usual one. I often see the results of backtests in my own work, and I often do hold-out backtests on this blog. I will continue to follow my research on this topic so that I can understand and evaluate the uncertainty of the results obtained.</p>
+</div>

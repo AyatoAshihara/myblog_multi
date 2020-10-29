@@ -199,5 +199,376 @@ sns.relplot(data=result[lambda df: (df.VAR==&amp;#39;201&amp;#39;) &amp;amp; (pd
 </description>
     </item>
     
+    <item>
+      <title>I predicted the standings based on horse photos using CNN.</title>
+      <link>/en/post/post18/</link>
+      <pubDate>Sun, 05 Jul 2020 00:00:00 +0000</pubDate>
+      <guid>/en/post/post18/</guid>
+      <description>
+&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+
+&lt;div id=&#34;TOC&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#crawling-for-data-collection&#34;&gt;1. Crawling for data collection&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#where-to-get-the-data-from&#34;&gt;Where to get the data from&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#running-crawling-by-selenium&#34;&gt;Running crawling by selenium&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#training-cnn-using-keras&#34;&gt;2. Training CNN using &lt;code&gt;Keras&lt;/code&gt;&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#what-is-keras&#34;&gt;What is Keras?&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#what-is-cnn&#34;&gt;What is CNN?&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#coding&#34;&gt;Coding&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#undersampling-for-unbalanced-data-adjustment&#34;&gt;Undersampling for unbalanced data adjustment&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#interpretation-of-results-using-shap-values&#34;&gt;3. Interpretation of results using Shap values&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#finally&#34;&gt;4. Finally&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Hi. This time I would like to write an article about predicting horse racing. In the last post, I created a prediction model for horse racing rankings using table data obtained from yahoo horse racing using &lt;code&gt;LightGBM&lt;/code&gt;. I used structural data last time, but anyone can do this kind of analysis in these days. So this time, I developed a &lt;code&gt;Convolutional Neural Network&lt;/code&gt; (CNN) which extracts features from a horse’s body image and predicts its ranking. This is the second time I’ve used &lt;code&gt;Earth Engine&lt;/code&gt; to analyze satellite images, and the first time I’ve used deep learning in this blog. The code is written in Python.&lt;/p&gt;
+&lt;div id=&#34;crawling-for-data-collection&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;1. Crawling for data collection&lt;/h2&gt;
+&lt;p&gt;The first step is to collect images of the horse’s body from the internet; the best thing to do would be to use pictures of the paddock on race day. However, as far as I’ve been able to find, there are no sites that post photos of the paddock in a cohesive format. It may be interesting to use it as a clipped image or to apply it as a video to the &lt;code&gt;Encoder-Decoder&lt;/code&gt; model of CNN to RNN, because it may be that a horse racing fan may have a paddock video on Youtube. However, I don’t have the ability to do that much.&lt;/p&gt;
+&lt;div id=&#34;where-to-get-the-data-from&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;Where to get the data from&lt;/h3&gt;
+&lt;p&gt;So in this case, the data is taken from &lt;a href=&#34;https://www.daily.co.jp/horse/horsecheck/photo/&#34;&gt;Daley’s Web site&lt;/a&gt;. Here you can find pre-race photos of horses running in the last 1 year? You can find pre-race photos of horses running in G1 races in the past year? Horse bettors who can’t go to the actual racecourse can look at these pictures and analyze the condition of the horses.&lt;br /&gt;
+Please note that this site does not include body photos of all the horses that are entered in the race. Also, since this is only a limited number of G1 races, it’s entirely possible that all the horses are finished to begin with, and it’s entirely possible that you won’t be able to tell the difference. However, I’ll make it a priority to try and do it quickly and use this data for this one.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;running-crawling-by-selenium&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;Running crawling by selenium&lt;/h3&gt;
+&lt;p&gt;For crawling, we’ll use selenium. I won’t go into web crawling as I’m mainly using CNN in this article. The code I used is as follows.&lt;br /&gt;
+[Note] If you use the following codes, please do so at your own risk.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.select import Select
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.alert import Alert
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.common.action_chains import ActionChains
+from time import sleep
+from urllib import request
+import random
+
+# selenium option settings (spell)
+options = Options()
+options.add_argument(&amp;#39;--disable-gpu&amp;#39;);
+options.add_argument(&amp;#39;--disable-extensions&amp;#39;);
+options.add_argument(&amp;#39;--proxy-server=&amp;quot;direct://&amp;quot;&amp;#39;);
+options.add_argument(&amp;#39;--proxy-bypass-list=*&amp;#39;);
+options.add_argument(&amp;#39;--start-maximized&amp;#39;);
+
+# driver specification
+DRIVER_PATH = r&amp;#39;C:/Users/aashi/Desktop/chromedriver_win32/chromedriver.exe&amp;#39;
+driver = webdriver.Chrome(executable_path=DRIVER_PATH, chrome_options=options)
+
+# Pass the url and go to the site
+url = &amp;#39;https://www.daily.co.jp/horse/horsecheck/photo/&amp;#39;
+driver.get(url)
+driver.implicitly_wait(15) # Maximum time to wait for an object to load, and if this is exceeded, an error
+sleep(5) # 1 second sleep as the web page transition is performed
+
+# Image data is saved for each race.
+selector0 = &amp;quot;body &amp;gt; div &amp;gt; main &amp;gt; div &amp;gt; div.primaryContents &amp;gt; article &amp;gt; div &amp;gt; section &amp;gt; a&amp;quot;
+elements = driver.find_elements_by_css_selector(selector0)
+for i in range(0,len(elements)):
+  elements = driver.find_elements_by_css_selector(selector0)
+  element = elements[i]
+  element.click()
+  sleep(5) # 5 seconds sleep as the web page transition is performed
+
+  target = driver.find_element_by_link_text(&amp;#39;Ｇ１馬体診断写真集のTOP&amp;#39;)
+  actions = ActionChains(driver)
+  actions.move_to_element(target)
+  actions.perform()
+  sleep(5) # 5 seconds sleep as the web page transition is performed
+  selector = &amp;quot;body &amp;gt; div.wrapper.horse.is-fixedHeader.is-fixedAnimation &amp;gt; main &amp;gt; div &amp;gt; div.primaryContents &amp;gt; article &amp;gt; article &amp;gt; div.photoDetail-wrapper &amp;gt; section &amp;gt; div &amp;gt; figure&amp;quot;
+  figures = driver.find_elements_by_css_selector(selector)
+  download_dir = r&amp;#39;C:\Users\aashi\umanalytics\photo\image&amp;#39;
+  selector = &amp;quot;body &amp;gt; div &amp;gt; main &amp;gt; div &amp;gt; div.primaryContents &amp;gt; article &amp;gt; article &amp;gt; div.photoDetail-wrapper &amp;gt; section &amp;gt; h1&amp;quot;
+  race_name = driver.find_element_by_css_selector(selector).text
+  for figure in figures:
+    img_name = figure.find_element_by_tag_name(&amp;#39;figcaption&amp;#39;).text
+    horse_src = figure.find_element_by_tag_name(&amp;#39;img&amp;#39;).get_attribute(&amp;quot;src&amp;quot;)    
+    save_name = download_dir + &amp;#39;/&amp;#39; + race_name + &amp;#39;_&amp;#39; + img_name + &amp;#39;.jpg&amp;#39;
+    request.urlretrieve(horse_src,save_name)
+  driver.back()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The saved images were cross-checked with the actual race results and manually divided into the top three groups and the rest of the groups. The images are saved as follows.&lt;/p&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;horse_photo.PNG&#34; alt=&#34;&#34; /&gt;
+&lt;p class=&#34;caption&#34;&gt;Stored Horse Image&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;This completes the collection of the original data.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&#34;training-cnn-using-keras&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;2. Training CNN using &lt;code&gt;Keras&lt;/code&gt;&lt;/h2&gt;
+&lt;div id=&#34;what-is-keras&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;What is Keras?&lt;/h3&gt;
+&lt;p&gt;Now, let’s train CNN using &lt;code&gt;Keras&lt;/code&gt;. &lt;code&gt;Keras&lt;/code&gt; is one of the &lt;code&gt;Neural Network&lt;/code&gt; libraries that runs on &lt;code&gt;Tensorflow&lt;/code&gt; and &lt;code&gt;Theano&lt;/code&gt;. &lt;code&gt;Keras&lt;/code&gt; is one of the &lt;code&gt;Neural Network&lt;/code&gt; libraries that runs on &lt;code&gt;Tensorflow&lt;/code&gt; and &lt;code&gt;Theano&lt;/code&gt;. &lt;code&gt;Keras&lt;/code&gt; is characterized by its ability to build models with relatively short code and its many learning algorithms.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;what-is-cnn&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;What is CNN?&lt;/h3&gt;
+&lt;p&gt;CNN is a type of &lt;code&gt;(Deep) Neural Network&lt;/code&gt; often used in image analysis, and as its name suggests, it is an additional &lt;code&gt;convolution&lt;/code&gt;. Convolution is a process like the following.&lt;/p&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;https://cdn-ak.f.st-hatena.com/images/fotolife/t/tdualdir/20180501/20180501211957.png&#34; alt=&#34;&#34; /&gt;
+&lt;p class=&#34;caption&#34;&gt;Convolutional Layer Processing&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;The input here is the image data. Image analysis recognizes and analyzes images as numerical values. The image on the computer is represented by the &lt;code&gt;RGB&lt;/code&gt; value, which is a numerical value from 0 to 255 of three colors, red (Red), green (Green) and blue (Blue). There are three layers of vectors in the form of 255 red, 0 green, 0 blue, and so on, and in this case a perfect red is represented. In the case above, you can think of a, b, c, etc. as representing one of the &lt;code&gt;RGB&lt;/code&gt; values of each pixel. Convolution calculates the features of an image by taking the inner product of these &lt;code&gt;RGB&lt;/code&gt; values with a matrix called the kernel. The following video(Japanese) is a good example of what the convolution layer means.&lt;/p&gt;
+&lt;iframe width=&#34;560&#34; height=&#34;315&#34; src=&#34;https://www.youtube.com/embed/vU-JfZNBdYU&#34; frameborder=&#34;0&#34; allow=&#34;accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture&#34; allowfullscreen&gt;
+&lt;/iframe&gt;
+&lt;p&gt;By learning the kernel to successfully get the distinctive parts of that image, it is possible to identify the image. I think the convolutional layer is the most important part of the CNN.&lt;/p&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;https://th.bing.com/th/id/OIP.F2Ik_XFzmu5jZF-byiAKQQHaCg?w=342&amp;amp;h=118&amp;amp;c=7&amp;amp;o=5&amp;amp;dpr=1.25&amp;amp;pid=1.7&#34; alt=&#34;&#34; /&gt;
+&lt;p class=&#34;caption&#34;&gt;The Big Picture of CNN&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;As shown in the above figure, CNN has not only convolutional layers but also input and output layers as well as usual &lt;code&gt;Neural Network&lt;/code&gt; layers. If you want to know about the &lt;code&gt;MaxPooling&lt;/code&gt; layer, see the following movie(Japanese).&lt;/p&gt;
+&lt;iframe width=&#34;560&#34; height=&#34;315&#34; src=&#34;https://www.youtube.com/embed/MLixg9K6oeU&#34; frameborder=&#34;0&#34; allow=&#34;accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture&#34; allowfullscreen&gt;
+&lt;/iframe&gt;
+&lt;p&gt;Although the gradient method is known as the most orthodox training method for deep learning, various extension algorithms such as &lt;code&gt;Adam&lt;/code&gt; have been proposed. Basically, &lt;code&gt;Adam&lt;/code&gt; or &lt;code&gt;momentum&lt;/code&gt; is often used.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;coding&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;Coding&lt;/h3&gt;
+&lt;p&gt;Now, let’s get to the coding.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;from keras.utils import np_utils
+from keras.models import Sequential
+from keras.layers.convolutional import MaxPooling2D
+from keras.layers import Activation, Conv2D, Flatten, Dense,Dropout
+from sklearn.model_selection import train_test_split
+from keras.optimizers import SGD, Adadelta, Adagrad, Adam, Adamax, RMSprop, Nadam
+from PIL import Image
+import numpy as np
+import glob
+import matplotlib.pyplot as plt
+import time
+import os&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The first step is to convert the collected image data to numerical data to create the training data.
+The directory structure is as follows, with the top image and other images being stored in separate directories. When we read in the images from each directory, we give a category variable of 1 for the top image and 0 for others.&lt;/p&gt;
+&lt;p&gt;photograph of a horse&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;superior (in rank)&lt;/li&gt;
+&lt;li&gt;Other&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;#Specify a folder
+folders = os.listdir(r&amp;quot;C:\Users\aashi\umanalytics\photo\image&amp;quot;)
+#Specify the total number of strokes (50 x 50 x 3 in this case).
+image_size = 300
+dense_size = len(folders)
+
+X = []
+Y = []
+
+#Reads an image from each folder and converts it to a numpy array of RGB values using the Image function
+for i, folder in enumerate(folders):
+  files = glob.glob(&amp;quot;C:/Users/aashi/umanalytics/photo/image/&amp;quot; + folder + &amp;quot;/*.jpg&amp;quot;)
+  index = i
+  for k, file in enumerate(files):
+    image = Image.open(file)
+    image = image.convert(&amp;quot;L&amp;quot;).convert(&amp;quot;RGB&amp;quot;)
+    image = image.resize((image_size, image_size)) #I&amp;#39;m dropping the number of pixels.
+ 
+    data = np.asarray(image)
+    X.append(data)
+    Y.append(index)
+
+X = np.array(X)
+Y = np.array(Y)
+X = X.astype(&amp;#39;float32&amp;#39;)
+X = X / 255.0 # Conversion to 0~1
+X.shape
+Y = np_utils.to_categorical(Y, dense_size)
+
+#splitting training data and test data
+X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.20)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;I’ve been able to split the training data and the test data. What I’m considering now is a binary classification of “top” and “other”, but I defined “top” as the top 3, so the data is unbalanced (about 5 times as much other data as the top data). In this case, if we train on the data as it is, it is easier to predict the label with the larger sample size (in this case, “other”), and the model will have a bias. Therefore, it is necessary to adjust the training data so that the sample size is the same for each of the two classes.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;index_zero = np.random.choice(np.array(np.where(y_train[:,1]==0))[0,],np.count_nonzero(y_train[:,1]==1),replace=False)
+index_one = np.array(np.where(y_train[:,1]==1))[0]
+y_resampled = y_train[np.hstack((index_one,index_zero))]
+X_resampled = X_train[np.hstack((index_one,index_zero))]&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;We will use this &lt;code&gt;y_resampled&lt;/code&gt; and &lt;code&gt;X_resampled&lt;/code&gt; for the training data. Next, we will build the CNN. In &lt;code&gt;Keras&lt;/code&gt;, a model is defined by specifying a &lt;code&gt;sequential model&lt;/code&gt; and adding a layer by &lt;code&gt;add&lt;/code&gt; method.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;model = Sequential()
+model.add(Conv2D(32, (3, 3), padding=&amp;#39;same&amp;#39;,input_shape=X_train.shape[1:]))
+model.add(Activation(&amp;#39;relu&amp;#39;))
+model.add(Conv2D(32, (3, 3)))
+model.add(Activation(&amp;#39;relu&amp;#39;))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))
+
+model.add(Conv2D(64, (3, 3), padding=&amp;#39;same&amp;#39;))
+model.add(Activation(&amp;#39;relu&amp;#39;))
+model.add(Conv2D(64, (3, 3)))
+model.add(Activation(&amp;#39;relu&amp;#39;))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))
+
+model.add(Flatten())
+model.add(Dense(512))
+model.add(Activation(&amp;#39;relu&amp;#39;))
+model.add(Dropout(0.5))
+model.add(Dense(dense_size))
+model.add(Activation(&amp;#39;softmax&amp;#39;))
+
+model.summary()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Model: &amp;quot;sequential&amp;quot;
+## _________________________________________________________________
+## Layer (type)                 Output Shape              Param #   
+## =================================================================
+## conv2d (Conv2D)              (None, 300, 300, 32)      896       
+## _________________________________________________________________
+## activation (Activation)      (None, 300, 300, 32)      0         
+## _________________________________________________________________
+## conv2d_1 (Conv2D)            (None, 298, 298, 32)      9248      
+## _________________________________________________________________
+## activation_1 (Activation)    (None, 298, 298, 32)      0         
+## _________________________________________________________________
+## max_pooling2d (MaxPooling2D) (None, 149, 149, 32)      0         
+## _________________________________________________________________
+## dropout (Dropout)            (None, 149, 149, 32)      0         
+## _________________________________________________________________
+## conv2d_2 (Conv2D)            (None, 149, 149, 64)      18496     
+## _________________________________________________________________
+## activation_2 (Activation)    (None, 149, 149, 64)      0         
+## _________________________________________________________________
+## conv2d_3 (Conv2D)            (None, 147, 147, 64)      36928     
+## _________________________________________________________________
+## activation_3 (Activation)    (None, 147, 147, 64)      0         
+## _________________________________________________________________
+## max_pooling2d_1 (MaxPooling2 (None, 73, 73, 64)        0         
+## _________________________________________________________________
+## dropout_1 (Dropout)          (None, 73, 73, 64)        0         
+## _________________________________________________________________
+## flatten (Flatten)            (None, 341056)            0         
+## _________________________________________________________________
+## dense (Dense)                (None, 512)               174621184 
+## _________________________________________________________________
+## activation_4 (Activation)    (None, 512)               0         
+## _________________________________________________________________
+## dropout_2 (Dropout)          (None, 512)               0         
+## _________________________________________________________________
+## dense_1 (Dense)              (None, 2)                 1026      
+## _________________________________________________________________
+## activation_5 (Activation)    (None, 2)                 0         
+## =================================================================
+## Total params: 174,687,778
+## Trainable params: 174,687,778
+## Non-trainable params: 0
+## _________________________________________________________________&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Now, let’s get to the learning part. We’ll use &lt;code&gt;Adadelta&lt;/code&gt; for the algorithm. I don’t really understand it.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;optimizers =&amp;quot;Adadelta&amp;quot;
+results = {}
+epochs = 50
+model.compile(loss=&amp;#39;categorical_crossentropy&amp;#39;, optimizer=optimizers, metrics=[&amp;#39;accuracy&amp;#39;])
+results = model.fit(X_resampled, y_resampled, validation_split=0.2, epochs=epochs)&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;undersampling-for-unbalanced-data-adjustment&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;Undersampling for unbalanced data adjustment&lt;/h3&gt;
+&lt;p&gt;From here, we perform binary classification with Test data, but since we are undersampling the training data, we have an undersampled sample selection bias when calculating the prediction probability. The paper is available &lt;a href=&#34;https://www3.nd.edu/~dial/publications/dalpozzolo2015calibrating.pdf&#34;&gt;here&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Therefore, I would like to formulate this part of the problem here, although a correction is needed. I will describe the current binary classification problem as the problem of predicting the objective variable &lt;span class=&#34;math inline&#34;&gt;\(Y\)&lt;/span&gt;, which takes a binary value from the explanatory thousand &lt;span class=&#34;math inline&#34;&gt;\(X\)&lt;/span&gt;. Let &lt;span class=&#34;math inline&#34;&gt;\((X,Y)\)&lt;/span&gt; be a dataset where the positive example is considerably less than the negative example and the sample size of the negative example is matched to the positive example as &lt;span class=&#34;math inline&#34;&gt;\((X_s,Y_s)\)&lt;/span&gt;. We define a categorical variable &lt;span class=&#34;math inline&#34;&gt;\(s\)&lt;/span&gt; that takes 1 if the &lt;span class=&#34;math inline&#34;&gt;\((X,Y)\)&lt;/span&gt; sample set is also included in &lt;span class=&#34;math inline&#34;&gt;\((X_s,Y_s)\)&lt;/span&gt; and 0 if it is not.
+Given an explanatory variable &lt;span class=&#34;math inline&#34;&gt;\(x\)&lt;/span&gt; to the model constructed using the dataset &lt;span class=&#34;math inline&#34;&gt;\((X,Y)\)&lt;/span&gt;, the positive example and the conditional probability of predicting can be expressed as &lt;span class=&#34;math inline&#34;&gt;\(P(y=1|x)\)&lt;/span&gt;. On the other hand, the conditional probability of predicting a positive example in a model constructed using &lt;span class=&#34;math inline&#34;&gt;\((X_s,Y_s)\)&lt;/span&gt; can be expressed as &lt;span class=&#34;math inline&#34;&gt;\(P(y=1|x)\)&lt;/span&gt; using Bayes’ theorem and the categorical variable &lt;span class=&#34;math inline&#34;&gt;\(s\)&lt;/span&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+P(y=1|x,s=1) = \frac{P(s=1|y=1)P(y=1|x)}{P(s=1|y=1)P(y=1|x) + P(s=1|y=0)P(y=0|x)}
+\]&lt;/span&gt;
+It can be written as. Since &lt;span class=&#34;math inline&#34;&gt;\((X_s,Y_s)\)&lt;/span&gt; matches the sample size of the negative example to the positive example, &lt;span class=&#34;math inline&#34;&gt;\(P(s=1,y=1)=1\)&lt;/span&gt;, the above formula is rewritten as&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+P(y=1|x,s=1) = \frac{P(y=1|x)}{P(y=1|x) + P(s=1|y=0)P(y=0|x)}
+= \frac{P(y=1|x)}{P(y=1|x) + P(s=1|y=0)(1-P(y=1|x))}
+\]&lt;/span&gt;
+It is self-evident from the definition of &lt;span class=&#34;math inline&#34;&gt;\((X_s,Y_s)\)&lt;/span&gt; that &lt;span class=&#34;math inline&#34;&gt;\(P(s=1|y=0)\neq0\)&lt;/span&gt; (0 would result in unbalanced data with only positive examples). Thus, as long as &lt;span class=&#34;math inline&#34;&gt;\(P(y=0,x) \neq0\)&lt;/span&gt;, the probability that the undersampling model will be rejected as a positive example is positively biased against the probability that the original data set will produce. What we want to find is &lt;span class=&#34;math inline&#34;&gt;\(P(y=1|x)\)&lt;/span&gt; with no bias, so &lt;span class=&#34;math inline&#34;&gt;\(P=P(y=1|x),P_s=P(y|x,s=1),\beta=P(s=1,y=0)\)&lt;/span&gt;, then we can get&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+P = \frac{\beta P_s}{\beta P_s-P_s+1}
+\]&lt;/span&gt;
+and can use this relationship formula to correct for bias.
+Let’s define what we’ve just identified as a function.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;def calibration(y_proba, beta):
+    return y_proba / (y_proba + (1 - y_proba) / beta)
+
+sampling_rate = sum(y_train[:,1]) / sum(1-y_train[:,1])
+y_proba_calib = calibration(model.predict(X_test), sampling_rate)
+y_pred = np_utils.to_categorical(np.argmax(y_proba_calib,axis=1), dense_size)
+
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, accuracy_score
+score = accuracy_score(y_test, y_pred)
+print(&amp;#39;Test accuracy:&amp;#39;, score)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Test accuracy: 0.2711864406779661&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;It’s not good at all. I ran the &lt;code&gt;ConfusionMatrix&lt;/code&gt; and found out that it doesn’t work.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;ConfusionMatrixDisplay(confusion_matrix(np.argmax(y_test,axis=1), np.argmax(y_pred,axis=1))).plot()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## &amp;lt;sklearn.metrics._plot.confusion_matrix.ConfusionMatrixDisplay object at 0x0000000049341F88&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.show()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-13-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.close()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;I did a bias correction for the imbalance data, but the model is still very predictive of negative values. This doesn’t work.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&#34;interpretation-of-results-using-shap-values&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;3. Interpretation of results using Shap values&lt;/h2&gt;
+&lt;p&gt;I would like to consider the &lt;code&gt;shap&lt;/code&gt; value of the model we just learned and interpret the results. I’ll add an explanation of the &lt;code&gt;shap&lt;/code&gt; value when I have time. Simply put, the visualization captures which parts of the image the CNN captured features and predicted the horse to be at the top. We’ll be analyzing this horse.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.imshow(X_test[0])
+plt.show()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-14-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.close()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import shap
+background = X_train[np.random.choice(X_train.shape[0],100,replace=False)]
+
+e = shap.GradientExplainer(model,background)
+
+shap_values = e.shap_values(X_test[[0]])
+shap.image_plot(shap_values[1],X_test[[0]])&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-15-1.png&#34; width=&#34;576&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;It’s very subtle, but it looks like you’re appreciating the legs and buttocks, etc. It needs to be cropped to take out the horse’s body only, since it seems to be responding to the background. I think I need to build a model for object detection. I’ll think about this another time.
+I’d like to visualize which aspects of the image are captured at each layer.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;from keras import models
+
+layer_outputs = [layer.output for layer in model.layers[:8]]
+layer_names = []
+for layer in model.layers[:8]:
+    layer_names.append(layer.name)
+images_per_row = 16
+
+activation_model = models.Model(inputs=model.input, outputs=layer_outputs)
+activations = activation_model.predict(X_train[[0]])
+
+for layer_name, layer_activation in zip(layer_names, activations):
+    n_features = layer_activation.shape[-1]
+
+    size = layer_activation.shape[1]
+
+    n_cols = n_features // images_per_row
+    display_grid = np.zeros((size * n_cols, images_per_row * size))
+
+    for col in range(n_cols):
+        for row in range(images_per_row):
+            channel_image = layer_activation[0,
+                                             :, :,
+                                             col * images_per_row + row]
+            channel_image -= channel_image.mean()
+            channel_image /= channel_image.std()
+            channel_image *= 64
+            channel_image += 128
+            channel_image = np.clip(channel_image, 0, 255).astype(&amp;#39;uint8&amp;#39;)
+            display_grid[col * size : (col + 1) * size,
+                         row * size : (row + 1) * size] = channel_image
+
+    scale = 1. / size
+    plt.figure(figsize=(scale * display_grid.shape[1],
+                        scale * display_grid.shape[0]))
+    plt.title(layer_name)
+    plt.grid(False)
+    plt.imshow(display_grid, cmap=&amp;#39;viridis&amp;#39;)
+    plt.show()
+    plt.close()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-16-1.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-16-2.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-16-3.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-16-4.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-16-5.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-16-6.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-16-7.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-16-8.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-16-9.png&#34; width=&#34;576&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;It’s hard to interpret, partly because I’m inexperienced.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;finally&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;4. Finally&lt;/h2&gt;
+&lt;p&gt;To be honest, it hasn’t worked out at all. Is it still difficult to predict rankings from the horse’s body? Does multiplying it with other variables change the results? I don’t think I’m able to extract good features from the horses as it is.
+Do I need to get to the point where I can get a paddock video from Youtube and analyze it with the &lt;code&gt;Encoder-Decoder&lt;/code&gt; model to make it work? I’d love to do it when I’m good enough to do it (I don’t know when that will be). Until then, I need to improve my PC specs. Maybe I’ll use the cash handout.&lt;/p&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
   </channel>
 </rss>

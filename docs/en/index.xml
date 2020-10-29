@@ -75,14 +75,6 @@
     </item>
     
     <item>
-      <title>Post</title>
-      <link>/en/post/</link>
-      <pubDate>Wed, 28 Oct 2020 21:35:04 +0900</pubDate>
-      <guid>/en/post/</guid>
-      <description></description>
-    </item>
-    
-    <item>
       <title>Get macro panel data from OECD.org via API</title>
       <link>/en/post/post22/</link>
       <pubDate>Mon, 19 Oct 2020 00:00:00 +0000</pubDate>
@@ -638,6 +630,624 @@ results %&amp;gt;%
     </item>
     
     <item>
+      <title>Is that backtest really reproducible?</title>
+      <link>/en/post/post19/</link>
+      <pubDate>Wed, 08 Jul 2020 00:00:00 +0000</pubDate>
+      <guid>/en/post/post19/</guid>
+      <description>
+&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+
+&lt;div id=&#34;TOC&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#what-is-backtesting&#34;&gt;1. What is “Backtesting”?&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#backtesting-overfits.&#34;&gt;2. Backtesting overfits.&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#what-is-the-distribution-that-the-sharpe-ratio-follows&#34;&gt;3. What is the distribution that the Sharpe ratio follows?&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#trying-to-derive-the-minimum-backtest-length&#34;&gt;4. Trying to derive &lt;code&gt;the minimum backtest length&lt;/code&gt;&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#at-the-end&#34;&gt;4. At the end&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+
+&lt;div id=&#34;what-is-backtesting&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;1. What is “Backtesting”?&lt;/h2&gt;
+&lt;p&gt;Backtesting is an algorithmic historical simulation of an investment strategy. Backtesting uses an algorithm to calculate the gains and losses that would have been incurred if the investment strategy you have drafted had been implemented over a period of time. Common statistics that evaluate the performance of an investment strategy, such as the Sharpe ratio and the information ratio, are used. Investors typically examine these back-testing statistics to determine asset allocation to the best performing investment (management) strategies, so asset managers do trial-and-error back-testing of a bloody number of times for good performance and present customer by that materials.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://stat.ameba.jp/user_images/20190212/22/nash210/51/5f/j/o0705061514355131242.jpg&#34; alt=&#34;Backtest&#34; /&gt;
+From an investor’s perspective, it is important to distinguish between in-sample (IS) and out-of-sample (OOS) performance of a back-tested investment strategy; IS performance is defined as the sample used to design the investment strategy (referred to in the machine learning literature as the “training period” or “training set”) It is what is called “OOS”) simulated in a sample (aka “test set”). OOS performance, on the other hand, is simulated on a sample (aka “test set”) that was not used to design the investment strategy. Since backtesting predicts the effectiveness of an investment strategy with its performance, it can be guaranteed to be reproducible and realistic if the IS performance matches the OOS performance. However, it is difficult to judge whether the backtest is reliable when you receive it because the results of the out-sample are future results. It cannot be called a pure out-sample as long as the results of the OOS can be fed back to improve the strategy.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://www.triton.biz/blog1/wp-content/uploads/2018/04/pic001.png&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;So, when you receive a backtest with good results from a fund manager, it is very important that you manage to assess how realistic the simulation is. It is also important for fund managers to understand the uncertainty of their own backtesting results. In this post, we will look at how to evaluate the realism of a backtesting simulation and what to look out for in order to ensure a repeatable backtest.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;backtesting-overfits.&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;2. Backtesting overfits.&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2308659&#34;&gt;Bailey, Borwein, López de Prado and Zhu (2015)&lt;/a&gt;, which shows that any financial time series can be used to backtest We argue that it is (relatively) easy to overfit (overlearn) a simulation. Here, overfitting is a machine learning concept that describes a situation in which the model focuses on specific observational data (IS data) rather than on the general structure.&lt;/p&gt;
+&lt;p&gt;Bailey et. al. (2015) cite a situation where the backtesting results of a stock strategy are not good as an example of this claim. As the name implies, backtesting uses historical data, so it is possible to identify specific stocks that are experiencing losses and design the trading system to improve performance by adding some parameters to remove recommendations for those stocks ( (a technique known as “data snooping”). With a few repetitions of the simulation, you can derive “optimal parameters” that benefit from characteristics that are present in a particular sample but may be rare in the population.&lt;/p&gt;
+&lt;p&gt;There is a vast accumulation of research in the machine learning literature to address the problem of overfitting. But Bailey et. al. (2015) argue that the methods proposed in the context of machine learning are generally not applicable to multiple investment problems. The reasons for this seem to be the following four points.&lt;/p&gt;
+&lt;ol style=&#34;list-style-type: decimal&#34;&gt;
+&lt;li&gt;&lt;p&gt;Machine learning methods to prevent overfitting require explicit point estimates and confidence intervals in the domain in which the event is defined in order to assess the explanatory power and quality of the prediction, because few investment strategies make such explicit predictions.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;“The E-mini S&amp;amp;P 500 is predicted to close around 1,600 with one standard deviation of 5 points at Friday’s close,” for example, but rather qualitative recommendations such as “buy” or “strong buy” are typically provided. Moreover, these forecasts do not have an explicit expiration date and are subject to change in the event of an unexpected event. On the other hand, the quantitative forecast is stated as Friday’s close.&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;even if a particular investment strategy relies on a prediction formula, other components of the investment strategy may be overfitted.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;In other words, there are many ways to overfit an investment strategy other than simply adjusting the prediction equation.&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;because the methods of regression overfitting are parametric and involve many assumptions about data that are unobservable in the case of finance.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;because some methods do not control for the number of trials.&lt;/p&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Bailey et. al. (2015) show that a &lt;strong&gt;comparatively low number of trials&lt;/strong&gt; is needed to identify investment strategies with relatively poor backtesting performance. Think of the number of trials here as the number of trials and errors. It also calculates &lt;code&gt;the minimum backtest length&lt;/code&gt; (MinBTL), which is the length of the backtest required for the number of trials. In this paper, the Sharpe ratio is always used to evaluate performance, but it can be applied to other performance measures as well. Let’s take a look at what it does.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;what-is-the-distribution-that-the-sharpe-ratio-follows&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;3. What is the distribution that the Sharpe ratio follows?&lt;/h2&gt;
+&lt;p&gt;To derive the MinBTL, we first derive the (asymptotic) distribution of the Sharpe ratio. To begin with, the design of an investment strategy usually starts with the prior knowledge or belief that a particular pattern may help to predict the future value of a financial variable. For example, if you are aware of the lead-lag effect between bonds of different maturities, you can design a strategy that bets on a return to the equilibrium value if the yield curve rises. This model could take the form of a cointegration equation, a vector error correction model, or a system of stochastic differential equations.&lt;/p&gt;
+&lt;p&gt;The number of such model configurations (or trials) is vast, and fund managers naturally want to choose the one that maximizes the performance of their strategy, and to do so they conduct historical simulations (back testing) (see above). Backtesting evaluates the optimal sample size, frequency of signal updates, risk sizing, stop loss, maximum holding period, etc., in combination with other variables.&lt;/p&gt;
+&lt;p&gt;The Sharpe ratio used as a measure of performance assessment in this paper is a statistic that assesses the performance of a strategy based on a sample of historical returns, defined as the average excess return/standard deviation (risk) to BM. It is usually interpreted as “return to risk 1 standard deviation” and, depending on the asset class, if it is greater than 1, it can be considered a very good strategy. In the following, we will assume that the excess return &lt;span class=&#34;math inline&#34;&gt;\(r_t\)&lt;/span&gt; of a strategy is a random variable of i.i.d. and follows a normal distribution. That is, we assume that the distribution of &lt;span class=&#34;math inline&#34;&gt;\(r_t\)&lt;/span&gt; is independent of &lt;span class=&#34;math inline&#34;&gt;\(r_s(t\neq s)\)&lt;/span&gt;. It is not a very realistic assumption, though.&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+r_t \sim \mathcal{N}(\mu,\sigma^2)
+\]&lt;/span&gt;
+where &lt;span class=&#34;math inline&#34;&gt;\(\mathcal{N}\)&lt;/span&gt; is the normal distribution of the mean &lt;span class=&#34;math inline&#34;&gt;\(\mu\)&lt;/span&gt; and the variance &lt;span class=&#34;math inline&#34;&gt;\(\sigma^2\)&lt;/span&gt;. Now, the excess return &lt;span class=&#34;math inline&#34;&gt;\(r_{t}(q)\)&lt;/span&gt; at time t~t-q+1 is defined (I’m ignoring the compounding part.)&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+r_{t}(q) \equiv r_{t} + r_{t-1} + ... + r_{t-q+1}
+\]&lt;/span&gt;
+Then, the annualized Sharpe ratio is represented&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\begin{eqnarray}
+SR(q) &amp;amp;=&amp;amp; \frac{E[r_{t}(q)]}{\sqrt{Var(r_{t}(q))}}\\
+&amp;amp;=&amp;amp; \frac{q\mu}{\sqrt{q}\sigma}\\
+&amp;amp;=&amp;amp; \frac{\mu}{\sigma}\sqrt{q}
+\end{eqnarray}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;We can express this as where &lt;span class=&#34;math inline&#34;&gt;\(q\)&lt;/span&gt; is the number (frequency) of returns per year. For example, &lt;span class=&#34;math inline&#34;&gt;\(q=365\)&lt;/span&gt; for daily returns (excluding leap years).&lt;/p&gt;
+&lt;p&gt;The true value of &lt;span class=&#34;math inline&#34;&gt;\(SR\)&lt;/span&gt; cannot be known because &lt;span class=&#34;math inline&#34;&gt;\(\mu\)&lt;/span&gt; and &lt;span class=&#34;math inline&#34;&gt;\(\sigma\)&lt;/span&gt; are generally unknown. So, let &lt;span class=&#34;math inline&#34;&gt;\(R_t\)&lt;/span&gt; be the sample return and the risk-free rate &lt;span class=&#34;math inline&#34;&gt;\(R^f\)&lt;/span&gt;(constant), we calculate the estimated Sharpe ratio by the sample mean of &lt;span class=&#34;math inline&#34;&gt;\(\hat{\mu}=1/T\sum_{t=1}^T R_{t}-R^f\)&lt;/span&gt; and the sample standard deviation of &lt;span class=&#34;math inline&#34;&gt;\(\hat{\sigma}=\sqrt{1/T\sum_{t=1}^{T}(R_{t}-\hat{\mu})}\)&lt;/span&gt; (where &lt;span class=&#34;math inline&#34;&gt;\(T\)&lt;/span&gt; is the sample size to be back-tested).&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\hat{SR}(q) = \frac{\hat{\mu}}{\hat{\sigma}}\sqrt{q}
+\]&lt;/span&gt;
+As an inevitable consequence, the calculation of &lt;span class=&#34;math inline&#34;&gt;\(SR\)&lt;/span&gt; is likely to be accompanied by considerable estimation errors. Now, let us derive the main topic of this section, the asymptotic distribution of &lt;span class=&#34;math inline&#34;&gt;\(\hat{SR}\)&lt;/span&gt;. First, since the asymptotic distributions of &lt;span class=&#34;math inline&#34;&gt;\(\hat{\mu}\)&lt;/span&gt; and &lt;span class=&#34;math inline&#34;&gt;\(\hat{\sigma}^2\)&lt;/span&gt; are finite and i.i.d., applying the central limit theorem derives&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\sqrt{T}\hat{\mu}\sim^{a}\mathcal{N}(\mu,\sigma^2), \\
+\sqrt{T}\hat{\sigma}^2\sim^a\mathcal{N}(\sigma^2,2\sigma^4)
+\]&lt;/span&gt;
+ince the Sharpe ratio is a random variable which is calculated from this &lt;span class=&#34;math inline&#34;&gt;\(\hat{\mu}\)&lt;/span&gt; and &lt;span class=&#34;math inline&#34;&gt;\(\hat{\sigma}^2\)&lt;/span&gt;, let us denote this function as &lt;span class=&#34;math inline&#34;&gt;\(g(\hat{{\boldsymbol \theta}})\)&lt;/span&gt; where &lt;span class=&#34;math inline&#34;&gt;\(\hat{{\boldsymbol \theta}}=(\hat{\mu},\hat{\sigma}^2)\)&lt;/span&gt;. Now, since it is i.i.d., &lt;span class=&#34;math inline&#34;&gt;\(\hat{{\boldsymbol \theta}}\)&lt;/span&gt; is independent of each other, and, from the above discussion, the asymptotic joint distribution is written as&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\sqrt{T}\hat{{\boldsymbol \theta}} \sim^a \mathcal{N}({\boldsymbol \theta},{\boldsymbol V_{\boldsymbol \theta}})
+\]&lt;/span&gt;
+where &lt;span class=&#34;math inline&#34;&gt;\({\boldsymbol V_{\boldsymbol \theta}}\)&lt;/span&gt; is&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+{\boldsymbol V_{\boldsymbol \theta}} = \left( 
+    \begin{array}{cccc}
+      \sigma^2 &amp;amp; 0\\
+      0 &amp;amp; 2\sigma^4\\
+    \end{array}
+  \right)
+\]&lt;/span&gt;
+Since the sharp ratio estimates are now only a function of &lt;span class=&#34;math inline&#34;&gt;\(g(\hat{{\boldsymbol \theta}})\)&lt;/span&gt; and &lt;span class=&#34;math inline&#34;&gt;\(\hat{{\boldsymbol \theta}}\)&lt;/span&gt;, from the delta method, the following&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\hat{SR} = g(\hat{{\boldsymbol \theta}}) \sim^a \mathcal{N}(g({\boldsymbol \theta}),\boldsymbol V_g)
+\]&lt;/span&gt;
+asymptotically follows a normal distribution. where &lt;span class=&#34;math inline&#34;&gt;\(\boldsymbol V_g\)&lt;/span&gt; is&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\boldsymbol V_g=\frac{\partial g}{\partial{\boldsymbol \theta}}{\boldsymbol V_{\boldsymbol \theta}}\frac{\partial g}{\partial{\boldsymbol \theta}&amp;#39;}
+\]&lt;/span&gt;
+&lt;span class=&#34;math inline&#34;&gt;\(g({\boldsymbol \theta})=\mu/\sigma\)&lt;/span&gt;なので、
+Since &lt;span class=&#34;math inline&#34;&gt;\(g({\boldsymbol \theta})=\mu/\sigma\)&lt;/span&gt;, then&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\frac{\partial g}{\partial{\boldsymbol \theta}&amp;#39;} = \left[ 
+    \begin{array}{cccc}
+      \frac{\partial g}{\partial \mu}\\
+      \frac{\partial g}{\partial \sigma^2}\\
+    \end{array}
+  \right]
+  = \left[ 
+    \begin{array}{cccc}
+      \frac{1}{\sigma}\\
+      -\frac{\mu}{2\sigma^3}\\
+    \end{array}
+  \right]
+\]&lt;/span&gt;
+Therefore, you can derive&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\begin{eqnarray}
+\boldsymbol V_g &amp;amp;=&amp;amp; \left(
+    \begin{array}{cccc}
+      \frac{\partial g}{\partial \mu}, \frac{\partial g}{\partial \sigma}\\
+    \end{array}
+  \right)
+  \left( 
+    \begin{array}{cccc}
+      \sigma^2 &amp;amp; 0\\
+      0 &amp;amp; 2\sigma^4\\
+    \end{array}
+  \right)
+  \left(
+    \begin{array}{cccc}
+      \frac{\partial g}{\partial \mu}\\
+      \frac{\partial g}{\partial \sigma}\\
+    \end{array}
+  \right) \\
+  &amp;amp;=&amp;amp; \left(
+    \begin{array}{cccc}
+      \frac{\partial g}{\partial \mu}\sigma^2, \frac{\partial g}{\partial \sigma}2\sigma^4\\
+    \end{array}
+  \right)
+    \left(
+    \begin{array}{cccc}
+      \frac{\partial g}{\partial \mu}\\
+      \frac{\partial g}{\partial \sigma}\\
+    \end{array}
+  \right) \\
+  &amp;amp;=&amp;amp; (\frac{\partial g}{\partial \mu})^2\sigma^2 + (\frac{\partial g}{\partial \sigma})^2\sigma^4 \\
+  &amp;amp;=&amp;amp; 1 + \frac{\mu^2}{2\sigma^2} \\
+  &amp;amp;=&amp;amp; 1 + \frac{1}{2}SR^2
+\end{eqnarray}
+\]&lt;/span&gt;
+You may need to be careful when you see good performance because the variance tends to be exponentially larger as the absolute value of the Sharpe ratio increases. Here’s the distribution that the annualized Sharpe ratio estimate &lt;span class=&#34;math inline&#34;&gt;\(\hat{SR}(q)\)&lt;/span&gt; follows&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\hat{SR}(q)\sim^a \mathcal{N}(\sqrt{q}SR,\frac{V(q)}{T}) \\
+V(q) = q{\boldsymbol V}_g = q(1 + \frac{1}{2}SR^2)
+\]&lt;/span&gt;
+Now, if &lt;span class=&#34;math inline&#34;&gt;\(y\)&lt;/span&gt; is the number of years of backtesting, we can write &lt;span class=&#34;math inline&#34;&gt;\(T=yq\)&lt;/span&gt; and use this to rewrite the above equation as follows (for a 3-year measurement with daily returns, the sample size &lt;span class=&#34;math inline&#34;&gt;\(T\)&lt;/span&gt; is &lt;span class=&#34;math inline&#34;&gt;\(T=3×365=1095\)&lt;/span&gt;).&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\hat{SR}(q)\sim^a \mathcal{N}(\sqrt{q}SR,\frac{1+\frac{1}{2}SR^2}{y}) \tag{1}
+\]&lt;/span&gt;
+The frequency &lt;span class=&#34;math inline&#34;&gt;\(q\)&lt;/span&gt; affects the mean of the Sharpe ratio, but not the variance. We can now derive an asymptotic distribution of the Sharpe ratio estimates. Now, what do we wanted to do with this? We were thinking about the reliability of the backtest. In other words, what is the probability that a backtest of &lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt; investment strategy ideas that FM twists and turns to develop a new product will produce a very high (good) value even though the true value of all of those Sharpe ratios is zero. In Bailey et. al. (2015), it was described as follows&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;How high is the expected maximum Sharpe ratio IS among a set of strategy configurations where the true Sharpe ratio is zero?&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;We also want to know how long you should be backtesting for in order to reduce the value of the expected maximum Sharpe ratio.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;trying-to-derive-the-minimum-backtest-length&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;4. Trying to derive &lt;code&gt;the minimum backtest length&lt;/code&gt;&lt;/h2&gt;
+&lt;p&gt;The situation we are considering now is that let &lt;span class=&#34;math inline&#34;&gt;\(\mu=0\)&lt;/span&gt; and &lt;span class=&#34;math inline&#34;&gt;\(y\)&lt;/span&gt; 1 year for simplicity, then from equation (1) &lt;span class=&#34;math inline&#34;&gt;\(\hat{SR}(q)\)&lt;/span&gt; follows the standard normal distribution &lt;span class=&#34;math inline&#34;&gt;\(\mathcal{N}(0,1)\)&lt;/span&gt;. Now, we will consider the expected value of the maximum value &lt;span class=&#34;math inline&#34;&gt;\(\max[\hat{SR}]_N\)&lt;/span&gt; of &lt;span class=&#34;math inline&#34;&gt;\(\hat{SR}_n(n=1,2,...N)\)&lt;/span&gt;, but as those with good instincts will have noticed, the discussion goes into the context of extreme value statistics. Since &lt;span class=&#34;math inline&#34;&gt;\(\hat{SR}_n\sim\mathcal{N}(0,1)\)&lt;/span&gt; is i.i.d., the extreme value distribution of that maximum statistic becomes Gumbel distribution from the Fisher-Tippett-Gnedenko theorem (sorry, I haven’t been able to follow the proof).&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\lim_{N\rightarrow\infty}prob[\frac{\max[\hat{SR}]_N-\alpha}{\beta}\leq x] = G(x) = e^{-e^{-x}}
+\]&lt;/span&gt;
+where &lt;span class=&#34;math inline&#34;&gt;\(\alpha=Z(x)^{-1}[1-1/N], \beta=Z(x)^{-1}[1-1/Ne^{-1}]-\alpha\)&lt;/span&gt;, and &lt;span class=&#34;math inline&#34;&gt;\(Z(x)\)&lt;/span&gt; represents the cumulative distribution function of the standard normal distribution. The moment generating function of the Gumbel distribution &lt;span class=&#34;math inline&#34;&gt;\(M_x(t)\)&lt;/span&gt; is written as&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\begin{eqnarray}
+M_x(t) &amp;amp;=&amp;amp; E[e^{tx}] = \int_{-\infty}^\infty e^{tx}e^{-x}e^{-e^{-x}}dx \\
+\end{eqnarray}
+\]&lt;/span&gt;
+Converting variables with &lt;span class=&#34;math inline&#34;&gt;\(x=-\log(y)\)&lt;/span&gt; gives &lt;span class=&#34;math inline&#34;&gt;\(dx/dy=-1/y=-(e^{-x})^{-1}\)&lt;/span&gt;, so&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\begin{eqnarray}
+M_x(t) &amp;amp;=&amp;amp; \int_{\infty}^0-e^{-t\log(y)}e^{-y}dy \\
+&amp;amp;=&amp;amp; \int_{0}^\infty y^{-t}e^{-y}dy \\
+&amp;amp;=&amp;amp; \Gamma(1-t)
+\end{eqnarray}
+\]&lt;/span&gt;
+where &lt;span class=&#34;math inline&#34;&gt;\(Gamma(x)\)&lt;/span&gt; is a gamma function. From here, the expected value (mean) of the standardized maximum statistic is&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\begin{eqnarray}
+\lim_{N\rightarrow\infty} E[\frac{\max[\hat{SR}]_N-\alpha}{\beta}] &amp;amp;=&amp;amp; M_x&amp;#39;(t)|_{t=0} \\
+&amp;amp;=&amp;amp; (-1)\Gamma&amp;#39;(1) \\
+&amp;amp;=&amp;amp; (-1)(-\gamma) = \gamma
+\end{eqnarray}
+\]&lt;/span&gt;
+Here, $… $ is the Euler-Mascheroni constant. Thus, when &lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt; is large, the expected value of the maximum statistic of the standard normal distribution of i.i.d. is approximated as (&lt;span class=&#34;math inline&#34;&gt;\(N&amp;gt;1\)&lt;/span&gt;)&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+E[\max[\hat{SR}]] \approx \alpha + \gamma\beta = (1-\gamma)Z^{-1}[1-\frac{1}{N}]+\gamma Z^{-1}[1-\frac{1}{N}e^{-1}] \tag{2}
+\]&lt;/span&gt;
+This is Proposition 1 of Bailey et. al. (2015). We plot &lt;span class=&#34;math inline&#34;&gt;\(E[\max[\hat{SR}]]\)&lt;/span&gt; as a function of the number of strategies (number of trials and errors) &lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;, which is shown below.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(ggplot2)
+ExMaxSR = function(N){
+  gamma_ct = -digamma(1)
+  Z = qnorm(0.99)
+  return((1-gamma_ct)*Z*(1-1/N) + gamma_ct*Z*(1-1/N*exp(1)^{-1}))
+}
+N = list(0:100)
+result = purrr::map(N,ExMaxSR)
+ggplot2::ggplot(data.frame(ExpMaxSR = unlist(result),N = unlist(N)),aes(x=N,y=ExpMaxSR)) +
+  geom_line(size=1) + ylim(0,3)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-1-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;You can see that the expected value of &lt;span class=&#34;math inline&#34;&gt;\(\max[\hat{SR}]\)&lt;/span&gt; is rapidly increasing for the small &lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;. At &lt;span class=&#34;math inline&#34;&gt;\(N=10\)&lt;/span&gt;, we expect to find at least one apparently quite good performing strategy, even though the true value of the Sharpe ratio of all strategies is zero. In finance, hold-out back-testing is often used, but this method does not take into account the number of trials, which is why it does not return reliable results when &lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt; is large. Don’t you think it’s very risky to do a lot of simulations in order to improve the backtest results? In the end, only the best performing of the &lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt; strategies will show up in the presentation material, so even if you consider 10 strategies, as in this example, any of them will have a Sharpe ratio distributed around 1.87. Of course, we don’t include the number of trials and errors in our materials, so it’s very misleading. When evaluating these materials, you might want to suspect false positives first.&lt;/p&gt;
+&lt;p&gt;So, as for what to do, Bailey et. al. (2015) calculate the Minimum Backtest Length. In short, they caution that as the number of trials (errors) &lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt; is increased, the number of years of backtesting &lt;span class=&#34;math inline&#34;&gt;\(y\)&lt;/span&gt; should also increase. Let’s show the relationship between &lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt; and the Minimum Backtest Length. As before, we will assume that &lt;span class=&#34;math inline&#34;&gt;\(\mu=0\)&lt;/span&gt;, but consider the case with &lt;span class=&#34;math inline&#34;&gt;\(y\neq 1\)&lt;/span&gt;. The expected value of the maximum statistic of the annualized Sharpe ratio is from equation (2)&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+E[\max[\hat{SR}(q)]_N] \approx y^{-1/2}((1-\gamma)Z^{-1}[1-\frac{1}{N}]+\gamma Z^{-1}[1-\frac{1}{N}e^{-1}])
+\]&lt;/span&gt;
+By solving this for &lt;span class=&#34;math inline&#34;&gt;\(y\)&lt;/span&gt;, you can get MinBTL.&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+MinBTL \approx (\frac{(1-\gamma)Z^{-1}[1-\frac{1}{N}]+\gamma Z^{-1}[1-\frac{1}{N}e^{-1}]}{\bar{E[\max[\hat{SR}(q)]_N]}})^2
+\]&lt;/span&gt;
+Here, &lt;span class=&#34;math inline&#34;&gt;\(\bar{E[\max[\hat{SR}(q)]_N]}\)&lt;/span&gt; is the upper limit of &lt;span class=&#34;math inline&#34;&gt;\(E[\max[\hat{SR}(q)]_N]\)&lt;/span&gt;, and the &lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt; strategy, where the true value of the Sharpe ratio is zero, suppresses the value that the maximum Sharpe ratio statistic can take. In doing so, the required backtesting years &lt;span class=&#34;math inline&#34;&gt;\(y\)&lt;/span&gt; are derived as MinBTL. Plotting the MinBTL as a function of &lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;, with &lt;span class=&#34;math inline&#34;&gt;\(\bar{E[\max[\hat{SR}(q)]_N]}=1\)&lt;/span&gt; is shown below.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;MinBTL &amp;lt;- function(N,MaxSR){
+  return((ExMaxSR(N)/MaxSR)^2)
+}
+N = list(1:100)
+result = purrr::map2(N,1,MinBTL)
+ggplot2::ggplot(data.frame(MinBTL = unlist(result),N = unlist(N)),aes(x=N,y=MinBTL)) +
+  geom_line(size=1) + ylim(0,6)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-2-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;simSR &amp;lt;- function(T1){
+    r = rnorm(T1)
+    return(mean(r)/sd(r))
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;If your backtesting period is less than 3 years, the number of trials (or errors) &lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt; should be limited to one. It is important to note that even if you are backtesting within the MinBTL, it is still possible to overfit. In other words, the MinBTL is a necessary condition, not a sufficient condition.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;at-the-end&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;4. At the end&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3257497&#34;&gt;López de Prado (2018)&lt;/a&gt; lists the following as generic means of preventing overfitting&lt;/p&gt;
+&lt;ol style=&#34;list-style-type: decimal&#34;&gt;
+&lt;li&gt;&lt;p&gt;Develop models for entire asset classes or investment universes, rather than for specific securities. Investors diversify, hence they do not make mistake X only on security Y. If you find mistake X only on security Y, no matter how apparently profitable, it is likely a false discovery.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Apply bagging as a means to both prevent overfitting and reduce the variance of the forecasting error. If bagging deteriorates the performance of a strategy, it was likely overfit to a small number of observations or outliers.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;Do not backtest until all your research is complete.&lt;/strong&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Record every backtest conducted on a dataset so that the probability of backtest overfitting may be estimated on the final selected result (see &lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2326253&#34;&gt;Bailey, Borwein, López de Prado and Zhu(2017)&lt;/a&gt;), and the Sharpe ratio may be properly deflated by the number of trials carried out (&lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2465675&#34;&gt;Bailey and López de Prado(2014.b)&lt;/a&gt;).&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Simulate scenarios rather than history. A standard backtest is a historical simulation, which can be easily overfit. History is just the random path that was realized, and it could have been entirely different. Your strategy should be profitable under a wide range of scenarios, not just the anecdotal historical path. It is harder to overfit the outcome of thousands of “what if” scenarios.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Do not research under the influence of a backtest. If the backtest fails to identify a profitable strategy,
+start from scratch. Resist the temptation of reusing those results.&lt;/p&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;I think 3 and 6 are relevant contexts for today’s post. There is an accumulation of other research in this area, so if you’re going to do backtesting on the job, it’s good to study techniques, but I recommend learning about the proper way to operate backtesting as a primer in the first place.&lt;br /&gt;
+In this post, I’ve decided to tackle a slightly different topic from the usual one. I often see the results of backtests in my own work, and I often do hold-out backtests on this blog. I will continue to follow my research on this topic so that I can understand and evaluate the uncertainty of the results obtained.&lt;/p&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>I predicted the standings based on horse photos using CNN.</title>
+      <link>/en/post/post18/</link>
+      <pubDate>Sun, 05 Jul 2020 00:00:00 +0000</pubDate>
+      <guid>/en/post/post18/</guid>
+      <description>
+&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+
+&lt;div id=&#34;TOC&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#crawling-for-data-collection&#34;&gt;1. Crawling for data collection&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#where-to-get-the-data-from&#34;&gt;Where to get the data from&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#running-crawling-by-selenium&#34;&gt;Running crawling by selenium&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#training-cnn-using-keras&#34;&gt;2. Training CNN using &lt;code&gt;Keras&lt;/code&gt;&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#what-is-keras&#34;&gt;What is Keras?&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#what-is-cnn&#34;&gt;What is CNN?&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#coding&#34;&gt;Coding&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#undersampling-for-unbalanced-data-adjustment&#34;&gt;Undersampling for unbalanced data adjustment&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#interpretation-of-results-using-shap-values&#34;&gt;3. Interpretation of results using Shap values&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#finally&#34;&gt;4. Finally&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Hi. This time I would like to write an article about predicting horse racing. In the last post, I created a prediction model for horse racing rankings using table data obtained from yahoo horse racing using &lt;code&gt;LightGBM&lt;/code&gt;. I used structural data last time, but anyone can do this kind of analysis in these days. So this time, I developed a &lt;code&gt;Convolutional Neural Network&lt;/code&gt; (CNN) which extracts features from a horse’s body image and predicts its ranking. This is the second time I’ve used &lt;code&gt;Earth Engine&lt;/code&gt; to analyze satellite images, and the first time I’ve used deep learning in this blog. The code is written in Python.&lt;/p&gt;
+&lt;div id=&#34;crawling-for-data-collection&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;1. Crawling for data collection&lt;/h2&gt;
+&lt;p&gt;The first step is to collect images of the horse’s body from the internet; the best thing to do would be to use pictures of the paddock on race day. However, as far as I’ve been able to find, there are no sites that post photos of the paddock in a cohesive format. It may be interesting to use it as a clipped image or to apply it as a video to the &lt;code&gt;Encoder-Decoder&lt;/code&gt; model of CNN to RNN, because it may be that a horse racing fan may have a paddock video on Youtube. However, I don’t have the ability to do that much.&lt;/p&gt;
+&lt;div id=&#34;where-to-get-the-data-from&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;Where to get the data from&lt;/h3&gt;
+&lt;p&gt;So in this case, the data is taken from &lt;a href=&#34;https://www.daily.co.jp/horse/horsecheck/photo/&#34;&gt;Daley’s Web site&lt;/a&gt;. Here you can find pre-race photos of horses running in the last 1 year? You can find pre-race photos of horses running in G1 races in the past year? Horse bettors who can’t go to the actual racecourse can look at these pictures and analyze the condition of the horses.&lt;br /&gt;
+Please note that this site does not include body photos of all the horses that are entered in the race. Also, since this is only a limited number of G1 races, it’s entirely possible that all the horses are finished to begin with, and it’s entirely possible that you won’t be able to tell the difference. However, I’ll make it a priority to try and do it quickly and use this data for this one.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;running-crawling-by-selenium&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;Running crawling by selenium&lt;/h3&gt;
+&lt;p&gt;For crawling, we’ll use selenium. I won’t go into web crawling as I’m mainly using CNN in this article. The code I used is as follows.&lt;br /&gt;
+[Note] If you use the following codes, please do so at your own risk.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.select import Select
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.alert import Alert
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.common.action_chains import ActionChains
+from time import sleep
+from urllib import request
+import random
+
+# selenium option settings (spell)
+options = Options()
+options.add_argument(&amp;#39;--disable-gpu&amp;#39;);
+options.add_argument(&amp;#39;--disable-extensions&amp;#39;);
+options.add_argument(&amp;#39;--proxy-server=&amp;quot;direct://&amp;quot;&amp;#39;);
+options.add_argument(&amp;#39;--proxy-bypass-list=*&amp;#39;);
+options.add_argument(&amp;#39;--start-maximized&amp;#39;);
+
+# driver specification
+DRIVER_PATH = r&amp;#39;C:/Users/aashi/Desktop/chromedriver_win32/chromedriver.exe&amp;#39;
+driver = webdriver.Chrome(executable_path=DRIVER_PATH, chrome_options=options)
+
+# Pass the url and go to the site
+url = &amp;#39;https://www.daily.co.jp/horse/horsecheck/photo/&amp;#39;
+driver.get(url)
+driver.implicitly_wait(15) # Maximum time to wait for an object to load, and if this is exceeded, an error
+sleep(5) # 1 second sleep as the web page transition is performed
+
+# Image data is saved for each race.
+selector0 = &amp;quot;body &amp;gt; div &amp;gt; main &amp;gt; div &amp;gt; div.primaryContents &amp;gt; article &amp;gt; div &amp;gt; section &amp;gt; a&amp;quot;
+elements = driver.find_elements_by_css_selector(selector0)
+for i in range(0,len(elements)):
+  elements = driver.find_elements_by_css_selector(selector0)
+  element = elements[i]
+  element.click()
+  sleep(5) # 5 seconds sleep as the web page transition is performed
+
+  target = driver.find_element_by_link_text(&amp;#39;Ｇ１馬体診断写真集のTOP&amp;#39;)
+  actions = ActionChains(driver)
+  actions.move_to_element(target)
+  actions.perform()
+  sleep(5) # 5 seconds sleep as the web page transition is performed
+  selector = &amp;quot;body &amp;gt; div.wrapper.horse.is-fixedHeader.is-fixedAnimation &amp;gt; main &amp;gt; div &amp;gt; div.primaryContents &amp;gt; article &amp;gt; article &amp;gt; div.photoDetail-wrapper &amp;gt; section &amp;gt; div &amp;gt; figure&amp;quot;
+  figures = driver.find_elements_by_css_selector(selector)
+  download_dir = r&amp;#39;C:\Users\aashi\umanalytics\photo\image&amp;#39;
+  selector = &amp;quot;body &amp;gt; div &amp;gt; main &amp;gt; div &amp;gt; div.primaryContents &amp;gt; article &amp;gt; article &amp;gt; div.photoDetail-wrapper &amp;gt; section &amp;gt; h1&amp;quot;
+  race_name = driver.find_element_by_css_selector(selector).text
+  for figure in figures:
+    img_name = figure.find_element_by_tag_name(&amp;#39;figcaption&amp;#39;).text
+    horse_src = figure.find_element_by_tag_name(&amp;#39;img&amp;#39;).get_attribute(&amp;quot;src&amp;quot;)    
+    save_name = download_dir + &amp;#39;/&amp;#39; + race_name + &amp;#39;_&amp;#39; + img_name + &amp;#39;.jpg&amp;#39;
+    request.urlretrieve(horse_src,save_name)
+  driver.back()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The saved images were cross-checked with the actual race results and manually divided into the top three groups and the rest of the groups. The images are saved as follows.&lt;/p&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;horse_photo.PNG&#34; alt=&#34;&#34; /&gt;
+&lt;p class=&#34;caption&#34;&gt;Stored Horse Image&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;This completes the collection of the original data.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&#34;training-cnn-using-keras&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;2. Training CNN using &lt;code&gt;Keras&lt;/code&gt;&lt;/h2&gt;
+&lt;div id=&#34;what-is-keras&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;What is Keras?&lt;/h3&gt;
+&lt;p&gt;Now, let’s train CNN using &lt;code&gt;Keras&lt;/code&gt;. &lt;code&gt;Keras&lt;/code&gt; is one of the &lt;code&gt;Neural Network&lt;/code&gt; libraries that runs on &lt;code&gt;Tensorflow&lt;/code&gt; and &lt;code&gt;Theano&lt;/code&gt;. &lt;code&gt;Keras&lt;/code&gt; is one of the &lt;code&gt;Neural Network&lt;/code&gt; libraries that runs on &lt;code&gt;Tensorflow&lt;/code&gt; and &lt;code&gt;Theano&lt;/code&gt;. &lt;code&gt;Keras&lt;/code&gt; is characterized by its ability to build models with relatively short code and its many learning algorithms.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;what-is-cnn&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;What is CNN?&lt;/h3&gt;
+&lt;p&gt;CNN is a type of &lt;code&gt;(Deep) Neural Network&lt;/code&gt; often used in image analysis, and as its name suggests, it is an additional &lt;code&gt;convolution&lt;/code&gt;. Convolution is a process like the following.&lt;/p&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;https://cdn-ak.f.st-hatena.com/images/fotolife/t/tdualdir/20180501/20180501211957.png&#34; alt=&#34;&#34; /&gt;
+&lt;p class=&#34;caption&#34;&gt;Convolutional Layer Processing&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;The input here is the image data. Image analysis recognizes and analyzes images as numerical values. The image on the computer is represented by the &lt;code&gt;RGB&lt;/code&gt; value, which is a numerical value from 0 to 255 of three colors, red (Red), green (Green) and blue (Blue). There are three layers of vectors in the form of 255 red, 0 green, 0 blue, and so on, and in this case a perfect red is represented. In the case above, you can think of a, b, c, etc. as representing one of the &lt;code&gt;RGB&lt;/code&gt; values of each pixel. Convolution calculates the features of an image by taking the inner product of these &lt;code&gt;RGB&lt;/code&gt; values with a matrix called the kernel. The following video(Japanese) is a good example of what the convolution layer means.&lt;/p&gt;
+&lt;iframe width=&#34;560&#34; height=&#34;315&#34; src=&#34;https://www.youtube.com/embed/vU-JfZNBdYU&#34; frameborder=&#34;0&#34; allow=&#34;accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture&#34; allowfullscreen&gt;
+&lt;/iframe&gt;
+&lt;p&gt;By learning the kernel to successfully get the distinctive parts of that image, it is possible to identify the image. I think the convolutional layer is the most important part of the CNN.&lt;/p&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;https://th.bing.com/th/id/OIP.F2Ik_XFzmu5jZF-byiAKQQHaCg?w=342&amp;amp;h=118&amp;amp;c=7&amp;amp;o=5&amp;amp;dpr=1.25&amp;amp;pid=1.7&#34; alt=&#34;&#34; /&gt;
+&lt;p class=&#34;caption&#34;&gt;The Big Picture of CNN&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;As shown in the above figure, CNN has not only convolutional layers but also input and output layers as well as usual &lt;code&gt;Neural Network&lt;/code&gt; layers. If you want to know about the &lt;code&gt;MaxPooling&lt;/code&gt; layer, see the following movie(Japanese).&lt;/p&gt;
+&lt;iframe width=&#34;560&#34; height=&#34;315&#34; src=&#34;https://www.youtube.com/embed/MLixg9K6oeU&#34; frameborder=&#34;0&#34; allow=&#34;accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture&#34; allowfullscreen&gt;
+&lt;/iframe&gt;
+&lt;p&gt;Although the gradient method is known as the most orthodox training method for deep learning, various extension algorithms such as &lt;code&gt;Adam&lt;/code&gt; have been proposed. Basically, &lt;code&gt;Adam&lt;/code&gt; or &lt;code&gt;momentum&lt;/code&gt; is often used.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;coding&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;Coding&lt;/h3&gt;
+&lt;p&gt;Now, let’s get to the coding.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;from keras.utils import np_utils
+from keras.models import Sequential
+from keras.layers.convolutional import MaxPooling2D
+from keras.layers import Activation, Conv2D, Flatten, Dense,Dropout
+from sklearn.model_selection import train_test_split
+from keras.optimizers import SGD, Adadelta, Adagrad, Adam, Adamax, RMSprop, Nadam
+from PIL import Image
+import numpy as np
+import glob
+import matplotlib.pyplot as plt
+import time
+import os&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The first step is to convert the collected image data to numerical data to create the training data.
+The directory structure is as follows, with the top image and other images being stored in separate directories. When we read in the images from each directory, we give a category variable of 1 for the top image and 0 for others.&lt;/p&gt;
+&lt;p&gt;photograph of a horse&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;superior (in rank)&lt;/li&gt;
+&lt;li&gt;Other&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;#Specify a folder
+folders = os.listdir(r&amp;quot;C:\Users\aashi\umanalytics\photo\image&amp;quot;)
+#Specify the total number of strokes (50 x 50 x 3 in this case).
+image_size = 300
+dense_size = len(folders)
+
+X = []
+Y = []
+
+#Reads an image from each folder and converts it to a numpy array of RGB values using the Image function
+for i, folder in enumerate(folders):
+  files = glob.glob(&amp;quot;C:/Users/aashi/umanalytics/photo/image/&amp;quot; + folder + &amp;quot;/*.jpg&amp;quot;)
+  index = i
+  for k, file in enumerate(files):
+    image = Image.open(file)
+    image = image.convert(&amp;quot;L&amp;quot;).convert(&amp;quot;RGB&amp;quot;)
+    image = image.resize((image_size, image_size)) #I&amp;#39;m dropping the number of pixels.
+ 
+    data = np.asarray(image)
+    X.append(data)
+    Y.append(index)
+
+X = np.array(X)
+Y = np.array(Y)
+X = X.astype(&amp;#39;float32&amp;#39;)
+X = X / 255.0 # Conversion to 0~1
+X.shape
+Y = np_utils.to_categorical(Y, dense_size)
+
+#splitting training data and test data
+X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.20)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;I’ve been able to split the training data and the test data. What I’m considering now is a binary classification of “top” and “other”, but I defined “top” as the top 3, so the data is unbalanced (about 5 times as much other data as the top data). In this case, if we train on the data as it is, it is easier to predict the label with the larger sample size (in this case, “other”), and the model will have a bias. Therefore, it is necessary to adjust the training data so that the sample size is the same for each of the two classes.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;index_zero = np.random.choice(np.array(np.where(y_train[:,1]==0))[0,],np.count_nonzero(y_train[:,1]==1),replace=False)
+index_one = np.array(np.where(y_train[:,1]==1))[0]
+y_resampled = y_train[np.hstack((index_one,index_zero))]
+X_resampled = X_train[np.hstack((index_one,index_zero))]&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;We will use this &lt;code&gt;y_resampled&lt;/code&gt; and &lt;code&gt;X_resampled&lt;/code&gt; for the training data. Next, we will build the CNN. In &lt;code&gt;Keras&lt;/code&gt;, a model is defined by specifying a &lt;code&gt;sequential model&lt;/code&gt; and adding a layer by &lt;code&gt;add&lt;/code&gt; method.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;model = Sequential()
+model.add(Conv2D(32, (3, 3), padding=&amp;#39;same&amp;#39;,input_shape=X_train.shape[1:]))
+model.add(Activation(&amp;#39;relu&amp;#39;))
+model.add(Conv2D(32, (3, 3)))
+model.add(Activation(&amp;#39;relu&amp;#39;))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))
+
+model.add(Conv2D(64, (3, 3), padding=&amp;#39;same&amp;#39;))
+model.add(Activation(&amp;#39;relu&amp;#39;))
+model.add(Conv2D(64, (3, 3)))
+model.add(Activation(&amp;#39;relu&amp;#39;))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))
+
+model.add(Flatten())
+model.add(Dense(512))
+model.add(Activation(&amp;#39;relu&amp;#39;))
+model.add(Dropout(0.5))
+model.add(Dense(dense_size))
+model.add(Activation(&amp;#39;softmax&amp;#39;))
+
+model.summary()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Model: &amp;quot;sequential&amp;quot;
+## _________________________________________________________________
+## Layer (type)                 Output Shape              Param #   
+## =================================================================
+## conv2d (Conv2D)              (None, 300, 300, 32)      896       
+## _________________________________________________________________
+## activation (Activation)      (None, 300, 300, 32)      0         
+## _________________________________________________________________
+## conv2d_1 (Conv2D)            (None, 298, 298, 32)      9248      
+## _________________________________________________________________
+## activation_1 (Activation)    (None, 298, 298, 32)      0         
+## _________________________________________________________________
+## max_pooling2d (MaxPooling2D) (None, 149, 149, 32)      0         
+## _________________________________________________________________
+## dropout (Dropout)            (None, 149, 149, 32)      0         
+## _________________________________________________________________
+## conv2d_2 (Conv2D)            (None, 149, 149, 64)      18496     
+## _________________________________________________________________
+## activation_2 (Activation)    (None, 149, 149, 64)      0         
+## _________________________________________________________________
+## conv2d_3 (Conv2D)            (None, 147, 147, 64)      36928     
+## _________________________________________________________________
+## activation_3 (Activation)    (None, 147, 147, 64)      0         
+## _________________________________________________________________
+## max_pooling2d_1 (MaxPooling2 (None, 73, 73, 64)        0         
+## _________________________________________________________________
+## dropout_1 (Dropout)          (None, 73, 73, 64)        0         
+## _________________________________________________________________
+## flatten (Flatten)            (None, 341056)            0         
+## _________________________________________________________________
+## dense (Dense)                (None, 512)               174621184 
+## _________________________________________________________________
+## activation_4 (Activation)    (None, 512)               0         
+## _________________________________________________________________
+## dropout_2 (Dropout)          (None, 512)               0         
+## _________________________________________________________________
+## dense_1 (Dense)              (None, 2)                 1026      
+## _________________________________________________________________
+## activation_5 (Activation)    (None, 2)                 0         
+## =================================================================
+## Total params: 174,687,778
+## Trainable params: 174,687,778
+## Non-trainable params: 0
+## _________________________________________________________________&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Now, let’s get to the learning part. We’ll use &lt;code&gt;Adadelta&lt;/code&gt; for the algorithm. I don’t really understand it.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;optimizers =&amp;quot;Adadelta&amp;quot;
+results = {}
+epochs = 50
+model.compile(loss=&amp;#39;categorical_crossentropy&amp;#39;, optimizer=optimizers, metrics=[&amp;#39;accuracy&amp;#39;])
+results = model.fit(X_resampled, y_resampled, validation_split=0.2, epochs=epochs)&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;undersampling-for-unbalanced-data-adjustment&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;Undersampling for unbalanced data adjustment&lt;/h3&gt;
+&lt;p&gt;From here, we perform binary classification with Test data, but since we are undersampling the training data, we have an undersampled sample selection bias when calculating the prediction probability. The paper is available &lt;a href=&#34;https://www3.nd.edu/~dial/publications/dalpozzolo2015calibrating.pdf&#34;&gt;here&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Therefore, I would like to formulate this part of the problem here, although a correction is needed. I will describe the current binary classification problem as the problem of predicting the objective variable &lt;span class=&#34;math inline&#34;&gt;\(Y\)&lt;/span&gt;, which takes a binary value from the explanatory thousand &lt;span class=&#34;math inline&#34;&gt;\(X\)&lt;/span&gt;. Let &lt;span class=&#34;math inline&#34;&gt;\((X,Y)\)&lt;/span&gt; be a dataset where the positive example is considerably less than the negative example and the sample size of the negative example is matched to the positive example as &lt;span class=&#34;math inline&#34;&gt;\((X_s,Y_s)\)&lt;/span&gt;. We define a categorical variable &lt;span class=&#34;math inline&#34;&gt;\(s\)&lt;/span&gt; that takes 1 if the &lt;span class=&#34;math inline&#34;&gt;\((X,Y)\)&lt;/span&gt; sample set is also included in &lt;span class=&#34;math inline&#34;&gt;\((X_s,Y_s)\)&lt;/span&gt; and 0 if it is not.
+Given an explanatory variable &lt;span class=&#34;math inline&#34;&gt;\(x\)&lt;/span&gt; to the model constructed using the dataset &lt;span class=&#34;math inline&#34;&gt;\((X,Y)\)&lt;/span&gt;, the positive example and the conditional probability of predicting can be expressed as &lt;span class=&#34;math inline&#34;&gt;\(P(y=1|x)\)&lt;/span&gt;. On the other hand, the conditional probability of predicting a positive example in a model constructed using &lt;span class=&#34;math inline&#34;&gt;\((X_s,Y_s)\)&lt;/span&gt; can be expressed as &lt;span class=&#34;math inline&#34;&gt;\(P(y=1|x)\)&lt;/span&gt; using Bayes’ theorem and the categorical variable &lt;span class=&#34;math inline&#34;&gt;\(s\)&lt;/span&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+P(y=1|x,s=1) = \frac{P(s=1|y=1)P(y=1|x)}{P(s=1|y=1)P(y=1|x) + P(s=1|y=0)P(y=0|x)}
+\]&lt;/span&gt;
+It can be written as. Since &lt;span class=&#34;math inline&#34;&gt;\((X_s,Y_s)\)&lt;/span&gt; matches the sample size of the negative example to the positive example, &lt;span class=&#34;math inline&#34;&gt;\(P(s=1,y=1)=1\)&lt;/span&gt;, the above formula is rewritten as&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+P(y=1|x,s=1) = \frac{P(y=1|x)}{P(y=1|x) + P(s=1|y=0)P(y=0|x)}
+= \frac{P(y=1|x)}{P(y=1|x) + P(s=1|y=0)(1-P(y=1|x))}
+\]&lt;/span&gt;
+It is self-evident from the definition of &lt;span class=&#34;math inline&#34;&gt;\((X_s,Y_s)\)&lt;/span&gt; that &lt;span class=&#34;math inline&#34;&gt;\(P(s=1|y=0)\neq0\)&lt;/span&gt; (0 would result in unbalanced data with only positive examples). Thus, as long as &lt;span class=&#34;math inline&#34;&gt;\(P(y=0,x) \neq0\)&lt;/span&gt;, the probability that the undersampling model will be rejected as a positive example is positively biased against the probability that the original data set will produce. What we want to find is &lt;span class=&#34;math inline&#34;&gt;\(P(y=1|x)\)&lt;/span&gt; with no bias, so &lt;span class=&#34;math inline&#34;&gt;\(P=P(y=1|x),P_s=P(y|x,s=1),\beta=P(s=1,y=0)\)&lt;/span&gt;, then we can get&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+P = \frac{\beta P_s}{\beta P_s-P_s+1}
+\]&lt;/span&gt;
+and can use this relationship formula to correct for bias.
+Let’s define what we’ve just identified as a function.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;def calibration(y_proba, beta):
+    return y_proba / (y_proba + (1 - y_proba) / beta)
+
+sampling_rate = sum(y_train[:,1]) / sum(1-y_train[:,1])
+y_proba_calib = calibration(model.predict(X_test), sampling_rate)
+y_pred = np_utils.to_categorical(np.argmax(y_proba_calib,axis=1), dense_size)
+
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, accuracy_score
+score = accuracy_score(y_test, y_pred)
+print(&amp;#39;Test accuracy:&amp;#39;, score)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Test accuracy: 0.2711864406779661&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;It’s not good at all. I ran the &lt;code&gt;ConfusionMatrix&lt;/code&gt; and found out that it doesn’t work.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;ConfusionMatrixDisplay(confusion_matrix(np.argmax(y_test,axis=1), np.argmax(y_pred,axis=1))).plot()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## &amp;lt;sklearn.metrics._plot.confusion_matrix.ConfusionMatrixDisplay object at 0x0000000049341F88&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.show()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-13-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.close()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;I did a bias correction for the imbalance data, but the model is still very predictive of negative values. This doesn’t work.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&#34;interpretation-of-results-using-shap-values&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;3. Interpretation of results using Shap values&lt;/h2&gt;
+&lt;p&gt;I would like to consider the &lt;code&gt;shap&lt;/code&gt; value of the model we just learned and interpret the results. I’ll add an explanation of the &lt;code&gt;shap&lt;/code&gt; value when I have time. Simply put, the visualization captures which parts of the image the CNN captured features and predicted the horse to be at the top. We’ll be analyzing this horse.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.imshow(X_test[0])
+plt.show()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-14-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.close()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import shap
+background = X_train[np.random.choice(X_train.shape[0],100,replace=False)]
+
+e = shap.GradientExplainer(model,background)
+
+shap_values = e.shap_values(X_test[[0]])
+shap.image_plot(shap_values[1],X_test[[0]])&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-15-1.png&#34; width=&#34;576&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;It’s very subtle, but it looks like you’re appreciating the legs and buttocks, etc. It needs to be cropped to take out the horse’s body only, since it seems to be responding to the background. I think I need to build a model for object detection. I’ll think about this another time.
+I’d like to visualize which aspects of the image are captured at each layer.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;from keras import models
+
+layer_outputs = [layer.output for layer in model.layers[:8]]
+layer_names = []
+for layer in model.layers[:8]:
+    layer_names.append(layer.name)
+images_per_row = 16
+
+activation_model = models.Model(inputs=model.input, outputs=layer_outputs)
+activations = activation_model.predict(X_train[[0]])
+
+for layer_name, layer_activation in zip(layer_names, activations):
+    n_features = layer_activation.shape[-1]
+
+    size = layer_activation.shape[1]
+
+    n_cols = n_features // images_per_row
+    display_grid = np.zeros((size * n_cols, images_per_row * size))
+
+    for col in range(n_cols):
+        for row in range(images_per_row):
+            channel_image = layer_activation[0,
+                                             :, :,
+                                             col * images_per_row + row]
+            channel_image -= channel_image.mean()
+            channel_image /= channel_image.std()
+            channel_image *= 64
+            channel_image += 128
+            channel_image = np.clip(channel_image, 0, 255).astype(&amp;#39;uint8&amp;#39;)
+            display_grid[col * size : (col + 1) * size,
+                         row * size : (row + 1) * size] = channel_image
+
+    scale = 1. / size
+    plt.figure(figsize=(scale * display_grid.shape[1],
+                        scale * display_grid.shape[0]))
+    plt.title(layer_name)
+    plt.grid(False)
+    plt.imshow(display_grid, cmap=&amp;#39;viridis&amp;#39;)
+    plt.show()
+    plt.close()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-16-1.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-16-2.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-16-3.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-16-4.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-16-5.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-16-6.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-16-7.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-16-8.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-16-9.png&#34; width=&#34;576&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;It’s hard to interpret, partly because I’m inexperienced.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;finally&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;4. Finally&lt;/h2&gt;
+&lt;p&gt;To be honest, it hasn’t worked out at all. Is it still difficult to predict rankings from the horse’s body? Does multiplying it with other variables change the results? I don’t think I’m able to extract good features from the horses as it is.
+Do I need to get to the point where I can get a paddock video from Youtube and analyze it with the &lt;code&gt;Encoder-Decoder&lt;/code&gt; model to make it work? I’d love to do it when I’m good enough to do it (I don’t know when that will be). Until then, I need to improve my PC specs. Maybe I’ll use the cash handout.&lt;/p&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+    <item>
       <title>I built the Asset Allocation Model in R.</title>
       <link>/en/post/post2/</link>
       <pubDate>Sun, 17 Feb 2019 00:00:00 +0000</pubDate>
@@ -1075,11 +1685,10 @@ As expected, the estimation of the variance-covariance matrix seems to be perfor
 &lt;h2 id=&#34;code-highlighting&#34;&gt;Code Highlighting&lt;/h2&gt;
 &lt;p&gt;Inline code: &lt;code&gt;variable&lt;/code&gt;&lt;/p&gt;
 &lt;p&gt;Code block:&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;porridge = &amp;quot;blueberry&amp;quot;
-if porridge == &amp;quot;blueberry&amp;quot;:
-    print(&amp;quot;Eating...&amp;quot;)
-&lt;/code&gt;&lt;/pre&gt;
-&lt;hr&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;porridge &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blueberry&amp;#34;&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; porridge &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blueberry&amp;#34;&lt;/span&gt;:
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Eating...&amp;#34;&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;hr&gt;
 &lt;h2 id=&#34;math&#34;&gt;Math&lt;/h2&gt;
 &lt;p&gt;In-line math: $x + y = z$&lt;/p&gt;
 &lt;p&gt;Block math:&lt;/p&gt;
@@ -1092,8 +1701,7 @@ $$&lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;{{% fragment %}} One {{% /fragment %}}
 {{% fragment %}} **Two** {{% /fragment %}}
 {{% fragment %}} Three {{% /fragment %}}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Press &lt;code&gt;Space&lt;/code&gt; to play!&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Press &lt;code&gt;Space&lt;/code&gt; to play!&lt;/p&gt;
 &lt;p&gt;&lt;span class=&#34;fragment &#34; &gt;
 One
 &lt;/span&gt;
@@ -1112,12 +1720,11 @@ Three
 &lt;hr&gt;
 &lt;h2 id=&#34;speaker-notes&#34;&gt;Speaker Notes&lt;/h2&gt;
 &lt;p&gt;Add speaker notes to your presentation&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&#34;language-markdown&#34;&gt;{{% speaker_note %}}
-- Only the speaker can read these notes
-- Press `S` key to view
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-markdown&#34; data-lang=&#34;markdown&#34;&gt;{{% speaker_note %}}
+&lt;span style=&#34;color:#66d9ef&#34;&gt;-&lt;/span&gt; Only the speaker can read these notes
+&lt;span style=&#34;color:#66d9ef&#34;&gt;-&lt;/span&gt; Press &lt;span style=&#34;color:#e6db74&#34;&gt;`S`&lt;/span&gt; key to view
 {{% /speaker_note %}}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Press the &lt;code&gt;S&lt;/code&gt; key to view the speaker notes!&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Press the &lt;code&gt;S&lt;/code&gt; key to view the speaker notes!&lt;/p&gt;
 &lt;aside class=&#34;notes&#34;&gt;
   &lt;ul&gt;
 &lt;li&gt;Only the speaker can read these notes&lt;/li&gt;
@@ -1151,21 +1758,19 @@ Three
 
 &lt;h2 id=&#34;custom-slide&#34;&gt;Custom Slide&lt;/h2&gt;
 &lt;p&gt;Customize the slide style and background&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&#34;language-markdown&#34;&gt;{{&amp;lt; slide background-image=&amp;quot;/media/boards.jpg&amp;quot; &amp;gt;}}
-{{&amp;lt; slide background-color=&amp;quot;#0000FF&amp;quot; &amp;gt;}}
-{{&amp;lt; slide class=&amp;quot;my-style&amp;quot; &amp;gt;}}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;hr&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-markdown&#34; data-lang=&#34;markdown&#34;&gt;{{&amp;lt; &lt;span style=&#34;color:#f92672&#34;&gt;slide&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;background-image&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/media/boards.jpg&amp;#34;&lt;/span&gt; &amp;gt;}}
+{{&amp;lt; &lt;span style=&#34;color:#f92672&#34;&gt;slide&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;background-color&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;#0000FF&amp;#34;&lt;/span&gt; &amp;gt;}}
+{{&amp;lt; &lt;span style=&#34;color:#f92672&#34;&gt;slide&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;my-style&amp;#34;&lt;/span&gt; &amp;gt;}}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;hr&gt;
 &lt;h2 id=&#34;custom-css-example&#34;&gt;Custom CSS Example&lt;/h2&gt;
 &lt;p&gt;Let&amp;rsquo;s make headers navy colored.&lt;/p&gt;
 &lt;p&gt;Create &lt;code&gt;assets/css/reveal_custom.css&lt;/code&gt; with:&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&#34;language-css&#34;&gt;.reveal section h1,
-.reveal section h2,
-.reveal section h3 {
-  color: navy;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-css&#34; data-lang=&#34;css&#34;&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;reveal&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;section&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;h1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;,&lt;/span&gt;
+.&lt;span style=&#34;color:#a6e22e&#34;&gt;reveal&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;section&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;h2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;,&lt;/span&gt;
+.&lt;span style=&#34;color:#a6e22e&#34;&gt;reveal&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;section&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;h3&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;color&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;navy&lt;/span&gt;;
 }
-&lt;/code&gt;&lt;/pre&gt;
-&lt;hr&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;hr&gt;
 &lt;h1 id=&#34;questions&#34;&gt;Questions?&lt;/h1&gt;
 &lt;p&gt;&lt;a href=&#34;https://spectrum.chat/academic&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Ask&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;&lt;a href=&#34;https://sourcethemes.com/academic/docs/managing-content/#create-slides&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Documentation&lt;/a&gt;&lt;/p&gt;

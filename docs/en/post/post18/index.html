@@ -1,0 +1,1601 @@
+<!DOCTYPE html><html lang="en-us" >
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  
+  
+  
+  <meta name="generator" content="Wowchemy 4.8.0 for Hugo">
+  
+
+  
+
+  
+  
+
+  
+  
+  
+  
+  
+    
+    
+    
+  
+  
+
+  <meta name="author" content="Ayato Ashihara">
+
+  
+  
+  
+    
+  
+  <meta name="description" content="We created a horse racing prediction model from a new perspective of horse body photography.">
+
+  
+  <link rel="alternate" hreflang="ja" href="../../../post/post18/">
+  
+  <link rel="alternate" hreflang="en-us" href="../../../en/post/post18/">
+
+  
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+  
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+
+  
+  
+  
+  <meta name="theme-color" content="#2962ff">
+  
+
+  
+  
+  
+  <script src="../../../js/mathjax-config.js"></script>
+  
+
+  
+  
+  
+  
+    
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha256-FMvZuGapsJLjouA6k7Eo2lusoAX9i0ShlWFG6qt7SLc=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin="anonymous">
+
+    
+    
+    
+      
+    
+    
+      
+      
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/xcode.min.css" crossorigin="anonymous" title="hl-light">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/xcode.min.css" crossorigin="anonymous" title="hl-dark" disabled>
+      
+    
+
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.css" integrity="sha512-1xoFisiGdy9nvho8EgXuXvnpR5GAMSjFwp40gSRE3NwdUdIMIKuPa7bqoUhLD0O/5tPNhteAsE5XyyMi5reQVA==" crossorigin="anonymous">
+    
+
+    
+
+    
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.2.2/lazysizes.min.js" integrity="sha512-TmDwFLhg3UA4ZG0Eb4MIyT1O1Mb+Oww5kFG0uHqXsdbyZz9DcvYQhKpGgNkamAI6h2lGGZq2X8ftOJvF/XjTUg==" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" integrity="" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+
+  
+
+  
+  
+  
+    
+      
+      
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,700%7CRoboto:400,400italic,700%7CRoboto+Mono&display=swap">
+    
+  
+
+  
+  
+  
+  
+  <link rel="stylesheet" href="../../../css/wowchemy.css">
+
+  
+
+
+
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-140804055-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+
+  function gtag() {
+      dataLayer.push(arguments);
+  }
+
+  function trackOutboundLink(url, target) {
+    gtag('event', 'click', {
+         'event_category': 'outbound',
+         'event_label': url,
+         'transport_type': 'beacon',
+         'event_callback': function () {
+           if (target !== '_blank') {
+             document.location = url;
+           }
+         }
+    });
+    console.debug("Outbound link clicked: " + url);
+  }
+
+  function onClickCallback(event) {
+    if ((event.target.tagName !== 'A') || (event.target.host === window.location.host)) {
+      return;
+    }
+    trackOutboundLink(event.target, event.target.getAttribute('target'));  
+  }
+
+  gtag('js', new Date());
+  gtag('config', 'UA-140804055-1', {});
+
+  
+  document.addEventListener('click', onClickCallback, false);
+</script>
+
+
+  
+
+
+  
+  
+
+  
+
+  <link rel="manifest" href="../../../en/index.webmanifest">
+  <link rel="icon" type="image/png" href="../../../images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
+  <link rel="apple-touch-icon" type="image/png" href="../../../images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
+
+  <link rel="canonical" href="../../../en/post/post18/">
+
+  
+  
+  
+  
+  
+  
+  
+    
+  
+  
+  <meta property="twitter:card" content="summary_large_image">
+  
+  <meta property="og:site_name" content="東京の資産運用会社で働く社会人が研究に没頭するブログ">
+  <meta property="og:url" content="/en/post/post18/">
+  <meta property="og:title" content="I predicted the standings based on horse photos using CNN. | 東京の資産運用会社で働く社会人が研究に没頭するブログ">
+  <meta property="og:description" content="We created a horse racing prediction model from a new perspective of horse body photography."><meta property="og:image" content="/en/post/post18/featured.jpg">
+  <meta property="twitter:image" content="/en/post/post18/featured.jpg"><meta property="og:locale" content="en-us">
+  
+    
+      <meta property="article:published_time" content="2020-07-05T00:00:00&#43;00:00">
+    
+    <meta property="article:modified_time" content="2020-07-05T00:00:00&#43;00:00">
+  
+
+  
+
+
+    
+
+
+
+
+
+
+  
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "/en/post/post18/"
+  },
+  "headline": "I predicted the standings based on horse photos using CNN.",
+  
+  "image": [
+    "/en/post/post18/featured.jpg"
+  ],
+  
+  "datePublished": "2020-07-05T00:00:00Z",
+  "dateModified": "2020-07-05T00:00:00Z",
+  
+  "author": {
+    "@type": "Person",
+    "name": "Ayato Ashihara"
+  },
+  
+  "publisher": {
+    "@type": "Organization",
+    "name": "東京の資産運用会社で働く社会人が研究に没頭するブログ",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png"
+    }
+  },
+  "description": "We created a horse racing prediction model from a new perspective of horse body photography."
+}
+</script>
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+
+  <title>I predicted the standings based on horse photos using CNN. | 東京の資産運用会社で働く社会人が研究に没頭するブログ</title>
+
+</head>
+
+
+<body id="top" data-spy="scroll" data-offset="70" data-target="#TableOfContents" class=" ">
+
+  
+  
+  
+    <script>window.wcDarkLightEnabled = true;</script>
+  
+  
+    <script>const isSiteThemeDark = false;</script>
+  
+  
+  <script src="../../../js/load-theme.js"></script>
+
+  <aside class="search-results" id="search">
+  <div class="container">
+    <section class="search-header">
+
+      <div class="row no-gutters justify-content-between mb-3">
+        <div class="col-6">
+          <h1>Search</h1>
+        </div>
+        <div class="col-6 col-search-close">
+          <a class="js-search" href="#"><i class="fas fa-times-circle text-muted" aria-hidden="true"></i></a>
+        </div>
+      </div>
+
+      <div id="search-box">
+        
+        <input name="q" id="search-query" placeholder="Search..." autocapitalize="off"
+        autocomplete="off" autocorrect="off" spellcheck="false" type="search" class="form-control">
+        
+      </div>
+
+    </section>
+    <section class="section-search-results">
+
+      <div id="search-hits">
+        
+      </div>
+
+    </section>
+  </div>
+</aside>
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+<nav class="navbar navbar-expand-lg navbar-light compensate-for-scrollbar" id="navbar-main">
+  <div class="container">
+
+    
+    <div class="d-none d-lg-inline-flex">
+      <a class="navbar-brand" href="../../../en">東京の資産運用会社で働く社会人が研究に没頭するブログ</a>
+    </div>
+    
+
+    
+    <button type="button" class="navbar-toggler" data-toggle="collapse"
+            data-target="#navbar-content" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+    <span><i class="fas fa-bars"></i></span>
+    </button>
+    
+
+    
+    <div class="navbar-brand-mobile-wrapper d-inline-flex d-lg-none">
+      <a class="navbar-brand" href="../../../en">東京の資産運用会社で働く社会人が研究に没頭するブログ</a>
+    </div>
+    
+
+    
+    
+    <div class="navbar-collapse main-menu-item collapse justify-content-start" id="navbar-content">
+
+      
+      <ul class="navbar-nav d-md-inline-flex">
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+            
+            
+            
+              
+            
+            
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="../../../en/#about"><span>About</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link  active" href="../../../en/post"><span>Posts</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="../../../en/publication"><span>Publications</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+            
+            
+            
+              
+            
+            
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="../../../en/#contact"><span>Contact</span></a>
+        </li>
+
+        
+        
+
+      
+
+        
+      </ul>
+    </div>
+
+    <ul class="nav-icons navbar-nav flex-row ml-auto d-flex pl-md-2">
+      
+      
+      <li class="nav-item">
+        <a class="nav-link js-search" href="#" aria-label="Search"><i class="fas fa-search" aria-hidden="true"></i></a>
+      </li>
+      
+
+      
+      
+      <li class="nav-item dropdown theme-dropdown">
+        <a href="#" class="nav-link" data-toggle="dropdown" aria-haspopup="true">
+          <i class="fas fa-moon" aria-hidden="true"></i>
+        </a>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item js-set-theme-light">
+            <span>Light</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-dark">
+            <span>Dark</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-auto">
+            <span>Automatic</span>
+          </a>
+        </div>
+      </li>
+      
+
+      
+      <li class="nav-item dropdown i18n-dropdown">
+        <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true">
+          <i class="fas fa-globe mr-1" aria-hidden="true"></i><span class="d-none d-lg-inline">English</span></a>
+        <div class="dropdown-menu">
+          <div class="dropdown-item dropdown-item-active">
+            <span>English</span>
+          </div>
+          
+          <a class="dropdown-item" href="../../../post/post18/">
+            <span>日本語</span>
+          </a>
+          
+        </div>
+      </li>
+      
+
+    </ul>
+
+  </div>
+</nav>
+
+
+
+  <article class="article">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+<div class="article-container pt-3">
+  <h1>I predicted the standings based on horse photos using CNN.</h1>
+
+  
+
+  
+
+
+<div class="article-metadata">
+
+  
+  
+
+  
+  <span class="article-date">
+    
+    
+      
+    
+    Jul 5, 2020
+  </span>
+  
+
+  
+
+  
+  <span class="middot-divider"></span>
+  <span class="article-reading-time">
+    6 min read
+  </span>
+  
+
+  
+  
+  
+  <span class="middot-divider"></span>
+  <a href="../../../en/post/post18/#disqus_thread"></a>
+  
+
+  
+  
+  <span class="middot-divider"></span>
+  <span class="article-categories">
+    <i class="fas fa-folder mr-1"></i><a href="../../../en/category/horse_racing/">horse_racing</a></span>
+  
+
+</div>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+<div class="article-header container featured-image-wrapper mt-4 mb-4" style="max-width: 728px; max-height: 484px;">
+  <div style="position: relative">
+    <img src="../../../en/post/post18/featured.jpg" alt="" class="featured-image">
+    
+  </div>
+</div>
+
+
+
+  <div class="article-container">
+
+    <div class="article-style">
+      
+<script src="index_files/header-attrs/header-attrs.js"></script>
+
+<div id="TOC">
+<ul>
+<li><a href="#crawling-for-data-collection">1. Crawling for data collection</a>
+<ul>
+<li><a href="#where-to-get-the-data-from">Where to get the data from</a></li>
+<li><a href="#running-crawling-by-selenium">Running crawling by selenium</a></li>
+</ul></li>
+<li><a href="#training-cnn-using-keras">2. Training CNN using <code>Keras</code></a>
+<ul>
+<li><a href="#what-is-keras">What is Keras?</a></li>
+<li><a href="#what-is-cnn">What is CNN?</a></li>
+<li><a href="#coding">Coding</a></li>
+<li><a href="#undersampling-for-unbalanced-data-adjustment">Undersampling for unbalanced data adjustment</a></li>
+</ul></li>
+<li><a href="#interpretation-of-results-using-shap-values">3. Interpretation of results using Shap values</a></li>
+<li><a href="#finally">4. Finally</a></li>
+</ul>
+</div>
+
+<p>Hi. This time I would like to write an article about predicting horse racing. In the last post, I created a prediction model for horse racing rankings using table data obtained from yahoo horse racing using <code>LightGBM</code>. I used structural data last time, but anyone can do this kind of analysis in these days. So this time, I developed a <code>Convolutional Neural Network</code> (CNN) which extracts features from a horse’s body image and predicts its ranking. This is the second time I’ve used <code>Earth Engine</code> to analyze satellite images, and the first time I’ve used deep learning in this blog. The code is written in Python.</p>
+<div id="crawling-for-data-collection" class="section level2">
+<h2>1. Crawling for data collection</h2>
+<p>The first step is to collect images of the horse’s body from the internet; the best thing to do would be to use pictures of the paddock on race day. However, as far as I’ve been able to find, there are no sites that post photos of the paddock in a cohesive format. It may be interesting to use it as a clipped image or to apply it as a video to the <code>Encoder-Decoder</code> model of CNN to RNN, because it may be that a horse racing fan may have a paddock video on Youtube. However, I don’t have the ability to do that much.</p>
+<div id="where-to-get-the-data-from" class="section level3">
+<h3>Where to get the data from</h3>
+<p>So in this case, the data is taken from <a href="https://www.daily.co.jp/horse/horsecheck/photo/">Daley’s Web site</a>. Here you can find pre-race photos of horses running in the last 1 year? You can find pre-race photos of horses running in G1 races in the past year? Horse bettors who can’t go to the actual racecourse can look at these pictures and analyze the condition of the horses.<br />
+Please note that this site does not include body photos of all the horses that are entered in the race. Also, since this is only a limited number of G1 races, it’s entirely possible that all the horses are finished to begin with, and it’s entirely possible that you won’t be able to tell the difference. However, I’ll make it a priority to try and do it quickly and use this data for this one.</p>
+</div>
+<div id="running-crawling-by-selenium" class="section level3">
+<h3>Running crawling by selenium</h3>
+<p>For crawling, we’ll use selenium. I won’t go into web crawling as I’m mainly using CNN in this article. The code I used is as follows.<br />
+[Note] If you use the following codes, please do so at your own risk.</p>
+<pre class="python"><code>from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.select import Select
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.alert import Alert
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.common.action_chains import ActionChains
+from time import sleep
+from urllib import request
+import random
+
+# selenium option settings (spell)
+options = Options()
+options.add_argument(&#39;--disable-gpu&#39;);
+options.add_argument(&#39;--disable-extensions&#39;);
+options.add_argument(&#39;--proxy-server=&quot;direct://&quot;&#39;);
+options.add_argument(&#39;--proxy-bypass-list=*&#39;);
+options.add_argument(&#39;--start-maximized&#39;);
+
+# driver specification
+DRIVER_PATH = r&#39;C:/Users/aashi/Desktop/chromedriver_win32/chromedriver.exe&#39;
+driver = webdriver.Chrome(executable_path=DRIVER_PATH, chrome_options=options)
+
+# Pass the url and go to the site
+url = &#39;https://www.daily.co.jp/horse/horsecheck/photo/&#39;
+driver.get(url)
+driver.implicitly_wait(15) # Maximum time to wait for an object to load, and if this is exceeded, an error
+sleep(5) # 1 second sleep as the web page transition is performed
+
+# Image data is saved for each race.
+selector0 = &quot;body &gt; div &gt; main &gt; div &gt; div.primaryContents &gt; article &gt; div &gt; section &gt; a&quot;
+elements = driver.find_elements_by_css_selector(selector0)
+for i in range(0,len(elements)):
+  elements = driver.find_elements_by_css_selector(selector0)
+  element = elements[i]
+  element.click()
+  sleep(5) # 5 seconds sleep as the web page transition is performed
+
+  target = driver.find_element_by_link_text(&#39;Ｇ１馬体診断写真集のTOP&#39;)
+  actions = ActionChains(driver)
+  actions.move_to_element(target)
+  actions.perform()
+  sleep(5) # 5 seconds sleep as the web page transition is performed
+  selector = &quot;body &gt; div.wrapper.horse.is-fixedHeader.is-fixedAnimation &gt; main &gt; div &gt; div.primaryContents &gt; article &gt; article &gt; div.photoDetail-wrapper &gt; section &gt; div &gt; figure&quot;
+  figures = driver.find_elements_by_css_selector(selector)
+  download_dir = r&#39;C:\Users\aashi\umanalytics\photo\image&#39;
+  selector = &quot;body &gt; div &gt; main &gt; div &gt; div.primaryContents &gt; article &gt; article &gt; div.photoDetail-wrapper &gt; section &gt; h1&quot;
+  race_name = driver.find_element_by_css_selector(selector).text
+  for figure in figures:
+    img_name = figure.find_element_by_tag_name(&#39;figcaption&#39;).text
+    horse_src = figure.find_element_by_tag_name(&#39;img&#39;).get_attribute(&quot;src&quot;)    
+    save_name = download_dir + &#39;/&#39; + race_name + &#39;_&#39; + img_name + &#39;.jpg&#39;
+    request.urlretrieve(horse_src,save_name)
+  driver.back()</code></pre>
+<p>The saved images were cross-checked with the actual race results and manually divided into the top three groups and the rest of the groups. The images are saved as follows.</p>
+<div class="figure">
+<img src="horse_photo.PNG" alt="" />
+<p class="caption">Stored Horse Image</p>
+</div>
+<p>This completes the collection of the original data.</p>
+</div>
+</div>
+<div id="training-cnn-using-keras" class="section level2">
+<h2>2. Training CNN using <code>Keras</code></h2>
+<div id="what-is-keras" class="section level3">
+<h3>What is Keras?</h3>
+<p>Now, let’s train CNN using <code>Keras</code>. <code>Keras</code> is one of the <code>Neural Network</code> libraries that runs on <code>Tensorflow</code> and <code>Theano</code>. <code>Keras</code> is one of the <code>Neural Network</code> libraries that runs on <code>Tensorflow</code> and <code>Theano</code>. <code>Keras</code> is characterized by its ability to build models with relatively short code and its many learning algorithms.</p>
+</div>
+<div id="what-is-cnn" class="section level3">
+<h3>What is CNN?</h3>
+<p>CNN is a type of <code>(Deep) Neural Network</code> often used in image analysis, and as its name suggests, it is an additional <code>convolution</code>. Convolution is a process like the following.</p>
+<div class="figure">
+<img src="https://cdn-ak.f.st-hatena.com/images/fotolife/t/tdualdir/20180501/20180501211957.png" alt="" />
+<p class="caption">Convolutional Layer Processing</p>
+</div>
+<p>The input here is the image data. Image analysis recognizes and analyzes images as numerical values. The image on the computer is represented by the <code>RGB</code> value, which is a numerical value from 0 to 255 of three colors, red (Red), green (Green) and blue (Blue). There are three layers of vectors in the form of 255 red, 0 green, 0 blue, and so on, and in this case a perfect red is represented. In the case above, you can think of a, b, c, etc. as representing one of the <code>RGB</code> values of each pixel. Convolution calculates the features of an image by taking the inner product of these <code>RGB</code> values with a matrix called the kernel. The following video(Japanese) is a good example of what the convolution layer means.</p>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/vU-JfZNBdYU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
+</iframe>
+<p>By learning the kernel to successfully get the distinctive parts of that image, it is possible to identify the image. I think the convolutional layer is the most important part of the CNN.</p>
+<div class="figure">
+<img src="https://th.bing.com/th/id/OIP.F2Ik_XFzmu5jZF-byiAKQQHaCg?w=342&amp;h=118&amp;c=7&amp;o=5&amp;dpr=1.25&amp;pid=1.7" alt="" />
+<p class="caption">The Big Picture of CNN</p>
+</div>
+<p>As shown in the above figure, CNN has not only convolutional layers but also input and output layers as well as usual <code>Neural Network</code> layers. If you want to know about the <code>MaxPooling</code> layer, see the following movie(Japanese).</p>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/MLixg9K6oeU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
+</iframe>
+<p>Although the gradient method is known as the most orthodox training method for deep learning, various extension algorithms such as <code>Adam</code> have been proposed. Basically, <code>Adam</code> or <code>momentum</code> is often used.</p>
+</div>
+<div id="coding" class="section level3">
+<h3>Coding</h3>
+<p>Now, let’s get to the coding.</p>
+<pre class="python"><code>from keras.utils import np_utils
+from keras.models import Sequential
+from keras.layers.convolutional import MaxPooling2D
+from keras.layers import Activation, Conv2D, Flatten, Dense,Dropout
+from sklearn.model_selection import train_test_split
+from keras.optimizers import SGD, Adadelta, Adagrad, Adam, Adamax, RMSprop, Nadam
+from PIL import Image
+import numpy as np
+import glob
+import matplotlib.pyplot as plt
+import time
+import os</code></pre>
+<p>The first step is to convert the collected image data to numerical data to create the training data.
+The directory structure is as follows, with the top image and other images being stored in separate directories. When we read in the images from each directory, we give a category variable of 1 for the top image and 0 for others.</p>
+<p>photograph of a horse</p>
+<ul>
+<li>superior (in rank)</li>
+<li>Other</li>
+</ul>
+<pre class="python"><code>#Specify a folder
+folders = os.listdir(r&quot;C:\Users\aashi\umanalytics\photo\image&quot;)
+#Specify the total number of strokes (50 x 50 x 3 in this case).
+image_size = 300
+dense_size = len(folders)
+
+X = []
+Y = []
+
+#Reads an image from each folder and converts it to a numpy array of RGB values using the Image function
+for i, folder in enumerate(folders):
+  files = glob.glob(&quot;C:/Users/aashi/umanalytics/photo/image/&quot; + folder + &quot;/*.jpg&quot;)
+  index = i
+  for k, file in enumerate(files):
+    image = Image.open(file)
+    image = image.convert(&quot;L&quot;).convert(&quot;RGB&quot;)
+    image = image.resize((image_size, image_size)) #I&#39;m dropping the number of pixels.
+ 
+    data = np.asarray(image)
+    X.append(data)
+    Y.append(index)
+
+X = np.array(X)
+Y = np.array(Y)
+X = X.astype(&#39;float32&#39;)
+X = X / 255.0 # Conversion to 0~1
+X.shape
+Y = np_utils.to_categorical(Y, dense_size)
+
+#splitting training data and test data
+X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.20)</code></pre>
+<p>I’ve been able to split the training data and the test data. What I’m considering now is a binary classification of “top” and “other”, but I defined “top” as the top 3, so the data is unbalanced (about 5 times as much other data as the top data). In this case, if we train on the data as it is, it is easier to predict the label with the larger sample size (in this case, “other”), and the model will have a bias. Therefore, it is necessary to adjust the training data so that the sample size is the same for each of the two classes.</p>
+<pre class="python"><code>index_zero = np.random.choice(np.array(np.where(y_train[:,1]==0))[0,],np.count_nonzero(y_train[:,1]==1),replace=False)
+index_one = np.array(np.where(y_train[:,1]==1))[0]
+y_resampled = y_train[np.hstack((index_one,index_zero))]
+X_resampled = X_train[np.hstack((index_one,index_zero))]</code></pre>
+<p>We will use this <code>y_resampled</code> and <code>X_resampled</code> for the training data. Next, we will build the CNN. In <code>Keras</code>, a model is defined by specifying a <code>sequential model</code> and adding a layer by <code>add</code> method.</p>
+<pre class="python"><code>model = Sequential()
+model.add(Conv2D(32, (3, 3), padding=&#39;same&#39;,input_shape=X_train.shape[1:]))
+model.add(Activation(&#39;relu&#39;))
+model.add(Conv2D(32, (3, 3)))
+model.add(Activation(&#39;relu&#39;))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))
+
+model.add(Conv2D(64, (3, 3), padding=&#39;same&#39;))
+model.add(Activation(&#39;relu&#39;))
+model.add(Conv2D(64, (3, 3)))
+model.add(Activation(&#39;relu&#39;))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))
+
+model.add(Flatten())
+model.add(Dense(512))
+model.add(Activation(&#39;relu&#39;))
+model.add(Dropout(0.5))
+model.add(Dense(dense_size))
+model.add(Activation(&#39;softmax&#39;))
+
+model.summary()</code></pre>
+<pre><code>## Model: &quot;sequential&quot;
+## _________________________________________________________________
+## Layer (type)                 Output Shape              Param #   
+## =================================================================
+## conv2d (Conv2D)              (None, 300, 300, 32)      896       
+## _________________________________________________________________
+## activation (Activation)      (None, 300, 300, 32)      0         
+## _________________________________________________________________
+## conv2d_1 (Conv2D)            (None, 298, 298, 32)      9248      
+## _________________________________________________________________
+## activation_1 (Activation)    (None, 298, 298, 32)      0         
+## _________________________________________________________________
+## max_pooling2d (MaxPooling2D) (None, 149, 149, 32)      0         
+## _________________________________________________________________
+## dropout (Dropout)            (None, 149, 149, 32)      0         
+## _________________________________________________________________
+## conv2d_2 (Conv2D)            (None, 149, 149, 64)      18496     
+## _________________________________________________________________
+## activation_2 (Activation)    (None, 149, 149, 64)      0         
+## _________________________________________________________________
+## conv2d_3 (Conv2D)            (None, 147, 147, 64)      36928     
+## _________________________________________________________________
+## activation_3 (Activation)    (None, 147, 147, 64)      0         
+## _________________________________________________________________
+## max_pooling2d_1 (MaxPooling2 (None, 73, 73, 64)        0         
+## _________________________________________________________________
+## dropout_1 (Dropout)          (None, 73, 73, 64)        0         
+## _________________________________________________________________
+## flatten (Flatten)            (None, 341056)            0         
+## _________________________________________________________________
+## dense (Dense)                (None, 512)               174621184 
+## _________________________________________________________________
+## activation_4 (Activation)    (None, 512)               0         
+## _________________________________________________________________
+## dropout_2 (Dropout)          (None, 512)               0         
+## _________________________________________________________________
+## dense_1 (Dense)              (None, 2)                 1026      
+## _________________________________________________________________
+## activation_5 (Activation)    (None, 2)                 0         
+## =================================================================
+## Total params: 174,687,778
+## Trainable params: 174,687,778
+## Non-trainable params: 0
+## _________________________________________________________________</code></pre>
+<p>Now, let’s get to the learning part. We’ll use <code>Adadelta</code> for the algorithm. I don’t really understand it.</p>
+<pre class="python"><code>optimizers =&quot;Adadelta&quot;
+results = {}
+epochs = 50
+model.compile(loss=&#39;categorical_crossentropy&#39;, optimizer=optimizers, metrics=[&#39;accuracy&#39;])
+results = model.fit(X_resampled, y_resampled, validation_split=0.2, epochs=epochs)</code></pre>
+</div>
+<div id="undersampling-for-unbalanced-data-adjustment" class="section level3">
+<h3>Undersampling for unbalanced data adjustment</h3>
+<p>From here, we perform binary classification with Test data, but since we are undersampling the training data, we have an undersampled sample selection bias when calculating the prediction probability. The paper is available <a href="https://www3.nd.edu/~dial/publications/dalpozzolo2015calibrating.pdf">here</a>.</p>
+<p>Therefore, I would like to formulate this part of the problem here, although a correction is needed. I will describe the current binary classification problem as the problem of predicting the objective variable <span class="math inline">\(Y\)</span>, which takes a binary value from the explanatory thousand <span class="math inline">\(X\)</span>. Let <span class="math inline">\((X,Y)\)</span> be a dataset where the positive example is considerably less than the negative example and the sample size of the negative example is matched to the positive example as <span class="math inline">\((X_s,Y_s)\)</span>. We define a categorical variable <span class="math inline">\(s\)</span> that takes 1 if the <span class="math inline">\((X,Y)\)</span> sample set is also included in <span class="math inline">\((X_s,Y_s)\)</span> and 0 if it is not.
+Given an explanatory variable <span class="math inline">\(x\)</span> to the model constructed using the dataset <span class="math inline">\((X,Y)\)</span>, the positive example and the conditional probability of predicting can be expressed as <span class="math inline">\(P(y=1|x)\)</span>. On the other hand, the conditional probability of predicting a positive example in a model constructed using <span class="math inline">\((X_s,Y_s)\)</span> can be expressed as <span class="math inline">\(P(y=1|x)\)</span> using Bayes’ theorem and the categorical variable <span class="math inline">\(s\)</span>.</p>
+<p><span class="math display">\[
+P(y=1|x,s=1) = \frac{P(s=1|y=1)P(y=1|x)}{P(s=1|y=1)P(y=1|x) + P(s=1|y=0)P(y=0|x)}
+\]</span>
+It can be written as. Since <span class="math inline">\((X_s,Y_s)\)</span> matches the sample size of the negative example to the positive example, <span class="math inline">\(P(s=1,y=1)=1\)</span>, the above formula is rewritten as</p>
+<p><span class="math display">\[
+P(y=1|x,s=1) = \frac{P(y=1|x)}{P(y=1|x) + P(s=1|y=0)P(y=0|x)}
+= \frac{P(y=1|x)}{P(y=1|x) + P(s=1|y=0)(1-P(y=1|x))}
+\]</span>
+It is self-evident from the definition of <span class="math inline">\((X_s,Y_s)\)</span> that <span class="math inline">\(P(s=1|y=0)\neq0\)</span> (0 would result in unbalanced data with only positive examples). Thus, as long as <span class="math inline">\(P(y=0,x) \neq0\)</span>, the probability that the undersampling model will be rejected as a positive example is positively biased against the probability that the original data set will produce. What we want to find is <span class="math inline">\(P(y=1|x)\)</span> with no bias, so <span class="math inline">\(P=P(y=1|x),P_s=P(y|x,s=1),\beta=P(s=1,y=0)\)</span>, then we can get</p>
+<p><span class="math display">\[
+P = \frac{\beta P_s}{\beta P_s-P_s+1}
+\]</span>
+and can use this relationship formula to correct for bias.
+Let’s define what we’ve just identified as a function.</p>
+<pre class="python"><code>def calibration(y_proba, beta):
+    return y_proba / (y_proba + (1 - y_proba) / beta)
+
+sampling_rate = sum(y_train[:,1]) / sum(1-y_train[:,1])
+y_proba_calib = calibration(model.predict(X_test), sampling_rate)
+y_pred = np_utils.to_categorical(np.argmax(y_proba_calib,axis=1), dense_size)
+
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, accuracy_score
+score = accuracy_score(y_test, y_pred)
+print(&#39;Test accuracy:&#39;, score)</code></pre>
+<pre><code>## Test accuracy: 0.2711864406779661</code></pre>
+<p>It’s not good at all. I ran the <code>ConfusionMatrix</code> and found out that it doesn’t work.</p>
+<pre class="python"><code>ConfusionMatrixDisplay(confusion_matrix(np.argmax(y_test,axis=1), np.argmax(y_pred,axis=1))).plot()</code></pre>
+<pre><code>## &lt;sklearn.metrics._plot.confusion_matrix.ConfusionMatrixDisplay object at 0x0000000049341F88&gt;</code></pre>
+<pre class="python"><code>plt.show()</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+<pre class="python"><code>plt.close()</code></pre>
+<p>I did a bias correction for the imbalance data, but the model is still very predictive of negative values. This doesn’t work.</p>
+</div>
+</div>
+<div id="interpretation-of-results-using-shap-values" class="section level2">
+<h2>3. Interpretation of results using Shap values</h2>
+<p>I would like to consider the <code>shap</code> value of the model we just learned and interpret the results. I’ll add an explanation of the <code>shap</code> value when I have time. Simply put, the visualization captures which parts of the image the CNN captured features and predicted the horse to be at the top. We’ll be analyzing this horse.</p>
+<pre class="python"><code>plt.imshow(X_test[0])
+plt.show()</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
+<pre class="python"><code>plt.close()</code></pre>
+<pre class="python"><code>import shap
+background = X_train[np.random.choice(X_train.shape[0],100,replace=False)]
+
+e = shap.GradientExplainer(model,background)
+
+shap_values = e.shap_values(X_test[[0]])
+shap.image_plot(shap_values[1],X_test[[0]])</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-15-1.png" width="576" /></p>
+<p>It’s very subtle, but it looks like you’re appreciating the legs and buttocks, etc. It needs to be cropped to take out the horse’s body only, since it seems to be responding to the background. I think I need to build a model for object detection. I’ll think about this another time.
+I’d like to visualize which aspects of the image are captured at each layer.</p>
+<pre class="python"><code>from keras import models
+
+layer_outputs = [layer.output for layer in model.layers[:8]]
+layer_names = []
+for layer in model.layers[:8]:
+    layer_names.append(layer.name)
+images_per_row = 16
+
+activation_model = models.Model(inputs=model.input, outputs=layer_outputs)
+activations = activation_model.predict(X_train[[0]])
+
+for layer_name, layer_activation in zip(layer_names, activations):
+    n_features = layer_activation.shape[-1]
+
+    size = layer_activation.shape[1]
+
+    n_cols = n_features // images_per_row
+    display_grid = np.zeros((size * n_cols, images_per_row * size))
+
+    for col in range(n_cols):
+        for row in range(images_per_row):
+            channel_image = layer_activation[0,
+                                             :, :,
+                                             col * images_per_row + row]
+            channel_image -= channel_image.mean()
+            channel_image /= channel_image.std()
+            channel_image *= 64
+            channel_image += 128
+            channel_image = np.clip(channel_image, 0, 255).astype(&#39;uint8&#39;)
+            display_grid[col * size : (col + 1) * size,
+                         row * size : (row + 1) * size] = channel_image
+
+    scale = 1. / size
+    plt.figure(figsize=(scale * display_grid.shape[1],
+                        scale * display_grid.shape[0]))
+    plt.title(layer_name)
+    plt.grid(False)
+    plt.imshow(display_grid, cmap=&#39;viridis&#39;)
+    plt.show()
+    plt.close()</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-16-1.png" width="1536" /><img src="index_files/figure-html/unnamed-chunk-16-2.png" width="1536" /><img src="index_files/figure-html/unnamed-chunk-16-3.png" width="1536" /><img src="index_files/figure-html/unnamed-chunk-16-4.png" width="1536" /><img src="index_files/figure-html/unnamed-chunk-16-5.png" width="1536" /><img src="index_files/figure-html/unnamed-chunk-16-6.png" width="1536" /><img src="index_files/figure-html/unnamed-chunk-16-7.png" width="1536" /><img src="index_files/figure-html/unnamed-chunk-16-8.png" width="1536" /><img src="index_files/figure-html/unnamed-chunk-16-9.png" width="576" /></p>
+<p>It’s hard to interpret, partly because I’m inexperienced.</p>
+</div>
+<div id="finally" class="section level2">
+<h2>4. Finally</h2>
+<p>To be honest, it hasn’t worked out at all. Is it still difficult to predict rankings from the horse’s body? Does multiplying it with other variables change the results? I don’t think I’m able to extract good features from the horses as it is.
+Do I need to get to the point where I can get a paddock video from Youtube and analyze it with the <code>Encoder-Decoder</code> model to make it work? I’d love to do it when I’m good enough to do it (I don’t know when that will be). Until then, I need to improve my PC specs. Maybe I’ll use the cash handout.</p>
+</div>
+
+    </div>
+
+    
+
+
+
+
+
+
+<div class="article-tags">
+  
+  <a class="badge badge-light" href="../../../en/tag/python/">Python</a>
+  
+  <a class="badge badge-light" href="../../../en/tag/web_scraping/">Web_scraping</a>
+  
+  <a class="badge badge-light" href="../../../en/tag/machine_learning/">machine_learning</a>
+  
+</div>
+
+
+
+<div class="share-box" aria-hidden="true">
+  <ul class="share">
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://twitter.com/intent/tweet?url=../../../en/post/post18/&amp;text=I%20predicted%20the%20standings%20based%20on%20horse%20photos%20using%20CNN." target="_blank" rel="noopener" class="share-btn-twitter">
+          <i class="fab fa-twitter"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://www.facebook.com/sharer.php?u=/en/post/post18/&amp;t=I%20predicted%20the%20standings%20based%20on%20horse%20photos%20using%20CNN." target="_blank" rel="noopener" class="share-btn-facebook">
+          <i class="fab fa-facebook"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="mailto:?subject=I%20predicted%20the%20standings%20based%20on%20horse%20photos%20using%20CNN.&amp;body=/en/post/post18/" target="_blank" rel="noopener" class="share-btn-email">
+          <i class="fas fa-envelope"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://www.linkedin.com/shareArticle?url=../../../en/post/post18/&amp;title=I%20predicted%20the%20standings%20based%20on%20horse%20photos%20using%20CNN." target="_blank" rel="noopener" class="share-btn-linkedin">
+          <i class="fab fa-linkedin-in"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="whatsapp://send?text=I%20predicted%20the%20standings%20based%20on%20horse%20photos%20using%20CNN.%20/en/post/post18/" target="_blank" rel="noopener" class="share-btn-whatsapp">
+          <i class="fab fa-whatsapp"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://service.weibo.com/share/share.php?url=../../../en/post/post18/&amp;title=I%20predicted%20the%20standings%20based%20on%20horse%20photos%20using%20CNN." target="_blank" rel="noopener" class="share-btn-weibo">
+          <i class="fab fa-weibo"></i>
+        </a>
+      </li>
+    
+  </ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+
+  
+  
+  
+    
+  
+  
+  
+  <div class="media author-card content-widget-hr">
+    
+      
+      <a href="../../../"><img class="avatar mr-3 avatar-circle" src="../../../en/author/ayato-ashihara/avatar_hu77c0c0affdebd3b9cbda9c39412092b5_245163_270x270_fill_q90_lanczos_center.jpg" alt="Ayato Ashihara"></a>
+    
+
+    <div class="media-body">
+      <h5 class="card-title"><a href="../../../">Ayato Ashihara</a></h5>
+      <h6 class="card-subtitle">company employee</h6>
+      <p class="card-text">This blog is a nightly update by a man who is working in his third year since completing graduate school. The content of this blog has nothing to do with the official position of the author&rsquo;s organization.</p>
+      <ul class="network-icon" aria-hidden="true">
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="../../../en/#contact" >
+        <i class="fas fa-envelope"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://www.facebook.com/ASSIY" target="_blank" rel="noopener">
+        <i class="fab fa-facebook"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://github.com/AyatoAshihara/myblog_jp" target="_blank" rel="noopener">
+        <i class="fab fa-github"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://www.linkedin.com/in/%E5%BD%A9%E4%BA%BA-%E8%91%A6%E5%8E%9F-9391b7143/" target="_blank" rel="noopener">
+        <i class="fab fa-linkedin"></i>
+      </a>
+    </li>
+  
+</ul>
+
+    </div>
+  </div>
+
+
+
+
+
+
+
+<section id="comments">
+  
+    
+<div id="disqus_thread"></div>
+<script>
+  let disqus_config = function () {
+    
+    
+    
+  };
+  (function() {
+    if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+      document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+      return;
+    }
+    var d = document, s = d.createElement('script'); s.async = true;
+    s.src = 'https://' + "ayatoashihara-github-io-myblog-multi" + '.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+  })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  
+</section>
+
+
+
+
+
+
+
+
+  
+  
+  <div class="article-widget content-widget-hr">
+    <h3>Related</h3>
+    <ul>
+      
+      <li><a href="../../../en/post/post22/">Get macro panel data from OECD.org via API</a></li>
+      
+    </ul>
+  </div>
+  
+
+
+
+
+
+  </div>
+</article>
+
+      
+
+    
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.4/imagesloaded.pkgd.min.js" integrity="sha256-lqvxZrPLtfffUl2G/e7szqSvPBILGbwmsGE1MKlOi0Q=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js" integrity="sha256-CBrpuqrMhXwcLLUd5tvQ4euBHCdh7wGlDfNz8vbu/iI=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js" integrity="sha256-yt2kYMy0w8AbtF89WXb2P1rfjcP/HTHLT7097U8Y5b8=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/instant.page/5.1.0/instantpage.min.js" integrity="sha512-1+qUtKoh9XZW7j+6LhRMAyOrgSQKenQ4mluTR+cvxXjP1Z54RxZuzstR/H9kgPXQsVB8IW7DMDFUJpzLjvhGSQ==" crossorigin="anonymous"></script>
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/8.8.0/mermaid.min.js" integrity="sha512-ja+hSBi4JDtjSqc4LTBsSwuBT3tdZ3oKYKd07lTVYmCnTCor56AnRql00ssqnTOR9Ss4gOP/ROGB3SfcJnZkeg==" crossorigin="anonymous" title="mermaid"></script>
+      
+
+      
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/highlight.min.js" integrity="sha512-TDKKr+IvoqZnPzc3l35hdjpHD0m+b2EC2SrLEgKDRWpxf2rFCxemkgvJ5kfU48ip+Y+m2XVKyOCD85ybtlZDmw==" crossorigin="anonymous"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/languages/r.min.js"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/languages/latex.min.js"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/languages/python.min.js"></script>
+        
+      
+
+    
+
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.js" integrity="sha512-SeiQaaDh73yrb56sTW/RgVdi/mMqNeM2oBwubFHagc5BkixSpP1fvqF47mKzPGWYSSy4RwbBunrJBQ4Co8fRWA==" crossorigin="anonymous"></script>
+    
+
+    
+    
+    <script>const code_highlighting = true;</script>
+    
+
+    
+    
+    
+    
+    
+    
+    <script>
+      const search_config = {"indexURI":"/en/index.json","minLength":1,"threshold":0.3};
+      const i18n = {"no_results":"No results found","placeholder":"Search...","results":"results found"};
+      const content_type = {
+        'post': "Posts",
+        'project': "Projects",
+        'publication' : "Publications",
+        'talk' : "Talks",
+        'slides' : "Slides"
+        };
+    </script>
+    
+
+    
+    
+
+    
+    
+    <script id="search-hit-fuse-template" type="text/x-template">
+      <div class="search-hit" id="summary-{{key}}">
+      <div class="search-hit-content">
+        <div class="search-hit-name">
+          <a href="{{relpermalink}}">{{title}}</a>
+          <div class="article-metadata search-hit-type">{{type}}</div>
+          <p class="search-hit-description">{{snippet}}</p>
+        </div>
+      </div>
+      </div>
+    </script>
+    
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.2.1/fuse.min.js" integrity="sha256-VzgmKYmhsGNNN4Ph1kMW+BjoYJM2jV5i4IlFoeZA9XI=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js" integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin="anonymous"></script>
+    
+
+    
+    
+
+    
+    
+
+    
+    
+
+    
+    
+    <script id="dsq-count-scr" src="https://ayatoashihara-github-io-myblog-multi.disqus.com/count.js" async></script>
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+      
+    
+    
+      
+    
+    
+    
+    <script src="../../../js/wowchemy.min.8139e5044a74e2e05dca886f99332759.js"></script>
+
+    
+
+
+  
+  
+  <div class="container">
+    <footer class="site-footer">
+  
+
+  <p class="powered-by">
+    
+  </p>
+
+  
+  
+
+
+
+
+
+
+  <p class="powered-by">
+    
+    Published with
+    <a href="https://wowchemy.com" target="_blank" rel="noopener">Wowchemy</a>  —
+    the free, <a href="https://github.com/wowchemy/wowchemy-hugo-modules" target="_blank" rel="noopener">
+    open source</a> website builder that empowers creators.
+    
+
+    
+    <span class="float-right" aria-hidden="true">
+      <a href="#" class="back-to-top">
+        <span class="button_icon">
+          <i class="fas fa-chevron-up fa-2x"></i>
+        </span>
+      </a>
+    </span>
+    
+  </p>
+</footer>
+
+  </div>
+  
+
+  
+<div id="modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cite</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <pre><code class="tex hljs"></code></pre>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-outline-primary my-1 js-copy-cite" href="#" target="_blank">
+          <i class="fas fa-copy"></i> Copy
+        </a>
+        <a class="btn btn-outline-primary my-1 js-download-cite" href="#" target="_blank">
+          <i class="fas fa-download"></i> Download
+        </a>
+        <div id="modal-error"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

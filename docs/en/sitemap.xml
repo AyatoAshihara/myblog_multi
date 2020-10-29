@@ -93,26 +93,6 @@
   </url>
   
   <url>
-    <loc>/en/post/</loc>
-    <lastmod>2020-10-28T21:35:04+09:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/en/post/</loc>
-    <lastmod>2020-10-28T21:35:04+09:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="ja"
-                href="/post/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="en"
-                href="/en/post/"
-                />
-  </url>
-  
-  <url>
     <loc>/en/tag/api/</loc>
     <lastmod>2020-10-19T00:00:00+00:00</lastmod>
     <xhtml:link
@@ -165,6 +145,21 @@
   <url>
     <loc>/en/category/macroeconomics/</loc>
     <lastmod>2020-10-19T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/en/post/</loc>
+    <lastmod>2020-10-19T00:00:00+00:00</lastmod>
+    <xhtml:link
+                rel="alternate"
+                hreflang="ja"
+                href="/post/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="/en/post/"
+                />
   </url>
   
   <url>
@@ -273,6 +268,61 @@
   </url>
   
   <url>
+    <loc>/en/post/post19/</loc>
+    <lastmod>2020-07-08T00:00:00+00:00</lastmod>
+    <xhtml:link
+                rel="alternate"
+                hreflang="ja"
+                href="/post/post19/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="/en/post/post19/"
+                />
+  </url>
+  
+  <url>
+    <loc>/en/tag/machine-learning/</loc>
+    <lastmod>2020-07-08T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/en/tag/time-series_analysis/</loc>
+    <lastmod>2020-07-08T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/en/category/work-related/</loc>
+    <lastmod>2020-07-08T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/en/category/horse_racing/</loc>
+    <lastmod>2020-07-05T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/en/post/post18/</loc>
+    <lastmod>2020-07-05T00:00:00+00:00</lastmod>
+    <xhtml:link
+                rel="alternate"
+                hreflang="ja"
+                href="/post/post18/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="/en/post/post18/"
+                />
+  </url>
+  
+  <url>
+    <loc>/en/tag/machine_learning/</loc>
+    <lastmod>2020-07-05T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>/en/courses/</loc>
     <lastmod>2019-05-05T00:00:00+01:00</lastmod>
     <xhtml:link
@@ -300,11 +350,6 @@
                 hreflang="en"
                 href="/en/post/post2/"
                 />
-  </url>
-  
-  <url>
-    <loc>/en/category/work-related/</loc>
-    <lastmod>2019-03-03T00:00:00+00:00</lastmod>
   </url>
   
   <url>
