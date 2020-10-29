@@ -41,8 +41,6 @@ $$
 d\log S(t) = \mu(t)dt + \sigma(t)dW(t) + Y(t)dJ(t) \tag{2}
 $$
 
-ここで、$J(t)$は$W(t)$とは独立したカウント過程です。[^1]$Y(t)$はジャンプのサイズを表現しており、予測可能な過程であるとします。
-
 [^1]: A stochastic process with non-negative, integer, non-decreasing values.
 
 where $J(t)$ is a counting process independent of $W(t)$. [^2] $Y(t)$ represents the size of the jump and is a predictable process.
@@ -263,7 +261,7 @@ system.time(results <- Rolling_r_cpp(JPYUSD,from))
 
 ```
 ##    ユーザ   システム       経過  
-##       0.03       0.00       0.03
+##       0.02       0.00       0.02
 ```
 
 It takes less than a second to process 12 million records. So Convenient!!
@@ -394,7 +392,7 @@ system.time(results <- results %>% Rolling_rbv_cpp(na_remove = FALSE))
 
 ```
 ##    ユーザ   システム       経過  
-##       0.20       0.12       0.33
+##       0.24       0.09       0.33
 ```
 
 So fast!

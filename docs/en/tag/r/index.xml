@@ -34,9 +34,8 @@ d\log S(t) = \mu(t)dt + \sigma(t)dW(t) \tag{1}
 &lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
 d\log S(t) = \mu(t)dt + \sigma(t)dW(t) + Y(t)dJ(t) \tag{2}
 \]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;ここで、&lt;span class=&#34;math inline&#34;&gt;\(J(t)\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(W(t)\)&lt;/span&gt;とは独立したカウント過程です。&lt;a href=&#34;#fn1&#34; class=&#34;footnote-ref&#34; id=&#34;fnref1&#34;&gt;&lt;sup&gt;1&lt;/sup&gt;&lt;/a&gt;&lt;span class=&#34;math inline&#34;&gt;\(Y(t)\)&lt;/span&gt;はジャンプのサイズを表現しており、予測可能な過程であるとします。&lt;/p&gt;
-&lt;p&gt;where &lt;span class=&#34;math inline&#34;&gt;\(J(t)\)&lt;/span&gt; is a counting process independent of &lt;span class=&#34;math inline&#34;&gt;\(W(t)\)&lt;/span&gt;. &lt;a href=&#34;#fn2&#34; class=&#34;footnote-ref&#34; id=&#34;fnref2&#34;&gt;&lt;sup&gt;2&lt;/sup&gt;&lt;/a&gt; &lt;span class=&#34;math inline&#34;&gt;\(Y(t)\)&lt;/span&gt; represents the size of the jump and is a predictable process.&lt;/p&gt;
-&lt;p&gt;Next, consider the logarithmic return of &lt;span class=&#34;math inline&#34;&gt;\(S(t)\)&lt;/span&gt;. That is, &lt;span class=&#34;math inline&#34;&gt;\(\log S(t_i)/S(t_{i-1})\)&lt;/span&gt;, which follows a normal distribution &lt;span class=&#34;math inline&#34;&gt;\(N(0, \sigma(t_i))\)&lt;/span&gt;. &lt;a href=&#34;#fn3&#34; class=&#34;footnote-ref&#34; id=&#34;fnref3&#34;&gt;&lt;sup&gt;3&lt;/sup&gt;&lt;/a&gt;Now, we define the statistic &lt;span class=&#34;math inline&#34;&gt;\(\mathcal{L(i)}\)&lt;/span&gt; at &lt;span class=&#34;math inline&#34;&gt;\(t_i\)&lt;/span&gt; when there is a jump from &lt;span class=&#34;math inline&#34;&gt;\(t_{i-1}\)&lt;/span&gt; to &lt;span class=&#34;math inline&#34;&gt;\(t_{i}\)&lt;/span&gt; as follows.&lt;/p&gt;
+&lt;p&gt;where &lt;span class=&#34;math inline&#34;&gt;\(J(t)\)&lt;/span&gt; is a counting process independent of &lt;span class=&#34;math inline&#34;&gt;\(W(t)\)&lt;/span&gt;. &lt;a href=&#34;#fn1&#34; class=&#34;footnote-ref&#34; id=&#34;fnref1&#34;&gt;&lt;sup&gt;1&lt;/sup&gt;&lt;/a&gt; &lt;span class=&#34;math inline&#34;&gt;\(Y(t)\)&lt;/span&gt; represents the size of the jump and is a predictable process.&lt;/p&gt;
+&lt;p&gt;Next, consider the logarithmic return of &lt;span class=&#34;math inline&#34;&gt;\(S(t)\)&lt;/span&gt;. That is, &lt;span class=&#34;math inline&#34;&gt;\(\log S(t_i)/S(t_{i-1})\)&lt;/span&gt;, which follows a normal distribution &lt;span class=&#34;math inline&#34;&gt;\(N(0, \sigma(t_i))\)&lt;/span&gt;. &lt;a href=&#34;#fn2&#34; class=&#34;footnote-ref&#34; id=&#34;fnref2&#34;&gt;&lt;sup&gt;2&lt;/sup&gt;&lt;/a&gt;Now, we define the statistic &lt;span class=&#34;math inline&#34;&gt;\(\mathcal{L(i)}\)&lt;/span&gt; at &lt;span class=&#34;math inline&#34;&gt;\(t_i\)&lt;/span&gt; when there is a jump from &lt;span class=&#34;math inline&#34;&gt;\(t_{i-1}\)&lt;/span&gt; to &lt;span class=&#34;math inline&#34;&gt;\(t_{i}\)&lt;/span&gt; as follows.&lt;/p&gt;
 &lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
 \mathcal{L(i)} \equiv \frac{|\log S(t_i)/S(t_{i-1})|}{\hat{\sigma}_{t_i}} \tag{3}
 \]&lt;/span&gt;&lt;/p&gt;
@@ -191,7 +190,7 @@ DataFrame Rolling_r_cpp(
 &lt;p&gt;If you compile the program with &lt;code&gt;Rcpp::sourceCpp&lt;/code&gt;, the function of &lt;code&gt;R&lt;/code&gt; can be executed as follows.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;system.time(results &amp;lt;- Rolling_r_cpp(JPYUSD,from))&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;##    ユーザ   システム       経過  
-##       0.03       0.00       0.03&lt;/code&gt;&lt;/pre&gt;
+##       0.02       0.00       0.02&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;It takes less than a second to process 12 million records. So Convenient!!&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;summary(results)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;##       from                           r         
@@ -301,7 +300,7 @@ DataFrame Rolling_rbv_cpp(
 &lt;p&gt;Now, compile it and run it with &lt;code&gt;R&lt;/code&gt;.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;system.time(results &amp;lt;- results %&amp;gt;% Rolling_rbv_cpp(na_remove = FALSE))&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;##    ユーザ   システム       経過  
-##       0.20       0.12       0.33&lt;/code&gt;&lt;/pre&gt;
+##       0.24       0.09       0.33&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;So fast!&lt;/p&gt;
 &lt;/div&gt;
 &lt;div id=&#34;calculating-jump-statistics&#34; class=&#34;section level2&#34;&gt;
@@ -375,8 +374,7 @@ results %&amp;gt;%
 &lt;hr /&gt;
 &lt;ol&gt;
 &lt;li id=&#34;fn1&#34;&gt;&lt;p&gt;A stochastic process with non-negative, integer, non-decreasing values.&lt;a href=&#34;#fnref1&#34; class=&#34;footnote-back&#34;&gt;↩︎&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
-&lt;li id=&#34;fn2&#34;&gt;&lt;p&gt;A stochastic process with non-negative, integer, non-decreasing values.&lt;a href=&#34;#fnref2&#34; class=&#34;footnote-back&#34;&gt;↩︎&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
-&lt;li id=&#34;fn3&#34;&gt;&lt;p&gt;The mean is not necessarily zero, depending on the shape of the drift term, but we are assuming a small enough drift term now. In the paper, it is defined more precisely.&lt;a href=&#34;#fnref3&#34; class=&#34;footnote-back&#34;&gt;↩︎&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;li id=&#34;fn2&#34;&gt;&lt;p&gt;The mean is not necessarily zero, depending on the shape of the drift term, but we are assuming a small enough drift term now. In the paper, it is defined more precisely.&lt;a href=&#34;#fnref2&#34; class=&#34;footnote-back&#34;&gt;↩︎&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
 &lt;/ol&gt;
 &lt;/div&gt;
 </description>

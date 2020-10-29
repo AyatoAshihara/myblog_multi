@@ -37,9 +37,8 @@ d\log S(t) = \mu(t)dt + \sigma(t)dW(t) \tag{1}
 <p><span class="math display">\[
 d\log S(t) = \mu(t)dt + \sigma(t)dW(t) + Y(t)dJ(t) \tag{2}
 \]</span></p>
-<p>ここで、<span class="math inline">\(J(t)\)</span>は<span class="math inline">\(W(t)\)</span>とは独立したカウント過程です。<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a><span class="math inline">\(Y(t)\)</span>はジャンプのサイズを表現しており、予測可能な過程であるとします。</p>
-<p>where <span class="math inline">\(J(t)\)</span> is a counting process independent of <span class="math inline">\(W(t)\)</span>. <a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a> <span class="math inline">\(Y(t)\)</span> represents the size of the jump and is a predictable process.</p>
-<p>Next, consider the logarithmic return of <span class="math inline">\(S(t)\)</span>. That is, <span class="math inline">\(\log S(t_i)/S(t_{i-1})\)</span>, which follows a normal distribution <span class="math inline">\(N(0, \sigma(t_i))\)</span>. <a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a>Now, we define the statistic <span class="math inline">\(\mathcal{L(i)}\)</span> at <span class="math inline">\(t_i\)</span> when there is a jump from <span class="math inline">\(t_{i-1}\)</span> to <span class="math inline">\(t_{i}\)</span> as follows.</p>
+<p>where <span class="math inline">\(J(t)\)</span> is a counting process independent of <span class="math inline">\(W(t)\)</span>. <a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> <span class="math inline">\(Y(t)\)</span> represents the size of the jump and is a predictable process.</p>
+<p>Next, consider the logarithmic return of <span class="math inline">\(S(t)\)</span>. That is, <span class="math inline">\(\log S(t_i)/S(t_{i-1})\)</span>, which follows a normal distribution <span class="math inline">\(N(0, \sigma(t_i))\)</span>. <a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>Now, we define the statistic <span class="math inline">\(\mathcal{L(i)}\)</span> at <span class="math inline">\(t_i\)</span> when there is a jump from <span class="math inline">\(t_{i-1}\)</span> to <span class="math inline">\(t_{i}\)</span> as follows.</p>
 <p><span class="math display">\[
 \mathcal{L(i)} \equiv \frac{|\log S(t_i)/S(t_{i-1})|}{\hat{\sigma}_{t_i}} \tag{3}
 \]</span></p>
@@ -194,7 +193,7 @@ DataFrame Rolling_r_cpp(
 <p>If you compile the program with <code>Rcpp::sourceCpp</code>, the function of <code>R</code> can be executed as follows.</p>
 <pre class="r"><code>system.time(results &lt;- Rolling_r_cpp(JPYUSD,from))</code></pre>
 <pre><code>##    ユーザ   システム       経過  
-##       0.03       0.00       0.03</code></pre>
+##       0.02       0.00       0.02</code></pre>
 <p>It takes less than a second to process 12 million records. So Convenient!!</p>
 <pre class="r"><code>summary(results)</code></pre>
 <pre><code>##       from                           r         
@@ -304,7 +303,7 @@ DataFrame Rolling_rbv_cpp(
 <p>Now, compile it and run it with <code>R</code>.</p>
 <pre class="r"><code>system.time(results &lt;- results %&gt;% Rolling_rbv_cpp(na_remove = FALSE))</code></pre>
 <pre><code>##    ユーザ   システム       経過  
-##       0.20       0.12       0.33</code></pre>
+##       0.24       0.09       0.33</code></pre>
 <p>So fast!</p>
 </div>
 <div id="calculating-jump-statistics" class="section level2">
@@ -378,7 +377,6 @@ results %&gt;%
 <hr />
 <ol>
 <li id="fn1"><p>A stochastic process with non-negative, integer, non-decreasing values.<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
-<li id="fn2"><p>A stochastic process with non-negative, integer, non-decreasing values.<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
-<li id="fn3"><p>The mean is not necessarily zero, depending on the shape of the drift term, but we are assuming a small enough drift term now. In the paper, it is defined more precisely.<a href="#fnref3" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>The mean is not necessarily zero, depending on the shape of the drift term, but we are assuming a small enough drift term now. In the paper, it is defined more precisely.<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
 </ol>
 </div>
