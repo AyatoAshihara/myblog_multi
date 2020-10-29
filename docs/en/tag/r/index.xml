@@ -5,12 +5,382 @@
     <link>/en/tag/r/</link>
       <atom:link href="/en/tag/r/index.xml" rel="self" type="application/rss+xml" />
     <description>R</description>
-    <generator>Wowchemy (https://wowchemy.com)</generator><language>en-us</language><lastBuildDate>Sun, 17 Feb 2019 00:00:00 +0000</lastBuildDate>
+    <generator>Wowchemy (https://wowchemy.com)</generator><language>en-us</language><lastBuildDate>Thu, 10 Sep 2020 00:00:00 +0000</lastBuildDate>
     <image>
       <url>/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
       <title>R</title>
       <link>/en/tag/r/</link>
     </image>
+    
+    <item>
+      <title>Rcpp to speed up data handling (using Tick data processing as an example)</title>
+      <link>/en/post/post21/</link>
+      <pubDate>Thu, 10 Sep 2020 00:00:00 +0000</pubDate>
+      <guid>/en/post/post21/</guid>
+      <description>
+&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+
+
+&lt;div id=&#34;what-i-want-to-do&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;0. What I want to do&lt;/h2&gt;
+&lt;p&gt;What I’m going to show you is pre-processing (and analysis) using the Tick data of the exchange rate, as I mentioned above. I won’t go into the details of this article because my main focus is to improve efficiency using &lt;code&gt;Rcpp&lt;/code&gt;, but I will briefly describe what I want to do first. I will not go into details, but I will show what we want to do in a nutshell first.&lt;/p&gt;
+&lt;p&gt;What we want to do is to detect a &lt;em&gt;Jump&lt;/em&gt; from the five-minute incremental return of the JPY/USD rate. Here, a jump is the point at which the exchange rate has risen (fallen) sharply compared to the previous rate. During the day, the exchange rate moves in small increments, but when there is an event, it rises (or falls) significantly. It is very interesting to see what kind of event causes the jump. In order to test this, we first need to detect jumps. The following paper is a reference point.&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://academic.oup.com/rfs/article-abstract/21/6/2535/1574138?redirectedFrom=fulltext&#34;&gt;Suzanne S. Lee &amp;amp; Per A. Mykland, 2008. “Jumps in Financial Markets: A New Nonparametric Test and Jump Dynamics,” Review of Financial Studies, Society for Financial Studies, vol. 21(6), pages 2535-2563, November.&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;It is a very well-respected paper with 204 Citation. We will scratch out the estimation method. First, let the continuous compound return be &lt;span class=&#34;math inline&#34;&gt;\(d\log S(t)\)&lt;/span&gt; for &lt;span class=&#34;math inline&#34;&gt;\(t&amp;gt;0\)&lt;/span&gt;. where &lt;span class=&#34;math inline&#34;&gt;\(S(t)\)&lt;/span&gt; is the price of the asset at &lt;span class=&#34;math inline&#34;&gt;\(t\)&lt;/span&gt;. If there are no jumps in the market, &lt;span class=&#34;math inline&#34;&gt;\(S(t)\)&lt;/span&gt; is assumed to follow the following stochastic process&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+d\log S(t) = \mu(t)dt + \sigma(t)dW(t) \tag{1}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;where &lt;span class=&#34;math inline&#34;&gt;\(W(t)\)&lt;/span&gt; is the standard Brownian motion, &lt;span class=&#34;math inline&#34;&gt;\(\mu(t)\)&lt;/span&gt; is the drift term, and &lt;span class=&#34;math inline&#34;&gt;\(\sigma(t)\)&lt;/span&gt; is the spot volatility. Also, when there is a Jump, &lt;span class=&#34;math inline&#34;&gt;\(S(t)\)&lt;/span&gt; is assumed to follow the following stochastic process&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+d\log S(t) = \mu(t)dt + \sigma(t)dW(t) + Y(t)dJ(t) \tag{2}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;ここで、&lt;span class=&#34;math inline&#34;&gt;\(J(t)\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(W(t)\)&lt;/span&gt;とは独立したカウント過程です。&lt;a href=&#34;#fn1&#34; class=&#34;footnote-ref&#34; id=&#34;fnref1&#34;&gt;&lt;sup&gt;1&lt;/sup&gt;&lt;/a&gt;&lt;span class=&#34;math inline&#34;&gt;\(Y(t)\)&lt;/span&gt;はジャンプのサイズを表現しており、予測可能な過程であるとします。&lt;/p&gt;
+&lt;p&gt;where &lt;span class=&#34;math inline&#34;&gt;\(J(t)\)&lt;/span&gt; is a counting process independent of &lt;span class=&#34;math inline&#34;&gt;\(W(t)\)&lt;/span&gt;. &lt;a href=&#34;#fn2&#34; class=&#34;footnote-ref&#34; id=&#34;fnref2&#34;&gt;&lt;sup&gt;2&lt;/sup&gt;&lt;/a&gt; &lt;span class=&#34;math inline&#34;&gt;\(Y(t)\)&lt;/span&gt; represents the size of the jump and is a predictable process.&lt;/p&gt;
+&lt;p&gt;Next, consider the logarithmic return of &lt;span class=&#34;math inline&#34;&gt;\(S(t)\)&lt;/span&gt;. That is, &lt;span class=&#34;math inline&#34;&gt;\(\log S(t_i)/S(t_{i-1})\)&lt;/span&gt;, which follows a normal distribution &lt;span class=&#34;math inline&#34;&gt;\(N(0, \sigma(t_i))\)&lt;/span&gt;. &lt;a href=&#34;#fn3&#34; class=&#34;footnote-ref&#34; id=&#34;fnref3&#34;&gt;&lt;sup&gt;3&lt;/sup&gt;&lt;/a&gt;Now, we define the statistic &lt;span class=&#34;math inline&#34;&gt;\(\mathcal{L(i)}\)&lt;/span&gt; at &lt;span class=&#34;math inline&#34;&gt;\(t_i\)&lt;/span&gt; when there is a jump from &lt;span class=&#34;math inline&#34;&gt;\(t_{i-1}\)&lt;/span&gt; to &lt;span class=&#34;math inline&#34;&gt;\(t_{i}\)&lt;/span&gt; as follows.&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\mathcal{L(i)} \equiv \frac{|\log S(t_i)/S(t_{i-1})|}{\hat{\sigma}_{t_i}} \tag{3}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;It is a simple standardization of the absolute value of the log return, but uses the “Realized Bipower Variation” defined below as an estimator of the standard deviation.&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\hat{\sigma}_{t_i} = \frac{1}{K-2}\sum_{j=i-K+2}^{i-2}|\log S(t_j)/\log S(t_{j-1})||\log S(t_{j-1})/\log S(t_{j-2})| \tag{4}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math inline&#34;&gt;\(K\)&lt;/span&gt; is the number of sample sizes contained in the Window. If we use a return in 5-minute increments and the jump occurs at 10:00 on 9/10/2020, and &lt;span class=&#34;math inline&#34;&gt;\(K=270\)&lt;/span&gt;, then we will calculate using samples from the previous day, 9/9/2020 11:30 to 9/11/2020 09:55. What we’re doing is adding up the absolute value of the return multiplied by the absolute value of the return, which seems to make it difficult for the estimate of the next instant after the jump occurs (i.e., &lt;span class=&#34;math inline&#34;&gt;\(t_{i+1}\)&lt;/span&gt; and so on) to be affected by the jump. Incidentally, &lt;span class=&#34;math inline&#34;&gt;\(K=270\)&lt;/span&gt; is introduced in another paper as a recommended value for returns in 5-minute increments.&lt;/p&gt;
+&lt;p&gt;Let us move on to how the calculated jump statistic &lt;span class=&#34;math inline&#34;&gt;\(\mathcal{L(i)}\)&lt;/span&gt; is used in the statistical test to detect jumps. This is done by considering the maximum value of the random variable &lt;span class=&#34;math inline&#34;&gt;\(\mathcal{L(i)}\)&lt;/span&gt; (also a random variable), and if it deviates significantly from that distribution (like 95% of points), the return of the statistic is the jump.&lt;/p&gt;
+&lt;p&gt;If there is no Jump in the period &lt;span class=&#34;math inline&#34;&gt;\([t_{i-1},t_{i}]\)&lt;/span&gt;, then with the length of this period &lt;span class=&#34;math inline&#34;&gt;\(\Delta=t_{i}-t_{i-1}\)&lt;/span&gt; approached to &lt;span class=&#34;math inline&#34;&gt;\(0\)&lt;/span&gt;, i.e., &lt;span class=&#34;math inline&#34;&gt;\(\Delta\rightarrow0\)&lt;/span&gt;, the sample maximum of the absolute value of the standard normal variable converges to the Gumbel distribution. Thus, Jump can reject and detect the null hypothesis when the following conditions are met&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\mathcal{L(i)} &amp;gt; G^{-1}(1-\alpha)S_{n} + C_{n} \tag{5}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;where &lt;span class=&#34;math inline&#34;&gt;\(G^{-1}(1-\alpha)\)&lt;/span&gt; is the &lt;span class=&#34;math inline&#34;&gt;\((1-\alpha)\)&lt;/span&gt; quantile function of the standard Gumbell distribution. If &lt;span class=&#34;math inline&#34;&gt;\(\alpha=10%\)&lt;/span&gt;, &lt;span class=&#34;math inline&#34;&gt;\(G^{-1}(1-\alpha)=2.25\)&lt;/span&gt;. Note that (We won’t derive it, but we can prove it using equations 1 and 2)&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+S_{n} = \frac{1}{c(2\log n)^{0.5}} \\
+C_{n} = \frac{(2\log n)^{0.5}}{c}-\frac{\log \pi+\log(\log n)}{2c(2\log n)^{0.5}}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;where &lt;span class=&#34;math inline&#34;&gt;\(c=(2/\pi)^{0.5}\)&lt;/span&gt; and &lt;span class=&#34;math inline&#34;&gt;\(n\)&lt;/span&gt; is the total sample size used for estimation.
+Finally, &lt;span class=&#34;math inline&#34;&gt;\(Jump_{t_i}\)&lt;/span&gt; is calculated by&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+Jump_{t_i} = \log\frac{S(t_i)}{S(t_{i-1})}×I(\mathcal{L(i)} - G^{-1}(1-\alpha)S_{n} + C_{n})\tag{6}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;where &lt;span class=&#34;math inline&#34;&gt;\(I(⋅)\)&lt;/span&gt; is an Indicator function that returns 1 if the content is greater than 0 and 0 otherwise.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;loading-data&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;1. Loading data&lt;/h2&gt;
+&lt;p&gt;So now that we know how to estimate, let’s load the Tick data first. The data is csv from &lt;code&gt;QuantDataManager&lt;/code&gt; and saved in a working directory.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(magrittr)
+
+# Read Tick data
+strPath &amp;lt;- r&amp;quot;(C:\Users\hogehoge\JPYUSD_Tick_2011.csv)&amp;quot;
+JPYUSD &amp;lt;- readr::read_csv(strPath)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;On an unrelated note, I recently upgraded R to 4.0.2, and I’m quite happy to say that with 4.0 and above, you can escape the strings made by &lt;code&gt;Python&lt;/code&gt;, which relieves some of the stress I’ve been experiencing.&lt;/p&gt;
+&lt;p&gt;The data looks like the following: in addition to the date, the Bid value, Ask value and the volume of transactions are stored. Here, we use the 2011 tick. The reason for this is to cover the dollar/yen at the time of the Great East Japan Earthquake.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;summary(JPYUSD)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##     DateTime                        Bid             Ask            Volume     
+##  Min.   :2011-01-03 07:00:00   Min.   :75.57   Min.   :75.58   Min.   : 1.00  
+##  1st Qu.:2011-03-30 15:09:23   1st Qu.:77.43   1st Qu.:77.44   1st Qu.: 2.00  
+##  Median :2011-06-15 14:00:09   Median :80.40   Median :80.42   Median : 2.00  
+##  Mean   :2011-06-22 05:43:11   Mean   :79.91   Mean   :79.92   Mean   : 2.55  
+##  3rd Qu.:2011-09-09 13:54:51   3rd Qu.:81.93   3rd Qu.:81.94   3rd Qu.: 3.00  
+##  Max.   :2011-12-30 06:59:59   Max.   :85.52   Max.   :85.54   Max.   :90.00&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;By the way, &lt;code&gt;DateTime&lt;/code&gt; includes the period from 07:00:00 on 2011/1/3 to 06:59:59 on 2011-12-30 (16:59:59 on 2011-12-30) in Japan by UTC. The sample size is approximately 12 million entries.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;NROW(JPYUSD)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 11946621&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;preprocessing&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;2. Preprocessing&lt;/h2&gt;
+&lt;p&gt;Then calculate the median value from Bid and Ask and take the logarithm to calculate the return later.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Calculate the median value of Ask and Bid and make it logarithmic (for calculating the logarithmic return).
+JPYUSD &amp;lt;- JPYUSD %&amp;gt;% dplyr::mutate(Mid = (Ask+Bid)/2) %&amp;gt;% 
+                     dplyr::mutate(logMid = log(Mid))&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;I format the currently irregularly arranged trading data into 5-minute increments of returns. The way to do it is:&lt;/p&gt;
+&lt;ol style=&#34;list-style-type: decimal&#34;&gt;
+&lt;li&gt;Create a &lt;code&gt;POSIXct&lt;/code&gt; vector with 1 year chopped every 5 minutes.&lt;/li&gt;
+&lt;li&gt;create a function that calculates the logarithmic return from the first and last sample in the window of 5min in turn, if you pass 1. as an argument.&lt;/li&gt;
+&lt;li&gt;execute. This is the plan. First, create the vector of 1.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Create POSIX vector to calculate returns in 5min increments (288 x days)
+start &amp;lt;- as.POSIXct(&amp;quot;2011-01-02 22:00:00&amp;quot;,tz=&amp;quot;UTC&amp;quot;)
+end &amp;lt;- as.POSIXct(&amp;quot;2011-12-31 21:55:00&amp;quot;,tz=&amp;quot;UTC&amp;quot;)
+from &amp;lt;- seq(from=start,to=end,by=5*60)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Then, let’s move on to 2. If you have 12 million data, even if you use &lt;code&gt;purrr::map&lt;/code&gt; or &lt;code&gt;apply&lt;/code&gt; with &lt;code&gt;R&lt;/code&gt;, it takes a long time to call a function and it’s quite inefficient. I tried to use &lt;code&gt;sapply&lt;/code&gt;, but it didn’t complete the process and it was forced to terminate. &lt;code&gt;RCCp&lt;/code&gt; is useful in such a case. Although &lt;code&gt;R&lt;/code&gt; has many very useful functions for graphs and statistics, it is not very good at large repetition, including calls to user-defined functions (because it is a scripting language, rather than a compiling language, I mean). So, I write the part of repetitive process in &lt;code&gt;C++&lt;/code&gt; and compile it as &lt;code&gt;R&lt;/code&gt; function using &lt;code&gt;Rcpp&lt;/code&gt; and execute it. It is very efficient to compile and visualize the results and write them in &lt;code&gt;R&lt;/code&gt;. Also, &lt;code&gt;Rccp&lt;/code&gt; helps you to write &lt;code&gt;C++&lt;/code&gt; in a similar way to &lt;code&gt;R&lt;/code&gt; with less sense of discomfort. I think the following will give you a good idea of the details. It’s pretty well organized and is God, to say the least.&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://teuder.github.io/rcpp4everyone_en/&#34;&gt;Rcpp for everyone&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Now, let’s write the code for the second step. In coding, I used articles on the net for reference. C++ has a longer history and more users than &lt;code&gt;R&lt;/code&gt;, so you can find information you want to know.&lt;/p&gt;
+&lt;pre class=&#34;cpp&#34;&gt;&lt;code&gt;#include &amp;lt;Rcpp.h&amp;gt;
+#include &amp;lt;algorithm&amp;gt;
+
+using namespace Rcpp;
+//[[Rcpp::plugins(cpp11)]]
+
+// [[Rcpp::export]]
+DataFrame Rolling_r_cpp(
+    DataFrame input,               // Data frame of (measurement time, measured value data)
+    newDatetimeVector from,        // The starting point vector for the timing of the calculation
+    double time_window = 5*60)  // Calculated window width (in seconds)
+{ 
+  
+  // Extract the measurement time and value as a vector
+  newDatetimeVector time = input[&amp;quot;DateTime&amp;quot;]; // This time is assumed to be sorted in ascending order.
+  NumericVector     data = input[&amp;quot;logMid&amp;quot;];
+  
+  // The endpoint vector of the timing to be calculated
+  newDatetimeVector to = from + time_window;
+  
+  // Number to calculate
+  R_xlen_t N = from.length();
+  
+  // vector for storage 
+  NumericVector value(N);
+  
+  // An object representing the position of a vector element
+  newDatetimeVector::iterator begin = time.begin();
+  newDatetimeVector::iterator end   = time.end();
+  newDatetimeVector::iterator p1    = begin;
+  newDatetimeVector::iterator p2    = begin;
+  
+  // Loop for window i
+  for(R_xlen_t i = 0; i &amp;lt; N; ++i){
+    // Rcout &amp;lt;&amp;lt; &amp;quot;i=&amp;quot; &amp;lt;&amp;lt; i &amp;lt;&amp;lt; &amp;quot;\n&amp;quot;;
+    
+    double f = from[i];         // Time of the window&amp;#39;s start point
+    double t = f + time_window; // The time of the window&amp;#39;s endpoint
+    
+    // If the endpoint of the window is before the first measurement time, it is NA or
+    // If the starting point of the window is after the last measurement time, NA
+    if(t &amp;lt;= *begin || f &amp;gt; *(end-1)){ 
+      value[i]  = NA_REAL;
+      continue;// Go to the next loop
+    }
+    
+    // Vector time from position p1 and subsequent elements x
+    // Let p1 be the position of the first element whose time is at the start point f &amp;quot;after&amp;quot; the window
+    p1 = std::find_if(p1, end, [&amp;amp;f](double x){return f&amp;lt;=x;});
+    // p1 = std::lower_bound(p1, end, f); //Same as above
+    
+    // Vector time from position p1 and subsequent elements x
+    // Let p2 be the position of the last element whose time is &amp;quot;before&amp;quot; the endpoint t of the window
+    // (In the below, this is accomplished by making the time one position before the &amp;#39;first element&amp;#39;, where the time is the window&amp;#39;s endpoint t &amp;#39;after&amp;#39;)
+    p2 = std::find_if(p1, end, [&amp;amp;t](double x){return t&amp;lt;=x;}) - 1 ;
+    // p2 = std::lower_bound(p1, end, t) - 1 ;//Same as above
+    
+    // Convert the position p1,p2 of an element to the element numbers i1, i2
+    R_xlen_t i1 = p1 - begin;
+    R_xlen_t i2 = p2 - begin; 
+    
+    
+    // Checking the element number
+    // C++ starts with the element number 0, so I&amp;#39;m adding 1 to match the R
+    // Rcout &amp;lt;&amp;lt; &amp;quot;i1 = &amp;quot; &amp;lt;&amp;lt; i1+1 &amp;lt;&amp;lt; &amp;quot; i2 = &amp;quot; &amp;lt;&amp;lt; i2+1 &amp;lt;&amp;lt; &amp;quot;\n&amp;quot;;
+    
+    
+    // Calculate the data in the relevant range
+    if(i1&amp;gt;i2) {
+      value[i] = NA_REAL; // When there is no data in the window
+    } else { 
+      value[i] = data[i2] - data[i1];
+    }
+    // ↑You can create various window functions by changing above
+    
+  }
+  
+  // Output the calculated time and the value as a data frame.
+  DataFrame out =
+    DataFrame::create(
+      Named(&amp;quot;from&amp;quot;, from),
+      Named(&amp;quot;r&amp;quot;, value*100));
+  
+  return out;
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;If you compile the program with &lt;code&gt;Rcpp::sourceCpp&lt;/code&gt;, the function of &lt;code&gt;R&lt;/code&gt; can be executed as follows.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;system.time(results &amp;lt;- Rolling_r_cpp(JPYUSD,from))&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##    ユーザ   システム       経過  
+##       0.03       0.00       0.03&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;It takes less than a second to process 12 million records. So Convenient!!&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;summary(results)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##       from                           r         
+##  Min.   :2011-01-02 22:00:00   Min.   :-1.823  
+##  1st Qu.:2011-04-03 15:58:45   1st Qu.:-0.014  
+##  Median :2011-07-03 09:57:30   Median : 0.000  
+##  Mean   :2011-07-03 09:57:30   Mean   : 0.000  
+##  3rd Qu.:2011-10-02 03:56:15   3rd Qu.: 0.015  
+##  Max.   :2011-12-31 21:55:00   Max.   : 2.880  
+##                                NA&amp;#39;s   :29977&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The return is precisely calculated. The recommended length of the window is 270 in 5 min increments, but we’ll make it flexible as well. And we carefully process the &lt;code&gt;NA&lt;/code&gt;.&lt;/p&gt;
+&lt;pre class=&#34;cpp&#34;&gt;&lt;code&gt;#include &amp;lt;Rcpp.h&amp;gt;
+#include &amp;lt;cmath&amp;gt;
+
+using namespace Rcpp;
+//[[Rcpp::plugins(cpp11)]]
+
+// [[Rcpp::export]]
+float rbv_cpp(
+    NumericVector x, // Return vector to calculate rbv
+    bool na_rm = true) // If NA is included in x, remove it and calculate it or
+{
+  
+  // Get the number of calculations
+  R_xlen_t N = x.length();
+  
+  // Define variables to contain the results of a calculation
+  float out = 0;
+
+  // Check for missing x
+  LogicalVector lg_NA = is_na(x);
+  
+  // If there is a NA in x, whether to exclude that NA and calculate
+  if(any(lg_NA).is_true() and na_rm==FALSE){
+    out = NA_REAL; // Output NA as a result of the calculation
+  } else {
+    
+    // Excluding NA
+    if (any(lg_NA).is_true() and na_rm==TRUE){
+      x[is_na(x)==TRUE] = 0.00; // Fill in the NA with zeros and effectively exclude it from the calculation.
+    }
+    
+    // Compute the numerator (sum of rbv)
+    for(R_xlen_t i = 1; i &amp;lt; N; ++i){
+      out = out + std::abs(x[i])*std::abs(x[i-1]);
+    }
+    
+    // Calculate the average and take the route.
+    long denomi; //denominator
+    if(N-sum(lg_NA)-2&amp;gt;0){
+      denomi = N-sum(lg_NA)-2;
+    } else {
+      denomi = 1;
+    }
+    out = out/denomi;
+    out = std::sqrt(out);
+  }
+  
+  return out;
+}
+
+// [[Rcpp::export]]
+DataFrame Rolling_rbv_cpp(
+    DataFrame input, //Data frame of (measurement time, measured value data)
+    int K = 270, // Rolling Window width to calculate
+    bool na_pad = false, // Returning NA when the window width is insufficient
+    bool na_remove = false // If the NA exists in the window width, exclude it from the calculation
+){
+  // Extract the return vector and number of samples
+  NumericVector data = input[&amp;quot;r&amp;quot;];
+  R_xlen_t T = data.length();
+  
+  // Prepare a vector to store the results
+  NumericVector value(T);
+  
+  // Calculate and store RBVs per Windows width
+  if(na_pad==TRUE){
+    value[0] = NA_REAL; // return NA.
+    value[1] = NA_REAL; // return NA.
+    value[2] = NA_REAL; // return NA.
+  } else {
+    value[0] = 0; // Return zero.
+    value[1] = 0; // Return zero.
+    value[2] = 0; // Return zero.
+  }
+  
+  for(R_xlen_t t = 3; t &amp;lt; T; ++t){
+    // Bifurcation of the process depending on whether or not there is enough Windows width
+    if (t-K&amp;gt;=0){
+      value[t] = rbv_cpp(data[seq(t-K,t-1)],na_remove); // Run a normal calculation
+    } else if(na_pad==FALSE) {
+      value[t] = rbv_cpp(data[seq(0,t-1)],na_remove); // Run a calculation with an incomplete Widnows width of less than K
+    } else {
+      value[t] = NA_REAL; // return NA.
+    }
+  }
+  
+  // Output the calculated time and value as a data frame.
+  DataFrame out =
+    DataFrame::create(
+      Named(&amp;quot;from&amp;quot;, input[&amp;quot;from&amp;quot;]),
+      Named(&amp;quot;r&amp;quot;, data),
+      Named(&amp;quot;rbv&amp;quot;,value));
+  
+  return out;
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Now, compile it and run it with &lt;code&gt;R&lt;/code&gt;.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;system.time(results &amp;lt;- results %&amp;gt;% Rolling_rbv_cpp(na_remove = FALSE))&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##    ユーザ   システム       経過  
+##       0.20       0.12       0.33&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;So fast!&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;calculating-jump-statistics&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;3. Calculating Jump Statistics&lt;/h2&gt;
+&lt;p&gt;Now let’s calculate the statistic &lt;span class=&#34;math inline&#34;&gt;\(\mathcal{L}_{t_i}\)&lt;/span&gt; from the returns and standard deviation we just calculated.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Standardize the absolute value of the log return = Jump statistic
+results &amp;lt;- results %&amp;gt;% dplyr::mutate(J=ifelse(rbv&amp;gt;0,abs(r)/rbv,NA))&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;This is what it looks like now.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;summary(results)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##       from                           r               rbv              J        
+##  Min.   :2011-01-02 22:00:00   Min.   :-1.823   Min.   :0.00    Min.   : 0.00  
+##  1st Qu.:2011-04-03 15:58:45   1st Qu.:-0.014   1st Qu.:0.02    1st Qu.: 0.28  
+##  Median :2011-07-03 09:57:30   Median : 0.000   Median :0.02    Median : 0.64  
+##  Mean   :2011-07-03 09:57:30   Mean   : 0.000   Mean   :0.03    Mean   : 0.93  
+##  3rd Qu.:2011-10-02 03:56:15   3rd Qu.: 0.015   3rd Qu.:0.03    3rd Qu.: 1.23  
+##  Max.   :2011-12-31 21:55:00   Max.   : 2.880   Max.   :0.16    Max.   :58.60  
+##                                NA&amp;#39;s   :29977    NA&amp;#39;s   :44367   NA&amp;#39;s   :44423&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Now let’s move on to the Jump test. First, we need to define the useful functions.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Preparing Constants &amp;amp; Functions for Calculating Jump Test
+c &amp;lt;- (2/pi)^0.5
+Cn &amp;lt;- function(n){
+  return((2*log(n))^0.5/c - (log(pi)+log(log(n)))/(2*c*(2*log(n))^0.5))
+}
+Sn &amp;lt;- function(n){
+  1/(c*(2*log(n))^0.5)
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Now we perform the test. Rejected samples return 1 and all others 0.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Perform a jump test (10%) (return value is logical)
+N &amp;lt;- NROW(results$J)
+results &amp;lt;- results %&amp;gt;% dplyr::mutate(Jump = J &amp;gt; 2.25*Sn(N) + Cn(N))
+summary(results)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##       from                           r               rbv              J        
+##  Min.   :2011-01-02 22:00:00   Min.   :-1.823   Min.   :0.00    Min.   : 0.00  
+##  1st Qu.:2011-04-03 15:58:45   1st Qu.:-0.014   1st Qu.:0.02    1st Qu.: 0.28  
+##  Median :2011-07-03 09:57:30   Median : 0.000   Median :0.02    Median : 0.64  
+##  Mean   :2011-07-03 09:57:30   Mean   : 0.000   Mean   :0.03    Mean   : 0.93  
+##  3rd Qu.:2011-10-02 03:56:15   3rd Qu.: 0.015   3rd Qu.:0.03    3rd Qu.: 1.23  
+##  Max.   :2011-12-31 21:55:00   Max.   : 2.880   Max.   :0.16    Max.   :58.60  
+##                                NA&amp;#39;s   :29977    NA&amp;#39;s   :44367   NA&amp;#39;s   :44423  
+##     Jump        
+##  Mode :logical  
+##  FALSE:59864    
+##  TRUE :257      
+##  NA&amp;#39;s :44423    
+##                 
+##                 
+## &lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;visualization-using-ggplot2&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;4. Visualization using ggplot2&lt;/h2&gt;
+&lt;p&gt;Now that the numbers have been calculated, let’s visualize them by plotting the intraday logarithmic return of JPY/USD in 5-minute increments for 2011/03/11 and the jump. By the way, the horizontal axis has been adjusted to Japan time.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Plotting about Jump at the time of the 2011/03/11 Great East Japan Earthquake
+results %&amp;gt;% 
+  dplyr::filter(from &amp;gt;= as.POSIXct(&amp;quot;2011-03-11 00:00:00&amp;quot;,tz=&amp;quot;UTC&amp;quot;),from &amp;lt; as.POSIXct(&amp;quot;2011-03-12 00:00:00&amp;quot;,tz=&amp;quot;UTC&amp;quot;)) %&amp;gt;% 
+  ggplot2::ggplot(ggplot2::aes(x=from,y=r)) +
+  ggplot2::geom_path(linetype=3) +
+  ggplot2::geom_path(ggplot2::aes(x=from,y=r*Jump,colour=&amp;quot;red&amp;quot;)) +
+  ggplot2::scale_x_datetime(date_breaks = &amp;quot;2 hours&amp;quot;, labels = scales::date_format(format=&amp;quot;%H:%M&amp;quot;,tz=&amp;quot;Asia/Tokyo&amp;quot;)) +
+  ggplot2::ggtitle(&amp;quot;JPY/USD Jumps within Tohoku earthquake on 2011-3-11&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Removed 36 row(s) containing missing values (geom_path).
+
+## Warning: Removed 36 row(s) containing missing values (geom_path).&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-16-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;I’ve spent quite a bit of time writing this, and it’s 23:37 right now, so I’ll refrain from discussing it in depth, but since the earthquake occurred at 14:46:18, you can see that the market reacted to the weakening of the yen immediately after the disaster. After that, for some reason, the yen moved higher and peaked at 19:00. It is said that the yen is a safe asset, but this is the only time it is not safe given the heightened uncertainty.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;summary&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;5. Summary&lt;/h2&gt;
+&lt;p&gt;I introduced the use of &lt;code&gt;Rcpp&lt;/code&gt; to improve the efficiency of &lt;code&gt;R&lt;/code&gt; analysis. The &lt;code&gt;C++&lt;/code&gt; is much faster than &lt;code&gt;R&lt;/code&gt; even if you write the code honestly, so it is hard to make coding mistakes. The &lt;code&gt;C++&lt;/code&gt; is much faster than &lt;code&gt;R&lt;/code&gt; even if you write the code in a simple way. Also, even if a compile error occurs, RStudio gives you a clue as to where the compile error is occurring, so there is no stress in that respect either, which is why I recommend it.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&#34;footnotes&#34;&gt;
+&lt;hr /&gt;
+&lt;ol&gt;
+&lt;li id=&#34;fn1&#34;&gt;&lt;p&gt;A stochastic process with non-negative, integer, non-decreasing values.&lt;a href=&#34;#fnref1&#34; class=&#34;footnote-back&#34;&gt;↩︎&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;li id=&#34;fn2&#34;&gt;&lt;p&gt;A stochastic process with non-negative, integer, non-decreasing values.&lt;a href=&#34;#fnref2&#34; class=&#34;footnote-back&#34;&gt;↩︎&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;li id=&#34;fn3&#34;&gt;&lt;p&gt;The mean is not necessarily zero, depending on the shape of the drift term, but we are assuming a small enough drift term now. In the paper, it is defined more precisely.&lt;a href=&#34;#fnref3&#34; class=&#34;footnote-back&#34;&gt;↩︎&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;
+</description>
+    </item>
     
     <item>
       <title>I built the Asset Allocation Model in R.</title>

@@ -127,9 +127,8 @@ You can see that the data is stored in tidy form (long type). The most right val
 
 -   LOCATION - Country
 
-```{=html}
 <!-- -->
-```
+
 -   VAR - Items
 
 -   EDI - At the time of acquisition (in the case of MEI\_ARCHIVE)
