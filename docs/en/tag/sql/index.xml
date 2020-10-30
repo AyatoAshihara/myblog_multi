@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>SQL | 東京の資産運用会社で働く社会人が研究に没頭するブログ</title>
+    <link>/en/tag/sql/</link>
+      <atom:link href="/en/tag/sql/index.xml" rel="self" type="application/rss+xml" />
+    <description>SQL</description>
+    <generator>Wowchemy (https://wowchemy.com)</generator><language>en-us</language><lastBuildDate>Sat, 13 Jul 2019 00:00:00 +0000</lastBuildDate>
+    <image>
+      <url>/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
+      <title>SQL</title>
+      <link>/en/tag/sql/</link>
+    </image>
+    
+    <item>
+      <title>Scraping past race results on yahoo horse racing on rvest (for the second time)</title>
+      <link>/en/post/post11/</link>
+      <pubDate>Sat, 13 Jul 2019 00:00:00 +0000</pubDate>
+      <guid>/en/post/post11/</guid>
+      <description>
+&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+
+&lt;div id=&#34;TOC&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#script&#34;&gt;1. Script&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+
+&lt;p&gt;For the second time, I’d like to drop past race results in rvest again. If you haven’t seen the past articles, I suggest you look at that one first.&lt;/p&gt;
+&lt;p&gt;The reason I decided to take back the data this time is because I wanted to add more items to the explanatory variables when analyzing horse racing. So this time I created the program as an addition to the previous R script. The 14 new data items I added are as follows&lt;/p&gt;
+&lt;ol style=&#34;list-style-type: decimal&#34;&gt;
+&lt;li&gt;grass or dirt.&lt;/li&gt;
+&lt;li&gt;right-handed or left-handed.&lt;/li&gt;
+&lt;li&gt;race conditions (good or slight)&lt;/li&gt;
+&lt;li&gt;weather&lt;/li&gt;
+&lt;li&gt;the color of the horse’s coat (chestnut, deer hair, etc.)&lt;/li&gt;
+&lt;li&gt;horse owner&lt;/li&gt;
+&lt;li&gt;producers&lt;/li&gt;
+&lt;li&gt;place of origin&lt;/li&gt;
+&lt;li&gt;date of birth&lt;/li&gt;
+&lt;li&gt;the father’s horse&lt;/li&gt;
+&lt;li&gt;the mother’s horse&lt;/li&gt;
+&lt;li&gt;winnings up to that race (available from 2003)&lt;/li&gt;
+&lt;li&gt;jockey’s weight.&lt;/li&gt;
+&lt;li&gt;increase or decrease in the weight of the jockey.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Actually, I haven’t finished collecting data yet, and the R program has been running for a long time (I’ve been running it for about 3 days). However, the program itself is running tightly and I’ll try to introduce the script. Maybe I’ll write the results in a postscript.&lt;/p&gt;
+&lt;div id=&#34;script&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;1. Script&lt;/h2&gt;
+&lt;p&gt;The first step is to call the package.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Web scraping of horse racing data by rvest
+
+#install.packages(&amp;quot;rvest&amp;quot;)
+#if (!require(&amp;quot;pacman&amp;quot;)) install.packages(&amp;quot;pacman&amp;quot;)
+#install.packages(&amp;quot;beepr&amp;quot;)
+#install.packages(&amp;quot;RSQLite&amp;quot;)
+pacman::p_load(qdapRegex)
+library(rvest)
+library(stringr)
+library(dplyr)
+library(beepr)
+library(RSQLite)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;I’m pretty much warnning out, so I’m banning it and connecting to SQLite&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# warning prohibition
+options(warn=-1)
+
+# Connecting to SQLite
+con = dbConnect(SQLite(), &amp;quot;horse_data.db&amp;quot;, synchronous=&amp;quot;off&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Since the odds are only available since 1994, the data is taken from 1994 up to the most recent date. yahoo horse racing has races organized by month, so the data is taken using that as a variable. Basically, you go to &lt;a href=&#34;https://keiba.yahoo.co.jp/schedule/list/2018/?month=7&#34;&gt;List of race results for the relevant year and month&lt;/a&gt; and then go to &lt;a href=&#34;https://keiba.yahoo.co.jp/race/list/18020106/&#34;&gt;Timetable for each day of the race&lt;/a&gt; for each day on that page. Since there are roughly a dozen or so races at each individual track, get the link and go to the &lt;a href=&#34;https://keiba.yahoo.co.jp/race/result/1802010601/&#34;&gt;race results page&lt;/a&gt; for each race. Then you will get the race results. The first step is to get a link to the timetable for each individual racecourse for each day.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;for(year in 1994:2019){
+  start.time &amp;lt;- Sys.time() # calculate time
+  # Retrieve the race results page on Yahoo!
+  for (k in 1:12){ # K is for the month.
+    
+    tryCatch(
+      {
+        keiba.yahoo &amp;lt;- read_html(str_c(&amp;quot;https://keiba.yahoo.co.jp/schedule/list/&amp;quot;, year,&amp;quot;/?month=&amp;quot;,k)) # Access to the list of race results for a given year and month
+        Sys.sleep(2)
+        race_lists &amp;lt;- keiba.yahoo %&amp;gt;%
+          html_nodes(&amp;quot;a&amp;quot;) %&amp;gt;% 
+          html_attr(&amp;quot;href&amp;quot;) # Retrieve all URLs
+        
+        # Get the list of races for each day by track
+        race_lists &amp;lt;- race_lists[str_detect(race_lists, pattern=&amp;quot;race/list/\\d+/&amp;quot;)==1] # Extracts URLs containing &amp;quot;results&amp;quot;.
+      }
+      , error = function(e){signal &amp;lt;- 1}
+    )&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Here, we only extract the links we get that contain the word result in the url. In essence, it is a link to the race tables of each racecourse. From here, we use the links to the race tables of the tracks to access that page and get the links to the pages that contain the results of all 12 races.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;    for (j in 1:length(race_lists)){ # where j is the link to the race table for the year in question.
+      
+      tryCatch(
+        {
+          race_list &amp;lt;- read_html(str_c(&amp;quot;https://keiba.yahoo.co.jp&amp;quot;,race_lists[j]))
+          race_url &amp;lt;- race_list %&amp;gt;% html_nodes(&amp;quot;a&amp;quot;) %&amp;gt;% html_attr(&amp;quot;href&amp;quot;) # 全urlを取得
+          
+          # Get the URL of the race results
+          race_url &amp;lt;- race_url[str_detect(race_url, pattern=&amp;quot;result&amp;quot;)==1] # Extracts URLs containing &amp;quot;results&amp;quot;.
+        }
+        , error = function(e){signal &amp;lt;- 1}
+      )&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Now that we have the links to the results of each race, it’s time to get the race results and the formatting part of the code. It’s quite a long and complicated code. The race results are stored in the following table attributes, so we’ll simply pull them first.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;      for (i in 1:length(race_url)){ # where i is the race that was held at the racecourse in question
+        
+        print(str_c(year, &amp;quot;/&amp;quot;, k, &amp;quot;/&amp;quot;,j, &amp;quot; group &amp;quot;, i,&amp;quot; order&amp;quot;))
+        
+        tryCatch(
+          {
+            race1 &amp;lt;-  read_html(str_c(&amp;quot;https://keiba.yahoo.co.jp&amp;quot;,race_url[i])) # Get the URL of the race results
+            signal &amp;lt;- 0
+            Sys.sleep(2)
+          }
+          , error = function(e){signal &amp;lt;- 1}
+        )
+        
+        # If the race is aborted or there are no errors in the process so far, run the process
+        if (identical(race1 %&amp;gt;%
+                      html_nodes(xpath = &amp;quot;//div[@class = &amp;#39;resultAtt mgnBL fntSS&amp;#39;]&amp;quot;) %&amp;gt;%
+                      html_text(),character(0)) == TRUE &amp;amp;&amp;amp; signal == 0){
+          
+          # Scraping the race results
+          race_result &amp;lt;- race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//table[@id = &amp;#39;raceScore&amp;#39;]&amp;quot;) %&amp;gt;%
+            html_table()
+          race_result &amp;lt;- do.call(&amp;quot;data.frame&amp;quot;,race_result) # Change the list to a data frame.
+          
+          colnames(race_result) &amp;lt;- c(&amp;quot;order&amp;quot;,&amp;quot;frame_number&amp;quot;,&amp;quot;horse_number&amp;quot;,&amp;quot;horse_name/age&amp;quot;,&amp;quot;time/margin&amp;quot;,&amp;quot;passing_rank/last_3F&amp;quot;,&amp;quot;jockey/weight&amp;quot;,&amp;quot;popularity/odds&amp;quot;,&amp;quot;trainer&amp;quot;) #　column renaming&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;If you just get a table, it will not be useful for analysis because of the following or multiple information in one cell. So, we need to mold the data into a form.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;          # Passing order and time for 3 furlongs uphill
+          race_result &amp;lt;- dplyr::mutate(race_result,passing_rank=as.character(str_extract_all(race_result$`passing_rank/last_3F`,&amp;quot;(\\d{2}-\\d{2}-\\d{2}-\\d{2})|(\\d{2}-\\d{2}-\\d{2})|(\\d{2}-\\d{2})&amp;quot;)))
+          race_result &amp;lt;- dplyr::mutate(race_result,last_3F=as.character(str_extract_all(race_result$`passing_rank/last_3F`,&amp;quot;\\d{2}\\.\\d&amp;quot;)))
+          race_result &amp;lt;- race_result[-6]
+          
+          # Time and Difference
+          race_result &amp;lt;- dplyr::mutate(race_result,time=as.character(str_extract_all(race_result$`time/margin`,&amp;quot;\\d\\.\\d{2}\\.\\d|\\d{2}\\.\\d&amp;quot;)))
+          race_result &amp;lt;- dplyr::mutate(race_result,margin=as.character(str_extract_all(race_result$`time/margin`,&amp;quot;./.馬身|.馬身|.[:space:]./.馬身|[ア-ン-]+&amp;quot;)))
+          race_result$margin[race_result$order==1] &amp;lt;- &amp;quot;トップ&amp;quot;
+          race_result$margin[race_result$margin==&amp;quot;character(0)&amp;quot;] &amp;lt;- &amp;quot;大差&amp;quot;
+          race_result$margin[race_result$order==0] &amp;lt;- NA
+          race_result &amp;lt;- race_result[-5]
+          
+          # Horse&amp;#39;s name, age and weight
+          race_result &amp;lt;- dplyr::mutate(race_result,horse_name=as.character(str_extract_all(race_result$`horse_name/age`,&amp;quot;[ァ-ヴー・]+&amp;quot;)))
+          race_result &amp;lt;- dplyr::mutate(race_result,horse_age=as.character(str_extract_all(race_result$`horse_name/age`,&amp;quot;牡\\d+|牝\\d+|せん\\d+&amp;quot;)))
+          race_result$horse_sex &amp;lt;- str_extract(race_result$horse_age, pattern = &amp;quot;牡|牝|せん&amp;quot;)
+          race_result$horse_age &amp;lt;- str_extract(race_result$horse_age, pattern = &amp;quot;\\d&amp;quot;)
+          race_result &amp;lt;- dplyr::mutate(race_result,horse_weight=as.character(str_extract_all(race_result$`horse_name/age`,&amp;quot;\\d{3}&amp;quot;)))
+          race_result &amp;lt;- dplyr::mutate(race_result,horse_weight_change=as.character(str_extract_all(race_result$`horse_name/age`,&amp;quot;\\([\\+|\\-]\\d+\\)|\\([\\d+]\\)&amp;quot;)))
+          race_result$horse_weight_change &amp;lt;- sapply(rm_round(race_result$horse_weight_change, extract=TRUE), paste, collapse=&amp;quot;&amp;quot;)
+          race_result &amp;lt;- dplyr::mutate(race_result,brinker=as.character(str_extract_all(race_result$`horse_name/age`,&amp;quot;B&amp;quot;)))
+          race_result$brinker[race_result$brinker!=&amp;quot;B&amp;quot;] &amp;lt;- &amp;quot;N&amp;quot;
+          race_result &amp;lt;- race_result[-4]
+          
+          # jockey
+          race_result &amp;lt;- dplyr::mutate(race_result,jockey=as.character(str_extract_all(race_result$`jockey/weight`,&amp;quot;[ぁ-ん一-龠]+\\s[ぁ-ん一-龠]+|[:upper:].[ァ-ヶー]+&amp;quot;)))
+          race_result &amp;lt;- dplyr::mutate(race_result,jockey_weight=as.character(str_extract_all(race_result$`jockey/weight`,&amp;quot;\\d{2}&amp;quot;)))
+          race_result$jockey_weight_change &amp;lt;- 0
+          race_result$jockey_weight_change[str_detect(race_result$`jockey/weight`,&amp;quot;☆&amp;quot;)==1] &amp;lt;- 1
+          race_result$jockey_weight_change[str_detect(race_result$`jockey/weight`,&amp;quot;△&amp;quot;)==1] &amp;lt;- 2
+          race_result$jockey_weight_change[str_detect(race_result$`jockey/weight`,&amp;quot;△&amp;quot;)==1] &amp;lt;- 3
+          race_result &amp;lt;- race_result[-4]
+          
+          # Odds and popularity
+          race_result &amp;lt;- dplyr::mutate(race_result,odds=as.character(str_extract_all(race_result$`popularity/odds`,&amp;quot;\\(.+\\)&amp;quot;)))
+          race_result &amp;lt;- dplyr::mutate(race_result,popularity=as.character(str_extract_all(race_result$`popularity/odds`,&amp;quot;\\d+[^(\\d+.\\d)]&amp;quot;)))
+          race_result$odds &amp;lt;- sapply(rm_round(race_result$odds, extract=TRUE), paste, collapse=&amp;quot;&amp;quot;)
+          race_result &amp;lt;- race_result[-4]&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Next, we’ll import information other than the table we just retrieved. Specifically, race names, weather conditions, track conditions, dates, racecourses, etc. These information are listed at the top of the race results page.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;          # Race Information
+          race_date &amp;lt;- race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//div[@id = &amp;#39;raceTitName&amp;#39;]/p[@id = &amp;#39;raceTitDay&amp;#39;]&amp;quot;) %&amp;gt;%
+            html_text()
+          race_name &amp;lt;- race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//div[@id = &amp;#39;raceTitName&amp;#39;]/h1[@class = &amp;#39;fntB&amp;#39;]&amp;quot;) %&amp;gt;%
+            html_text()
+          race_distance &amp;lt;- race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//p[@id = &amp;#39;raceTitMeta&amp;#39;]&amp;quot;) %&amp;gt;%
+            html_text()
+        
+          race_result &amp;lt;- dplyr::mutate(race_result,race_date=as.character(str_extract_all(race_date,&amp;quot;\\d+年\\d+月\\d+日&amp;quot;)))
+          race_result$race_date &amp;lt;- str_replace_all(race_result$race_date,&amp;quot;年&amp;quot;,&amp;quot;/&amp;quot;)
+          race_result$race_date &amp;lt;- str_replace_all(race_result$race_date,&amp;quot;月&amp;quot;,&amp;quot;/&amp;quot;)
+          race_result$race_date &amp;lt;- as.Date(race_result$race_date)
+          race_course &amp;lt;- as.character(str_extract_all(race_date,pattern = &amp;quot;札幌|函館|福島|新潟|東京|中山|中京|京都|阪神|小倉&amp;quot;))
+          race_result$race_course &amp;lt;- race_course
+          race_result &amp;lt;- dplyr::mutate(race_result,race_name=as.character(str_replace_all(race_name,&amp;quot;\\s&amp;quot;,&amp;quot;&amp;quot;)))
+          race_result &amp;lt;- dplyr::mutate(race_result,race_distance=as.character(str_extract_all(race_distance,&amp;quot;\\d+m&amp;quot;)))
+          race_type=as.character(str_extract_all(race_distance,pattern = &amp;quot;芝|ダート&amp;quot;))
+          race_result$type &amp;lt;- race_type
+          race_turn &amp;lt;- as.character(str_extract_all(race_distance,pattern = &amp;quot;右|左&amp;quot;))
+          race_result$race_turn &amp;lt;- race_turn
+          
+          if(length(race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//img[@class = &amp;#39;spBg ryou&amp;#39;]&amp;quot;)) == 1){
+            race_result$race_condition &amp;lt;- &amp;quot;良&amp;quot;
+          } else if (length(race1 %&amp;gt;% 
+                            html_nodes(xpath = &amp;quot;//img[@class = &amp;#39;spBg yayaomo&amp;#39;]&amp;quot;)) == 1){
+            race_result$race_condition &amp;lt;- &amp;quot;稍重&amp;quot;
+          } else if (length(race1 %&amp;gt;%
+                            html_nodes(xpath = &amp;quot;//img[@class = &amp;#39;spBg omo&amp;#39;]&amp;quot;)) == 1){
+            race_result$race_condition &amp;lt;- &amp;quot;重&amp;quot;
+          } else if (length(race1 %&amp;gt;% 
+                            html_nodes(xpath = &amp;quot;//img[@class = &amp;#39;spBg furyou&amp;#39;]&amp;quot;)) == 1){
+            race_result$race_condition &amp;lt;- &amp;quot;不良&amp;quot;
+          } else race_result$race_condition &amp;lt;- &amp;quot;NA&amp;quot;
+          
+          if (length(race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//img[@class = &amp;#39;spBg hare&amp;#39;]&amp;quot;)) == 1){
+            race_result$race_weather &amp;lt;- &amp;quot;晴れ&amp;quot;
+          } else if (length(race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//img[@class = &amp;#39;spBg ame&amp;#39;]&amp;quot;)) == 1){
+            race_result$race_weather &amp;lt;- &amp;quot;曇り&amp;quot;
+          } else if (length(race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//img[@class = &amp;#39;spBg kumori&amp;#39;]&amp;quot;)) == 1){
+            race_result$race_weather &amp;lt;- &amp;quot;雨&amp;quot;
+          } else race_result$race_weather &amp;lt;- &amp;quot;その他&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The next step is to get information about each horse. In fact, the horse’s name in the table we got earlier is a link, and if you follow the link, you can get [information about each horse] (&lt;a href=&#34;https://keiba.yahoo.co.jp/directory/horse/2015105508/&#34; class=&#34;uri&#34;&gt;https://keiba.yahoo.co.jp/directory/horse/2015105508/&lt;/a&gt;) (such as coat color and date of birth).&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;          horse_url &amp;lt;- race1 %&amp;gt;% html_nodes(&amp;quot;a&amp;quot;) %&amp;gt;% html_attr(&amp;quot;href&amp;quot;) 
+          horse_url &amp;lt;- horse_url[str_detect(horse_url, pattern=&amp;quot;directory/horse&amp;quot;)==1] # Extract only links to horse information.
+          
+          for (l in 1:length(horse_url)){
+            tryCatch(
+              {
+                horse1 &amp;lt;-  read_html(str_c(&amp;quot;https://keiba.yahoo.co.jp&amp;quot;,horse_url[l]))
+                Sys.sleep(0.5)
+                horse_name &amp;lt;- horse1 %&amp;gt;% html_nodes(xpath = &amp;quot;//div[@id = &amp;#39;dirTitName&amp;#39;]/h1[@class = &amp;#39;fntB&amp;#39;]&amp;quot;) %&amp;gt;% 
+                  html_text()
+                horse &amp;lt;- horse1 %&amp;gt;% html_nodes(xpath = &amp;quot;//div[@id = &amp;#39;dirTitName&amp;#39;]/ul&amp;quot;) %&amp;gt;% 
+                  html_text()
+                race_result$colour[race_result$horse_name==horse_name] &amp;lt;- as.character(str_extract_all(horse,&amp;quot;毛色：.+&amp;quot;)) 
+                race_result$owner[race_result$horse_name==horse_name] &amp;lt;- as.character(str_extract_all(horse,&amp;quot;馬主：.+&amp;quot;))
+                race_result$farm[race_result$horse_name==horse_name] &amp;lt;- as.character(str_extract_all(horse,&amp;quot;生産者：.+&amp;quot;))
+                race_result$locality[race_result$horse_name==horse_name] &amp;lt;- as.character(str_extract_all(horse,&amp;quot;産地：.+&amp;quot;))
+                race_result$horse_birthday[race_result$horse_name==horse_name] &amp;lt;- as.character(str_extract_all(horse,&amp;quot;\\d+年\\d+月\\d+日&amp;quot;))
+                race_result$father[race_result$horse_name==horse_name] &amp;lt;- horse1 %&amp;gt;% html_nodes(xpath = &amp;quot;//td[@class = &amp;#39;bloodM&amp;#39;][@rowspan = &amp;#39;4&amp;#39;]&amp;quot;) %&amp;gt;% html_text()
+                race_result$mother[race_result$horse_name==horse_name] &amp;lt;- horse1 %&amp;gt;% html_nodes(xpath = &amp;quot;//td[@class = &amp;#39;bloodF&amp;#39;][@rowspan = &amp;#39;4&amp;#39;]&amp;quot;) %&amp;gt;% html_text()
+              }
+              , error = function(e){
+                race_result$colour[race_result$horse_name==horse_name] &amp;lt;- NA 
+                race_result$owner[race_result$horse_name==horse_name] &amp;lt;- NA
+                race_result$farm[race_result$horse_name==horse_name] &amp;lt;- NA
+                race_result$locality[race_result$horse_name==horse_name] &amp;lt;- NA
+                race_result$horse_birthday[race_result$horse_name==horse_name] &amp;lt;- NA
+                race_result$father[race_result$horse_name==horse_name] &amp;lt;- NA
+                race_result$mother[race_result$horse_name==horse_name] &amp;lt;- NA
+                }
+            )
+          }
+          
+          race_result$colour &amp;lt;- str_replace_all(race_result$colour,&amp;quot;毛色：&amp;quot;,&amp;quot;&amp;quot;)
+          race_result$owner &amp;lt;- str_replace_all(race_result$owner,&amp;quot;馬主：&amp;quot;,&amp;quot;&amp;quot;)
+          race_result$farm &amp;lt;- str_replace_all(race_result$farm,&amp;quot;生産者：&amp;quot;,&amp;quot;&amp;quot;)
+          race_result$locality &amp;lt;- str_replace_all(race_result$locality,&amp;quot;産地：&amp;quot;,&amp;quot;&amp;quot;)
+          #race_result$horse_birthday &amp;lt;- str_replace_all(race_result$horse_birthday,&amp;quot;年&amp;quot;,&amp;quot;/&amp;quot;)
+          #race_result$horse_birthday &amp;lt;- str_replace_all(race_result$horse_birthday,&amp;quot;月&amp;quot;,&amp;quot;/&amp;quot;)
+          #race_result$horse_birthday &amp;lt;- as.Date(race_result$horse_birthday)
+          
+          race_result &amp;lt;- dplyr::arrange(race_result,horse_number) # arrange in order of precedence&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The next step is to go and drop the amount of money you have won up to that race. You can access this by following the link marked [Runoffs] (&lt;a href=&#34;https://keiba.yahoo.co.jp/race/denma/1802010601/&#34; class=&#34;uri&#34;&gt;https://keiba.yahoo.co.jp/race/denma/1802010601/&lt;/a&gt;) on the race results page. This is where you will find the prize money and you will get it.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;          yosou_url &amp;lt;- race1 %&amp;gt;% html_nodes(&amp;quot;a&amp;quot;) %&amp;gt;% html_attr(&amp;quot;href&amp;quot;) 
+          yosou_url &amp;lt;- yosou_url[str_detect(yosou_url, pattern=&amp;quot;denma&amp;quot;)==1]
+          
+          if (length(yosou_url)==1){
+          yosou1 &amp;lt;-  read_html(str_c(&amp;quot;https://keiba.yahoo.co.jp&amp;quot;,yosou_url)) 
+          Sys.sleep(2)
+          yosou &amp;lt;- yosou1 %&amp;gt;% html_nodes(xpath = &amp;quot;//td[@class = &amp;#39;txC&amp;#39;]&amp;quot;) %&amp;gt;% as.character()
+          prize &amp;lt;- yosou[grepl(&amp;quot;万&amp;quot;,yosou)==TRUE] %&amp;gt;% str_extract_all(&amp;quot;\\d+万&amp;quot;)
+          prize &amp;lt;- t(do.call(&amp;quot;data.frame&amp;quot;,prize)) %&amp;gt;% as.character()
+          race_result$prize &amp;lt;- prize
+          race_result$prize &amp;lt;- str_replace_all(race_result$prize,&amp;quot;万&amp;quot;,&amp;quot;&amp;quot;) %&amp;gt;% as.numeric()
+          } else race_result$prize &amp;lt;- NA&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;We create a data frame called dataset to store the results of each race and store the data.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;          ## file storage
+          if (k == 1 &amp;amp;&amp;amp; i == 1 &amp;amp;&amp;amp; j == 1){
+            dataset &amp;lt;- race_result
+          } else {
+            dataset &amp;lt;- rbind(dataset,race_result)
+          }
+        }else
+        {
+          print(&amp;quot;We couldn&amp;#39;t save it.&amp;quot;) 
+        }
+      }
+    }
+  }
+  beep(3)
+  write.csv(dataset,&amp;quot;race_result2.csv&amp;quot;, row.names = FALSE)
+  
+  if (year == 1994){
+    dbWriteTable(con, &amp;quot;race_result&amp;quot;, dataset)
+  } else {
+    dbWriteTable(con, &amp;quot;temp&amp;quot;, dataset)
+    dbSendQuery(con, &amp;quot;INSERT INTO race_result select * from temp&amp;quot;)
+    dbSendQuery(con, &amp;quot;DROP TABLE temp&amp;quot;)
+  }
+}
+end.time &amp;lt;- Sys.time()
+print(str_c(&amp;quot;処理時間は&amp;quot;,end.time-start.time,&amp;quot;です。&amp;quot;))
+beep(5)
+
+options(warn = 1)
+
+dbDisconnect(con)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;That’s all. The data taken is as follows&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;head(race_result)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##   order frame_number horse_number   trainer passing_rank last_3F   time
+## 1    10            1            1   田中 剛        09-09    39.0 1.14.3
+## 2    16            1            2 天間 昭一        11-11    40.3 1.15.7
+## 3    15            2            3 田中 清隆        14-14    39.4 1.15.1
+## 4     9            2            4 中舘 英二        08-08    39.1 1.14.3
+## 5    12            3            5 根本 康広        11-11    39.0 1.14.4
+## 6     4            3            6 杉浦 宏昭        04-04    38.4 1.13.2
+##      margin         horse_name horse_age horse_sex horse_weight
+## 1    アタマ     サトノジョニー         3        牡          512
+## 2 3 1/2馬身       ツギノイッテ         3        牡          464
+## 3     3馬身           ギュウホ         3        牡          444
+## 4 2 1/2馬身 セイウンメラビリア         3        牝          466
+## 5      クビ サバイバルトリック         3        牝          450
+## 6    アタマ       ステイホット         3        牝          474
+##   horse_weight_change brinker      jockey jockey_weight jockey_weight_change
+## 1                 +30       N   松岡 正海            56                    0
+## 2                  +8       N 西田 雄一郎            56                    0
+## 3                  +8       N   杉原 誠人            56                    0
+## 4                 +10       N   村田 一誠            54                    0
+## 5                  -2       N 野中 悠太郎            51                    0
+## 6                  -2       N   大野 拓弥            54                    0
+##    odds popularity  race_date race_course       race_name race_distance   type
+## 1  40.3         9  2019-01-05        中山 サラ系3歳未勝利         1200m ダート
+## 2 340.9        16  2019-01-05        中山 サラ系3歳未勝利         1200m ダート
+## 3 283.1        14  2019-01-05        中山 サラ系3歳未勝利         1200m ダート
+## 4 299.7        15  2019-01-05        中山 サラ系3歳未勝利         1200m ダート
+## 5  26.7         8  2019-01-05        中山 サラ系3歳未勝利         1200m ダート
+## 6   2.4         1  2019-01-05        中山 サラ系3歳未勝利         1200m ダート
+##   race_turn race_condition race_weather colour                           owner
+## 1        右             良         晴れ   栗毛 株式会社 サトミホースカンパニー
+## 2        右             良         晴れ 黒鹿毛                     西村 新一郎
+## 3        右             良         晴れ   鹿毛           有限会社 ミルファーム
+## 4        右             良         晴れ 青鹿毛                       西山 茂行
+## 5        右             良         晴れ 黒鹿毛                       福田 光博
+## 6        右             良         晴れ   栗毛                       小林 善一
+##           farm   locality horse_birthday                 father
+## 1   千代田牧場 新ひだか町  2016年1月29日         オルフェーヴル
+## 2    織笠 時男     青森県  2016年4月17日 スクワートルスクワート
+## 3    神垣 道弘 新ひだか町  2016年4月19日     ジャングルポケット
+## 4  石郷岡 雅樹     新冠町  2016年4月21日     キンシャサノキセキ
+## 5     原田牧場     日高町  2016年4月30日       リーチザクラウン
+## 6 社台ファーム     千歳市  2016年3月13日     キャプテントゥーレ
+##               mother prize
+## 1 スパークルジュエル     0
+## 2   エプソムアイリス     0
+## 3     デライトシーン     0
+## 4     ドリームシップ     0
+## 5   フリーダムガール   180
+## 6     ステイアライヴ   455&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
