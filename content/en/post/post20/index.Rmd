@@ -4,7 +4,7 @@ author: admin
 date: 2020-08-12T00:00:00Z
 categories: ["horse racing"]
 tags: ["Python","machine_learning","preprocessing"]
-draft: true
+draft: false
 featured: false
 slug: ["Pytorch"]
 image:

@@ -268,6 +268,21 @@
   </url>
   
   <url>
+    <loc>/en/post/post20/</loc>
+    <lastmod>2020-08-12T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/en/category/horse-racing/</loc>
+    <lastmod>2020-08-12T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/en/tag/machine_learning/</loc>
+    <lastmod>2020-08-12T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>/en/post/post19/</loc>
     <lastmod>2020-07-08T00:00:00+00:00</lastmod>
     <xhtml:link
@@ -315,11 +330,6 @@
                 hreflang="en"
                 href="/en/post/post18/"
                 />
-  </url>
-  
-  <url>
-    <loc>/en/tag/machine_learning/</loc>
-    <lastmod>2020-07-05T00:00:00+00:00</lastmod>
   </url>
   
   <url>

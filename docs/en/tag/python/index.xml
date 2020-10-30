@@ -200,6 +200,173 @@ sns.relplot(data=result[lambda df: (df.VAR==&amp;#39;201&amp;#39;) &amp;amp; (pd
     </item>
     
     <item>
+      <title>Automatically cropping the background of a horse body photo with Pytorch&#39;s Pre-trained model</title>
+      <link>/en/post/post20/</link>
+      <pubDate>Wed, 12 Aug 2020 00:00:00 +0000</pubDate>
+      <guid>/en/post/post20/</guid>
+      <description>
+&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+
+&lt;div id=&#34;TOC&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#downloading-the-pre-trained-model&#34;&gt;1. Downloading the pre-trained model&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#executing-the-background-deletion-process&#34;&gt;2. Executing the Background Deletion Process&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#analysis-using-cnn&#34;&gt;3. Analysis using CNN&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#interpretation-of-results-using-shap-values&#34;&gt;4. Interpretation of results using Shap values&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#summary&#34;&gt;5.Summary&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Hi. In the last post, I built a model to predict the order of a racehorse using CNN based on its body image. The results were not so good, and we needed to refine our analysis, especially when we analyzed the factors using &lt;code&gt;shap&lt;/code&gt; values, we found that the horses responded more to the stables in the background than to their bodies. This time, I would like to re-analyze the background from the horse’s body photo using &lt;code&gt;Pytorch&lt;/code&gt; pre-trained model, and analyze the photo with only the horse’s body.&lt;/p&gt;
+&lt;div id=&#34;downloading-the-pre-trained-model&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;1. Downloading the pre-trained model&lt;/h2&gt;
+&lt;p&gt;The code is adapted from &lt;a href=&#34;https://pytorch.org/hub/pytorch_vision_deeplabv3_resnet101/&#34;&gt;here&lt;/a&gt;. First, install the packages.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import numpy as np
+import cv2
+import matplotlib.pyplot as plt
+import torch
+import torchvision
+from torchvision import transforms
+import glob
+from PIL import Image
+import PIL
+import os&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Next, install the pre-trained model.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;#Install a pre-trained model
+device = torch.device(&amp;quot;cuda:0&amp;quot; if torch.cuda.is_available() else &amp;quot;cpu&amp;quot;)
+model = torchvision.models.segmentation.deeplabv3_resnet101(pretrained=True)
+model = model.to(device)
+model.eval()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Apparently, all pre-trained models assume a mini-batch of 3-channel RGB images of shape &lt;span class=&#34;math inline&#34;&gt;\((N, 3, H, W)\)&lt;/span&gt; normalized in the same way. Here, &lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt; is assumed to be the number of images and &lt;span class=&#34;math inline&#34;&gt;\(H\)&lt;/span&gt; and &lt;span class=&#34;math inline&#34;&gt;\(W\)&lt;/span&gt; are assumed to be at least 224 pixels. The images need to be scaled to a range of [0, 1] and then normalized using the mean value = [0.485, 0.456, 0.406] and the standard value = [0.229, 0.224, 0.225]. So, we define a function that does the preprocessing.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;#preprocessing
+preprocess = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+])&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;executing-the-background-deletion-process&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;2. Executing the Background Deletion Process&lt;/h2&gt;
+&lt;p&gt;Now, let’s load the images collected by the &lt;code&gt;selenium&lt;/code&gt; code in the previous post and remove the background one by one.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;#Specify a folder
+folders = os.listdir(r&amp;quot;C:\Users\aashi\umanalytics\photo\image&amp;quot;)
+
+#Reads an image from each folder and converts it to a numpy array of RGB values using the Image function
+for i, folder in enumerate(folders):
+  files = glob.glob(&amp;quot;C:/Users/aashi/umanalytics/photo/image/&amp;quot; + folder + &amp;quot;/*.jpg&amp;quot;)
+  index = i
+  for k, file in enumerate(files):
+    img_array = np.fromfile(file, dtype=np.uint8)
+    img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
+    h,w,_ = img.shape
+    input_tensor = preprocess(img)
+    input_batch = input_tensor.unsqueeze(0).to(device)
+
+    with torch.no_grad():
+      output = model(input_batch)[&amp;#39;out&amp;#39;][0]
+    output_predictions = output.argmax(0)
+    mask_array = output_predictions.byte().cpu().numpy()
+    Image.fromarray(mask_array*255).save(r&amp;#39;C:\Users\aashi\umanalytics\photo\image\mask.jpg&amp;#39;)
+    mask = cv2.imread(r&amp;#39;C:\Users\aashi\umanalytics\photo\image\mask.jpg&amp;#39;)
+    bg = np.full_like(img,255)
+    img = cv2.multiply(img.astype(float), mask.astype(float)/255)
+    bg = cv2.multiply(bg.astype(float), 1.0 - mask.astype(float)/255)
+    outImage = cv2.add(img, bg)
+    Image.fromarray(outImage.astype(np.uint8)).convert(&amp;#39;L&amp;#39;).save(file)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The following &lt;code&gt;mask&lt;/code&gt; image is output using the pre-trained model, and the &lt;code&gt;numpy&lt;/code&gt; array and the &lt;code&gt;mask&lt;/code&gt; image are merged to create a background delete image. The output looks like the following.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.gray()
+plt.figure(figsize=(20,20))
+plt.subplot(1,3,1)
+plt.imshow(img)
+plt.subplot(1,3,2)
+plt.imshow(mask)
+plt.subplot(1,3,3)
+plt.imshow(outImage)
+plt.show()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-8-1.png&#34; width=&#34;1920&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.close()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Here’s what the folders look like. Some of them are handled well and some of them show the trainer. I know there is a way to identify the objects and &lt;code&gt;mask&lt;/code&gt; only the horses, but this model doesn’t allow for object labeling, so we’ll continue with that.&lt;/p&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;maskhorse.PNG&#34; alt=&#34;&#34; /&gt;
+&lt;p class=&#34;caption&#34;&gt;folder&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&#34;analysis-using-cnn&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;3. Analysis using CNN&lt;/h2&gt;
+&lt;p&gt;Here is the same content as in the previous article. I will only post the results.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;## Test accuracy: 0.0&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## &amp;lt;sklearn.metrics._plot.confusion_matrix.ConfusionMatrixDisplay object at 0x0000000030DEAD08&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-10-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;The results have been disastrous.
+I have not been able to identify it at all. Aren’t there any characteristics in the horse photos that would predict the rankings? Or is it that there is no variation in the photos of the horses in G1 races and it is impossible to identify them? Either way, it seems a bit harsh.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;interpretation-of-results-using-shap-values&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;4. Interpretation of results using Shap values&lt;/h2&gt;
+&lt;p&gt;As before, let’s see how it fails using the &lt;code&gt;shap&lt;/code&gt; value. We will use this image as an example.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.imshow(X_test[4])
+plt.show()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-11-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.close()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import shap
+background = X_resampled[np.random.choice(X_resampled.shape[0],100,replace=False)]
+
+e = shap.GradientExplainer(model,background)
+
+shap_values = e.shap_values(X_test[[4]])
+shap.image_plot(shap_values[1],X_test[[4]])&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-12-1.png&#34; width=&#34;576&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;They seem to be evaluating from the paws to the face. Surprisingly, they do not seem to be evaluating the buttocks.
+I would like to try to visualize which aspect of the image is captured in each layer.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;from keras import models
+
+layer_outputs = [layer.output for layer in model.layers[:8]]
+layer_names = []
+for layer in model.layers[:8]:
+    layer_names.append(layer.name)
+images_per_row = 16
+
+activation_model = models.Model(inputs=model.input, outputs=layer_outputs)
+activations = activation_model.predict(X_train[[0]])
+
+for layer_name, layer_activation in zip(layer_names, activations):
+    n_features = layer_activation.shape[-1]
+
+    size = layer_activation.shape[1]
+
+    n_cols = n_features // images_per_row
+    display_grid = np.zeros((size * n_cols, images_per_row * size))
+
+    for col in range(n_cols):
+        for row in range(images_per_row):
+            channel_image = layer_activation[0,
+                                             :, :,
+                                             col * images_per_row + row]
+            channel_image -= channel_image.mean()
+            channel_image /= channel_image.std()
+            channel_image *= 64
+            channel_image += 128
+            channel_image = np.clip(channel_image, 0, 255).astype(&amp;#39;uint8&amp;#39;)
+            display_grid[col * size : (col + 1) * size,
+                         row * size : (row + 1) * size] = channel_image
+
+    scale = 1. / size
+    plt.figure(figsize=(scale * display_grid.shape[1],
+                        scale * display_grid.shape[0]))
+    plt.title(layer_name)
+    plt.grid(False)
+    plt.imshow(display_grid, cmap=&amp;#39;viridis&amp;#39;)
+    plt.show()
+    plt.close()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-13-1.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-13-2.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-13-3.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-13-4.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-13-5.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-13-6.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-13-7.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-13-8.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-13-9.png&#34; width=&#34;576&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;I still can’t understand this one.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;summary&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;5.Summary&lt;/h2&gt;
+&lt;p&gt;I removed the stable background and rerun it, but the results were the same - it was a good experience using PyTorch and removing the background, but not with any results, so I’ll stop with the horse photos for now.&lt;/p&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+    <item>
       <title>I predicted the standings based on horse photos using CNN.</title>
       <link>/en/post/post18/</link>
       <pubDate>Sun, 05 Jul 2020 00:00:00 +0000</pubDate>
