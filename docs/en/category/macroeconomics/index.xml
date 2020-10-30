@@ -487,6 +487,133 @@ mse.lasso.d&lt;/code&gt;&lt;/pre&gt;
     </item>
     
     <item>
+      <title>Obtaining satellite image data with the Google Earth Engine API and do nowcasting on business conditions</title>
+      <link>/en/post/post12/</link>
+      <pubDate>Tue, 16 Jul 2019 00:00:00 +0000</pubDate>
+      <guid>/en/post/post12/</guid>
+      <description>
+&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+
+&lt;div id=&#34;TOC&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#preparing-to-use-the-earth-engine-in-advance&#34;&gt;1. Preparing to use the Earth Engine in advance&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#obtaining-satellite-image-data-using-python-api&#34;&gt;2. Obtaining Satellite Image Data Using Python API&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#image&#34;&gt;Image&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#imagecollection&#34;&gt;ImageCollection&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#featurecollection&#34;&gt;FeatureCollection…&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Hi. Last time, we built a GDP forecasting model using the GPLVM model. However, since we are talking about nowcasting, I would like to perform an analysis using alternative data. I suddenly found the following article.&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://jp.reuters.com/article/gdp-u-tokyo-idJPKBN15M0NH&#34;&gt;Focus: Nowcast’s GDP estimates, including the world’s first increased use of satellite imagery&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Here’s an article by Dr. Tsutomu Watanabe of the University of Tokyo, who developed a GDP forecasting model using satellite images. In the article, the following is written&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;The U.S. National Oceanic and Atmospheric Administration (NOAA) purchases images of the Suomi NPP meteorological satellite as it passes over Japan at 1:30 a.m. each day and measures the brightness of each square in a 720-meter vertical and horizontal grid. Even with the same brightness, the magnitude of economic activity varies depending on the use of the land, such as agricultural land, commercial land, industrial land, etc., so refer to the Land Use Survey of the Geographical Survey Institute. The correlation between land use and economic activity indicated by brightness is played out, and the magnitude of economic activity is estimated from the brightness, taking this result into account.
+Watanabe calls this the “democratization of statistics” and predicts that it will become a global trend, because anyone can analyze publicly available data like satellite images, regardless of whether it is government or private sector.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;and, I was intrigued by the analysis using satellite images.
+Is satellite photography available to everyone? But then I found out that Google is offering a service called &lt;code&gt;Earth Engine&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;earthengine3.jpg&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://earthengine.google.com/&#34; class=&#34;uri&#34;&gt;https://earthengine.google.com/&lt;/a&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Google Earth Engine combines a multi-petabyte catalog of satellite imagery and geospatial datasets with planetary-scale analysis capabilities and makes it available for scientists, researchers, and developers to detect changes, map trends, and quantify differences on the Earth’s surface.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;If it’s for research, education, or non-commercial purposes, what a great way to analyze satellite photo data for &lt;strong&gt;free&lt;/strong&gt;. Watch the video below to see what exactly it can do.&lt;/p&gt;
+&lt;iframe src=&#34;//www.youtube.com/embed/gKGOeTFHnKY&#34; width=&#34;100%&#34; height=&#34;500&#34; seamless frameborder=&#34;0&#34; allowfullscreen&gt;
+&lt;/iframe&gt;
+&lt;p&gt;In this post, I will use Eath Engine’s Python API to acquire and analyze satellite image data.&lt;/p&gt;
+&lt;div id=&#34;preparing-to-use-the-earth-engine-in-advance&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;1. Preparing to use the Earth Engine in advance&lt;/h2&gt;
+&lt;p&gt;In order to use Earth Engine, you need to apply using your Google Account. You can do this from “Sign Up” in the upper right corner of the image above. After you apply for it, you will receive an email in your Gmail as shown below.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;earthengine4.jpg&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;とりあえずというのはWEB上の&lt;code&gt;Earth Engine&lt;/code&gt; コードエディタは使用できるということです。コードエディタというのは以下のようなもので、ブラウザ上でデータを取得したり、解析をしたり、解析結果をMAPに投影したりすることができる便利ツールです。&lt;code&gt;Earth Engine&lt;/code&gt;の本体はむしろこいつで、APIは副次的なものと考えています。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;earthengine5.jpg&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;You can type the code into the code editor in the middle, but the language is javascript (the API is both &lt;code&gt;python&lt;/code&gt; and &lt;code&gt;javascript&lt;/code&gt;). It’s quite useful because you can project the analysis results to MAP, refer to the reference (left), and check the data spit out to Console. However, if you want to do advanced analysis after dropping the data, you should use Python, which I am familiar with, so I use the API in this case.
+I digress. Now, once you get the &lt;code&gt;Earth Engine&lt;/code&gt; approval, install the &lt;code&gt;earthengine-api&lt;/code&gt; with &lt;code&gt;pip&lt;/code&gt;. Then, type &lt;code&gt;earthengine authenticate&lt;/code&gt; on the command prompt. Then, the browser will open by itself and you will see a screen for &lt;code&gt;python api&lt;/code&gt; authentication as shown below.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;earthengine1.jpg&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;次に以下のような画面にいきますので、そのまま承認します。これでauthenticationの完成です。&lt;code&gt;python&lt;/code&gt;からAPIが使えます。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;earthengine2.jpg&#34; /&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;obtaining-satellite-image-data-using-python-api&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;2. Obtaining Satellite Image Data Using Python API&lt;/h2&gt;
+&lt;p&gt;We are now ready to use the &lt;code&gt;Python&lt;/code&gt; API. From here, we will retrieve the satellite image data. As you can see below, there are many datasets in the &lt;code&gt;Earth Engine&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://developers.google.com/earth-engine/datasets/&#34; class=&#34;uri&#34;&gt;https://developers.google.com/earth-engine/datasets/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;We will use the &lt;code&gt;VIIRS Stray Light Corrected Nighttime Day/Night Band Composites Version 1&lt;/code&gt; dataset. This dataset provides monthly averages of nighttime light intensity around the world. The sample period is 2014-01~present.&lt;/p&gt;
+&lt;p&gt;The &lt;code&gt;Earth Engine&lt;/code&gt; has several unique data types. You should remember the following three.&lt;/p&gt;
+&lt;div id=&#34;image&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;Image&lt;/h3&gt;
+&lt;p&gt;The &lt;code&gt;raster&lt;/code&gt; data at a single point in time. An &lt;code&gt;image&lt;/code&gt; object is composed of several &lt;code&gt;bands&lt;/code&gt;. This &lt;code&gt;band&lt;/code&gt; varies from data to data, but roughly each &lt;code&gt;band&lt;/code&gt; may represent an RGB value. These are the most basic data for using the &lt;code&gt;Earth Engine&lt;/code&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;imagecollection&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;ImageCollection&lt;/h3&gt;
+&lt;p&gt;The object of &lt;code&gt;Image&lt;/code&gt; objects in chronological order. In this case, we will use this data for time-series analysis.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;featurecollection&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;FeatureCollection…&lt;/h3&gt;
+&lt;p&gt;The &lt;code&gt;GeoJSON Feature&lt;/code&gt;. It contains &lt;code&gt;Geometry&lt;/code&gt; objects for geographic information and their properties (e.g. country names). This time, this feature is used to get location information of Japan.&lt;/p&gt;
+&lt;p&gt;Let’s start with the coding. The first step is to get the &lt;code&gt;FeatureCollection&lt;/code&gt; object for Japan. Geographical information is stored in the &lt;code&gt;Fusion Tables&lt;/code&gt; and we extract the data whose country is Japan by ID. &lt;code&gt;FeatureCollection()&lt;/code&gt;, we can get it easily by passing the ID as an argument to &lt;code&gt;ee&lt;/code&gt;.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import ee
+from dateutil.parser import parse
+
+ee.Initialize()
+
+# get Japan geometory as FeatureCollection from fusion table
+japan = ee.FeatureCollection(&amp;#39;ft:1tdSwUL7MVpOauSgRzqVTOwdfy17KDbw-1d9omPw&amp;#39;).filter(ee.Filter.eq(&amp;#39;Country&amp;#39;, &amp;#39;Japan&amp;#39;))&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Next, let’s get a nighttime satellite image. &lt;code&gt;ImageCollection()&lt;/code&gt; is also used to obtain a nighttime satellite image. &lt;code&gt;ImageCollection()&lt;/code&gt;. Here, &lt;code&gt;band&lt;/code&gt; is extracted to &lt;code&gt;avg_rad&lt;/code&gt;, which is monthly average light intensity.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;# get night-light data from earth engine from 2014-01-01 to 2019-01-01
+dataset = ee.ImageCollection(&amp;#39;NOAA/VIIRS/DNB/MONTHLY_V1/VCMSLCFG&amp;#39;).filter(ee.Filter.date(&amp;#39;2014-01-01&amp;#39;,&amp;#39;2019-01-01&amp;#39;)).select(&amp;#39;avg_rad&amp;#39;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Let’s cut out a satellite image to the area around Japan and output it as an image file. You can use the &lt;code&gt;image&lt;/code&gt; object to create an image file (otherwise, you will get a lot of images…). . Since what you just got is an &lt;code&gt;ImageCollection&lt;/code&gt; object, you need to compress it into an &lt;code&gt;Image&lt;/code&gt; object (top is an &lt;code&gt;ImageCollection&lt;/code&gt; object, bottom is a compressed &lt;code&gt;Image&lt;/code&gt; object).&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://developers.google.com/earth-engine/images/Reduce_ImageCollection.png&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;Here, I would like to show you the average image of the sample period from the average value of &lt;code&gt;Image&lt;/code&gt; objects in an &lt;code&gt;ImageCollection&lt;/code&gt; object. You can do this with &lt;code&gt;ImageCollection.mean()&lt;/code&gt;. Also, I used &lt;code&gt;.visualize({min:0.5})&lt;/code&gt; to filter the image if the pixel value is more than 0.5. If you don’t do this, you can’t see what you think are clouds or garbage? You’ll get something like this. Next, the method &lt;code&gt;.getDownloadURL&lt;/code&gt; is used to get the URL to download the processed image. (If the &lt;code&gt;scale&lt;/code&gt; is too small, an error occurs and the image cannot be processed.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;dataset.mean().visualize(min=0.5).getDownloadURL(dict(name=&amp;#39;thumbnail&amp;#39;,region=[[[120.3345348936478, 46.853488838010854],[119.8071911436478, 24.598157870729043],[148.6353161436478, 24.75788466523463],[149.3384411436478, 46.61252884462868]]],scale=5000))&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Here’s the image we got.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;earthengine6.jpg&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;As expected, light levels are high in the Kanto area centered on Tokyo, the Kansai area centered on Osaka, Aichi, Fukuoka and Hokkaido (Sapporo and its vicinity), indicating that economic activity is active. It also shows that there are areas with higher light levels in the coastal areas than on land. This may not seem to be a phenomenon directly related to economic activity. It is striking that the northern part of the image becomes completely dark after 38 degrees north latitude, which is outside the scope of this analysis. Needless to say, this is the borderline between North and South Korea, so the difference in the level of economic activity between the two countries must be visually contrasted. The dataset we used here is from 2014, but some other datasets allow us to get data from the 1990s (although we can’t get more recent data instead). It would be interesting to use them to observe the economic development of the Korean peninsula and China.&lt;/p&gt;
+&lt;p&gt;Now that we have the image, we can’t analyze it at this point. We will try to get the data of the nightlight mapped to pixel values and analyze it numerically. However, the procedure to acquire the data is a little different from the previous one. But the procedure is a little different from the previous one, because this time you need to aggregate** all the different values of nighttime light in Japan, pixel by pixel, into a single proxy value. Once you have the pixel-by-pixel values, you have too much to analyze. The image looks like this (taken from the Earth Engine site)&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://developers.google.com/earth-engine/images/Reduce_region_diagram.png&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;The left image is a satellite image at one point in time of the &lt;code&gt;ImageCollection&lt;/code&gt; acquired earlier. The Earth Engine API provides the method &lt;code&gt;.reduceRegions()&lt;/code&gt;, so you can use it. The arguments are: &lt;code&gt;reducer&lt;/code&gt;=aggregation method (here, the total value), &lt;code&gt;collection&lt;/code&gt;=region (a &lt;code&gt;FeatureCollection&lt;/code&gt; object), and &lt;code&gt;scale&lt;/code&gt;=resolution. Here, the first &lt;code&gt;Image&lt;/code&gt; object in an &lt;code&gt;ImageCollection&lt;/code&gt; (dataset) is called with the &lt;code&gt;.reduceRegions()&lt;/code&gt; method.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;# initialize output box
+time0 = dataset.first().get(&amp;#39;system:time_start&amp;#39;);
+first = dataset.first().reduceRegions(reducer=ee.Reducer.sum(),collection=japan,scale=1000).set(&amp;#39;time_start&amp;#39;, time0)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Since we want time series data, we need to do the same thing for each &lt;code&gt;Image&lt;/code&gt; in the &lt;code&gt;ImageCollection&lt;/code&gt;. processing. Here, the function &lt;code&gt;myfunc&lt;/code&gt; is defined to merge the &lt;code&gt;Computed Object&lt;/code&gt; processed by the &lt;code&gt;reduceRegions&lt;/code&gt; method with the previously processed one in the &lt;code&gt;Image&lt;/code&gt; object, and it is passed to &lt;code&gt;iterate&lt;/code&gt;. Finally, the generated data is downloaded using the &lt;code&gt;getDownloadURL&lt;/code&gt; method as before (file format is csv).&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;# define reduceRegions function for iteration
+def myfunc(image,first):
+  added = image.reduceRegions(reducer=ee.Reducer.sum(),collection=japan,scale=1000).set(&amp;#39;time_start&amp;#39;, image.get(&amp;#39;system:time_start&amp;#39;))
+  return ee.FeatureCollection(first).merge(added)
+
+# implement iteration
+nightjp = dataset.filter(ee.Filter.date(&amp;#39;2014-02-01&amp;#39;,&amp;#39;2019-01-01&amp;#39;)).iterate(myfunc,first)
+
+# get url to download
+ee.FeatureCollection(nightjp).getDownloadURL(filetype=&amp;#39;csv&amp;#39;,selectors=ee.FeatureCollection(nightjp).first().propertyNames().getInfo())&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;I was able to get the url to the CSV file. I’m going to plot this time series to end today.
+Here’s what it looks like when you load the data.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import pandas as pd
+import matplotlib.pyplot as plt
+import os
+
+os.environ[&amp;#39;QT_QPA_PLATFORM_PLUGIN_PATH&amp;#39;] = &amp;#39;C:/Users/aashi/Anaconda3/Library/plugins/platforms&amp;#39;
+
+plt.style.use(&amp;#39;ggplot&amp;#39;)
+
+nightjp_csv.head()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##   system:index          sum Country  Unnamed: 3  Unnamed: 4
+## 0     2014/1/1  881512.4572   Japan         NaN         NaN
+## 1     2014/2/1  827345.3551   Japan         NaN         NaN
+## 2     2014/3/1  729110.4619   Japan         NaN         NaN
+## 3     2014/4/1  612665.8866   Japan         NaN         NaN
+## 4     2014/5/1  661434.5027   Japan         NaN         NaN&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.plot(pd.to_datetime(nightjp_csv[&amp;#39;system:index&amp;#39;]),nightjp_csv[&amp;#39;sum&amp;#39;])&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-8-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;It’s quite seasonal. It seems that the amount of light seems to increase in the winter because there are less hours of daylight. Nevertheless, it is a rapid increase. Next time, I would like to perform a statistical analysis based on this data and economic statistics, which is a proxy variable for business confidence. Please stay tuned.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+    <item>
       <title>Implementing Gaussian regression.</title>
       <link>/en/post/post1/</link>
       <pubDate>Sun, 02 Dec 2018 00:00:00 +0000</pubDate>
