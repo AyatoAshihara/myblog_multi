@@ -1353,6 +1353,525 @@ Do I need to get to the point where I can get a paddock video from Youtube and a
     </item>
     
     <item>
+      <title>Predicting Horse Racing Results Using LightGBM</title>
+      <link>/en/post/post16/</link>
+      <pubDate>Sat, 29 Feb 2020 00:00:00 +0000</pubDate>
+      <guid>/en/post/post16/</guid>
+      <description>
+&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+
+&lt;div id=&#34;TOC&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#data-import&#34;&gt;1.Data Import&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#creating-a-model&#34;&gt;2. Creating a Model&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#interpreting-results-in-shap&#34;&gt;3. Interpreting results in shap&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#summary&#34;&gt;4. Summary&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Hi. It’s been quite a while, but I’d like to create a model to predict the outcome of a race based on race result data previously collected from yahoo.keiba in order to study Python.&lt;/p&gt;
+&lt;div id=&#34;data-import&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;1.Data Import&lt;/h2&gt;
+&lt;p&gt;First, I get the race result data saved from &lt;code&gt;sqlite&lt;/code&gt; to the &lt;code&gt;pandas&lt;/code&gt; data frame.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;conn = sqlite3.connect(r&amp;#39;C:\hogehoge\horse_data.db&amp;#39;)
+sql = r&amp;#39;SELECT * FROM race_result&amp;#39;
+df = pd.read_sql(con=conn,sql=sql)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Let’s check the contents of the data. The columns are as follows, with order being the order of arrival.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df.columns&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Index([&amp;#39;order&amp;#39;, &amp;#39;frame_number&amp;#39;, &amp;#39;horse_number&amp;#39;, &amp;#39;trainer&amp;#39;, &amp;#39;passing_rank&amp;#39;,
+##        &amp;#39;last_3F&amp;#39;, &amp;#39;time&amp;#39;, &amp;#39;margin&amp;#39;, &amp;#39;horse_name&amp;#39;, &amp;#39;horse_age&amp;#39;, &amp;#39;horse_sex&amp;#39;,
+##        &amp;#39;horse_weight&amp;#39;, &amp;#39;horse_weight_change&amp;#39;, &amp;#39;brinker&amp;#39;, &amp;#39;jockey&amp;#39;,
+##        &amp;#39;jockey_weight&amp;#39;, &amp;#39;jockey_weight_change&amp;#39;, &amp;#39;odds&amp;#39;, &amp;#39;popularity&amp;#39;,
+##        &amp;#39;race_date&amp;#39;, &amp;#39;race_course&amp;#39;, &amp;#39;race_name&amp;#39;, &amp;#39;race_distance&amp;#39;, &amp;#39;type&amp;#39;,
+##        &amp;#39;race_turn&amp;#39;, &amp;#39;race_condition&amp;#39;, &amp;#39;race_weather&amp;#39;, &amp;#39;colour&amp;#39;, &amp;#39;owner&amp;#39;,
+##        &amp;#39;farm&amp;#39;, &amp;#39;locality&amp;#39;, &amp;#39;horse_birthday&amp;#39;, &amp;#39;father&amp;#39;, &amp;#39;mother&amp;#39;, &amp;#39;prize&amp;#39;,
+##        &amp;#39;http&amp;#39;],
+##       dtype=&amp;#39;object&amp;#39;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Checking the contents of the order, you’ll see that many of the orders have parentheses () and that they are recognized by the letter type because of the presence of cancellation, abort and disqualification. By the way, the order in parentheses is the order of entry, which means that the horse has been disqualified for interfering with another horse’s running (&lt;a href=&#34;http://www.jra.go.jp/judge/&#34; class=&#34;uri&#34;&gt;http://www.jra.go.jp/judge/&lt;/a&gt;).&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df.loc[:,&amp;#39;order&amp;#39;].unique()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## array([&amp;#39;1&amp;#39;, &amp;#39;7&amp;#39;, &amp;#39;2&amp;#39;, &amp;#39;8&amp;#39;, &amp;#39;5&amp;#39;, &amp;#39;15&amp;#39;, &amp;#39;6&amp;#39;, &amp;#39;12&amp;#39;, &amp;#39;11&amp;#39;, &amp;#39;14&amp;#39;, &amp;#39;3&amp;#39;, &amp;#39;13&amp;#39;,
+##        &amp;#39;4&amp;#39;, &amp;#39;16&amp;#39;, &amp;#39;9&amp;#39;, &amp;#39;10&amp;#39;, &amp;#39;取消&amp;#39;, &amp;#39;中止&amp;#39;, &amp;#39;除外&amp;#39;, &amp;#39;17&amp;#39;, &amp;#39;18&amp;#39;, &amp;#39;4(3)&amp;#39;, &amp;#39;2(1)&amp;#39;,
+##        &amp;#39;3(2)&amp;#39;, &amp;#39;6(4)&amp;#39;, &amp;#39;失格&amp;#39;, &amp;#39;9(8)&amp;#39;, &amp;#39;16(6)&amp;#39;, &amp;#39;12(12)&amp;#39;, &amp;#39;13(9)&amp;#39;, &amp;#39;6(3)&amp;#39;,
+##        &amp;#39;10(7)&amp;#39;, &amp;#39;6(5)&amp;#39;, &amp;#39;9(3)&amp;#39;, &amp;#39;11(8)&amp;#39;, &amp;#39;13(2)&amp;#39;, &amp;#39;12(9)&amp;#39;, &amp;#39;14(7)&amp;#39;,
+##        &amp;#39;10(1)&amp;#39;, &amp;#39;16(8)&amp;#39;, &amp;#39;14(6)&amp;#39;, &amp;#39;10(3)&amp;#39;, &amp;#39;12(1)&amp;#39;, &amp;#39;13(6)&amp;#39;, &amp;#39;7(1)&amp;#39;,
+##        &amp;#39;12(6)&amp;#39;, &amp;#39;6(2)&amp;#39;, &amp;#39;11(2)&amp;#39;, &amp;#39;15(6)&amp;#39;, &amp;#39;13(10)&amp;#39;, &amp;#39;14(4)&amp;#39;, &amp;#39;7(5)&amp;#39;,
+##        &amp;#39;17(4)&amp;#39;, &amp;#39;9(7)&amp;#39;, &amp;#39;16(14)&amp;#39;, &amp;#39;12(11)&amp;#39;, &amp;#39;14(2)&amp;#39;, &amp;#39;8(2)&amp;#39;, &amp;#39;9(5)&amp;#39;,
+##        &amp;#39;11(5)&amp;#39;, &amp;#39;12(7)&amp;#39;, &amp;#39;11(1)&amp;#39;, &amp;#39;12(8)&amp;#39;, &amp;#39;7(4)&amp;#39;, &amp;#39;5(4)&amp;#39;, &amp;#39;13(12)&amp;#39;,
+##        &amp;#39;14(3)&amp;#39;, &amp;#39;10(2)&amp;#39;, &amp;#39;11(10)&amp;#39;, &amp;#39;18(3)&amp;#39;, &amp;#39;10(4)&amp;#39;, &amp;#39;15(8)&amp;#39;, &amp;#39;8(3)&amp;#39;,
+##        &amp;#39;5(1)&amp;#39;, &amp;#39;10(5)&amp;#39;, &amp;#39;7(3)&amp;#39;, &amp;#39;5(2)&amp;#39;, &amp;#39;9(1)&amp;#39;, &amp;#39;13(3)&amp;#39;, &amp;#39;16(11)&amp;#39;,
+##        &amp;#39;11(3)&amp;#39;, &amp;#39;18(15)&amp;#39;, &amp;#39;11(6)&amp;#39;, &amp;#39;10(6)&amp;#39;, &amp;#39;14(12)&amp;#39;, &amp;#39;12(5)&amp;#39;, &amp;#39;15(14)&amp;#39;,
+##        &amp;#39;17(8)&amp;#39;, &amp;#39;18(6)&amp;#39;, &amp;#39;4(2)&amp;#39;, &amp;#39;18(10)&amp;#39;, &amp;#39;16(7)&amp;#39;, &amp;#39;13(1)&amp;#39;, &amp;#39;16(10)&amp;#39;,
+##        &amp;#39;15(7)&amp;#39;, &amp;#39;9(4)&amp;#39;, &amp;#39;15(5)&amp;#39;, &amp;#39;12(3)&amp;#39;, &amp;#39;8(7)&amp;#39;, &amp;#39;15(2)&amp;#39;, &amp;#39;12(10)&amp;#39;,
+##        &amp;#39;14(9)&amp;#39;, &amp;#39;3(1)&amp;#39;, &amp;#39;6(1)&amp;#39;, &amp;#39;14(5)&amp;#39;, &amp;#39;15(4)&amp;#39;, &amp;#39;11(4)&amp;#39;, &amp;#39;12(4)&amp;#39;,
+##        &amp;#39;16(4)&amp;#39;, &amp;#39;9(2)&amp;#39;, &amp;#39;13(5)&amp;#39;, &amp;#39;12(2)&amp;#39;, &amp;#39;15(1)&amp;#39;, &amp;#39;4(1)&amp;#39;, &amp;#39;14(13)&amp;#39;,
+##        &amp;#39;14(1)&amp;#39;, &amp;#39;13(7)&amp;#39;, &amp;#39;5(3)&amp;#39;, &amp;#39;8(6)&amp;#39;, &amp;#39;15(13)&amp;#39;, &amp;#39;7(2)&amp;#39;, &amp;#39;15(11)&amp;#39;,
+##        &amp;#39;10(9)&amp;#39;, &amp;#39;11(9)&amp;#39;, &amp;#39;8(4)&amp;#39;, &amp;#39;15(3)&amp;#39;, &amp;#39;13(4)&amp;#39;, &amp;#39;16(12)&amp;#39;, &amp;#39;16(5)&amp;#39;,
+##        &amp;#39;18(11)&amp;#39;, &amp;#39;10(8)&amp;#39;, &amp;#39;18(8)&amp;#39;, &amp;#39;14(8)&amp;#39;, &amp;#39;16(9)&amp;#39;, &amp;#39;8(5)&amp;#39;, &amp;#39;8(1)&amp;#39;,
+##        &amp;#39;14(11)&amp;#39;, &amp;#39;9(6)&amp;#39;, &amp;#39;16(13)&amp;#39;, &amp;#39;16(15)&amp;#39;, &amp;#39;11(11)&amp;#39;, &amp;#39;15(10)&amp;#39;, &amp;#39;7(6)&amp;#39;],
+##       dtype=object)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Let’s fix this first. Remove the parentheses and change the type to int, and add the arrival order as a new column &lt;code&gt;arriving order&lt;/code&gt;.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df[&amp;#39;arriving order&amp;#39;] = df[df.order.str.contains(r&amp;#39;\d*\(\d*\)&amp;#39;,regex=True)][&amp;#39;order&amp;#39;].replace(r&amp;#39;\d+\(&amp;#39;,r&amp;#39;&amp;#39;,regex=True).replace(r&amp;#39;\)&amp;#39;,r&amp;#39;&amp;#39;,regex=True).astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;arriving order&amp;#39;].unique()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## array([nan,  3.,  1.,  2.,  4.,  8.,  6., 12.,  9.,  7.,  5., 10., 14.,
+##        11., 15., 13.])&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df[&amp;#39;order&amp;#39;] = df[&amp;#39;order&amp;#39;].replace(r&amp;#39;\(\d+\)&amp;#39;,r&amp;#39;&amp;#39;,regex=True)
+df = df[lambda df: ~df.order.str.contains(r&amp;#39;(取消|中止|除外|失格)&amp;#39;,regex=True)]&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## C:\Users\aashi\Anaconda3\envs\umanalytics\lib\site-packages\pandas\core\strings.py:1954: UserWarning: This pattern has match groups. To actually get the groups, use str.extract.
+##   return func(self, *args, **kwargs)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df[&amp;#39;order&amp;#39;] = df[&amp;#39;order&amp;#39;].astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;order&amp;#39;].unique()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## array([ 1.,  7.,  2.,  8.,  5., 15.,  6., 12., 11., 14.,  3., 13.,  4.,
+##        16.,  9., 10., 17., 18.])&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;We were able to process it into a clean &lt;code&gt;float&lt;/code&gt; type. Now let’s move on to preprocessing the last three furlongs’ times. We use the last three furlongs’ time of the last race for our prediction.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import numpy as np
+df[&amp;#39;last_3F&amp;#39;] = df[&amp;#39;last_3F&amp;#39;].replace(r&amp;#39;character(0)&amp;#39;,np.nan,regex=False).astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;last_3F&amp;#39;] = df.groupby(&amp;#39;horse_name&amp;#39;)[&amp;#39;last_3F&amp;#39;].shift(-1)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Also include the previous race and rankings and any additional positions in the dataset.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df[&amp;#39;prerace&amp;#39;] = df.groupby(&amp;#39;horse_name&amp;#39;)[&amp;#39;race_name&amp;#39;].shift(-1)
+df[&amp;#39;preorder&amp;#39;] = df.groupby(&amp;#39;horse_name&amp;#39;)[&amp;#39;order&amp;#39;].shift(-1)
+df[&amp;#39;prepassing&amp;#39;] = df.groupby(&amp;#39;horse_name&amp;#39;)[&amp;#39;passing_rank&amp;#39;].shift(-1)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The accumulated prize money earned at the time of running will also be added.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df[&amp;#39;preprize&amp;#39;] = df.groupby(&amp;#39;horse_name&amp;#39;)[&amp;#39;prize&amp;#39;].shift(-1)
+df[&amp;#39;preprize&amp;#39;] = df[&amp;#39;preprize&amp;#39;].fillna(0)
+df[&amp;#39;margin&amp;#39;] = df.groupby(&amp;#39;horse_name&amp;#39;)[&amp;#39;margin&amp;#39;].shift(-1)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;We also add missing values, data type fixes, and label encoding for categorical data.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df[&amp;#39;horse_weight&amp;#39;] = df[&amp;#39;horse_weight&amp;#39;].astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;margin&amp;#39;] = df[&amp;#39;margin&amp;#39;].replace(r&amp;#39;character(0)&amp;#39;,np.nan,regex=False)
+df[&amp;#39;horse_age&amp;#39;] = df[&amp;#39;horse_age&amp;#39;].astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;horse_weight_change&amp;#39;] = df[&amp;#39;horse_weight_change&amp;#39;].astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;jockey_weight&amp;#39;] = df[&amp;#39;jockey_weight&amp;#39;].astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;race_distance&amp;#39;] = df[&amp;#39;race_distance&amp;#39;].replace(r&amp;#39;m&amp;#39;,r&amp;#39;&amp;#39;,regex=True).astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;race_turn&amp;#39;] = df[&amp;#39;race_turn&amp;#39;].replace(r&amp;#39;character(0)&amp;#39;,np.nan,regex=False)
+df.loc[df[&amp;#39;order&amp;#39;]!=1,&amp;#39;order&amp;#39;] = 0
+
+df[&amp;#39;race_turn&amp;#39;] = df[&amp;#39;race_turn&amp;#39;].fillna(&amp;#39;missing&amp;#39;)
+df[&amp;#39;colour&amp;#39;] = df[&amp;#39;colour&amp;#39;].fillna(&amp;#39;missing&amp;#39;)
+df[&amp;#39;prepassing&amp;#39;] = df[&amp;#39;prepassing&amp;#39;].fillna(&amp;#39;missing&amp;#39;)
+df[&amp;#39;prerace&amp;#39;] = df[&amp;#39;prerace&amp;#39;].fillna(&amp;#39;missing&amp;#39;)
+df[&amp;#39;father&amp;#39;] = df[&amp;#39;father&amp;#39;].fillna(&amp;#39;missing&amp;#39;)
+df[&amp;#39;mother&amp;#39;] = df[&amp;#39;mother&amp;#39;].fillna(&amp;#39;missing&amp;#39;)
+
+from sklearn import preprocessing
+cat_list = [&amp;#39;trainer&amp;#39;, &amp;#39;horse_name&amp;#39;, &amp;#39;horse_sex&amp;#39;, &amp;#39;brinker&amp;#39;, &amp;#39;jockey&amp;#39;, &amp;#39;race_course&amp;#39;, &amp;#39;race_name&amp;#39;, &amp;#39;type&amp;#39;, &amp;#39;race_turn&amp;#39;, &amp;#39;race_condition&amp;#39;, &amp;#39;race_weather&amp;#39;, &amp;#39;colour&amp;#39;, &amp;#39;father&amp;#39;, &amp;#39;mother&amp;#39;, &amp;#39;prerace&amp;#39;, &amp;#39;prepassing&amp;#39;]
+for column in cat_list:
+    target_column = df[column]
+    le = preprocessing.LabelEncoder()
+    le.fit(target_column)
+    label_encoded_column = le.transform(target_column)
+    df[column] = pd.Series(label_encoded_column).astype(&amp;#39;category&amp;#39;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import pandas_profiling as pdq
+profile = pdq.ProfileReport(df)
+profile&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;creating-a-model&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;2. Creating a Model&lt;/h2&gt;
+&lt;p&gt;Now, let’s try to build a prediction model with &lt;code&gt;LightGBM&lt;/code&gt;. The &lt;code&gt;optuna&lt;/code&gt; &lt;code&gt;LightGBM&lt;/code&gt; is used to perform hyperparameter tuning and calculate the &lt;code&gt;confusion matrix&lt;/code&gt;, as well as the correctness rate of test data calculated with the trained model.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import optuna.integration.lightgbm as lgb
+from sklearn.model_selection import train_test_split
+
+y = df[&amp;#39;order&amp;#39;]
+x = df.drop([&amp;#39;order&amp;#39;,&amp;#39;passing_rank&amp;#39;,&amp;#39;time&amp;#39;,&amp;#39;odds&amp;#39;,&amp;#39;popularity&amp;#39;,&amp;#39;owner&amp;#39;,&amp;#39;farm&amp;#39;,&amp;#39;locality&amp;#39;,&amp;#39;horse_birthday&amp;#39;,&amp;#39;http&amp;#39;,&amp;#39;prize&amp;#39;,&amp;#39;race_date&amp;#39;,&amp;#39;margin&amp;#39;],axis=1)
+
+X_train, X_test, y_train, y_test = train_test_split(x, y)
+X_train, x_val, y_train, y_val = train_test_split(X_train, y_train)
+
+lgb_train = lgb.Dataset(X_train, y_train)
+lgb_eval = lgb.Dataset(x_val, y_val)
+lgb_test = lgb.Dataset(X_test, y_test, reference=lgb_train)
+
+lgbm_params = {
+        &amp;#39;objective&amp;#39;: &amp;#39;binary&amp;#39;,
+        &amp;#39;boost_from_average&amp;#39;: False
+    }
+
+best_params, history = {}, []
+model = lgb.train(lgbm_params, lgb_train, categorical_feature = cat_list,valid_sets = lgb_eval, num_boost_round=100,early_stopping_rounds=20,best_params=best_params,tuning_history=history, verbose_eval=False)
+best_params
+
+def calibration(y_proba, beta):
+    return y_proba / (y_proba + (1 - y_proba) / beta)
+
+sampling_rate = y_train.sum() / len(y_train)
+y_proba = model.predict(X_test, num_iteration=model.best_iteration)
+y_proba_calib = calibration(y_proba, sampling_rate)
+
+y_pred = np.vectorize(lambda x: 1 if x &amp;gt; 0.49 else 0)(y_proba_calib)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Visualization part.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, accuracy_score, precision_score, recall_score, f1_score, roc_curve, auc
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Calculating the AUC (Area Under the Curve)
+fpr, tpr, thresholds = roc_curve(y_test, y_pred)
+auc = auc(fpr, tpr)
+
+# Plot the ROC curve
+plt.plot(fpr, tpr, label=&amp;#39;ROC curve (area = %.2f)&amp;#39;%auc)
+plt.legend()
+plt.title(&amp;#39;ROC curve&amp;#39;)
+plt.xlabel(&amp;#39;False Positive Rate&amp;#39;)
+plt.ylabel(&amp;#39;True Positive Rate&amp;#39;)
+plt.grid(True)
+plt.show()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-16-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.close()
+
+# Generate a Confusion Matrix
+ConfusionMatrixDisplay(confusion_matrix(y_test, y_pred)).plot()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## &amp;lt;sklearn.metrics._plot.confusion_matrix.ConfusionMatrixDisplay object at 0x0000000050413A88&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.show()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-16-2.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.close()
+
+accuracy_score(y_test, y_pred)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 0.9300293307706259&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;precision_score(y_test, y_pred)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 0.9227166276346604&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The &lt;code&gt;accuracy_score&lt;/code&gt; (prediction accuracy) is over 90% and the &lt;code&gt;precision_Score&lt;/code&gt; (the percentage of data correct that predicted positive = 1) is good.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;recall_score(y_test, y_pred)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 0.011613511760891352&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;f1_score(y_test, y_pred)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 0.022938316886443686&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;On the other hand, we can see that the &lt;code&gt;recall_score&lt;/code&gt; (percentage of sample that was predicted to be positive and actually true) is low and the false negative is high. As a result, the &lt;code&gt;F1&lt;/code&gt; value is also low. In the case of the horse racing prediction model, high false negatives are better than high false positives, but we have to work harder to reduce the false negatives to increase the return rate. This is an issue for the future. In the next section, I will use the &lt;code&gt;shapley&lt;/code&gt; value to do a factorization.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;interpreting-results-in-shap&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;3. Interpreting results in shap&lt;/h2&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import shap
+
+shap.initjs()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## &amp;lt;IPython.core.display.HTML object&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;explainer = shap.TreeExplainer(model)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Setting feature_perturbation = &amp;quot;tree_path_dependent&amp;quot; because no background data was given.&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;shap_values = explainer.shap_values(X_test)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## LightGBM binary classifier with TreeExplainer shap values output has changed to a list of ndarray&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;First, we’ll see how important each feature is. The &lt;code&gt;summary_plot&lt;/code&gt; method is used.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;shap.summary_plot(shap_values, X_test)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-19-1.png&#34; width=&#34;768&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;The horizontal axis represents the average importance of each feature (absolute value of the shap value), and we can see that preprize (amount of money won up to the last race), horse_age, and preorder (order of finish in the last race) are all important in predicting the winner of the race. The same is true for horse_age. However, it is not possible to evaluate it qualitatively just because it is important. For example, if the relationship between a higher preprize and a higher probability of being first is confirmed, that can be important information. Then you can check it. The &lt;code&gt;summary_plot&lt;/code&gt; method is used.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;shap.summary_plot(shap_values[1], X_test)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-20-1.png&#34; width=&#34;768&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;The above figure also shows the importance of each feature (not absolute values in this case). In this case, the importance of each feature is shown in the violin plot and is colored according to the size of the feature value. For example, in the case of preprize, the red distribution occurs only where the horizontal axis is greater than 0, and this is where the feature value of preprize is large. This means that we can take the obvious interpretation that the probability of finishing first increases on average with the amount of money won up to the previous race.
+Other factors such as horse_age, preorder, and last_3F seem to increase the probability of finishing first as the feature value becomes smaller, while horse_weight and jokey_weight seem to increase the probability of finishing first as the feature value becomes larger. On the other hand, there is no qualitative relationship between the two variables.&lt;/p&gt;
+&lt;p&gt;Next, let’s look at the relationship between feature value and probability in more detail. We saw earlier that preprize increases the probability of being the first one to arrive as the feature value increases. But we don’t know if the increase is linear, exponential, or diminishing as in dependence on &lt;span class=&#34;math inline&#34;&gt;\(log x\)&lt;/span&gt;. Let’s find out with the &lt;code&gt;dependence_plot&lt;/code&gt;.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;shap.dependence_plot(ind=&amp;quot;preprize&amp;quot;, shap_values=shap_values[1], features=X_test)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-21-1.png&#34; width=&#34;720&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;The above figure plots the approximate form of the learned &lt;code&gt;LightGBM&lt;/code&gt; as a function of preprize. As we saw earlier, the probability of being the first one to be placed increases as the feature value increases. However, the increase is gradual and diminishing, and it almost reaches its peak at over 20 million yen. Also, in the figure above, we have color-coded by HORSE_AGE, so you can see the relationship with PREPRIZE. As you might expect, the probability of horses with high preprize is higher for the youngest horses to win the race.&lt;/p&gt;
+&lt;p&gt;Let’s also check the &lt;code&gt;dependence_plot&lt;/code&gt; of the preorder.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;shap.dependence_plot(ind=&amp;quot;preorder&amp;quot;, shap_values=shap_values[1], features=X_test)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-22-1.png&#34; width=&#34;720&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;As expected, the higher the order of the last race, the higher the probability of finishing first. I also checked the relationship with the time of last_3F, but it doesn’t seem to be very relevant here.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;summary&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;4. Summary&lt;/h2&gt;
+&lt;p&gt;I made a prediction model of horse racing using &lt;code&gt;LightGBM&lt;/code&gt;. As you would expect of &lt;code&gt;Light GBM&lt;/code&gt;, the prediction accuracy is very high. Also, the &lt;code&gt;shap&lt;/code&gt; value was successfully used to detect important features. This will help us understand how &lt;code&gt;LightGBM&lt;/code&gt; feels and improve our modeling accuracy as we continue to find better features.&lt;/p&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Fitting the 10-year long-term interest rate</title>
+      <link>/en/post/post14/</link>
+      <pubDate>Tue, 16 Jul 2019 00:00:00 +0000</pubDate>
+      <guid>/en/post/post14/</guid>
+      <description>
+&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+
+&lt;div id=&#34;TOC&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#data-collection&#34;&gt;1. Data collection&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#monthly-analysis-part&#34;&gt;2. Monthly Analysis Part&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#daily-analysis-part&#34;&gt;3. Daily Analysis Part&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Hi. I wanted to do a fitting of the 10 year long term interest rate for a certain reason. So, we will use US data to analyze the results. First, let’s collect the data. We will use the &lt;code&gt;quantmod&lt;/code&gt; package to drop the data from FRED. The command &lt;code&gt;getsymbols(key,from=start date,src=&#34;FRED&#34;, auto.assign=TRUE)&lt;/code&gt; is easy to use. You can find the key on the FRED website.&lt;/p&gt;
+&lt;div id=&#34;data-collection&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;1. Data collection&lt;/h2&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(quantmod)
+
+# data name collected
+symbols.name &amp;lt;- c(&amp;quot;10-Year Treasury Constant Maturity Rate&amp;quot;,&amp;quot;Effective Federal Funds Rate&amp;quot;,&amp;quot;
+Consumer Price Index for All Urban Consumers: All Items&amp;quot;,&amp;quot;Civilian Unemployment Rate&amp;quot;,&amp;quot;3-Month Treasury Bill: Secondary Market Rate&amp;quot;,&amp;quot;Industrial Production Index&amp;quot;,&amp;quot;
+10-Year Breakeven Inflation Rate&amp;quot;,&amp;quot;Trade Weighted U.S. Dollar Index: Broad, Goods&amp;quot;,&amp;quot;
+Smoothed U.S. Recession Probabilities&amp;quot;,&amp;quot;Moody&amp;#39;s Seasoned Baa Corporate Bond Yield&amp;quot;,&amp;quot;5-Year, 5-Year Forward Inflation Expectation Rate&amp;quot;,&amp;quot;Personal Consumption Expenditures&amp;quot;)
+
+# Collect economic data
+symbols &amp;lt;- c(&amp;quot;GS10&amp;quot;,&amp;quot;FEDFUNDS&amp;quot;,&amp;quot;CPIAUCSL&amp;quot;,&amp;quot;UNRATE&amp;quot;,&amp;quot;TB3MS&amp;quot;,&amp;quot;INDPRO&amp;quot;,&amp;quot;T10YIEM&amp;quot;,&amp;quot;TWEXBMTH&amp;quot;,&amp;quot;RECPROUSM156N&amp;quot;,&amp;quot;BAA&amp;quot;,&amp;quot;T5YIFRM&amp;quot;,&amp;quot;PCE&amp;quot;)
+getSymbols(symbols, from = &amp;#39;1980-01-01&amp;#39;, src = &amp;quot;FRED&amp;quot;, auto.assign = TRUE)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##  [1] &amp;quot;GS10&amp;quot;          &amp;quot;FEDFUNDS&amp;quot;      &amp;quot;CPIAUCSL&amp;quot;      &amp;quot;UNRATE&amp;quot;       
+##  [5] &amp;quot;TB3MS&amp;quot;         &amp;quot;INDPRO&amp;quot;        &amp;quot;T10YIEM&amp;quot;       &amp;quot;TWEXBMTH&amp;quot;     
+##  [9] &amp;quot;RECPROUSM156N&amp;quot; &amp;quot;BAA&amp;quot;           &amp;quot;T5YIFRM&amp;quot;       &amp;quot;PCE&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;macro_indicator &amp;lt;- merge(GS10,FEDFUNDS,CPIAUCSL,UNRATE,TB3MS,INDPRO,T10YIEM,TWEXBMTH,RECPROUSM156N,BAA,T5YIFRM,PCE)
+rm(GS10,FEDFUNDS,CPIAUCSL,UNRATE,TB3MS,INDPRO,T10YIEM,TWEXBMTH,RECPROUSM156N,BAA,T5YIFRM,PCE,USEPUINDXD)&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;monthly-analysis-part&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;2. Monthly Analysis Part&lt;/h2&gt;
+&lt;p&gt;The data are &lt;a href=&#34;htmlwidget/macro_indicator.html&#34;&gt;here&lt;/a&gt;. We will create a dataset for the estimation. The dependent variable is the &lt;code&gt;10-Year Treasury Constant Maturity Rate(GS10)&lt;/code&gt;. The explanatory variables are as follows&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th&gt;explanatory variable&lt;/th&gt;
+&lt;th&gt;key&lt;/th&gt;
+&lt;th&gt;proxy variable&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Federal Funds Rate&lt;/td&gt;
+&lt;td&gt;FEDFUNDS&lt;/td&gt;
+&lt;td&gt;Short term rate&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;Consumer Price Index&lt;/td&gt;
+&lt;td&gt;CPIAUCSL&lt;/td&gt;
+&lt;td&gt;Price&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Unemployment Rate&lt;/td&gt;
+&lt;td&gt;UNRATE&lt;/td&gt;
+&lt;td&gt;Employment&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;3-Month Treasury Bill&lt;/td&gt;
+&lt;td&gt;TB3MS&lt;/td&gt;
+&lt;td&gt;Short term rate&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Industrial Production Index&lt;/td&gt;
+&lt;td&gt;INDPRO&lt;/td&gt;
+&lt;td&gt;Business conditions&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;Breakeven Inflation Rate&lt;/td&gt;
+&lt;td&gt;T10YIEM&lt;/td&gt;
+&lt;td&gt;Price&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Trade Weighted Dollar Index&lt;/td&gt;
+&lt;td&gt;TWEXBMTH&lt;/td&gt;
+&lt;td&gt;Exchange rates&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;Recession Probabilities&lt;/td&gt;
+&lt;td&gt;RECPROUSM156N&lt;/td&gt;
+&lt;td&gt;Business condition&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Moody’s Seasoned Baa Corporate Bond Yield&lt;/td&gt;
+&lt;td&gt;BAA&lt;/td&gt;
+&lt;td&gt;Risk premium&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;Inflation Expectation Rate&lt;/td&gt;
+&lt;td&gt;T5YIFRM&lt;/td&gt;
+&lt;td&gt;Price&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Personal Consumption Expenditures&lt;/td&gt;
+&lt;td&gt;PCE&lt;/td&gt;
+&lt;td&gt;Business condition&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;Economic Policy Uncertainty Index&lt;/td&gt;
+&lt;td&gt;USEPUINDXD&lt;/td&gt;
+&lt;td&gt;Politics&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;It’s a pretty appropriate choice of variables, but in many cases, we haven’t done it properly in terms of how to model long-term interest rates from a macro modeling perspective… In DSGE, we formulate the path of short-term interest rates linked to the path of short-term interest rates up to 10 years into the future according to the efficient market hypothesis and long-term interest rates equal to the path of short-term interest rates when I was a graduate student It was modeling (which seems to be done properly in macro finance circles). That’s why I’ve added short-term interest rates as an explanatory variable. And I also added three indicators for prices that would have an impact on the short-term interest rate. In addition, I added data on the economy because it is well known that it is highly correlated with the economy. This is due to the fact that in the first place, it is common in macro models to model short-term interest rates as following the Taylor rule.&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+r_t = \rho r_{t-1} + \alpha \pi_{t} + \beta y_{t}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;where &lt;span class=&#34;math inline&#34;&gt;\(r_t\)&lt;/span&gt; is the policy interest rate (short-term interest rate), &lt;span class=&#34;math inline&#34;&gt;\(\pi_t\)&lt;/span&gt; is the inflation rate, and &lt;span class=&#34;math inline&#34;&gt;\(y_t\)&lt;/span&gt; is the output. The $R_rho, \\alpha, and &lt;span class=&#34;math inline&#34;&gt;\(y_t\)&lt;/span&gt; are called deep parameters, which represent inertia, the sensitivity of the interest rate to inflation, and the sensitivity of the interest rate to output, respectively. It is well known as the “Taylor’s Principle” that when $, &lt;span class=&#34;math inline&#34;&gt;\(\beta=0\)&lt;/span&gt;, a reasonably expected equilibrium solution can only be obtained when &lt;span class=&#34;math inline&#34;&gt;\(\alpha&amp;gt;=1\)&lt;/span&gt;. Other explanatory variables include &lt;code&gt;Moody&#39;s Seasoned Baa Corporate Bond Yield&lt;/code&gt;, which may also have an arbitrage relationship with corporate bonds. Also, we would like to add the &lt;code&gt;VIX&lt;/code&gt; index and an index related to finances if we wanted to. The fiscal index is either Quatery or Annualy and cannot be used for monthly estimation. This is the most difficult part. I will re-estimate if I come up with something.&lt;/p&gt;
+&lt;p&gt;Now, let’s get into the estimation. Since there are many explanatory variables in this case, we want to do a &lt;code&gt;lasso&lt;/code&gt; regression to narrow down the valid variables. We will also do an &lt;code&gt;OLS&lt;/code&gt; for comparison. The explanatory variables will be the values of the dependent variable one period ago. Probably, even one period ago, depending on when the data are published, it may not be in time for the next month’s estimates, but I’ll do this anyway.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# make dataset
+traindata &amp;lt;- na.omit(merge(macro_indicator[&amp;quot;2003-01-01::2015-12-31&amp;quot;][,1],stats::lag(macro_indicator[&amp;quot;2003-01-01::2015-12-31&amp;quot;][,-1],1)))
+testdata  &amp;lt;- na.omit(merge(macro_indicator[&amp;quot;2016-01-01::&amp;quot;][,1],stats::lag(macro_indicator[&amp;quot;2016-01-01::&amp;quot;][,-1],1)))
+
+# fitting OLS
+trial1 &amp;lt;- lm(GS10~.,data = traindata)
+summary(trial1)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 
+## Call:
+## lm(formula = GS10 ~ ., data = traindata)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.76208 -0.21234  0.00187  0.21595  0.70493 
+## 
+## Coefficients:
+##                 Estimate Std. Error t value Pr(&amp;gt;|t|)    
+## (Intercept)   14.3578405  4.3524691   3.299 0.001226 ** 
+## FEDFUNDS      -0.2011132  0.1438774  -1.398 0.164335    
+## CPIAUCSL      -0.0702011  0.0207761  -3.379 0.000938 ***
+## UNRATE        -0.2093502  0.0796052  -2.630 0.009477 ** 
+## TB3MS          0.2970160  0.1413796   2.101 0.037410 *  
+## INDPRO        -0.0645376  0.0260343  -2.479 0.014339 *  
+## T10YIEM        1.1484487  0.1769925   6.489 1.32e-09 ***
+## TWEXBMTH      -0.0317345  0.0118155  -2.686 0.008091 ** 
+## RECPROUSM156N -0.0099083  0.0021021  -4.713 5.72e-06 ***
+## BAA            0.7793520  0.0868628   8.972 1.49e-15 ***
+## T5YIFRM       -0.4551318  0.1897695  -2.398 0.017759 *  
+## PCE            0.0009087  0.0002475   3.672 0.000339 ***
+## ---
+## Signif. codes:  0 &amp;#39;***&amp;#39; 0.001 &amp;#39;**&amp;#39; 0.01 &amp;#39;*&amp;#39; 0.05 &amp;#39;.&amp;#39; 0.1 &amp;#39; &amp;#39; 1
+## 
+## Residual standard error: 0.2981 on 143 degrees of freedom
+## Multiple R-squared:  0.9203, Adjusted R-squared:  0.9142 
+## F-statistic: 150.1 on 11 and 143 DF,  p-value: &amp;lt; 2.2e-16&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;It’s a higher degree of freedom-adjusted coefficient of determination; we use the model through 12/31/2015 to predict the out-sample data (01/01/2016~) and calculate the mean squared error.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;est.OLS.Y &amp;lt;- predict(trial1,testdata[,-1])
+Y &amp;lt;- as.matrix(testdata[,1])
+mse.OLS &amp;lt;- sum((Y - est.OLS.Y)^2) / length(Y)
+mse.OLS&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 0.1431734&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The next step is the &lt;code&gt;lasso&lt;/code&gt; regression, using the &lt;code&gt;cv.glmnet&lt;/code&gt; function of the &lt;code&gt;glmnet&lt;/code&gt; package to perform Cross Validation and determine &lt;span class=&#34;math inline&#34;&gt;\(\lambda\)&lt;/span&gt;.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# fitting lasso regression
+library(glmnet)
+trial2 &amp;lt;- cv.glmnet(as.matrix(traindata[,-1]),as.matrix(traindata[,1]),family=&amp;quot;gaussian&amp;quot;,alpha=1)
+plot(trial2)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-4-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;trial2$lambda.min&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 0.001214651&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;coef(trial2,s=trial2$lambda.min)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 12 x 1 sparse Matrix of class &amp;quot;dgCMatrix&amp;quot;
+##                           1
+## (Intercept)    8.4885375862
+## FEDFUNDS       .           
+## CPIAUCSL      -0.0378778837
+## UNRATE        -0.1693313660
+## TB3MS          0.1224641351
+## INDPRO        -0.0545965007
+## T10YIEM        1.1926554061
+## TWEXBMTH      -0.0140144490
+## RECPROUSM156N -0.0090706154
+## BAA            0.7389283529
+## T5YIFRM       -0.4638923964
+## PCE            0.0005014518&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;Unemployment Rate&lt;/code&gt;, &lt;code&gt;3-Month Treasury Bill&lt;/code&gt;, &lt;code&gt;Breakeven Inflation Rate&lt;/code&gt;, &lt;code&gt;Moody&#39;s Seasoned Baa Corporate Bond Yield&lt;/code&gt; and &lt;code&gt;Inflation Expectation Rate&lt;/code&gt;. That’s the result of a larger regression coefficient. Other than the unemployment rate, the results are within expectations. However, the correlation with the economy seems to be low as far as this result is concerned (does it only work in the opposite direction?). Calculate the MSE.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;est.lasso.Y &amp;lt;- predict(trial2, newx = as.matrix(testdata[,-1]), s = trial2$lambda.min, type = &amp;#39;response&amp;#39;)
+mse.lasso &amp;lt;- sum((Y - est.lasso.Y)^2) / length(Y)
+mse.lasso&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 0.1125487&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The &lt;code&gt;lasso&lt;/code&gt; regression gives better results. Let’s plot the predicted and actual values from the &lt;code&gt;lasso&lt;/code&gt; regression as a time series.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(tidyverse)
+
+ggplot(gather(data.frame(actual=Y[,1],lasso_prediction=est.lasso.Y[,1],OLS_prediction=est.OLS.Y,date=as.POSIXct(rownames(Y))),key=data,value=rate,-date),aes(x=date,y=rate, colour=data)) +
+  geom_line(size=1.5) +
+  scale_x_datetime(breaks = &amp;quot;6 month&amp;quot;,date_labels = &amp;quot;%Y-%m&amp;quot;) +
+  scale_y_continuous(breaks=c(1,1.5,2,2.5,3,3.5),limits = c(1.25,3.5))&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-6-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;The sense of direction is good. On the other hand, I am not predicting a sharp decline in interest rates from January 2016 or after December 2018. It looks like we’ll have to try to do one of the following to improve the accuracy of this part of the projections: consider some variables OR run a rolling estimate.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;daily-analysis-part&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;3. Daily Analysis Part&lt;/h2&gt;
+&lt;p&gt;In addition to monthly analysis, I would like to do daily analysis. In the case of daily data, the &lt;code&gt;jagged edge&lt;/code&gt; problem is unlikely to occur because the data is often released after the market closes. We will start by collecting daily data.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# data name collected
+symbols.name &amp;lt;- c(&amp;quot;10-Year Treasury Constant Maturity Rate&amp;quot;,&amp;quot;Effective Federal Funds Rate&amp;quot;,&amp;quot;
+6-Month London Interbank Offered Rate (LIBOR), based on U.S. Dollar&amp;quot;,&amp;quot;NASDAQ Composite Index&amp;quot;,&amp;quot;3-Month Treasury Bill: Secondary Market Rate&amp;quot;,&amp;quot;Economic Policy Uncertainty Index for United States&amp;quot;,&amp;quot;
+10-Year Breakeven Inflation Rate&amp;quot;,&amp;quot;Trade Weighted U.S. Dollar Index: Broad, Goods&amp;quot;,&amp;quot;Moody&amp;#39;s Seasoned Baa Corporate Bond Yield&amp;quot;,&amp;quot;5-Year, 5-Year Forward Inflation Expectation Rate&amp;quot;)
+
+# Collect economic data
+symbols &amp;lt;- c(&amp;quot;DGS10&amp;quot;,&amp;quot;DFF&amp;quot;,&amp;quot;USD6MTD156N&amp;quot;,&amp;quot;NASDAQCOM&amp;quot;,&amp;quot;DTB3&amp;quot;,&amp;quot;USEPUINDXD&amp;quot;,&amp;quot;T10YIE&amp;quot;,&amp;quot;DTWEXB&amp;quot;,&amp;quot;DBAA&amp;quot;,&amp;quot;T5YIFR&amp;quot;)
+getSymbols(symbols, from = &amp;#39;1980-01-01&amp;#39;, src = &amp;quot;FRED&amp;quot;, auto.assign = TRUE)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##  [1] &amp;quot;DGS10&amp;quot;       &amp;quot;DFF&amp;quot;         &amp;quot;USD6MTD156N&amp;quot; &amp;quot;NASDAQCOM&amp;quot;   &amp;quot;DTB3&amp;quot;       
+##  [6] &amp;quot;USEPUINDXD&amp;quot;  &amp;quot;T10YIE&amp;quot;      &amp;quot;DTWEXB&amp;quot;      &amp;quot;DBAA&amp;quot;        &amp;quot;T5YIFR&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;NASDAQCOM.r &amp;lt;- ROC(na.omit(NASDAQCOM))
+macro_indicator.d &amp;lt;- merge(DGS10,DFF,USD6MTD156N,NASDAQCOM.r,DTB3,USEPUINDXD,T10YIE,DTWEXB,DBAA,T5YIFR)
+rm(DGS10,DFF,USD6MTD156N,NASDAQCOM,NASDAQCOM.r,DTB3,USEPUINDXD,T10YIE,DTWEXB,DBAA,T5YIFR)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The next step is to build the data set. We separate the data for training and for training. Considering the actual prediction process, we use data from two business days ago as the explanatory variables.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# make dataset
+traindata.d &amp;lt;- na.omit(merge(macro_indicator.d[&amp;quot;1980-01-01::2010-12-31&amp;quot;][,1],stats::lag(macro_indicator.d[&amp;quot;1980-01-01::2010-12-31&amp;quot;][,-1],2)))
+testdata.d  &amp;lt;- na.omit(merge(macro_indicator.d[&amp;quot;2010-01-01::&amp;quot;][,1],stats::lag(macro_indicator.d[&amp;quot;2010-01-01::&amp;quot;][,-1],2)))
+
+# fitting OLS
+trial1.d &amp;lt;- lm(DGS10~.,data = traindata.d)
+summary(trial1.d)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 
+## Call:
+## lm(formula = DGS10 ~ ., data = traindata.d)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.82445 -0.12285  0.00469  0.14332  0.73789 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(&amp;gt;|t|)    
+## (Intercept) -3.5051208  0.1690503 -20.734  &amp;lt; 2e-16 ***
+## DFF          0.0818269  0.0239371   3.418 0.000653 ***
+## USD6MTD156N -0.0135771  0.0233948  -0.580 0.561799    
+## NASDAQCOM   -0.3880217  0.4367334  -0.888 0.374483    
+## DTB3         0.1227984  0.0280283   4.381 1.29e-05 ***
+## USEPUINDXD  -0.0006611  0.0001086  -6.087 1.58e-09 ***
+## T10YIE       0.6980971  0.0355734  19.624  &amp;lt; 2e-16 ***
+## DTWEXB       0.0270128  0.0012781  21.135  &amp;lt; 2e-16 ***
+## DBAA         0.2988122  0.0182590  16.365  &amp;lt; 2e-16 ***
+## T5YIFR       0.3374944  0.0381111   8.856  &amp;lt; 2e-16 ***
+## ---
+## Signif. codes:  0 &amp;#39;***&amp;#39; 0.001 &amp;#39;**&amp;#39; 0.01 &amp;#39;*&amp;#39; 0.05 &amp;#39;.&amp;#39; 0.1 &amp;#39; &amp;#39; 1
+## 
+## Residual standard error: 0.2173 on 1114 degrees of freedom
+## Multiple R-squared:  0.8901, Adjusted R-squared:  0.8892 
+## F-statistic:  1002 on 9 and 1114 DF,  p-value: &amp;lt; 2.2e-16&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The coefficient of determination remains high.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;est.OLS.Y.d &amp;lt;- predict(trial1.d,testdata.d[,-1])
+Y.d &amp;lt;- as.matrix(testdata.d[,1])
+mse.OLS.d &amp;lt;- sum((Y.d - est.OLS.Y.d)^2) / length(Y.d)
+mse.OLS.d&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 0.8003042&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Next is the &lt;code&gt;lasso&lt;/code&gt; regression. Determine &lt;span class=&#34;math inline&#34;&gt;\(lambda\)&lt;/span&gt; in &lt;code&gt;CV&lt;/code&gt;.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# fitting lasso regression
+trial2.d &amp;lt;- cv.glmnet(as.matrix(traindata.d[,-1]),as.matrix(traindata.d[,1]),family=&amp;quot;gaussian&amp;quot;,alpha=1)
+plot(trial2.d)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-10-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;trial2.d$lambda.min&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 0.001472377&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;coef(trial2.d,s=trial2.d$lambda.min)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 10 x 1 sparse Matrix of class &amp;quot;dgCMatrix&amp;quot;
+##                         1
+## (Intercept) -3.4186530904
+## DFF          0.0707022021
+## USD6MTD156N  .           
+## NASDAQCOM   -0.2675513858
+## DTB3         0.1204092358
+## USEPUINDXD  -0.0006506183
+## T10YIE       0.6915446819
+## DTWEXB       0.0270389569
+## DBAA         0.2861031504
+## T5YIFR       0.3376304446&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The coefficient of &lt;code&gt;libor&lt;/code&gt; became zero, and the MSE of &lt;code&gt;OLS&lt;/code&gt; was higher than that of &lt;code&gt;libor&lt;/code&gt;.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;est.lasso.Y.d &amp;lt;- predict(trial2.d, newx = as.matrix(testdata.d[,-1]), s = trial2.d$lambda.min, type = &amp;#39;response&amp;#39;)
+mse.lasso.d &amp;lt;- sum((Y.d - est.lasso.Y.d)^2) / length(Y.d)
+mse.lasso.d&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 0.8378427&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Plot the predictions.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggplot(gather(data.frame(actual=Y.d[,1],lasso_prediction=est.lasso.Y.d[,1],OLS_prediction=est.OLS.Y.d,date=as.POSIXct(rownames(Y.d))),key=data,value=rate,-date),aes(x=date,y=rate, colour=data)) +
+  geom_line(size=1.5) +
+  scale_x_datetime(breaks = &amp;quot;2 year&amp;quot;,date_labels = &amp;quot;%Y-%m&amp;quot;) +
+  scale_y_continuous(breaks=c(1,1.5,2,2.5,3,3.5),limits = c(1.25,5))&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-12-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;As with the monthly, there is very little difference between the predicted values for &lt;code&gt;OLS&lt;/code&gt; and &lt;code&gt;lasso&lt;/code&gt;. We have been able to capture the fluctuations quite nicely, but we have not been able to capture the interest rate decline caused by the &lt;code&gt;United States federal government credit-rating downgrades&lt;/code&gt; in 2011 or the interest rate increase associated with the economic recovery in 2013. The only daily economic indicator I have is POS data, but I might be able to use the recently used nightlight satellite imagery data, if I had to say so. I’ll try it if I have time. For now, I’d like to end this article for now. Thank you for reading this article.&lt;/p&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+    <item>
       <title>I built the Asset Allocation Model in R.</title>
       <link>/en/post/post2/</link>
       <pubDate>Sun, 17 Feb 2019 00:00:00 +0000</pubDate>

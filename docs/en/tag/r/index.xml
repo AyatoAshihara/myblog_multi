@@ -381,6 +381,293 @@ results %&amp;gt;%
     </item>
     
     <item>
+      <title>Fitting the 10-year long-term interest rate</title>
+      <link>/en/post/post14/</link>
+      <pubDate>Tue, 16 Jul 2019 00:00:00 +0000</pubDate>
+      <guid>/en/post/post14/</guid>
+      <description>
+&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+
+&lt;div id=&#34;TOC&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#data-collection&#34;&gt;1. Data collection&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#monthly-analysis-part&#34;&gt;2. Monthly Analysis Part&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#daily-analysis-part&#34;&gt;3. Daily Analysis Part&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Hi. I wanted to do a fitting of the 10 year long term interest rate for a certain reason. So, we will use US data to analyze the results. First, let’s collect the data. We will use the &lt;code&gt;quantmod&lt;/code&gt; package to drop the data from FRED. The command &lt;code&gt;getsymbols(key,from=start date,src=&#34;FRED&#34;, auto.assign=TRUE)&lt;/code&gt; is easy to use. You can find the key on the FRED website.&lt;/p&gt;
+&lt;div id=&#34;data-collection&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;1. Data collection&lt;/h2&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(quantmod)
+
+# data name collected
+symbols.name &amp;lt;- c(&amp;quot;10-Year Treasury Constant Maturity Rate&amp;quot;,&amp;quot;Effective Federal Funds Rate&amp;quot;,&amp;quot;
+Consumer Price Index for All Urban Consumers: All Items&amp;quot;,&amp;quot;Civilian Unemployment Rate&amp;quot;,&amp;quot;3-Month Treasury Bill: Secondary Market Rate&amp;quot;,&amp;quot;Industrial Production Index&amp;quot;,&amp;quot;
+10-Year Breakeven Inflation Rate&amp;quot;,&amp;quot;Trade Weighted U.S. Dollar Index: Broad, Goods&amp;quot;,&amp;quot;
+Smoothed U.S. Recession Probabilities&amp;quot;,&amp;quot;Moody&amp;#39;s Seasoned Baa Corporate Bond Yield&amp;quot;,&amp;quot;5-Year, 5-Year Forward Inflation Expectation Rate&amp;quot;,&amp;quot;Personal Consumption Expenditures&amp;quot;)
+
+# Collect economic data
+symbols &amp;lt;- c(&amp;quot;GS10&amp;quot;,&amp;quot;FEDFUNDS&amp;quot;,&amp;quot;CPIAUCSL&amp;quot;,&amp;quot;UNRATE&amp;quot;,&amp;quot;TB3MS&amp;quot;,&amp;quot;INDPRO&amp;quot;,&amp;quot;T10YIEM&amp;quot;,&amp;quot;TWEXBMTH&amp;quot;,&amp;quot;RECPROUSM156N&amp;quot;,&amp;quot;BAA&amp;quot;,&amp;quot;T5YIFRM&amp;quot;,&amp;quot;PCE&amp;quot;)
+getSymbols(symbols, from = &amp;#39;1980-01-01&amp;#39;, src = &amp;quot;FRED&amp;quot;, auto.assign = TRUE)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##  [1] &amp;quot;GS10&amp;quot;          &amp;quot;FEDFUNDS&amp;quot;      &amp;quot;CPIAUCSL&amp;quot;      &amp;quot;UNRATE&amp;quot;       
+##  [5] &amp;quot;TB3MS&amp;quot;         &amp;quot;INDPRO&amp;quot;        &amp;quot;T10YIEM&amp;quot;       &amp;quot;TWEXBMTH&amp;quot;     
+##  [9] &amp;quot;RECPROUSM156N&amp;quot; &amp;quot;BAA&amp;quot;           &amp;quot;T5YIFRM&amp;quot;       &amp;quot;PCE&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;macro_indicator &amp;lt;- merge(GS10,FEDFUNDS,CPIAUCSL,UNRATE,TB3MS,INDPRO,T10YIEM,TWEXBMTH,RECPROUSM156N,BAA,T5YIFRM,PCE)
+rm(GS10,FEDFUNDS,CPIAUCSL,UNRATE,TB3MS,INDPRO,T10YIEM,TWEXBMTH,RECPROUSM156N,BAA,T5YIFRM,PCE,USEPUINDXD)&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;monthly-analysis-part&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;2. Monthly Analysis Part&lt;/h2&gt;
+&lt;p&gt;The data are &lt;a href=&#34;htmlwidget/macro_indicator.html&#34;&gt;here&lt;/a&gt;. We will create a dataset for the estimation. The dependent variable is the &lt;code&gt;10-Year Treasury Constant Maturity Rate(GS10)&lt;/code&gt;. The explanatory variables are as follows&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th&gt;explanatory variable&lt;/th&gt;
+&lt;th&gt;key&lt;/th&gt;
+&lt;th&gt;proxy variable&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Federal Funds Rate&lt;/td&gt;
+&lt;td&gt;FEDFUNDS&lt;/td&gt;
+&lt;td&gt;Short term rate&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;Consumer Price Index&lt;/td&gt;
+&lt;td&gt;CPIAUCSL&lt;/td&gt;
+&lt;td&gt;Price&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Unemployment Rate&lt;/td&gt;
+&lt;td&gt;UNRATE&lt;/td&gt;
+&lt;td&gt;Employment&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;3-Month Treasury Bill&lt;/td&gt;
+&lt;td&gt;TB3MS&lt;/td&gt;
+&lt;td&gt;Short term rate&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Industrial Production Index&lt;/td&gt;
+&lt;td&gt;INDPRO&lt;/td&gt;
+&lt;td&gt;Business conditions&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;Breakeven Inflation Rate&lt;/td&gt;
+&lt;td&gt;T10YIEM&lt;/td&gt;
+&lt;td&gt;Price&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Trade Weighted Dollar Index&lt;/td&gt;
+&lt;td&gt;TWEXBMTH&lt;/td&gt;
+&lt;td&gt;Exchange rates&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;Recession Probabilities&lt;/td&gt;
+&lt;td&gt;RECPROUSM156N&lt;/td&gt;
+&lt;td&gt;Business condition&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Moody’s Seasoned Baa Corporate Bond Yield&lt;/td&gt;
+&lt;td&gt;BAA&lt;/td&gt;
+&lt;td&gt;Risk premium&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;Inflation Expectation Rate&lt;/td&gt;
+&lt;td&gt;T5YIFRM&lt;/td&gt;
+&lt;td&gt;Price&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Personal Consumption Expenditures&lt;/td&gt;
+&lt;td&gt;PCE&lt;/td&gt;
+&lt;td&gt;Business condition&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;Economic Policy Uncertainty Index&lt;/td&gt;
+&lt;td&gt;USEPUINDXD&lt;/td&gt;
+&lt;td&gt;Politics&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;It’s a pretty appropriate choice of variables, but in many cases, we haven’t done it properly in terms of how to model long-term interest rates from a macro modeling perspective… In DSGE, we formulate the path of short-term interest rates linked to the path of short-term interest rates up to 10 years into the future according to the efficient market hypothesis and long-term interest rates equal to the path of short-term interest rates when I was a graduate student It was modeling (which seems to be done properly in macro finance circles). That’s why I’ve added short-term interest rates as an explanatory variable. And I also added three indicators for prices that would have an impact on the short-term interest rate. In addition, I added data on the economy because it is well known that it is highly correlated with the economy. This is due to the fact that in the first place, it is common in macro models to model short-term interest rates as following the Taylor rule.&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+r_t = \rho r_{t-1} + \alpha \pi_{t} + \beta y_{t}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;where &lt;span class=&#34;math inline&#34;&gt;\(r_t\)&lt;/span&gt; is the policy interest rate (short-term interest rate), &lt;span class=&#34;math inline&#34;&gt;\(\pi_t\)&lt;/span&gt; is the inflation rate, and &lt;span class=&#34;math inline&#34;&gt;\(y_t\)&lt;/span&gt; is the output. The $R_rho, \\alpha, and &lt;span class=&#34;math inline&#34;&gt;\(y_t\)&lt;/span&gt; are called deep parameters, which represent inertia, the sensitivity of the interest rate to inflation, and the sensitivity of the interest rate to output, respectively. It is well known as the “Taylor’s Principle” that when $, &lt;span class=&#34;math inline&#34;&gt;\(\beta=0\)&lt;/span&gt;, a reasonably expected equilibrium solution can only be obtained when &lt;span class=&#34;math inline&#34;&gt;\(\alpha&amp;gt;=1\)&lt;/span&gt;. Other explanatory variables include &lt;code&gt;Moody&#39;s Seasoned Baa Corporate Bond Yield&lt;/code&gt;, which may also have an arbitrage relationship with corporate bonds. Also, we would like to add the &lt;code&gt;VIX&lt;/code&gt; index and an index related to finances if we wanted to. The fiscal index is either Quatery or Annualy and cannot be used for monthly estimation. This is the most difficult part. I will re-estimate if I come up with something.&lt;/p&gt;
+&lt;p&gt;Now, let’s get into the estimation. Since there are many explanatory variables in this case, we want to do a &lt;code&gt;lasso&lt;/code&gt; regression to narrow down the valid variables. We will also do an &lt;code&gt;OLS&lt;/code&gt; for comparison. The explanatory variables will be the values of the dependent variable one period ago. Probably, even one period ago, depending on when the data are published, it may not be in time for the next month’s estimates, but I’ll do this anyway.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# make dataset
+traindata &amp;lt;- na.omit(merge(macro_indicator[&amp;quot;2003-01-01::2015-12-31&amp;quot;][,1],stats::lag(macro_indicator[&amp;quot;2003-01-01::2015-12-31&amp;quot;][,-1],1)))
+testdata  &amp;lt;- na.omit(merge(macro_indicator[&amp;quot;2016-01-01::&amp;quot;][,1],stats::lag(macro_indicator[&amp;quot;2016-01-01::&amp;quot;][,-1],1)))
+
+# fitting OLS
+trial1 &amp;lt;- lm(GS10~.,data = traindata)
+summary(trial1)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 
+## Call:
+## lm(formula = GS10 ~ ., data = traindata)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.76208 -0.21234  0.00187  0.21595  0.70493 
+## 
+## Coefficients:
+##                 Estimate Std. Error t value Pr(&amp;gt;|t|)    
+## (Intercept)   14.3578405  4.3524691   3.299 0.001226 ** 
+## FEDFUNDS      -0.2011132  0.1438774  -1.398 0.164335    
+## CPIAUCSL      -0.0702011  0.0207761  -3.379 0.000938 ***
+## UNRATE        -0.2093502  0.0796052  -2.630 0.009477 ** 
+## TB3MS          0.2970160  0.1413796   2.101 0.037410 *  
+## INDPRO        -0.0645376  0.0260343  -2.479 0.014339 *  
+## T10YIEM        1.1484487  0.1769925   6.489 1.32e-09 ***
+## TWEXBMTH      -0.0317345  0.0118155  -2.686 0.008091 ** 
+## RECPROUSM156N -0.0099083  0.0021021  -4.713 5.72e-06 ***
+## BAA            0.7793520  0.0868628   8.972 1.49e-15 ***
+## T5YIFRM       -0.4551318  0.1897695  -2.398 0.017759 *  
+## PCE            0.0009087  0.0002475   3.672 0.000339 ***
+## ---
+## Signif. codes:  0 &amp;#39;***&amp;#39; 0.001 &amp;#39;**&amp;#39; 0.01 &amp;#39;*&amp;#39; 0.05 &amp;#39;.&amp;#39; 0.1 &amp;#39; &amp;#39; 1
+## 
+## Residual standard error: 0.2981 on 143 degrees of freedom
+## Multiple R-squared:  0.9203, Adjusted R-squared:  0.9142 
+## F-statistic: 150.1 on 11 and 143 DF,  p-value: &amp;lt; 2.2e-16&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;It’s a higher degree of freedom-adjusted coefficient of determination; we use the model through 12/31/2015 to predict the out-sample data (01/01/2016~) and calculate the mean squared error.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;est.OLS.Y &amp;lt;- predict(trial1,testdata[,-1])
+Y &amp;lt;- as.matrix(testdata[,1])
+mse.OLS &amp;lt;- sum((Y - est.OLS.Y)^2) / length(Y)
+mse.OLS&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 0.1431734&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The next step is the &lt;code&gt;lasso&lt;/code&gt; regression, using the &lt;code&gt;cv.glmnet&lt;/code&gt; function of the &lt;code&gt;glmnet&lt;/code&gt; package to perform Cross Validation and determine &lt;span class=&#34;math inline&#34;&gt;\(\lambda\)&lt;/span&gt;.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# fitting lasso regression
+library(glmnet)
+trial2 &amp;lt;- cv.glmnet(as.matrix(traindata[,-1]),as.matrix(traindata[,1]),family=&amp;quot;gaussian&amp;quot;,alpha=1)
+plot(trial2)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-4-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;trial2$lambda.min&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 0.001214651&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;coef(trial2,s=trial2$lambda.min)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 12 x 1 sparse Matrix of class &amp;quot;dgCMatrix&amp;quot;
+##                           1
+## (Intercept)    8.4885375862
+## FEDFUNDS       .           
+## CPIAUCSL      -0.0378778837
+## UNRATE        -0.1693313660
+## TB3MS          0.1224641351
+## INDPRO        -0.0545965007
+## T10YIEM        1.1926554061
+## TWEXBMTH      -0.0140144490
+## RECPROUSM156N -0.0090706154
+## BAA            0.7389283529
+## T5YIFRM       -0.4638923964
+## PCE            0.0005014518&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;Unemployment Rate&lt;/code&gt;, &lt;code&gt;3-Month Treasury Bill&lt;/code&gt;, &lt;code&gt;Breakeven Inflation Rate&lt;/code&gt;, &lt;code&gt;Moody&#39;s Seasoned Baa Corporate Bond Yield&lt;/code&gt; and &lt;code&gt;Inflation Expectation Rate&lt;/code&gt;. That’s the result of a larger regression coefficient. Other than the unemployment rate, the results are within expectations. However, the correlation with the economy seems to be low as far as this result is concerned (does it only work in the opposite direction?). Calculate the MSE.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;est.lasso.Y &amp;lt;- predict(trial2, newx = as.matrix(testdata[,-1]), s = trial2$lambda.min, type = &amp;#39;response&amp;#39;)
+mse.lasso &amp;lt;- sum((Y - est.lasso.Y)^2) / length(Y)
+mse.lasso&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 0.1125487&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The &lt;code&gt;lasso&lt;/code&gt; regression gives better results. Let’s plot the predicted and actual values from the &lt;code&gt;lasso&lt;/code&gt; regression as a time series.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(tidyverse)
+
+ggplot(gather(data.frame(actual=Y[,1],lasso_prediction=est.lasso.Y[,1],OLS_prediction=est.OLS.Y,date=as.POSIXct(rownames(Y))),key=data,value=rate,-date),aes(x=date,y=rate, colour=data)) +
+  geom_line(size=1.5) +
+  scale_x_datetime(breaks = &amp;quot;6 month&amp;quot;,date_labels = &amp;quot;%Y-%m&amp;quot;) +
+  scale_y_continuous(breaks=c(1,1.5,2,2.5,3,3.5),limits = c(1.25,3.5))&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-6-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;The sense of direction is good. On the other hand, I am not predicting a sharp decline in interest rates from January 2016 or after December 2018. It looks like we’ll have to try to do one of the following to improve the accuracy of this part of the projections: consider some variables OR run a rolling estimate.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;daily-analysis-part&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;3. Daily Analysis Part&lt;/h2&gt;
+&lt;p&gt;In addition to monthly analysis, I would like to do daily analysis. In the case of daily data, the &lt;code&gt;jagged edge&lt;/code&gt; problem is unlikely to occur because the data is often released after the market closes. We will start by collecting daily data.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# data name collected
+symbols.name &amp;lt;- c(&amp;quot;10-Year Treasury Constant Maturity Rate&amp;quot;,&amp;quot;Effective Federal Funds Rate&amp;quot;,&amp;quot;
+6-Month London Interbank Offered Rate (LIBOR), based on U.S. Dollar&amp;quot;,&amp;quot;NASDAQ Composite Index&amp;quot;,&amp;quot;3-Month Treasury Bill: Secondary Market Rate&amp;quot;,&amp;quot;Economic Policy Uncertainty Index for United States&amp;quot;,&amp;quot;
+10-Year Breakeven Inflation Rate&amp;quot;,&amp;quot;Trade Weighted U.S. Dollar Index: Broad, Goods&amp;quot;,&amp;quot;Moody&amp;#39;s Seasoned Baa Corporate Bond Yield&amp;quot;,&amp;quot;5-Year, 5-Year Forward Inflation Expectation Rate&amp;quot;)
+
+# Collect economic data
+symbols &amp;lt;- c(&amp;quot;DGS10&amp;quot;,&amp;quot;DFF&amp;quot;,&amp;quot;USD6MTD156N&amp;quot;,&amp;quot;NASDAQCOM&amp;quot;,&amp;quot;DTB3&amp;quot;,&amp;quot;USEPUINDXD&amp;quot;,&amp;quot;T10YIE&amp;quot;,&amp;quot;DTWEXB&amp;quot;,&amp;quot;DBAA&amp;quot;,&amp;quot;T5YIFR&amp;quot;)
+getSymbols(symbols, from = &amp;#39;1980-01-01&amp;#39;, src = &amp;quot;FRED&amp;quot;, auto.assign = TRUE)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##  [1] &amp;quot;DGS10&amp;quot;       &amp;quot;DFF&amp;quot;         &amp;quot;USD6MTD156N&amp;quot; &amp;quot;NASDAQCOM&amp;quot;   &amp;quot;DTB3&amp;quot;       
+##  [6] &amp;quot;USEPUINDXD&amp;quot;  &amp;quot;T10YIE&amp;quot;      &amp;quot;DTWEXB&amp;quot;      &amp;quot;DBAA&amp;quot;        &amp;quot;T5YIFR&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;NASDAQCOM.r &amp;lt;- ROC(na.omit(NASDAQCOM))
+macro_indicator.d &amp;lt;- merge(DGS10,DFF,USD6MTD156N,NASDAQCOM.r,DTB3,USEPUINDXD,T10YIE,DTWEXB,DBAA,T5YIFR)
+rm(DGS10,DFF,USD6MTD156N,NASDAQCOM,NASDAQCOM.r,DTB3,USEPUINDXD,T10YIE,DTWEXB,DBAA,T5YIFR)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The next step is to build the data set. We separate the data for training and for training. Considering the actual prediction process, we use data from two business days ago as the explanatory variables.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# make dataset
+traindata.d &amp;lt;- na.omit(merge(macro_indicator.d[&amp;quot;1980-01-01::2010-12-31&amp;quot;][,1],stats::lag(macro_indicator.d[&amp;quot;1980-01-01::2010-12-31&amp;quot;][,-1],2)))
+testdata.d  &amp;lt;- na.omit(merge(macro_indicator.d[&amp;quot;2010-01-01::&amp;quot;][,1],stats::lag(macro_indicator.d[&amp;quot;2010-01-01::&amp;quot;][,-1],2)))
+
+# fitting OLS
+trial1.d &amp;lt;- lm(DGS10~.,data = traindata.d)
+summary(trial1.d)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 
+## Call:
+## lm(formula = DGS10 ~ ., data = traindata.d)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.82445 -0.12285  0.00469  0.14332  0.73789 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(&amp;gt;|t|)    
+## (Intercept) -3.5051208  0.1690503 -20.734  &amp;lt; 2e-16 ***
+## DFF          0.0818269  0.0239371   3.418 0.000653 ***
+## USD6MTD156N -0.0135771  0.0233948  -0.580 0.561799    
+## NASDAQCOM   -0.3880217  0.4367334  -0.888 0.374483    
+## DTB3         0.1227984  0.0280283   4.381 1.29e-05 ***
+## USEPUINDXD  -0.0006611  0.0001086  -6.087 1.58e-09 ***
+## T10YIE       0.6980971  0.0355734  19.624  &amp;lt; 2e-16 ***
+## DTWEXB       0.0270128  0.0012781  21.135  &amp;lt; 2e-16 ***
+## DBAA         0.2988122  0.0182590  16.365  &amp;lt; 2e-16 ***
+## T5YIFR       0.3374944  0.0381111   8.856  &amp;lt; 2e-16 ***
+## ---
+## Signif. codes:  0 &amp;#39;***&amp;#39; 0.001 &amp;#39;**&amp;#39; 0.01 &amp;#39;*&amp;#39; 0.05 &amp;#39;.&amp;#39; 0.1 &amp;#39; &amp;#39; 1
+## 
+## Residual standard error: 0.2173 on 1114 degrees of freedom
+## Multiple R-squared:  0.8901, Adjusted R-squared:  0.8892 
+## F-statistic:  1002 on 9 and 1114 DF,  p-value: &amp;lt; 2.2e-16&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The coefficient of determination remains high.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;est.OLS.Y.d &amp;lt;- predict(trial1.d,testdata.d[,-1])
+Y.d &amp;lt;- as.matrix(testdata.d[,1])
+mse.OLS.d &amp;lt;- sum((Y.d - est.OLS.Y.d)^2) / length(Y.d)
+mse.OLS.d&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 0.8003042&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Next is the &lt;code&gt;lasso&lt;/code&gt; regression. Determine &lt;span class=&#34;math inline&#34;&gt;\(lambda\)&lt;/span&gt; in &lt;code&gt;CV&lt;/code&gt;.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# fitting lasso regression
+trial2.d &amp;lt;- cv.glmnet(as.matrix(traindata.d[,-1]),as.matrix(traindata.d[,1]),family=&amp;quot;gaussian&amp;quot;,alpha=1)
+plot(trial2.d)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-10-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;trial2.d$lambda.min&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 0.001472377&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;coef(trial2.d,s=trial2.d$lambda.min)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 10 x 1 sparse Matrix of class &amp;quot;dgCMatrix&amp;quot;
+##                         1
+## (Intercept) -3.4186530904
+## DFF          0.0707022021
+## USD6MTD156N  .           
+## NASDAQCOM   -0.2675513858
+## DTB3         0.1204092358
+## USEPUINDXD  -0.0006506183
+## T10YIE       0.6915446819
+## DTWEXB       0.0270389569
+## DBAA         0.2861031504
+## T5YIFR       0.3376304446&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The coefficient of &lt;code&gt;libor&lt;/code&gt; became zero, and the MSE of &lt;code&gt;OLS&lt;/code&gt; was higher than that of &lt;code&gt;libor&lt;/code&gt;.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;est.lasso.Y.d &amp;lt;- predict(trial2.d, newx = as.matrix(testdata.d[,-1]), s = trial2.d$lambda.min, type = &amp;#39;response&amp;#39;)
+mse.lasso.d &amp;lt;- sum((Y.d - est.lasso.Y.d)^2) / length(Y.d)
+mse.lasso.d&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 0.8378427&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Plot the predictions.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggplot(gather(data.frame(actual=Y.d[,1],lasso_prediction=est.lasso.Y.d[,1],OLS_prediction=est.OLS.Y.d,date=as.POSIXct(rownames(Y.d))),key=data,value=rate,-date),aes(x=date,y=rate, colour=data)) +
+  geom_line(size=1.5) +
+  scale_x_datetime(breaks = &amp;quot;2 year&amp;quot;,date_labels = &amp;quot;%Y-%m&amp;quot;) +
+  scale_y_continuous(breaks=c(1,1.5,2,2.5,3,3.5),limits = c(1.25,5))&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-12-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;As with the monthly, there is very little difference between the predicted values for &lt;code&gt;OLS&lt;/code&gt; and &lt;code&gt;lasso&lt;/code&gt;. We have been able to capture the fluctuations quite nicely, but we have not been able to capture the interest rate decline caused by the &lt;code&gt;United States federal government credit-rating downgrades&lt;/code&gt; in 2011 or the interest rate increase associated with the economic recovery in 2013. The only daily economic indicator I have is POS data, but I might be able to use the recently used nightlight satellite imagery data, if I had to say so. I’ll try it if I have time. For now, I’d like to end this article for now. Thank you for reading this article.&lt;/p&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+    <item>
       <title>I built the Asset Allocation Model in R.</title>
       <link>/en/post/post2/</link>
       <pubDate>Sun, 17 Feb 2019 00:00:00 +0000</pubDate>

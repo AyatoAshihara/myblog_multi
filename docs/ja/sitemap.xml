@@ -335,11 +335,31 @@
   <url>
     <loc>/post/post16/</loc>
     <lastmod>2020-02-29T00:00:00+00:00</lastmod>
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="/en/post/post16/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="ja"
+                href="/post/post16/"
+                />
   </url>
   
   <url>
     <loc>/post/post14/</loc>
     <lastmod>2019-07-16T00:00:00+00:00</lastmod>
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="/en/post/post14/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="ja"
+                href="/post/post14/"
+                />
   </url>
   
   <url>

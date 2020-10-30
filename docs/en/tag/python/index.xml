@@ -737,5 +737,237 @@ Do I need to get to the point where I can get a paddock video from Youtube and a
 </description>
     </item>
     
+    <item>
+      <title>Predicting Horse Racing Results Using LightGBM</title>
+      <link>/en/post/post16/</link>
+      <pubDate>Sat, 29 Feb 2020 00:00:00 +0000</pubDate>
+      <guid>/en/post/post16/</guid>
+      <description>
+&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+
+&lt;div id=&#34;TOC&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#data-import&#34;&gt;1.Data Import&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#creating-a-model&#34;&gt;2. Creating a Model&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#interpreting-results-in-shap&#34;&gt;3. Interpreting results in shap&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#summary&#34;&gt;4. Summary&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Hi. It’s been quite a while, but I’d like to create a model to predict the outcome of a race based on race result data previously collected from yahoo.keiba in order to study Python.&lt;/p&gt;
+&lt;div id=&#34;data-import&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;1.Data Import&lt;/h2&gt;
+&lt;p&gt;First, I get the race result data saved from &lt;code&gt;sqlite&lt;/code&gt; to the &lt;code&gt;pandas&lt;/code&gt; data frame.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;conn = sqlite3.connect(r&amp;#39;C:\hogehoge\horse_data.db&amp;#39;)
+sql = r&amp;#39;SELECT * FROM race_result&amp;#39;
+df = pd.read_sql(con=conn,sql=sql)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Let’s check the contents of the data. The columns are as follows, with order being the order of arrival.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df.columns&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Index([&amp;#39;order&amp;#39;, &amp;#39;frame_number&amp;#39;, &amp;#39;horse_number&amp;#39;, &amp;#39;trainer&amp;#39;, &amp;#39;passing_rank&amp;#39;,
+##        &amp;#39;last_3F&amp;#39;, &amp;#39;time&amp;#39;, &amp;#39;margin&amp;#39;, &amp;#39;horse_name&amp;#39;, &amp;#39;horse_age&amp;#39;, &amp;#39;horse_sex&amp;#39;,
+##        &amp;#39;horse_weight&amp;#39;, &amp;#39;horse_weight_change&amp;#39;, &amp;#39;brinker&amp;#39;, &amp;#39;jockey&amp;#39;,
+##        &amp;#39;jockey_weight&amp;#39;, &amp;#39;jockey_weight_change&amp;#39;, &amp;#39;odds&amp;#39;, &amp;#39;popularity&amp;#39;,
+##        &amp;#39;race_date&amp;#39;, &amp;#39;race_course&amp;#39;, &amp;#39;race_name&amp;#39;, &amp;#39;race_distance&amp;#39;, &amp;#39;type&amp;#39;,
+##        &amp;#39;race_turn&amp;#39;, &amp;#39;race_condition&amp;#39;, &amp;#39;race_weather&amp;#39;, &amp;#39;colour&amp;#39;, &amp;#39;owner&amp;#39;,
+##        &amp;#39;farm&amp;#39;, &amp;#39;locality&amp;#39;, &amp;#39;horse_birthday&amp;#39;, &amp;#39;father&amp;#39;, &amp;#39;mother&amp;#39;, &amp;#39;prize&amp;#39;,
+##        &amp;#39;http&amp;#39;],
+##       dtype=&amp;#39;object&amp;#39;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Checking the contents of the order, you’ll see that many of the orders have parentheses () and that they are recognized by the letter type because of the presence of cancellation, abort and disqualification. By the way, the order in parentheses is the order of entry, which means that the horse has been disqualified for interfering with another horse’s running (&lt;a href=&#34;http://www.jra.go.jp/judge/&#34; class=&#34;uri&#34;&gt;http://www.jra.go.jp/judge/&lt;/a&gt;).&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df.loc[:,&amp;#39;order&amp;#39;].unique()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## array([&amp;#39;1&amp;#39;, &amp;#39;7&amp;#39;, &amp;#39;2&amp;#39;, &amp;#39;8&amp;#39;, &amp;#39;5&amp;#39;, &amp;#39;15&amp;#39;, &amp;#39;6&amp;#39;, &amp;#39;12&amp;#39;, &amp;#39;11&amp;#39;, &amp;#39;14&amp;#39;, &amp;#39;3&amp;#39;, &amp;#39;13&amp;#39;,
+##        &amp;#39;4&amp;#39;, &amp;#39;16&amp;#39;, &amp;#39;9&amp;#39;, &amp;#39;10&amp;#39;, &amp;#39;取消&amp;#39;, &amp;#39;中止&amp;#39;, &amp;#39;除外&amp;#39;, &amp;#39;17&amp;#39;, &amp;#39;18&amp;#39;, &amp;#39;4(3)&amp;#39;, &amp;#39;2(1)&amp;#39;,
+##        &amp;#39;3(2)&amp;#39;, &amp;#39;6(4)&amp;#39;, &amp;#39;失格&amp;#39;, &amp;#39;9(8)&amp;#39;, &amp;#39;16(6)&amp;#39;, &amp;#39;12(12)&amp;#39;, &amp;#39;13(9)&amp;#39;, &amp;#39;6(3)&amp;#39;,
+##        &amp;#39;10(7)&amp;#39;, &amp;#39;6(5)&amp;#39;, &amp;#39;9(3)&amp;#39;, &amp;#39;11(8)&amp;#39;, &amp;#39;13(2)&amp;#39;, &amp;#39;12(9)&amp;#39;, &amp;#39;14(7)&amp;#39;,
+##        &amp;#39;10(1)&amp;#39;, &amp;#39;16(8)&amp;#39;, &amp;#39;14(6)&amp;#39;, &amp;#39;10(3)&amp;#39;, &amp;#39;12(1)&amp;#39;, &amp;#39;13(6)&amp;#39;, &amp;#39;7(1)&amp;#39;,
+##        &amp;#39;12(6)&amp;#39;, &amp;#39;6(2)&amp;#39;, &amp;#39;11(2)&amp;#39;, &amp;#39;15(6)&amp;#39;, &amp;#39;13(10)&amp;#39;, &amp;#39;14(4)&amp;#39;, &amp;#39;7(5)&amp;#39;,
+##        &amp;#39;17(4)&amp;#39;, &amp;#39;9(7)&amp;#39;, &amp;#39;16(14)&amp;#39;, &amp;#39;12(11)&amp;#39;, &amp;#39;14(2)&amp;#39;, &amp;#39;8(2)&amp;#39;, &amp;#39;9(5)&amp;#39;,
+##        &amp;#39;11(5)&amp;#39;, &amp;#39;12(7)&amp;#39;, &amp;#39;11(1)&amp;#39;, &amp;#39;12(8)&amp;#39;, &amp;#39;7(4)&amp;#39;, &amp;#39;5(4)&amp;#39;, &amp;#39;13(12)&amp;#39;,
+##        &amp;#39;14(3)&amp;#39;, &amp;#39;10(2)&amp;#39;, &amp;#39;11(10)&amp;#39;, &amp;#39;18(3)&amp;#39;, &amp;#39;10(4)&amp;#39;, &amp;#39;15(8)&amp;#39;, &amp;#39;8(3)&amp;#39;,
+##        &amp;#39;5(1)&amp;#39;, &amp;#39;10(5)&amp;#39;, &amp;#39;7(3)&amp;#39;, &amp;#39;5(2)&amp;#39;, &amp;#39;9(1)&amp;#39;, &amp;#39;13(3)&amp;#39;, &amp;#39;16(11)&amp;#39;,
+##        &amp;#39;11(3)&amp;#39;, &amp;#39;18(15)&amp;#39;, &amp;#39;11(6)&amp;#39;, &amp;#39;10(6)&amp;#39;, &amp;#39;14(12)&amp;#39;, &amp;#39;12(5)&amp;#39;, &amp;#39;15(14)&amp;#39;,
+##        &amp;#39;17(8)&amp;#39;, &amp;#39;18(6)&amp;#39;, &amp;#39;4(2)&amp;#39;, &amp;#39;18(10)&amp;#39;, &amp;#39;16(7)&amp;#39;, &amp;#39;13(1)&amp;#39;, &amp;#39;16(10)&amp;#39;,
+##        &amp;#39;15(7)&amp;#39;, &amp;#39;9(4)&amp;#39;, &amp;#39;15(5)&amp;#39;, &amp;#39;12(3)&amp;#39;, &amp;#39;8(7)&amp;#39;, &amp;#39;15(2)&amp;#39;, &amp;#39;12(10)&amp;#39;,
+##        &amp;#39;14(9)&amp;#39;, &amp;#39;3(1)&amp;#39;, &amp;#39;6(1)&amp;#39;, &amp;#39;14(5)&amp;#39;, &amp;#39;15(4)&amp;#39;, &amp;#39;11(4)&amp;#39;, &amp;#39;12(4)&amp;#39;,
+##        &amp;#39;16(4)&amp;#39;, &amp;#39;9(2)&amp;#39;, &amp;#39;13(5)&amp;#39;, &amp;#39;12(2)&amp;#39;, &amp;#39;15(1)&amp;#39;, &amp;#39;4(1)&amp;#39;, &amp;#39;14(13)&amp;#39;,
+##        &amp;#39;14(1)&amp;#39;, &amp;#39;13(7)&amp;#39;, &amp;#39;5(3)&amp;#39;, &amp;#39;8(6)&amp;#39;, &amp;#39;15(13)&amp;#39;, &amp;#39;7(2)&amp;#39;, &amp;#39;15(11)&amp;#39;,
+##        &amp;#39;10(9)&amp;#39;, &amp;#39;11(9)&amp;#39;, &amp;#39;8(4)&amp;#39;, &amp;#39;15(3)&amp;#39;, &amp;#39;13(4)&amp;#39;, &amp;#39;16(12)&amp;#39;, &amp;#39;16(5)&amp;#39;,
+##        &amp;#39;18(11)&amp;#39;, &amp;#39;10(8)&amp;#39;, &amp;#39;18(8)&amp;#39;, &amp;#39;14(8)&amp;#39;, &amp;#39;16(9)&amp;#39;, &amp;#39;8(5)&amp;#39;, &amp;#39;8(1)&amp;#39;,
+##        &amp;#39;14(11)&amp;#39;, &amp;#39;9(6)&amp;#39;, &amp;#39;16(13)&amp;#39;, &amp;#39;16(15)&amp;#39;, &amp;#39;11(11)&amp;#39;, &amp;#39;15(10)&amp;#39;, &amp;#39;7(6)&amp;#39;],
+##       dtype=object)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Let’s fix this first. Remove the parentheses and change the type to int, and add the arrival order as a new column &lt;code&gt;arriving order&lt;/code&gt;.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df[&amp;#39;arriving order&amp;#39;] = df[df.order.str.contains(r&amp;#39;\d*\(\d*\)&amp;#39;,regex=True)][&amp;#39;order&amp;#39;].replace(r&amp;#39;\d+\(&amp;#39;,r&amp;#39;&amp;#39;,regex=True).replace(r&amp;#39;\)&amp;#39;,r&amp;#39;&amp;#39;,regex=True).astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;arriving order&amp;#39;].unique()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## array([nan,  3.,  1.,  2.,  4.,  8.,  6., 12.,  9.,  7.,  5., 10., 14.,
+##        11., 15., 13.])&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df[&amp;#39;order&amp;#39;] = df[&amp;#39;order&amp;#39;].replace(r&amp;#39;\(\d+\)&amp;#39;,r&amp;#39;&amp;#39;,regex=True)
+df = df[lambda df: ~df.order.str.contains(r&amp;#39;(取消|中止|除外|失格)&amp;#39;,regex=True)]&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## C:\Users\aashi\Anaconda3\envs\umanalytics\lib\site-packages\pandas\core\strings.py:1954: UserWarning: This pattern has match groups. To actually get the groups, use str.extract.
+##   return func(self, *args, **kwargs)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df[&amp;#39;order&amp;#39;] = df[&amp;#39;order&amp;#39;].astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;order&amp;#39;].unique()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## array([ 1.,  7.,  2.,  8.,  5., 15.,  6., 12., 11., 14.,  3., 13.,  4.,
+##        16.,  9., 10., 17., 18.])&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;We were able to process it into a clean &lt;code&gt;float&lt;/code&gt; type. Now let’s move on to preprocessing the last three furlongs’ times. We use the last three furlongs’ time of the last race for our prediction.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import numpy as np
+df[&amp;#39;last_3F&amp;#39;] = df[&amp;#39;last_3F&amp;#39;].replace(r&amp;#39;character(0)&amp;#39;,np.nan,regex=False).astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;last_3F&amp;#39;] = df.groupby(&amp;#39;horse_name&amp;#39;)[&amp;#39;last_3F&amp;#39;].shift(-1)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Also include the previous race and rankings and any additional positions in the dataset.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df[&amp;#39;prerace&amp;#39;] = df.groupby(&amp;#39;horse_name&amp;#39;)[&amp;#39;race_name&amp;#39;].shift(-1)
+df[&amp;#39;preorder&amp;#39;] = df.groupby(&amp;#39;horse_name&amp;#39;)[&amp;#39;order&amp;#39;].shift(-1)
+df[&amp;#39;prepassing&amp;#39;] = df.groupby(&amp;#39;horse_name&amp;#39;)[&amp;#39;passing_rank&amp;#39;].shift(-1)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The accumulated prize money earned at the time of running will also be added.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df[&amp;#39;preprize&amp;#39;] = df.groupby(&amp;#39;horse_name&amp;#39;)[&amp;#39;prize&amp;#39;].shift(-1)
+df[&amp;#39;preprize&amp;#39;] = df[&amp;#39;preprize&amp;#39;].fillna(0)
+df[&amp;#39;margin&amp;#39;] = df.groupby(&amp;#39;horse_name&amp;#39;)[&amp;#39;margin&amp;#39;].shift(-1)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;We also add missing values, data type fixes, and label encoding for categorical data.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df[&amp;#39;horse_weight&amp;#39;] = df[&amp;#39;horse_weight&amp;#39;].astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;margin&amp;#39;] = df[&amp;#39;margin&amp;#39;].replace(r&amp;#39;character(0)&amp;#39;,np.nan,regex=False)
+df[&amp;#39;horse_age&amp;#39;] = df[&amp;#39;horse_age&amp;#39;].astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;horse_weight_change&amp;#39;] = df[&amp;#39;horse_weight_change&amp;#39;].astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;jockey_weight&amp;#39;] = df[&amp;#39;jockey_weight&amp;#39;].astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;race_distance&amp;#39;] = df[&amp;#39;race_distance&amp;#39;].replace(r&amp;#39;m&amp;#39;,r&amp;#39;&amp;#39;,regex=True).astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;race_turn&amp;#39;] = df[&amp;#39;race_turn&amp;#39;].replace(r&amp;#39;character(0)&amp;#39;,np.nan,regex=False)
+df.loc[df[&amp;#39;order&amp;#39;]!=1,&amp;#39;order&amp;#39;] = 0
+
+df[&amp;#39;race_turn&amp;#39;] = df[&amp;#39;race_turn&amp;#39;].fillna(&amp;#39;missing&amp;#39;)
+df[&amp;#39;colour&amp;#39;] = df[&amp;#39;colour&amp;#39;].fillna(&amp;#39;missing&amp;#39;)
+df[&amp;#39;prepassing&amp;#39;] = df[&amp;#39;prepassing&amp;#39;].fillna(&amp;#39;missing&amp;#39;)
+df[&amp;#39;prerace&amp;#39;] = df[&amp;#39;prerace&amp;#39;].fillna(&amp;#39;missing&amp;#39;)
+df[&amp;#39;father&amp;#39;] = df[&amp;#39;father&amp;#39;].fillna(&amp;#39;missing&amp;#39;)
+df[&amp;#39;mother&amp;#39;] = df[&amp;#39;mother&amp;#39;].fillna(&amp;#39;missing&amp;#39;)
+
+from sklearn import preprocessing
+cat_list = [&amp;#39;trainer&amp;#39;, &amp;#39;horse_name&amp;#39;, &amp;#39;horse_sex&amp;#39;, &amp;#39;brinker&amp;#39;, &amp;#39;jockey&amp;#39;, &amp;#39;race_course&amp;#39;, &amp;#39;race_name&amp;#39;, &amp;#39;type&amp;#39;, &amp;#39;race_turn&amp;#39;, &amp;#39;race_condition&amp;#39;, &amp;#39;race_weather&amp;#39;, &amp;#39;colour&amp;#39;, &amp;#39;father&amp;#39;, &amp;#39;mother&amp;#39;, &amp;#39;prerace&amp;#39;, &amp;#39;prepassing&amp;#39;]
+for column in cat_list:
+    target_column = df[column]
+    le = preprocessing.LabelEncoder()
+    le.fit(target_column)
+    label_encoded_column = le.transform(target_column)
+    df[column] = pd.Series(label_encoded_column).astype(&amp;#39;category&amp;#39;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import pandas_profiling as pdq
+profile = pdq.ProfileReport(df)
+profile&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;creating-a-model&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;2. Creating a Model&lt;/h2&gt;
+&lt;p&gt;Now, let’s try to build a prediction model with &lt;code&gt;LightGBM&lt;/code&gt;. The &lt;code&gt;optuna&lt;/code&gt; &lt;code&gt;LightGBM&lt;/code&gt; is used to perform hyperparameter tuning and calculate the &lt;code&gt;confusion matrix&lt;/code&gt;, as well as the correctness rate of test data calculated with the trained model.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import optuna.integration.lightgbm as lgb
+from sklearn.model_selection import train_test_split
+
+y = df[&amp;#39;order&amp;#39;]
+x = df.drop([&amp;#39;order&amp;#39;,&amp;#39;passing_rank&amp;#39;,&amp;#39;time&amp;#39;,&amp;#39;odds&amp;#39;,&amp;#39;popularity&amp;#39;,&amp;#39;owner&amp;#39;,&amp;#39;farm&amp;#39;,&amp;#39;locality&amp;#39;,&amp;#39;horse_birthday&amp;#39;,&amp;#39;http&amp;#39;,&amp;#39;prize&amp;#39;,&amp;#39;race_date&amp;#39;,&amp;#39;margin&amp;#39;],axis=1)
+
+X_train, X_test, y_train, y_test = train_test_split(x, y)
+X_train, x_val, y_train, y_val = train_test_split(X_train, y_train)
+
+lgb_train = lgb.Dataset(X_train, y_train)
+lgb_eval = lgb.Dataset(x_val, y_val)
+lgb_test = lgb.Dataset(X_test, y_test, reference=lgb_train)
+
+lgbm_params = {
+        &amp;#39;objective&amp;#39;: &amp;#39;binary&amp;#39;,
+        &amp;#39;boost_from_average&amp;#39;: False
+    }
+
+best_params, history = {}, []
+model = lgb.train(lgbm_params, lgb_train, categorical_feature = cat_list,valid_sets = lgb_eval, num_boost_round=100,early_stopping_rounds=20,best_params=best_params,tuning_history=history, verbose_eval=False)
+best_params
+
+def calibration(y_proba, beta):
+    return y_proba / (y_proba + (1 - y_proba) / beta)
+
+sampling_rate = y_train.sum() / len(y_train)
+y_proba = model.predict(X_test, num_iteration=model.best_iteration)
+y_proba_calib = calibration(y_proba, sampling_rate)
+
+y_pred = np.vectorize(lambda x: 1 if x &amp;gt; 0.49 else 0)(y_proba_calib)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Visualization part.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, accuracy_score, precision_score, recall_score, f1_score, roc_curve, auc
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Calculating the AUC (Area Under the Curve)
+fpr, tpr, thresholds = roc_curve(y_test, y_pred)
+auc = auc(fpr, tpr)
+
+# Plot the ROC curve
+plt.plot(fpr, tpr, label=&amp;#39;ROC curve (area = %.2f)&amp;#39;%auc)
+plt.legend()
+plt.title(&amp;#39;ROC curve&amp;#39;)
+plt.xlabel(&amp;#39;False Positive Rate&amp;#39;)
+plt.ylabel(&amp;#39;True Positive Rate&amp;#39;)
+plt.grid(True)
+plt.show()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-16-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.close()
+
+# Generate a Confusion Matrix
+ConfusionMatrixDisplay(confusion_matrix(y_test, y_pred)).plot()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## &amp;lt;sklearn.metrics._plot.confusion_matrix.ConfusionMatrixDisplay object at 0x0000000050413A88&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.show()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-16-2.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.close()
+
+accuracy_score(y_test, y_pred)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 0.9300293307706259&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;precision_score(y_test, y_pred)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 0.9227166276346604&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The &lt;code&gt;accuracy_score&lt;/code&gt; (prediction accuracy) is over 90% and the &lt;code&gt;precision_Score&lt;/code&gt; (the percentage of data correct that predicted positive = 1) is good.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;recall_score(y_test, y_pred)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 0.011613511760891352&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;f1_score(y_test, y_pred)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 0.022938316886443686&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;On the other hand, we can see that the &lt;code&gt;recall_score&lt;/code&gt; (percentage of sample that was predicted to be positive and actually true) is low and the false negative is high. As a result, the &lt;code&gt;F1&lt;/code&gt; value is also low. In the case of the horse racing prediction model, high false negatives are better than high false positives, but we have to work harder to reduce the false negatives to increase the return rate. This is an issue for the future. In the next section, I will use the &lt;code&gt;shapley&lt;/code&gt; value to do a factorization.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;interpreting-results-in-shap&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;3. Interpreting results in shap&lt;/h2&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import shap
+
+shap.initjs()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## &amp;lt;IPython.core.display.HTML object&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;explainer = shap.TreeExplainer(model)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Setting feature_perturbation = &amp;quot;tree_path_dependent&amp;quot; because no background data was given.&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;shap_values = explainer.shap_values(X_test)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## LightGBM binary classifier with TreeExplainer shap values output has changed to a list of ndarray&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;First, we’ll see how important each feature is. The &lt;code&gt;summary_plot&lt;/code&gt; method is used.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;shap.summary_plot(shap_values, X_test)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-19-1.png&#34; width=&#34;768&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;The horizontal axis represents the average importance of each feature (absolute value of the shap value), and we can see that preprize (amount of money won up to the last race), horse_age, and preorder (order of finish in the last race) are all important in predicting the winner of the race. The same is true for horse_age. However, it is not possible to evaluate it qualitatively just because it is important. For example, if the relationship between a higher preprize and a higher probability of being first is confirmed, that can be important information. Then you can check it. The &lt;code&gt;summary_plot&lt;/code&gt; method is used.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;shap.summary_plot(shap_values[1], X_test)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-20-1.png&#34; width=&#34;768&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;The above figure also shows the importance of each feature (not absolute values in this case). In this case, the importance of each feature is shown in the violin plot and is colored according to the size of the feature value. For example, in the case of preprize, the red distribution occurs only where the horizontal axis is greater than 0, and this is where the feature value of preprize is large. This means that we can take the obvious interpretation that the probability of finishing first increases on average with the amount of money won up to the previous race.
+Other factors such as horse_age, preorder, and last_3F seem to increase the probability of finishing first as the feature value becomes smaller, while horse_weight and jokey_weight seem to increase the probability of finishing first as the feature value becomes larger. On the other hand, there is no qualitative relationship between the two variables.&lt;/p&gt;
+&lt;p&gt;Next, let’s look at the relationship between feature value and probability in more detail. We saw earlier that preprize increases the probability of being the first one to arrive as the feature value increases. But we don’t know if the increase is linear, exponential, or diminishing as in dependence on &lt;span class=&#34;math inline&#34;&gt;\(log x\)&lt;/span&gt;. Let’s find out with the &lt;code&gt;dependence_plot&lt;/code&gt;.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;shap.dependence_plot(ind=&amp;quot;preprize&amp;quot;, shap_values=shap_values[1], features=X_test)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-21-1.png&#34; width=&#34;720&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;The above figure plots the approximate form of the learned &lt;code&gt;LightGBM&lt;/code&gt; as a function of preprize. As we saw earlier, the probability of being the first one to be placed increases as the feature value increases. However, the increase is gradual and diminishing, and it almost reaches its peak at over 20 million yen. Also, in the figure above, we have color-coded by HORSE_AGE, so you can see the relationship with PREPRIZE. As you might expect, the probability of horses with high preprize is higher for the youngest horses to win the race.&lt;/p&gt;
+&lt;p&gt;Let’s also check the &lt;code&gt;dependence_plot&lt;/code&gt; of the preorder.&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;shap.dependence_plot(ind=&amp;quot;preorder&amp;quot;, shap_values=shap_values[1], features=X_test)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-22-1.png&#34; width=&#34;720&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;As expected, the higher the order of the last race, the higher the probability of finishing first. I also checked the relationship with the time of last_3F, but it doesn’t seem to be very relevant here.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;summary&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;4. Summary&lt;/h2&gt;
+&lt;p&gt;I made a prediction model of horse racing using &lt;code&gt;LightGBM&lt;/code&gt;. As you would expect of &lt;code&gt;Light GBM&lt;/code&gt;, the prediction accuracy is very high. Also, the &lt;code&gt;shap&lt;/code&gt; value was successfully used to detect important features. This will help us understand how &lt;code&gt;LightGBM&lt;/code&gt; feels and improve our modeling accuracy as we continue to find better features.&lt;/p&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
   </channel>
 </rss>
