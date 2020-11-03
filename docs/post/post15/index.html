@@ -1,0 +1,1601 @@
+<!DOCTYPE html><html lang="ja" >
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  
+  
+  
+  <meta name="generator" content="Wowchemy 4.8.0 for Hugo">
+  
+
+  
+
+  
+  
+
+  
+  
+  
+  
+  
+    
+    
+    
+  
+  
+
+  <meta name="author" content="Ayato Ashihara">
+
+  
+  
+  
+    
+  
+  <meta name="description" content="pandas_datareaderを使って色々なデータを取得してみました。">
+
+  
+  <link rel="alternate" hreflang="ja" href="../../post/post15/">
+
+  
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+  
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+
+  
+  
+  
+  <meta name="theme-color" content="#2962ff">
+  
+
+  
+  
+  
+  <script src="../../js/mathjax-config.js"></script>
+  
+
+  
+  
+  
+  
+    
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha256-FMvZuGapsJLjouA6k7Eo2lusoAX9i0ShlWFG6qt7SLc=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin="anonymous">
+
+    
+    
+    
+      
+    
+    
+      
+      
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/xcode.min.css" crossorigin="anonymous" title="hl-light">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/xcode.min.css" crossorigin="anonymous" title="hl-dark" disabled>
+      
+    
+
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.css" integrity="sha512-1xoFisiGdy9nvho8EgXuXvnpR5GAMSjFwp40gSRE3NwdUdIMIKuPa7bqoUhLD0O/5tPNhteAsE5XyyMi5reQVA==" crossorigin="anonymous">
+    
+
+    
+
+    
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.2.2/lazysizes.min.js" integrity="sha512-TmDwFLhg3UA4ZG0Eb4MIyT1O1Mb+Oww5kFG0uHqXsdbyZz9DcvYQhKpGgNkamAI6h2lGGZq2X8ftOJvF/XjTUg==" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" integrity="" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+
+  
+
+  
+  
+  
+    
+      
+      
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,700%7CRoboto:400,400italic,700%7CRoboto+Mono&display=swap">
+    
+  
+
+  
+  
+  
+  
+  <link rel="stylesheet" href="../../css/wowchemy.css">
+
+  
+
+
+
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-140804055-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+
+  function gtag() {
+      dataLayer.push(arguments);
+  }
+
+  function trackOutboundLink(url, target) {
+    gtag('event', 'click', {
+         'event_category': 'outbound',
+         'event_label': url,
+         'transport_type': 'beacon',
+         'event_callback': function () {
+           if (target !== '_blank') {
+             document.location = url;
+           }
+         }
+    });
+    console.debug("Outbound link clicked: " + url);
+  }
+
+  function onClickCallback(event) {
+    if ((event.target.tagName !== 'A') || (event.target.host === window.location.host)) {
+      return;
+    }
+    trackOutboundLink(event.target, event.target.getAttribute('target'));  
+  }
+
+  gtag('js', new Date());
+  gtag('config', 'UA-140804055-1', {});
+
+  
+  document.addEventListener('click', onClickCallback, false);
+</script>
+
+
+  
+
+
+  
+  
+
+  
+
+  <link rel="manifest" href="../../index.webmanifest">
+  <link rel="icon" type="image/png" href="../../images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
+  <link rel="apple-touch-icon" type="image/png" href="../../images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
+
+  <link rel="canonical" href="../../post/post15/">
+
+  
+  
+  
+  
+  
+  
+  
+    
+  
+  
+  <meta property="twitter:card" content="summary_large_image">
+  
+  <meta property="og:site_name" content="東京の資産運用会社で働く社会人が研究に没頭するブログ">
+  <meta property="og:url" content="/post/post15/">
+  <meta property="og:title" content="Pythonのpandas_datareaderから色々なデータを取得してみる | 東京の資産運用会社で働く社会人が研究に没頭するブログ">
+  <meta property="og:description" content="pandas_datareaderを使って色々なデータを取得してみました。"><meta property="og:image" content="/post/post15/featured.jpg">
+  <meta property="twitter:image" content="/post/post15/featured.jpg"><meta property="og:locale" content="ja">
+  
+    
+      <meta property="article:published_time" content="2020-11-03T00:00:00&#43;00:00">
+    
+    <meta property="article:modified_time" content="2020-11-03T00:00:00&#43;00:00">
+  
+
+  
+
+
+    
+
+
+
+
+
+
+  
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "/post/post15/"
+  },
+  "headline": "Pythonのpandas_datareaderから色々なデータを取得してみる",
+  
+  "image": [
+    "/post/post15/featured.jpg"
+  ],
+  
+  "datePublished": "2020-11-03T00:00:00Z",
+  "dateModified": "2020-11-03T00:00:00Z",
+  
+  "author": {
+    "@type": "Person",
+    "name": "Ayato Ashihara"
+  },
+  
+  "publisher": {
+    "@type": "Organization",
+    "name": "東京の資産運用会社で働く社会人が研究に没頭するブログ",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png"
+    }
+  },
+  "description": "pandas_datareaderを使って色々なデータを取得してみました。"
+}
+</script>
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+
+  <title>Pythonのpandas_datareaderから色々なデータを取得してみる | 東京の資産運用会社で働く社会人が研究に没頭するブログ</title>
+
+</head>
+
+
+<body id="top" data-spy="scroll" data-offset="70" data-target="#TableOfContents" class=" ">
+
+  
+  
+  
+    <script>window.wcDarkLightEnabled = true;</script>
+  
+  
+    <script>const isSiteThemeDark = false;</script>
+  
+  
+  <script src="../../js/load-theme.js"></script>
+
+  <aside class="search-results" id="search">
+  <div class="container">
+    <section class="search-header">
+
+      <div class="row no-gutters justify-content-between mb-3">
+        <div class="col-6">
+          <h1>Search</h1>
+        </div>
+        <div class="col-6 col-search-close">
+          <a class="js-search" href="#"><i class="fas fa-times-circle text-muted" aria-hidden="true"></i></a>
+        </div>
+      </div>
+
+      <div id="search-box">
+        
+        <input name="q" id="search-query" placeholder="検索..." autocapitalize="off"
+        autocomplete="off" autocorrect="off" spellcheck="false" type="search" class="form-control">
+        
+      </div>
+
+    </section>
+    <section class="section-search-results">
+
+      <div id="search-hits">
+        
+      </div>
+
+    </section>
+  </div>
+</aside>
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+<nav class="navbar navbar-expand-lg navbar-light compensate-for-scrollbar" id="navbar-main">
+  <div class="container">
+
+    
+    <div class="d-none d-lg-inline-flex">
+      <a class="navbar-brand" href="../../">東京の資産運用会社で働く社会人が研究に没頭するブログ</a>
+    </div>
+    
+
+    
+    <button type="button" class="navbar-toggler" data-toggle="collapse"
+            data-target="#navbar-content" aria-controls="navbar" aria-expanded="false" aria-label="ナビゲーションの切り替え">
+    <span><i class="fas fa-bars"></i></span>
+    </button>
+    
+
+    
+    <div class="navbar-brand-mobile-wrapper d-inline-flex d-lg-none">
+      <a class="navbar-brand" href="../../">東京の資産運用会社で働く社会人が研究に没頭するブログ</a>
+    </div>
+    
+
+    
+    
+    <div class="navbar-collapse main-menu-item collapse justify-content-start" id="navbar-content">
+
+      
+      <ul class="navbar-nav d-md-inline-flex">
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+            
+            
+            
+              
+            
+            
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="../../#about"><span>About</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link  active" href="../../post"><span>Posts</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="../../publication"><span>Publications</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+            
+            
+            
+              
+            
+            
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="../../#contact"><span>Contact</span></a>
+        </li>
+
+        
+        
+
+      
+
+        
+      </ul>
+    </div>
+
+    <ul class="nav-icons navbar-nav flex-row ml-auto d-flex pl-md-2">
+      
+      
+      <li class="nav-item">
+        <a class="nav-link js-search" href="#" aria-label="Search"><i class="fas fa-search" aria-hidden="true"></i></a>
+      </li>
+      
+
+      
+      
+      <li class="nav-item dropdown theme-dropdown">
+        <a href="#" class="nav-link" data-toggle="dropdown" aria-haspopup="true">
+          <i class="fas fa-moon" aria-hidden="true"></i>
+        </a>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item js-set-theme-light">
+            <span>Light</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-dark">
+            <span>Dark</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-auto">
+            <span>Automatic</span>
+          </a>
+        </div>
+      </li>
+      
+
+      
+
+    </ul>
+
+  </div>
+</nav>
+
+
+
+  <article class="article">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+
+<div class="article-container pt-3">
+  <h1>Pythonのpandas_datareaderから色々なデータを取得してみる</h1>
+
+  
+
+  
+
+
+<div class="article-metadata">
+
+  
+  
+
+  
+  <span class="article-date">
+    
+    
+      
+    
+    Nov 3, 2020
+  </span>
+  
+
+  
+
+  
+  <span class="middot-divider"></span>
+  <span class="article-reading-time">
+    9 分で読める
+  </span>
+  
+
+  
+  
+  
+  <span class="middot-divider"></span>
+  <a href="../../post/post15/#disqus_thread"></a>
+  
+
+  
+  
+  <span class="middot-divider"></span>
+  <span class="article-categories">
+    <i class="fas fa-folder mr-1"></i><a href="../../category/%E5%8D%98%E7%99%BA/">単発</a></span>
+  
+
+</div>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+<div class="article-header container featured-image-wrapper mt-4 mb-4" style="max-width: 1200px; max-height: 900px;">
+  <div style="position: relative">
+    <img src="../../post/post15/featured_hua67494cf43fe103a84f56bd170c11b5b_348390_1200x0_resize_q90_lanczos.jpg" alt="" class="featured-image">
+    
+  </div>
+</div>
+
+
+
+  <div class="article-container">
+
+    <div class="article-style">
+      
+<script src="index_files/header-attrs/header-attrs.js"></script>
+
+<div id="TOC">
+<ul>
+<li><a href="#econdbからのデータ取得">1. ECONDBからのデータ取得</a>
+<ul>
+<li><a href="#econdbとは">ECONDBとは？</a></li>
+<li><a href="#データ取得方法">データ取得方法</a></li>
+</ul></li>
+<li><a href="#world-bankからのデータ取得方法">2. World Bankからのデータ取得方法</a>
+<ul>
+<li><a href="#世界銀行から取得できるデータとは">世界銀行から取得できるデータとは？</a></li>
+<li><a href="#データの検索方法">データの検索方法</a></li>
+<li><a href="#データの取得方法">データの取得方法</a></li>
+</ul></li>
+<li><a href="#famafrench-data-libraryからのデータ取得方法">3. Fama/French Data Libraryからのデータ取得方法</a>
+<ul>
+<li><a href="#famafrench-data-libraryで取れるデータとは">Fama/French Data Libraryで取れるデータとは</a></li>
+<li><a href="#データ取得方法-1">データ取得方法</a></li>
+</ul></li>
+<li><a href="#ferdからのデータ取得方法">4. FERDからのデータ取得方法</a>
+<ul>
+<li><a href="#fredで取得できるデータとは">FREDで取得できるデータとは</a></li>
+<li><a href="#データ取得方法-2">データ取得方法</a></li>
+</ul></li>
+<li><a href="#oecdからのデータ取得方法">5. OECDからのデータ取得方法</a></li>
+<li><a href="#eurostatからのデータ取得方法">6. Eurostatからのデータ取得方法</a>
+<ul>
+<li><a href="#eurostatから取得できるデータとは">Eurostatから取得できるデータとは</a></li>
+<li><a href="#データ取得方法-3">データ取得方法</a></li>
+</ul></li>
+<li><a href="#最後に">最後に</a></li>
+</ul>
+</div>
+
+<p>おはこんばんにちは。最近会社のPCに<code>Anaconda</code>を入れてもらいました。業務で使用することはないのですが、ワークショップで使用するので色々勉強しています。以前、Googleが提供している<code>Earth Engine</code>から衛星画像を取得して解析した際に<code>Python</code>を使用しましたが、今回は<code>Python</code>から様々なデータが取得できる<code>pandas_datareader</code>を使用したいと思います。<code>pandas_datareader</code>では以下のようなデータソースからデータが取得できます。</p>
+<ul>
+<li><p>Tiingo</p></li>
+<li><p>IEX</p></li>
+<li><p>Alpha Vantage</p></li>
+<li><p>Enigma</p></li>
+<li><p>Quandl</p></li>
+<li><p>St.Louis FED</p></li>
+<li><p>Kenneth French’s data library</p></li>
+<li><p>World Bank</p></li>
+<li><p>OECD</p></li>
+<li><p>Eurostat</p></li>
+<li><p>Thrift Saving Plan</p></li>
+<li><p>Nasdaq Trader symbol definitions</p></li>
+<li><p>Stooq</p></li>
+<li><p>MOEX</p></li>
+<li><p>Naver Finance</p></li>
+</ul>
+<p>なお、このブログでは<code>Rstuio</code>と<code>blogdown</code>パッケージ、<code>git</code>を組み合わせて<code>github</code>上に記事を投稿しています。ですが、<code>Rstudio</code>と<code>reticulate</code>パッケージのおかげで、<code>python</code>を使用した記事も<code>rmd</code>で作成し、<code>html</code>として出力できています。ここでまず、<code>reticulate</code>パッケージを用いて<code>conda</code>仮想環境へ接続する方法を紹介しておきます。</p>
+<pre class="r"><code>library(reticulate)
+conda_path &lt;- &quot;C:\\Users\\hoge\\Anaconda3\\envs\\環境名&quot;
+use_condaenv(conda_path)</code></pre>
+<p>これで接続できます。<code>conda_path</code>には仮想環境へのパスを入力してください。</p>
+<pre class="python"><code>import sys
+sys.version</code></pre>
+<pre><code>## &#39;3.7.6 (default, Jan  8 2020, 20:23:39) [MSC v.1916 64 bit (AMD64)]&#39;</code></pre>
+<div id="econdbからのデータ取得" class="section level2">
+<h2>1. ECONDBからのデータ取得</h2>
+<p><code>pandas_datareader</code>では、<a href="https://www.econdb.com/">ECOMDB</a>からマクロ経済関連のデータを取得することができます。</p>
+<div id="econdbとは" class="section level3">
+<h3>ECONDBとは？</h3>
+<p><img src="econdb.PNG" /></p>
+<p>ECONDBは各国の主要マクロ経済データをdashboard形式で提供してくれるWebサイトで、またAPIをサポートしており、PythonやExcelにシームレスにデータを連係してくれます。</p>
+<p><img src="econdb2.PNG" /></p>
+</div>
+<div id="データ取得方法" class="section level3">
+<h3>データ取得方法</h3>
+<p><code>pandas_datareader</code>を用いた使用方法は以下の通りです。</p>
+<div id="基本的な使用方法" class="section level4">
+<h4>基本的な使用方法</h4>
+<p><code>pandas_datareader</code>からデータモジュールをインポートすることから始めます。</p>
+<pre class="python"><code>import pandas_datareader.data as web</code></pre>
+<p>EconDBからデータを取得するには、<code>DataReader</code>メソッドを呼び出し、以下のように<code>data_source</code>引数に<code>'econdb'</code>と適当な<code>query</code>を渡せばよいです。</p>
+<pre class="python"><code>df = web.DataReader(query, data_source=&#39;econdb&#39;, **kwargs)</code></pre>
+<p>クエリパラメータの形式は、取得するデータの種類によって異なります。</p>
+</div>
+<div id="クエリ指定方法" class="section level4">
+<h4>クエリ指定方法</h4>
+<p>データはいくつかのデータセットに分割されます。データセットには、トピック、頻度、調査方法などの共通の特徴を抽出できるティッカーが付与されています。ユーザーは検索機能を使用してデータセットを探すことができます。UST_MSPDデータセットを例にしてみます。</p>
+<p><img src="econdb3.PNG" /></p>
+<p>ページに入ると、いくつかのフィルターがあり、特定のシリーズと特定のタイムフレームに選択を絞り込むことができます。適切なフィルタが設定された状態で、<code>Export</code>ドロップダウンボタンをクリックすると、選択したデータをエクスポートするための多くのオプションとフォーマットが表示されます。その中でも、<code>Export to Python</code>は、事前にフォーマットされたパラメータを持つコードの重要な部分を表示します。これをそのまま貼り付けてしまえばデータを取得できます。</p>
+<p><img src="econdb4.PNG" /></p>
+<pre class="python"><code>query = &quot;&amp;&quot;.join([
+    &quot;dataset=UST_MSPD&quot;,
+    &quot;v=Category&quot;,
+    &quot;h=TIME&quot;,
+    &quot;from=2018-01-01&quot;,
+    &quot;to=2019-12-31&quot;
+])
+df = web.DataReader(query, &#39;econdb&#39;)
+df.head()</code></pre>
+<pre><code>## Category                         Bills  ... United States Savings Securities
+## Holder      Intragovernmental Holdings  ...                           Totals
+## TIME_PERIOD                             ...                                 
+## 2015-12-01                      2928.0  ...                           171630
+## 2016-01-01                      2642.0  ...                           171160
+## 2016-02-01                      3584.0  ...                           170824
+## 2016-03-01                      3582.0  ...                           170370
+## 2016-04-01                      4176.0  ...                           169956
+## 
+## [5 rows x 51 columns]</code></pre>
+</div>
+<div id="実践的な取得コード" class="section level4">
+<h4>実践的な取得コード</h4>
+<p>こんなこともできます。</p>
+<pre class="python"><code>import pandas as pd
+from matplotlib import pyplot as plt
+import pandas_datareader.data as web
+from datetime import datetime
+import seaborn as sns
+
+start = datetime(1980,1,1)
+end = datetime(2019,12,31)
+
+# parameters for data from econdb
+country = [&#39;US&#39;,&#39;UK&#39;,&#39;JP&#39;,&#39;EU&#39;]
+indicator = [&#39;RGDP&#39;,&#39;CPI&#39;,&#39;URATE&#39;,&#39;CA&#39;,&#39;HOU&#39;,&#39;POP&#39;,&#39;RETA&#39;,&#39;IP&#39;]
+
+# Parse API from econdb
+econ = pd.DataFrame()
+for cnty in country:
+    temp2 = pd.DataFrame()
+    for idctr in indicator:
+        temp = web.DataReader(&#39;ticker=&#39; + idctr + cnty,&#39;econdb&#39;,start,end)
+        temp.columns = [idctr]
+        temp2 = pd.concat([temp2,temp],join=&#39;outer&#39;,axis=1)
+    temp2 = temp2.assign(kuni=cnty,kijyundate=temp2.index)
+    econ = pd.concat([econ,temp2],join=&#39;outer&#39;)
+    econ = econ.reset_index(drop=True)
+econ.head()
+
+# Plot CPI for example</code></pre>
+<pre><code>##         RGDP   CPI  URATE       CA  HOU       POP  RETA     IP kuni kijyundate
+## 0  6837641.0  78.0    6.3 -10666.0  NaN  226554.0   NaN  53.50   US 1980-01-01
+## 1        NaN  79.0    6.3      NaN  NaN  226753.0   NaN  53.51   US 1980-02-01
+## 2        NaN  80.1    6.3      NaN  NaN  226955.0   NaN  53.33   US 1980-03-01
+## 3  6696753.0  80.9    6.9   9844.0  NaN  227156.0   NaN  52.23   US 1980-04-01
+## 4        NaN  81.7    7.5      NaN  NaN  227387.0   NaN  50.96   US 1980-05-01</code></pre>
+<pre class="python"><code>sns.set</code></pre>
+<pre><code>## &lt;function set at 0x000000002EA68558&gt;</code></pre>
+<pre class="python"><code>sns.relplot(data=econ,x=&#39;kijyundate&#39;,y=&#39;CPI&#39;,hue=&#39;kuni&#39;,kind=&#39;line&#39;)</code></pre>
+<pre><code>## &lt;seaborn.axisgrid.FacetGrid object at 0x00000000307EFE48&gt;
+## 
+## C:\Users\aashi\ANACON~1\envs\FINANC~1\lib\site-packages\pandas\plotting\_matplotlib\converter.py:103: FutureWarning: Using an implicitly registered datetime converter for a matplotlib plotting method. The converter was registered by pandas on import. Future versions of pandas will require you to explicitly register matplotlib converters.
+## 
+## To register the converters:
+##  &gt;&gt;&gt; from pandas.plotting import register_matplotlib_converters
+##  &gt;&gt;&gt; register_matplotlib_converters()
+##   warnings.warn(msg, FutureWarning)</code></pre>
+<pre class="python"><code>plt.show()</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-8-1.png" width="556" /></p>
+</div>
+</div>
+</div>
+<div id="world-bankからのデータ取得方法" class="section level2">
+<h2>2. World Bankからのデータ取得方法</h2>
+<div id="世界銀行から取得できるデータとは" class="section level3">
+<h3>世界銀行から取得できるデータとは？</h3>
+<p>世界銀行は前身が国際復興開発銀行(IBRD)、国際開発協会(IDA)であることからもわかるように開発系のデータが取得できます。最近ではCOVID-19関連のデータも取得することができます。 <code>pandas_datareader</code>では、<code>wb</code>関数を使用することで、<a href="https://data.worldbank.org/">World Bank’s World Development Indicators</a>と呼ばれる世界銀行の数千ものパネルデータに簡単にアクセスできます。</p>
+</div>
+<div id="データの検索方法" class="section level3">
+<h3>データの検索方法</h3>
+<p>例えば、北米地域の国々の一人当たりの国内総生産をドルベースで比較したい場合は、<code>search</code>関数を使用します。</p>
+<pre class="python"><code>from pandas_datareader import wb
+matches = wb.search(&#39;gdp.*capita.*const&#39;)
+print(matches.loc[:,[&#39;id&#39;,&#39;name&#39;]])</code></pre>
+<pre><code>##                         id                                               name
+## 680     6.0.GDPpc_constant  GDP per capita, PPP (constant 2011 internation...
+## 9266        NY.GDP.PCAP.KD                 GDP per capita (constant 2010 US$)
+## 9268        NY.GDP.PCAP.KN                      GDP per capita (constant LCU)
+## 9270     NY.GDP.PCAP.PP.KD  GDP per capita, PPP (constant 2017 internation...
+## 9271  NY.GDP.PCAP.PP.KD.87  GDP per capita, PPP (constant 1987 internation...</code></pre>
+<p><code>NY.GDP.PCAP.KD</code>がそれに当たることがわかります。2010年のUSドルベースで実質化されているようです。</p>
+</div>
+<div id="データの取得方法" class="section level3">
+<h3>データの取得方法</h3>
+<p><code>download</code>関数でデータを取得します。</p>
+<pre class="python"><code>dat = wb.download(indicator=&#39;NY.GDP.PCAP.KD&#39;, country=[&#39;US&#39;, &#39;CA&#39;, &#39;MX&#39;], start=2010, end=2018)
+print(dat)</code></pre>
+<pre><code>##                     NY.GDP.PCAP.KD
+## country       year                
+## Canada        2018    51476.200779
+##               2017    51170.475834
+##               2016    50193.750417
+##               2015    50262.027666
+##               2014    50306.944612
+##               2013    49397.523320
+##               2012    48785.936079
+##               2011    48464.496279
+##               2010    47448.013220
+## Mexico        2018    10403.540397
+##               2017    10301.357885
+##               2016    10205.795753
+##               2015    10037.201490
+##               2014     9839.050191
+##               2013     9693.722969
+##               2012     9690.869065
+##               2011     9477.887185
+##               2010     9271.398233
+## United States 2018    54659.198268
+##               2017    53382.764823
+##               2016    52555.518032
+##               2015    52116.738813
+##               2014    51028.824895
+##               2013    50171.237133
+##               2012    49603.253474
+##               2011    48866.053277
+##               2010    48467.515777</code></pre>
+<p><code>pandas</code>の<code>dataframe</code>形式でデータを取得できていることが分かります。年と国がindexになっていますね。</p>
+</div>
+</div>
+<div id="famafrench-data-libraryからのデータ取得方法" class="section level2">
+<h2>3. Fama/French Data Libraryからのデータ取得方法</h2>
+<div id="famafrench-data-libraryで取れるデータとは" class="section level3">
+<h3>Fama/French Data Libraryで取れるデータとは</h3>
+<p>金融関連データになりますが、有名なFama/Frechの3 Factor modelのデータセットが<a href="http://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html">Fama/French Data Library</a>から取得できます。<code>get_available_datasets</code>関数は、利用可能なすべてのデータセットのリストを返します。</p>
+</div>
+<div id="データ取得方法-1" class="section level3">
+<h3>データ取得方法</h3>
+<pre class="python"><code>from pandas_datareader.famafrench import get_available_datasets
+len(get_available_datasets())</code></pre>
+<pre><code>## 297</code></pre>
+<p>利用可能なデータセットは297です。 データセットにどんなものがあるか、20個ほどサンプリングしてみます。</p>
+<pre class="python"><code>import random
+print(random.sample(get_available_datasets(),20))</code></pre>
+<pre><code>## [&#39;6_Portfolios_2x3&#39;, &#39;6_Portfolios_ME_INV_2x3_daily&#39;, &#39;Portfolios_Formed_on_ME&#39;, &#39;F-F_ST_Reversal_Factor&#39;, &#39;Portfolios_Formed_on_VAR&#39;, &#39;Developed_ex_US_6_Portfolios_ME_INV_Daily&#39;, &#39;Developed_ex_US_3_Factors_Daily&#39;, &#39;Developed_25_Portfolios_ME_INV&#39;, &#39;48_Industry_Portfolios_daily&#39;, &#39;Europe_5_Factors&#39;, &#39;Asia_Pacific_ex_Japan_32_Portfolios_ME_BE-ME_INV(TA)_2x4x4&#39;, &#39;Developed_3_Factors&#39;, &#39;Europe_3_Factors&#39;, &#39;Europe_25_Portfolios_ME_INV_Daily&#39;, &#39;6_Portfolios_ME_INV_2x3_Wout_Div&#39;, &#39;6_Portfolios_ME_CFP_2x3_Wout_Div&#39;, &#39;North_America_25_Portfolios_ME_INV&#39;, &#39;Developed_ex_US_Mom_Factor&#39;, &#39;6_Portfolios_ME_OP_2x3_Wout_Div&#39;, &#39;17_Industry_Portfolios_Wout_Div&#39;]</code></pre>
+<p>日本株のポートフォリオも存在します。</p>
+<pre class="python"><code>ds = web.DataReader(&#39;5_Industry_Portfolios&#39;, &#39;famafrench&#39;)
+print(ds[&#39;DESCR&#39;])</code></pre>
+<pre><code>## 5 Industry Portfolios
+## ---------------------
+## 
+## This file was created by CMPT_IND_RETS using the 202009 CRSP database. It contains value- and equal-weighted returns for 5 industry portfolios. The portfolios are constructed at the end of June. The annual returns are from January to December. Missing data are indicated by -99.99 or -999. Copyright 2020 Kenneth R. French
+## 
+##   0 : Average Value Weighted Returns -- Monthly (59 rows x 5 cols)
+##   1 : Average Equal Weighted Returns -- Monthly (59 rows x 5 cols)
+##   2 : Average Value Weighted Returns -- Annual (5 rows x 5 cols)
+##   3 : Average Equal Weighted Returns -- Annual (5 rows x 5 cols)
+##   4 : Number of Firms in Portfolios (59 rows x 5 cols)
+##   5 : Average Firm Size (59 rows x 5 cols)
+##   6 : Sum of BE / Sum of ME (6 rows x 5 cols)
+##   7 : Value-Weighted Average of BE/ME (6 rows x 5 cols)</code></pre>
+<p>5つ目がポートフォリオに含まれる銘柄数、1つ目がvalue weightedポートフォリオの月次リターンです。</p>
+<pre class="python"><code>ds[4].head()</code></pre>
+<pre><code>##          Cnsmr  Manuf  HiTec  Hlth   Other
+## Date                                      
+## 2015-11    544    653    736    586   1109
+## 2015-12    542    649    730    583   1099
+## 2016-01    539    638    725    581   1091
+## 2016-02    537    635    718    576   1083
+## 2016-03    536    630    715    576   1074</code></pre>
+<pre class="python"><code>ds[0].head()</code></pre>
+<pre><code>##          Cnsmr  Manuf  HiTec  Hlth   Other
+## Date                                      
+## 2015-11   0.29  -0.08   0.57   0.72   1.17
+## 2015-12   0.13  -4.66  -2.59   0.38  -2.69
+## 2016-01  -3.30  -3.46  -5.05  -9.40  -8.24
+## 2016-02   0.51   1.39  -0.51  -1.06  -0.08
+## 2016-03   5.81   8.10   7.91   2.92   7.06</code></pre>
+</div>
+</div>
+<div id="ferdからのデータ取得方法" class="section level2">
+<h2>4. FERDからのデータ取得方法</h2>
+<div id="fredで取得できるデータとは" class="section level3">
+<h3>FREDで取得できるデータとは</h3>
+<p><a href="https://fred.stlouisfed.org/">FRED</a>では多種多様な経済統計データを取得することができます。サイトへ行くと、以下のように統計毎にページが存在します。この統計名の横についている<code>CPIAUCSL</code>がTickerになっており、これを渡すことで、データを取得することができます。</p>
+<p><img src="FRED.PNG" /></p>
+</div>
+<div id="データ取得方法-2" class="section level3">
+<h3>データ取得方法</h3>
+<p>先ほど見たTickerを<code>DataReader</code>関数に渡し、データソースを<code>fred</code>とすることで、データを取得することができます。</p>
+<pre class="python"><code>import datetime
+start = datetime.datetime(2010, 1, 1)
+end = datetime.datetime(2013, 1, 27)
+
+gdp = web.DataReader(&#39;GDP&#39;, &#39;fred&#39;, start, end)
+inflation = web.DataReader([&#39;CPIAUCSL&#39;, &#39;CPILFESL&#39;], &#39;fred&#39;, start, end)
+
+gdp.head()</code></pre>
+<pre><code>##                   GDP
+## DATE                 
+## 2010-01-01  14721.350
+## 2010-04-01  14926.098
+## 2010-07-01  15079.917
+## 2010-10-01  15240.843
+## 2011-01-01  15285.828</code></pre>
+<pre class="python"><code>inflation.head()</code></pre>
+<pre><code>##             CPIAUCSL  CPILFESL
+## DATE                          
+## 2010-01-01   217.488   220.633
+## 2010-02-01   217.281   220.731
+## 2010-03-01   217.353   220.783
+## 2010-04-01   217.403   220.822
+## 2010-05-01   217.290   220.962</code></pre>
+</div>
+</div>
+<div id="oecdからのデータ取得方法" class="section level2">
+<h2>5. OECDからのデータ取得方法</h2>
+<p><a href="https://stats.oecd.org/">OECD</a>は以前以下の記事で紹介しましたが、<code>pandas_datareader</code>でも取得することができます。</p>
+<p><a href="ttps://ayatoashihara.github.io/myblog_multi/post/post22/">OECD.orgからマクロパネルデータをAPIで取得する</a></p>
+<p>ただ、<code>OECD dataset code</code>を指定するだけ<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>なので、<code>pandasdmx</code>よりは自由度が低いです。 あと、前回取得した<code>MEI_ARCHIVE</code>とか指定するとデータが多すぎて、エラーが出ます。OECDデータを取得するときには、国や期間など細かい指定のできる<code>pandasdmx</code>のほうが良いと個人的に思います。</p>
+<p>なお、使用方法はFREDと同様で、データソースに<code>oecd</code>を指定します。</p>
+<pre class="python"><code>df = web.DataReader(&#39;TUD&#39;, &#39;oecd&#39;)
+df.head()</code></pre>
+<pre><code>## Country                Hungary                ...       Germany                     
+## Source     Administrative data                ...   Survey data                     
+## Series               Employees Union members  ... Union members Trade union  density
+## Year                                          ...                                   
+## 2016-01-01                 NaN           NaN  ...           NaN                  NaN
+## 2017-01-01                 NaN           NaN  ...           NaN                  NaN
+## 2018-01-01                 NaN           NaN  ...           NaN                  NaN
+## 
+## [3 rows x 216 columns]</code></pre>
+</div>
+<div id="eurostatからのデータ取得方法" class="section level2">
+<h2>6. Eurostatからのデータ取得方法</h2>
+<div id="eurostatから取得できるデータとは" class="section level3">
+<h3>Eurostatから取得できるデータとは</h3>
+<p>Eurostatは欧州連合の統計局で、主にEU地域のデータを取得することができます。データは以下のように多岐にわたっており、経済金融だけでなく農業や人口動態、輸送、環境等々多種多様なデータを取得することができます。</p>
+<p><img src="eurostat.PNG" /></p>
+<p>IDをどのように取得すればよいのかですが、以下の<a href="https://ec.europa.eu/eurostat/data/database">ページ</a>にて、取得したいデータを順々に掘り進めていくと黄色で色を付けたようなIDコードが出てきます。これで取得データのIDを特定します。</p>
+<p><img src="eurostat2.PNG" /></p>
+<p>ただ、eurostatもOECDと同じくsdmxに対応しているため、<code>pandasdmx</code>のほうが使いやすいかもしれません。</p>
+</div>
+<div id="データ取得方法-3" class="section level3">
+<h3>データ取得方法</h3>
+<p>一例として、 先ほど見た<code>Employment and activity by sex and age - annual data</code>を取得してみます。</p>
+<pre class="python"><code>df = web.DataReader(&#39;lfsi_emp_a&#39;,&#39;eurostat&#39;).unstack()
+df.head()</code></pre>
+<pre><code>## UNIT                            AGE                  SEX      INDIC_EM           GEO      FREQ    TIME_PERIOD
+## Percentage of total population  From 15 to 24 years  Females  Active population  Austria  Annual  2016-01-01     54.6
+##                                                                                                   2017-01-01     53.7
+##                                                                                                   2018-01-01     53.8
+##                                                                                                   2019-01-01     52.5
+##                                                                                  Belgium  Annual  2016-01-01     26.2
+## dtype: float64</code></pre>
+</div>
+</div>
+<div id="最後に" class="section level2">
+<h2>最後に</h2>
+<p><code>pandas_datareader</code>を使用して、様々なソースから多種多様なデータを取得しました。資産運用会社などで働いている方はbloombergやEIKONからデータを取得できるため、あまり魅力的に感じないかもしれませんが、個人で分析をしている方や定期的にデータを取得したい方は非常によいパッケージだと思います。自分自身、この新しいWebサイトにリニューアルしてから、週次や月次単位で経済分析を上げようかなと思っており、これらを使用して経済の定点観測をしたいなと思っているところです。皆さんも興味あるデータを<code>pandas_datareader</code>で自動収集してみてください！</p>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>サイトで統計を選び、<code>export &gt;- SDMX Query</code>とするとその統計のコードが見れます。<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
+
+    </div>
+
+    
+
+
+
+
+
+
+<div class="article-tags">
+  
+  <a class="badge badge-light" href="../../tag/python/">Python</a>
+  
+  <a class="badge badge-light" href="../../tag/%E5%89%8D%E5%87%A6%E7%90%86/">前処理</a>
+  
+</div>
+
+
+
+<div class="share-box" aria-hidden="true">
+  <ul class="share">
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://twitter.com/intent/tweet?url=../../post/post15/&amp;text=Python%e3%81%aepandas_datareader%e3%81%8b%e3%82%89%e8%89%b2%e3%80%85%e3%81%aa%e3%83%87%e3%83%bc%e3%82%bf%e3%82%92%e5%8f%96%e5%be%97%e3%81%97%e3%81%a6%e3%81%bf%e3%82%8b" target="_blank" rel="noopener" class="share-btn-twitter">
+          <i class="fab fa-twitter"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://www.facebook.com/sharer.php?u=/post/post15/&amp;t=Python%e3%81%aepandas_datareader%e3%81%8b%e3%82%89%e8%89%b2%e3%80%85%e3%81%aa%e3%83%87%e3%83%bc%e3%82%bf%e3%82%92%e5%8f%96%e5%be%97%e3%81%97%e3%81%a6%e3%81%bf%e3%82%8b" target="_blank" rel="noopener" class="share-btn-facebook">
+          <i class="fab fa-facebook"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="mailto:?subject=Python%e3%81%aepandas_datareader%e3%81%8b%e3%82%89%e8%89%b2%e3%80%85%e3%81%aa%e3%83%87%e3%83%bc%e3%82%bf%e3%82%92%e5%8f%96%e5%be%97%e3%81%97%e3%81%a6%e3%81%bf%e3%82%8b&amp;body=/post/post15/" target="_blank" rel="noopener" class="share-btn-email">
+          <i class="fas fa-envelope"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://www.linkedin.com/shareArticle?url=../../post/post15/&amp;title=Python%e3%81%aepandas_datareader%e3%81%8b%e3%82%89%e8%89%b2%e3%80%85%e3%81%aa%e3%83%87%e3%83%bc%e3%82%bf%e3%82%92%e5%8f%96%e5%be%97%e3%81%97%e3%81%a6%e3%81%bf%e3%82%8b" target="_blank" rel="noopener" class="share-btn-linkedin">
+          <i class="fab fa-linkedin-in"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="whatsapp://send?text=Python%e3%81%aepandas_datareader%e3%81%8b%e3%82%89%e8%89%b2%e3%80%85%e3%81%aa%e3%83%87%e3%83%bc%e3%82%bf%e3%82%92%e5%8f%96%e5%be%97%e3%81%97%e3%81%a6%e3%81%bf%e3%82%8b%20/post/post15/" target="_blank" rel="noopener" class="share-btn-whatsapp">
+          <i class="fab fa-whatsapp"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://service.weibo.com/share/share.php?url=../../post/post15/&amp;title=Python%e3%81%aepandas_datareader%e3%81%8b%e3%82%89%e8%89%b2%e3%80%85%e3%81%aa%e3%83%87%e3%83%bc%e3%82%bf%e3%82%92%e5%8f%96%e5%be%97%e3%81%97%e3%81%a6%e3%81%bf%e3%82%8b" target="_blank" rel="noopener" class="share-btn-weibo">
+          <i class="fab fa-weibo"></i>
+        </a>
+      </li>
+    
+  </ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+
+  
+  
+  
+    
+  
+  
+  
+  <div class="media author-card content-widget-hr">
+    
+      
+      <a href="../../"><img class="avatar mr-3 avatar-circle" src="../../author/ayato-ashihara/avatar_hu77c0c0affdebd3b9cbda9c39412092b5_245163_270x270_fill_q90_lanczos_center.jpg" alt="Ayato Ashihara"></a>
+    
+
+    <div class="media-body">
+      <h5 class="card-title"><a href="../../">Ayato Ashihara</a></h5>
+      <h6 class="card-subtitle">会社員3年目</h6>
+      <p class="card-text">院卒3年目の社会人が夜な夜な更新中。本ブログの内容は筆者が所属する組織の公式見解とは全く関係ありません。</p>
+      <ul class="network-icon" aria-hidden="true">
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="../../#contact" >
+        <i class="fas fa-envelope"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://www.facebook.com/ASSIY" target="_blank" rel="noopener">
+        <i class="fab fa-facebook"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://github.com/AyatoAshihara/myblog_jp" target="_blank" rel="noopener">
+        <i class="fab fa-github"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://www.linkedin.com/in/%E5%BD%A9%E4%BA%BA-%E8%91%A6%E5%8E%9F-9391b7143/" target="_blank" rel="noopener">
+        <i class="fab fa-linkedin"></i>
+      </a>
+    </li>
+  
+</ul>
+
+    </div>
+  </div>
+
+
+
+
+
+
+
+<section id="comments">
+  
+    
+<div id="disqus_thread"></div>
+<script>
+  let disqus_config = function () {
+    
+    
+    
+  };
+  (function() {
+    if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+      document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+      return;
+    }
+    var d = document, s = d.createElement('script'); s.async = true;
+    s.src = 'https://' + "ayatoashihara-github-io-myblog-multi" + '.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+  })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  
+</section>
+
+
+
+
+
+
+
+
+  
+  
+  <div class="article-widget content-widget-hr">
+    <h3>関連項目</h3>
+    <ul>
+      
+      <li><a href="../../post/post22/">OECD.orgからマクロパネルデータをAPIで取得する</a></li>
+      
+      <li><a href="../../post/post16/">LightGBMを使用して競馬結果を予想してみる</a></li>
+      
+      <li><a href="../../post/post12/">Google Earth Engine APIで衛星画像データを取得し、景況感をナウキャスティングしてみる</a></li>
+      
+      <li><a href="../../post/post21/">Rcppでデータハンドリングを高速に行う(Tickデータの処理を事例に)</a></li>
+      
+      <li><a href="../../post/post18/">CNNを使って馬体写真から順位予想してみた</a></li>
+      
+    </ul>
+  </div>
+  
+
+
+
+
+
+  </div>
+</article>
+
+      
+
+    
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.4/imagesloaded.pkgd.min.js" integrity="sha256-lqvxZrPLtfffUl2G/e7szqSvPBILGbwmsGE1MKlOi0Q=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js" integrity="sha256-CBrpuqrMhXwcLLUd5tvQ4euBHCdh7wGlDfNz8vbu/iI=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js" integrity="sha256-yt2kYMy0w8AbtF89WXb2P1rfjcP/HTHLT7097U8Y5b8=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/instant.page/5.1.0/instantpage.min.js" integrity="sha512-1+qUtKoh9XZW7j+6LhRMAyOrgSQKenQ4mluTR+cvxXjP1Z54RxZuzstR/H9kgPXQsVB8IW7DMDFUJpzLjvhGSQ==" crossorigin="anonymous"></script>
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/8.8.0/mermaid.min.js" integrity="sha512-ja+hSBi4JDtjSqc4LTBsSwuBT3tdZ3oKYKd07lTVYmCnTCor56AnRql00ssqnTOR9Ss4gOP/ROGB3SfcJnZkeg==" crossorigin="anonymous" title="mermaid"></script>
+      
+
+      
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/highlight.min.js" integrity="sha512-TDKKr+IvoqZnPzc3l35hdjpHD0m+b2EC2SrLEgKDRWpxf2rFCxemkgvJ5kfU48ip+Y+m2XVKyOCD85ybtlZDmw==" crossorigin="anonymous"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/languages/r.min.js"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/languages/latex.min.js"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/languages/python.min.js"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/languages/SQL.min.js"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/languages/C&#43;&#43;.min.js"></script>
+        
+      
+
+    
+
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.js" integrity="sha512-SeiQaaDh73yrb56sTW/RgVdi/mMqNeM2oBwubFHagc5BkixSpP1fvqF47mKzPGWYSSy4RwbBunrJBQ4Co8fRWA==" crossorigin="anonymous"></script>
+    
+
+    
+    
+    <script>const code_highlighting = true;</script>
+    
+
+    
+    
+    
+    
+    
+    
+    <script>
+      const search_config = {"indexURI":"/index.json","minLength":1,"threshold":0.3};
+      const i18n = {"no_results":"結果が見つかりませんでした","placeholder":"検索...","results":"results found"};
+      const content_type = {
+        'post': "投稿",
+        'project': "プロジェクト",
+        'publication' : "発表文献",
+        'talk' : "登壇",
+        'slides' : "Slides"
+        };
+    </script>
+    
+
+    
+    
+
+    
+    
+    <script id="search-hit-fuse-template" type="text/x-template">
+      <div class="search-hit" id="summary-{{key}}">
+      <div class="search-hit-content">
+        <div class="search-hit-name">
+          <a href="{{relpermalink}}">{{title}}</a>
+          <div class="article-metadata search-hit-type">{{type}}</div>
+          <p class="search-hit-description">{{snippet}}</p>
+        </div>
+      </div>
+      </div>
+    </script>
+    
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.2.1/fuse.min.js" integrity="sha256-VzgmKYmhsGNNN4Ph1kMW+BjoYJM2jV5i4IlFoeZA9XI=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js" integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin="anonymous"></script>
+    
+
+    
+    
+
+    
+    
+
+    
+    
+
+    
+    
+    <script id="dsq-count-scr" src="https://ayatoashihara-github-io-myblog-multi.disqus.com/count.js" async></script>
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+      
+    
+    
+      
+    
+    
+    
+    <script src="../../js/wowchemy.min.8139e5044a74e2e05dca886f99332759.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.11.1/tocbot.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.11.1/tocbot.css">
+<script>
+tocbot.init({
+  
+  tocSelector: '.js-toc',
+  
+  contentSelector: '.article-style',
+  
+  headingSelector: 'h2, h3',
+  
+  hasInnerContainers: true,
+});
+</script>
+<nav class="js-toc"></nav>
+
+
+  
+  
+  <div class="container">
+    <footer class="site-footer">
+  
+
+  <p class="powered-by">
+    
+  </p>
+
+  
+  
+
+
+
+
+
+
+  <p class="powered-by">
+    
+    Published with
+    <a href="https://wowchemy.com" target="_blank" rel="noopener">Wowchemy</a>  —
+    the free, <a href="https://github.com/wowchemy/wowchemy-hugo-modules" target="_blank" rel="noopener">
+    open source</a> website builder that empowers creators.
+    
+
+    
+    <span class="float-right" aria-hidden="true">
+      <a href="#" class="back-to-top">
+        <span class="button_icon">
+          <i class="fas fa-chevron-up fa-2x"></i>
+        </span>
+      </a>
+    </span>
+    
+  </p>
+</footer>
+
+  </div>
+  
+
+  
+<div id="modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">引用</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <pre><code class="tex hljs"></code></pre>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-outline-primary my-1 js-copy-cite" href="#" target="_blank">
+          <i class="fas fa-copy"></i> コピー
+        </a>
+        <a class="btn btn-outline-primary my-1 js-download-cite" href="#" target="_blank">
+          <i class="fas fa-download"></i> ダウンロード
+        </a>
+        <div id="modal-error"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
