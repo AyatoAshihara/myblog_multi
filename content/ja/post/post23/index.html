@@ -141,7 +141,7 @@ y_t = c_t + i_t \tag{10}
 \]</span>
 なお、ここで<span class="math inline">\(i_t\)</span>は投資であり、資本遷移式を表す以下の方程式に(10)を代入することで資本の動学が定まります。</p>
 <p><span class="math display">\[
-k_t = (1-\delta)k_{t-1} - z_tk_t^\alphal_t^(1-\alpha) + c_t \tag{11}
+k_t = (1-\delta)k_{t-1} - z_tk_t^\alpha l_t^(1-\alpha) + c_t \tag{11}
 \]</span>
 モデルの概観は以上になります。このモデルをどうやって解くのかやパラメータをどう推定するのかは次回、次々回のPostで説明します。</p>
 </div>
@@ -180,7 +180,11 @@ k_t = (1-\delta)k_{t-1} - z_tk_t^\alphal_t^(1-\alpha) + c_t \tag{11}
 </div>
 <div id="canonical-formとは" class="section level3">
 <h3><code>Canonical form</code>とは</h3>
-<p>おそらく聞き慣れない単語であろう<code>Canonical form</code>について説明しておきます。</p>
+<p>おそらく聞き慣れない単語であろう<code>Canonical form</code>について説明しておきます。先ほど導出したRBCモデルの均衡条件式は非線形差分方程式システムとなっています。動学的確率的一般均衡モデルでは、これを定常値周りで対数線形近似して線形化するのが一般的です。線形化されたシステムを行列形式で表現すると以下のようになります。</p>
+<p><span class="math display">\[
+Bs_{t+1} = Cs_{t} + \Psi\epsilon_t
+\]</span>
+ここで<span class="math inline">\(s_t\)</span>は内生変数で<span class="math inline">\(\epsilon_t\)</span>は外生変数、<span class="math inline">\(B,C,\Psi\)</span>は係数行列です。このシステムを<code>Canonical form</code>と呼びます。今回は均衡条件式をこちらの形式へ整形することがゴールです。</p>
 </div>
 <div id="利用するモジュール群のインポート" class="section level3">
 <h3>利用するモジュール群のインポート</h3>
@@ -216,7 +220,7 @@ optcon  = sym.Matrix([labor, euler, capital, tech])</code></pre>
 </div>
 <div id="sympyの自動数式処理機能を用いた自動対数線形近似の実施" class="section level3">
 <h3><code>Sympy</code>の自動数式処理機能を用いた自動対数線形近似の実施</h3>
-<p><code>optcon</code>に保存されているのは非線形差分方程式システムとなっています。動学的確率的一般均衡モデルでは、これを定常値周りで対数線形近似して線形化するのが一般的です。対数線形近似はそれ自体に特別な意味があるとは思えませんので、<code>Sympy</code>の<code>jacobian</code>を用いてヤコビ行列を計算し、自動処理します。</p>
+<p><code>optcon</code>に保存されているのは非線形差分方程式システムとなっています。次に対数線形近似を行い、線形システムへ変換を行います。対数線形近似はそれ自体に特別な意味があるとは思えませんので、<code>Sympy</code>の<code>jacobian</code>を用いてヤコビ行列を計算し、自動処理します。</p>
 <pre class="python"><code># Differentiation 
 jopt    = optcon.jacobian(endog).subs([(LEAD,endog[i]) for i, LEAD in enumerate(LEADs)])
 jopt_LEAD = optcon.jacobian(LEADs).subs([(LEAD,endog[i]) for i, LEAD in enumerate(LEADs)])</code></pre>
