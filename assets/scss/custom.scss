@@ -39,3 +39,15 @@ h2 {
     font-size: 120%;
     background: #f8f8f8;
 }
+
+.footnotes {
+    font-size: 75%;
+}
+
+h1::before, h2::before, h3::before, h4::before, h5::before, h6::before {
+    display: block;
+    content: " ";
+    height: 60px;
+    margin-top: -60px;
+    visibility: hidden;
+}
