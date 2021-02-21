@@ -9280,9 +9280,12 @@ h2 {
 .footnotes {
   font-size: 75%; }
 
-h1::before, h2::before, h3::before, h4::before, h5::before, h6::before {
-  display: block;
-  content: " ";
-  height: 60px;
-  margin-top: -60px;
-  visibility: hidden; }
+.toc-list {
+  font-size: 75%;
+  position: fixed;
+  top: 100px;
+  left: 50px;
+  width: 280px; }
+
+.mjx-container[jax="CHTML"][display="true"] {
+  overflow-x: auto; }

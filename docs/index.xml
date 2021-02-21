@@ -107,7 +107,7 @@
 &lt;li&gt;&lt;a href=&#34;#sympyでの方程式の定義&#34;&gt;Sympyでの方程式の定義&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;#sympyの自動数式処理機能を用いた自動対数線形近似の実施&#34;&gt;&lt;code&gt;Sympy&lt;/code&gt;の自動数式処理機能を用いた自動対数線形近似の実施&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#まとめ&#34;&gt;まとめ&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#まとめ&#34;&gt;4. まとめ&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/div&gt;
 
@@ -148,11 +148,11 @@
 \max_{c_t,~l_t,~k_t}\sum_{t=0}^{\infty}\beta^{t}[\frac{c_t^{1-\theta}}{1-\theta}-\Psi\frac{l_t^{1+\varphi}}{1+\varphi}] \\
 \]&lt;/span&gt;
 &lt;span class=&#34;math display&#34;&gt;\[
-s.t.~~c_t + k_t = w_tl_t + r_t^kk_t + (1-\delta)k_{t-1} - \tau_t \\
+s.t.~~c_t + k_t = w_tl_t + r_tk_{t-1} + (1-\delta)k_{t-1} - \tau_t \\
 \]&lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;ここで、&lt;span class=&#34;math inline&#34;&gt;\(c_t,k_t,l_t,w_t,r_t^k, \tau_t\)&lt;/span&gt;はそれぞれ消費、資本、労働量、賃金、資本のレンタル料を表しています。また、&lt;span class=&#34;math inline&#34;&gt;\(\beta,\theta,\Psi,\varphi,\delta\)&lt;/span&gt;は構造パラメータで主観的割引率、消費の異時点間の代替弾力性の逆数、不効用のスケールパラメータ、労働供給の弾力性の逆数、資本減耗率を表しています。この問題は制約付き最適化問題ですので、ラグランジアンを用いることで一階の条件を導出することができます。一階の条件は以下になります。&lt;/p&gt;
 &lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-c_t^{-\theta} = \beta E_t[(1+r_t^k-\delta)c_{t+1}^{-\theta}] \tag{1} \\
+c_t^{-\theta} = \beta E_t[(1+r_{t+1}-\delta)c_{t+1}^{-\theta}] \tag{1} \\
 \]&lt;/span&gt;
 &lt;span class=&#34;math display&#34;&gt;\[
 l_t^{\varphi} = c_t^{-\theta}w_t \tag{2} \\ 
@@ -183,16 +183,18 @@ s.t.~~y_t = z_tk_{t-1}^{\alpha}l_t^{1-\alpha}
 \]&lt;/span&gt;
 利潤最大化の一階の条件は以下の通り。&lt;/p&gt;
 &lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-r_t^k = z_t\alpha(\frac{l_t}{k_{t-1}})^{1-\alpha} \tag{6} \\
+r_t = z_t\alpha(\frac{l_t}{k_{t-1}})^{1-\alpha} \tag{6} \\
 \]&lt;/span&gt;
 &lt;span class=&#34;math display&#34;&gt;\[
 w_t = z_t(1-\alpha)(\frac{k_{t-1}}{l_t})^{\alpha} \tag{7}
 \]&lt;/span&gt;
 生産要素市場は完全競争市場であるので、限界生産性=要素価格が成立する点を需要することになります。また、利潤はゼロです。よって、以下のように完全分配が成り立ちます。&lt;/p&gt;
 &lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-y_t = r_t^kk_{t-1} + w_tl_t 
-\]&lt;/span&gt;
-#### 財市場の均衡条件&lt;/p&gt;
+y_t = r_tk_{t-1} + w_tl_t 
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;財市場の均衡条件&#34; class=&#34;section level4&#34;&gt;
+&lt;h4&gt;財市場の均衡条件&lt;/h4&gt;
 &lt;p&gt;&lt;span class=&#34;math inline&#34;&gt;\(t\)&lt;/span&gt;期に生産された財は消費されるか、投資されるかのいずれかです。よって、財市場の均衡条件は以下のようになります。&lt;/p&gt;
 &lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
 y_t = c_t + i_t \tag{10}
@@ -304,31 +306,26 @@ fcoef_LEAD = sym.lambdify([params,endog],jopt_LEAD)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre class=&#34;python&#34;&gt;&lt;code&gt;# Evaluate steady state and each derivative in terms of % deviations from ss
 vparams = np.array([0.99, 1.5 ,2 , 0.3, 0.025, 0.8, 1])
 ss = fss(vparams)
-B = fcoef_LEAD(vparams,ss)*ss
-C = fcoef(vparams,ss)*ss
+B = np.matrix(fcoef_LEAD(vparams,ss)*ss, dtype=&amp;#39;float&amp;#39;)
+C = np.matrix(fcoef(vparams,ss)*ss, dtype=&amp;#39;float&amp;#39;)
+A = np.dot(np.linalg.inv(np.matrix(C)),B)
 
-print(B,C)&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## [[0.0 0.0 0.0 0.0]
-##  [array([-0.02105851]) array([0.65844152]) array([0.00098239])
-##   array([-0.0264097])]
-##  [0.0 0.0 18.818238869597447 0.0]
-##  [0.0 0.0 0.0 1.0]] [[array([1.77253732]) array([0.58615151]) array([-0.01078558])
-##   array([-0.67655223])]
-##  [0.0 array([-0.65844152]) 0.0 0.0]
-##  [array([-33.03851945]) 18.818238869597447 array([-19.00832209])
-##   array([-41.4339477])]
-##  [0.0 0.0 0.0 -0.8]]&lt;/code&gt;&lt;/pre&gt;
+print(A)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [[-1.02747592e-02  3.21263317e-01 -5.48161413e-03 -4.68593779e-01]
+##  [ 3.19823603e-02 -1.00000000e+00 -1.49198793e-03  4.01094076e-02]
+##  [ 4.95211793e-02 -1.54839039e+00 -9.81949430e-01  3.57889915e+00]
+##  [ 0.00000000e+00  0.00000000e+00  0.00000000e+00 -1.25000000e+00]]&lt;/code&gt;&lt;/pre&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;div id=&#34;まとめ&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;まとめ&lt;/h2&gt;
+&lt;h2&gt;4. まとめ&lt;/h2&gt;
 &lt;p&gt;今回はReal Business Cycleモデルを&lt;code&gt;python&lt;/code&gt;で解くために前段階となるモデルのparseと&lt;code&gt;Canonical form&lt;/code&gt;への整形を行いました。次回は実際にこのモデルの合理的期待均衡解を解き、インパルスレスポンス応答を数値的に計算するところまで進みます。お楽しみに！！&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&#34;footnotes&#34;&gt;
 &lt;hr /&gt;
 &lt;ol&gt;
 &lt;li id=&#34;fn1&#34;&gt;&lt;p&gt;このほか、金融市場の情報の非対称性や労働市場での失業の発生などさまざまな不完全性を取り込んでいる場合が多いです。&lt;a href=&#34;#fnref1&#34; class=&#34;footnote-back&#34;&gt;↩︎&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
-&lt;li id=&#34;fn2&#34;&gt;&lt;p&gt;代表的家計とはその名の通り無数存在する家計を代表する家計です。一世帯ずつモデル化していると埒が明かないので、このような単純化を行っているわけです。なお、資本市場が完備な状態であればこの仮定は正当化されます。&lt;a href=&#34;#fnref2&#34; class=&#34;footnote-back&#34;&gt;↩︎&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;li id=&#34;fn2&#34;&gt;&lt;p&gt;代表的家計とはその名の通り無数存在する家計を代表する家計です。一世帯ずつモデル化していると埒が明かないので、このような単純化を行っているわけです。「平均的な消費者」とも言えるかもしれません。&lt;a href=&#34;#fnref2&#34; class=&#34;footnote-back&#34;&gt;↩︎&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
 &lt;li id=&#34;fn3&#34;&gt;&lt;p&gt;無限期間生きる家計は現実的でない仮定ですが、単一の家計が無限期間生きるということではなく、ある家計が自身のみではなく、代々脈々と無数に続く子孫までの消費計画を自身の問題として捉えて行動していると考える方が適切だと個人的に思っています。利他性100%の世代重複モデルとも解釈できます。&lt;a href=&#34;#fnref3&#34; class=&#34;footnote-back&#34;&gt;↩︎&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
 &lt;li id=&#34;fn4&#34;&gt;&lt;p&gt;家計が資本を供給することに違和感を持たれる人がいらっしゃるかもしれません。資本とは生産に必要な設備などですが、ここではその元となる原資である資金を社債等を通じて企業へ供給をしていると考えてもらった方がいいと思います。つまり、このモデルでは資本財価格は消費財価格と同じであると仮定していることになります。&lt;a href=&#34;#fnref4&#34; class=&#34;footnote-back&#34;&gt;↩︎&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
 &lt;/ol&gt;
