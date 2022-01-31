@@ -1,5 +1,5 @@
 ---
-bio: 院卒3年目の社会人が夜な夜な更新中。本ブログの内容は筆者が所属する組織の公式見解とは全く関係ありません。
+bio: 院卒4年目の社会人が夜な夜な更新中。本ブログの内容は筆者が所属する組織の公式見解とは全く関係ありません。
 education:
   courses:
   - course: 総合政策 修士
@@ -17,7 +17,7 @@ interests:
 organizations:
 - name: 東京のとある資産運用会社
   url: 
-role: 会社員3年目
+role: 会社員4年目
 social:
 - icon: envelope
   icon_pack: fas
@@ -27,7 +27,7 @@ social:
   link: https://www.facebook.com/ASSIY
 - icon: github
   icon_pack: fab
-  link: https://github.com/AyatoAshihara/myblog_jp
+  link: https://github.com/AyatoAshihara/myblog_multi
 - icon: linkedin
   icon_pack: fab
   link: https://www.linkedin.com/in/%E5%BD%A9%E4%BA%BA-%E8%91%A6%E5%8E%9F-9391b7143/
@@ -37,4 +37,4 @@ user_groups:
 - Principal Investigators
 ---
 
-奈良県出身の院卒3年目の26歳。専攻はマクロ経済（主にDynamic Stochastic General Equilibruim model）、時系列解析やテキストマイニングにも手を出していました。最近はデータラングリングに興味があり、(インフラ)エンジニアとしてのキャリアを進むため、資格勉強中。現在は某資産運用会社にて運用企画グループに所属。広瀬すずより有村架純よりお姉ちゃんのほうがタイプ。
+奈良県出身の院卒4年目の28歳。専攻はマクロ経済（主にDynamic Stochastic General Equilibruim model）、時系列解析やテキストマイニングにも手を出していました。最近はデータラングリングに興味があり、データエンジニアとしてのキャリアを進むため、資格勉強中。現在は某資産運用会社にて運用企画グループに所属。広瀬すずより有村架純よりお姉ちゃんのほうがタイプ。

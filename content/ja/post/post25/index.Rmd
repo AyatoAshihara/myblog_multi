@@ -1,0 +1,507 @@
+---
+title: "【徹底比較】センチメントスコア算出手法！！"
+author: admin
+date: 2021-02-23T00:00:00Z
+categories: ["単発"]
+tags: ["Python","前処理","機械学習","テキスト解析"]
+draft: True
+featured: false
+slug: ["sentiment_score"]
+image:
+  caption: ''
+  focal_point: ""
+  placement: 2
+  preview_only: false
+lastmod: ""
+projects: []
+summary: 機械学習を用いたセンチメントスコアの算出方法の発展を簡単にさらっていきます。
+subtitle: 辞書ベース→ナイーブベイズ→単語埋め込み(Word Embedding)→RNN→Attention
+output: 
+  blogdown::html_page:
+    number_sections: false
+    toc: true
+bibliography: references.bib
+---
+
+おはこんばんにちは。テキスト解析はデータ分析界隈ではもうかなり当たり前になってきています。自分も研究を行ううえで、テキストの感性情報(センチメント)を抽出する必要があり、どのような手法があるのか調べたところかなり時代は進んでいると実感しました。今回は実際に`R`や`Python`で作成した機械学習モデルを用いて、それらの精度を比較してみたいと思います。
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+```{python,include=FALSE}
+import os
+os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = r'C:\Users\aashi\Anaconda3\Library\plugins\platforms'
+```
+
+## 1. テキスト解析手法の進化の譜系
+
+私が調べた浅い知識によると、感性情報の抽出方法には以下のような手法があります。
+
+1.  辞書ベース
+2.  ナイーブベイズ分類器
+3.  単語埋め込み(Word Embedding)を用いた方法
+4.  Recurrent neural network(RNN)
+5.  Attention
+
+おそらく、下に行くにつれてより最新の手法になっており、精度も高いのではないかと推察されます。 また、1と2はやり方にもよるんでしょうが文章が与えられた際にその語順関係を考慮しません。 各手法について、細かく見ていきましょう。なお、今回の記事では文書内容からポジティブ・ネガティブ度を判定する問題を念頭に置いています。
+
+### 1.1 辞書ベース
+
+辞書ベースの手法はその名の通り、辞書を用いる手法です。各単語が持つ感情極性分類(各単語が良い意味か悪い意味か)をスコア化したものを単語と紐付ける形で辞書として保存し、文書内で出現した単語とそれぞれのスコアを紐付けることでその文書のセンチメントスコアを算出します。
+
+スコアをどのように算出するのかが重要になるわけですが、日本語において有名な感情極性辞書である東京工業大学の高村教授が作成した辞書[@takamura2005]では以下のような方法で算出を行っているようです([こちら](http://lr-www.pi.titech.ac.jp/wp/?page_id=4))。
+
+> まず，辞書，シソーラス（類義語辞典），コーパスデータを用いて，極性が同じになりやすい単語ペアを抽出し，そしてそれらのペアを連結することにより巨大な語彙ネットワークを構築します．たとえば，「良い」と「良好」が類義語関係にあるので，この二単語を結ぶなどの作業を行います．ここで，単語の感情極性を電子スピンの方向とみなし，語彙ネットワークをスピン系とみなして，語彙ネットワークの状態（各スピンがどの方向を向いているか）を計算します．この計算結果を見ることにより，単語の感情極性がわかるのです．
+
+こちらの辞書はHPで公開されており、非営利目的であれば利用が可能のようです。ちょっと覗いてみましょう。
+
+```{r}
+library(magrittr)
+# 単語感情極性対応表
+PNdict <- read.delim("http://www.lr.pi.titech.ac.jp/~takamura/pubs/pn_ja.dic",header=FALSE,sep=":") 
+PNdict %>% head()
+```
+
+センチメントスコアは1から-1までを取り、1に近いほどポジティブを表します。最もポジティブな単語は「優れる」となっていることがわかります。 辞書を利用する良い点は、手法のわかりやすさと教師データを必要としない点です。特に後者は辞書ベースならではの長所です。通常、文書分類器を作成するためには、その文書がポジティブ・ネガティブのどちらであるか正解ラベルの付いた教師データが必要です。必要なデータは文脈にもよると思いますが、少なくとも100件は必要でしょう。これは分析者が少なくとも100件以上の文書を読んで、ラベルを付与しなければならないことを意味します。 短所としては、特殊な文脈におけるセンチメントスコアを参集する場合は専用の辞書が必要になるという点です。辞書ベースの分類法の場合、辞書に含まれない単語はセンチメントスコアへ影響を全く与えません。また、通常辞書はwikipedia等のオールジャンルの文書を学習することによって開発されているため、感情極性が文脈に対してニュートラルになっています。例えば、金融等の文脈におけるセンチメントスコアを算出する場合は直感とは異なる結果が出る可能性もあります。
+
+### 1.2 ナイーブベイズ分類器
+
+ナイーブベイズ分類器、または単純ベイズ分類器と呼ばれる手法です。分類問題をベイズの定理を用いて解く手法を指します。ベイズの定理の復習からしましょう。入力情報$X$が与えられた時に、出力$Y$が得られる確率は以下で表すことができます。
+
+$$
+P(Y|X) = \frac{P(X|Y)P(Y)}{P(X)}
+$$
+
+これがベイズの定理で、$P(Y)$は事前分布、$P(X|Y)$は尤度と呼ばれます。ナイーブベイズ分類器が利用される典型的な問題に迷惑メールの分類問題があります。この問題だと、$X$は受信メールに含まれている単語、$Y$は迷惑メールかどうかを表すバイナリのデータとなります。
+
+実際に分類を行う際には、上式の確率を計算する必要はありません。知りたいのは確率の値ではなく、ある$X$が与えられた時に$P(Y=ポジティブ|X)$と$P(Y=ネガティブ|X)$のどちらが大きいかですので、共通している分母は計算から除外することができ、分子の$P(X|Y)P(Y)$をそれぞれ計算し、その大小関係によってポジティブ・ネガティブを割り振ればよいことになります。
+
+なお、$X=\{x_1,x_2,...,x_N\}$とします。各$x_n$は単語を表します。各単語の条件付確率は語順や他の単語に依存しないとすると、$P(X|Y)$は以下のように書き替えることができます。
+
+$$
+P(X|Y) = \Pi_{i=1}^N P(x_i|Y)
+$$
+
+$Y$はバイナリのスカラーですので、確率分布さえわかれば分類を行うことが可能です。
+
+では、どのように確率分布を求めるかに話を移しましょう。今、学習データセットとして
+
+$$
+\{(S,T)\} = (Y=S_1,X=T_1), (Y=S_2,X=T_2), ...,(Y=S_D,X=T_D)
+$$
+
+が得られているとします。ここで、$D$はサンプルサイズです。$Y$は$1$の時にポジティブ、$0$の時にネガティブとします。また、$Y$についても独立を仮定します。今、$P(・)$にある確率分布を仮定すると、$\{(S,T)\}$が得られたもとでの事後分布は
+
+$$
+M(\Theta,\Phi) = \Pi_{j=1}^{D}P(T_j;\Theta|S_j)P(S_j;\Theta,\Phi)
+$$
+
+に比例します。ここで、$\Theta=\{\theta_1,\theta2,...,\theta_M\}, \Phi=\{\phi_1,\phi_2,...,\phi_L\}$は確率分布のパラメータです。この事後分布は確率分布のパラメータによってさまざまな値を取りますが、事後分布を最大にするパラメータを推定値として選択することにします。$M(\Theta,\Phi)$は以下のように変形することができます。
+
+$$
+\begin{eqnarray*}
+M(\Theta,\Phi) &=& P(T_1;\Theta|0)P(0;\Theta,\Phi)×P(T_2;\Theta|0)P(0;\Theta,\Phi)×...×P(T_Q;\Theta|0)P(0;\Theta,\Phi)×P(T_{Q+1};\Theta|1)P(1;\Theta,\Phi) \\
+&=& \Pi_{k=0}^1P(k;\Theta,\Phi)\Pi_{i=1}^{Q_k}P(T_{Q_i};\Theta|k)
+\end{eqnarray*}
+$$
+
+$Q_k$は$Y=k$となる学習データの個数を表しています。
+
+確率分布$P(・)$ですが、尤度には多項分布、事前分布にはディリクレ分布を仮定するのが一般的です。多項分布とは同時確率関数が以下のような確率分布です。
+
+$$
+P(n_1,...,n_k) = \frac{n!}{n_1!...n_k!}p_1^{n_1}...p_k^{n_k}
+$$
+
+ここで、$n_i$は非負で$n=n_1+...+n_k$です。また、$p_1+...p_k=1$を満たします。多項分布は名前から分かるとおり、二項分布の拡張版です。二項分布はコイン投げが例として使われますが、多項分布はサイコロ投げが従う分布です($n=6, p_i=1/6$)。テキスト解析の文脈では、$n_i$は文章に含まれる単語$i$の出現回数になります。 ディリクレ分布は確率密度関数が以下のような確率分布です。
+
+$$
+f(x_1,...,x_n) = \frac{\Gamma(\alpha)}{\Gamma(\alpha_1)...\Gamma(\alpha_n)}x_1^{\alpha_1-1}...x_n^{\alpha_n-1}
+$$
+
+ここで、$x_i$は非負で$x_1+...+x_n=1$、$\alpha_1+...+\alpha_n=\alpha$はパラメータです。今、$\alpha_i$を正の整数とすると$\Gamma(\alpha_i)=(\alpha_{i-1})!$より、
+
+$$
+f(x_1,...,x_n) = \frac{(\alpha-1)!}{(\alpha_{1}-1)!...(\alpha_n-1)!}x_1^{\alpha_1-1}...x_n^{\alpha_n-1}
+$$ 
+
+となります。多項分布とディリクレ分布の確率分布を見比べると、とても似た形であることがわかります。両者は形は似ていますが、関数の入力が異なります。多項分布は確率がパラメータ、指数部分の回数が入力である一方、ディリクレ分布は確率が入力、指数部分の回数がパラメータになります。ディリクレ分布は多項分布の共役事前分布となっています。 これらの確率分布を仮定すると、$M(\Theta,\Phi)$は以下のようになります。
+
+$$
+\begin{eqnarray*}
+M(\vec{p};\vec{\alpha}) &\propto& \frac{1}{Z(\vec{\alpha})}\Pi_{k=0}^1\Pi_{i=1}^Vp_{ki}^{\alpha_{i}-1}\Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}} \\
+&=& \frac{1}{Z(\vec{\alpha})}\Pi_{k=0}^1 \Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1}
+\end{eqnarray*}
+$$
+
+ここで、$p_{k_j}$はポジティブ(またはネガティブ)である文書で単語$j$が出現する確率、$\tau_{k_j}=\sum_{i=1}^{Q_k}c_{kij}$はポジティブ(またはネガティブ)である教師データに含まれる単語$j$の総数、$\alpha_j$は単語$j$のディリクレ分布のハイパーパラメータ、$V$は単語数の上限を表しています。$Z(\vec{\alpha})$は確率の総和を1とするための正規化定数で、ベイズ統計学では分配関数と呼ばれます。ここから、パラメータ$p_{k_{j}}$を求めます。ただし、以下の制約条件があります。
+
+$$
+\sum_{j=1}^V p_{k_{j}}=1
+$$
+
+この制約の下で$M(\vec{p};\vec{\alpha})$を最大化するためにラグランジュ未定乗数法を使用します。
+
+$$
+\begin{eqnarray*}
+L &=& (\frac{1}{Z(\vec{\alpha})}\Pi_{k=0}^1 \Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1}-\lambda(1-\sum_{k=1}^V p_{k_{j}})) \\
+\frac{\partial L}{\partial p_{l_m}}
+&=& (\tau_{l_m}+\alpha_m-1)p_{l_m}^{\tau_{l_m}+\alpha_m-2}\frac{1}{Z(\vec{\alpha})}\Pi_{k\neq l}^1 \Pi_{j\neq m}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1}-\lambda \\
+&=& (\tau_{l_m}+\alpha_m-1)p_{l_m}^{-1}\frac{1}{Z(\vec{\alpha})}\Pi_{k=0}^1 \Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1}-\lambda \\
+p_{l_m} &=& \frac{(\tau_{l_m}+\alpha_m-1)}{\lambda}\frac{1}{Z(\vec{\alpha})}\Pi_{k=0}^1 \Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1}
+\end{eqnarray*}
+$$
+
+となります。ここで、制約条件を用いて上式の両辺で総和を取ると、
+
+$$
+\begin{eqnarray*}
+1 &=& \sum_{m=1}^V \frac{(\tau_{l_m}+\alpha_m-1)}{\lambda}\frac{1}{Z(\vec{\alpha})}\Pi_{k=0}^1 \Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1} \\
+\lambda &=& \sum_{m=1}^V (\tau_{l_m}+\alpha_m-1)\frac{1}{Z(\vec{\alpha})}\Pi_{k=0}^1 \Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1}
+\end{eqnarray*}
+$$
+
+となるので、$\lambda$を先ほどの式に代入すると、
+
+$$
+p_{l_m} = \frac{(\tau_{l_m}+\alpha_m-1)}{\sum_{m=1}^V (\tau_{l_m}+\alpha_m-1)}
+$$
+
+と、事後分布を最大にするパラメータを求めることができます。$p_{l_m}$の直感的な解釈は、ポジティブ(ネガティブ)な文脈で単語$m$が使用された頻度が全ての単語の頻度に占める割合です(+事前分布)。学習データに含まれない単語が出現した場合でもディリクレ分布を事前分布とすることで、$p_{l_m}$が0にならないこともわかります。所謂頻度ゼロ問題を解決しています。
+
+ところで、ディリクレ分布の$\alpha_m$はどのようにして求めるのでしょうか？推定値を見ればわかる通り、$\alpha_m$は(文脈を考慮しない)文書内における単語$m$の主観的な出現頻度を表していると解釈できます。ですが正直、$\alpha_m$に意味を持たせている人は少なく、先述した頻度ゼロ問題を解決できればよいと考えている人が大半ではないでしょうか？つまり、$\alpha_m=\alpha+1$($\alpha$は定数、例えば1とか)としてしまうということです。これは加算スクリーニングと呼ばれます。
+
+さて、このようにして求めた分類器ではどのように分類を行っているのでしょうか？思考実験として、1つの単語を除いて他の単語がポジティブな文書、ネガティブな文書で出現頻度が全て同じ文章を考えます。この場合、その1つの単語が両文脈のうち相対的に頻出である文脈へ分類されることになります。
+
+ナイーブベイズ分類器は教師あり学習です。つまり、辞書ベース分類法のセクションで言及した正解ラベルデータを用意する必要があります。これがナイーブベイズ分類器の欠点ですが、一方でデータがある場合には特殊な文脈でも分類が可能です。
+
+### 1.3 単語埋め込み(Word Embedding)
+
+ここまでの議論で、辞書ベース分類法と教師あり学習であるナイーブベイズ分類器が甲乙つけがたい分類法であることがわかったと思います。教師あり学習のほうが精度は出そうだが、教師データの準備にコストがかかるところで、この両者を埋め合わせる良い手法はないのかと調べていると1つ準教師学習を用いた手法を発見しました。
+
+**Latent Semantic Scaling: A Semisupervised Text Analysis Technique for New Domains and Languages**[@watanabe2020]
+
+#### 1.3.1 単語埋め込み(Word Embedding)とは
+
+この論文では単語埋め込み(Word Embedding)を使用しています。単語埋め込み(Word Embedding)とは、**自然言語処理における言語モデリング手法の一種であり、単語や語句を固定長の実数ベクトルとして表現する手法のこと**です。
+
+例としてWorks Applicationsが提供しているモデルChiveを使うと、以下のように各単語にその単語を表現する実数ベクトルを見ることができます(ここでは300次元ベクトル)。
+
+```{python}
+import gensim
+vectors = gensim.models.KeyedVectors.load(r"C:\Users\aashi\Desktop\TextMining\chive-1.2-mc15_gensim\chive-1.2-mc15.kv")
+vectors["王"][1:10]
+```
+
+この実数ベクトルを用いて、単語同士の演算を行うことも可能です。例えば、「王様 - 男 + 女 = 女王」と言った演算を行うことができます。
+
+```{python}
+vectors.most_similar(positive=["王様","女"], negative=["男"], topn=3)
+```
+
+以下のように、各単語ベクトルとのコサイン類似度を測ることによって、或る単語と意味が近い単語を調べることも可能です。
+
+```{python}
+vectors.most_similar(["関西学院大学"],topn=3)
+```
+
+Word Embeddingの手法としては、Word2Vec([Efficient Estimation of Word Representations in Vector Space (arxiv.org)](https://arxiv.org/abs/1301.3781))が有名です。
+
+#### 1.3.2 Latent Semantic Scalingとは
+
+計量政治学者である渡辺耕平さんによって提案されたWord Embeddingを利用してセンチメントスコアを単語へ付与する手法です。種語(Seed Words)と呼ばれる抽象的な意味を持つ幾つかの単語と対象とする単語群のEmbeddingベクトルの類似度(距離)をセンチメントスコアとする準教師学習となっており、教師あり学習、教師なし学習のメリデメを補完しています。
+
+-   教師あり学習
+
+    メリット - 学習のスピードが速く、精度も高い
+
+    デメリット - 教師データを整備するのが大変
+
+-   教師なし学習
+
+    メリット - 教師データを用意する必要がないので、分析を始めやすい
+
+    デメリット - 学習のスピードが遅く、精度も低い
+
+Word Embeddingの算出には特異値分解を用いています。各要素がその文書(行)におけるその単語(列)の出現頻度が入力されている行列である文書行列に対して特異値分解を行い、各単語のEmbeddingベクトルを計算します。ここで文書行列を$D$、文書行列$D$における単語(列)数を$n$とすると、
+
+$$
+D \approx U \Sigma V'
+$$
+
+と分解でき、$V$が$k×n$行列となるので各単語の特徴量ベクトルと見なすことができます($k$は分析者が決定)。$V$のうち$i$列目のベクトルと$V_i$と表すと、センチメントスコアは種語$s \in S$の特徴量ベクトル$V_s$と各単語の特徴量ベクトル$V_j$のコサイン類似度から算出します。単語$f$のセンチメントスコアを$g_f$とすると、算出式は
+
+$$
+g_f = \frac{1}{|S|}\sum_{s\in S} \cos(v_s,v_f)p_s
+$$
+
+となります。ここで、$p_s$は分析者が定める種語のセンチメントスコアです。種語が複数個存在する場合には平均値を使用します。
+
+次に、単語のセンチメントスコアを用いて文書のセンチメントスコアを算出します。文書$d$のセンチメントスコアを$y_d$とすると、その文書に含まれる単語$f\in F$を用いて
+
+$$
+y_d = \frac{1}{N}\sum_{f\in F}g_fh_f
+$$
+
+で計算します。ここで、$h_f$は各単語$f$のその文書内での出現回数、$N$はその文書に含まれる単語の総数です($V$に含まれない単語は除く)。
+
+### 1.4 Recurrent neural net work
+
+### 1.5 Attention
+
+## 2. 各手法の性能比較
+
+ここまで各手法の概要について見てきました。ここからは、同じデータセットを用いて各手法の性能を比較していきたいと思います。
+
+使用するデータセットは景気ウオッチャー調査です。景気ウオッチャー調査では、タクシー運転手や小売店の店主、旅館の経営者など景気に敏感な方々(景気ウオッチャー)に対して、5段階の景況感とその理由を毎月アンケートしています。5段階は、「良い(◎)」、「やや良い(○)」、「変わらない(■)」、「やや悪い(▲)」、「悪い(×)」となっています。
+
+データを覗いてみると、以下のようになっています。
+
+```{python, echo=FALSE}
+import pandas as pd
+sample = pd.read_csv(r"C:\Users\aashi\Desktop\TextMining\景気ウオッチャー\watcher_2016.csv",encoding="shift-jis")
+```
+
+```{python}
+sample.head(10)
+```
+
+「景気の現状判断」が景況感を表しており、その判断の理由が「追加説明及び具体的状況の説明」にある形です。よって、前者を教師データ、後者を説明データとする教師あり学習データになっています。
+
+### 2.0 前処理
+
+まず、各手法で共通の前処理を行います。以下では、使用するモジュールを呼び出し、学習データのうち有効回答のみを抽出しています。
+
+```{python}
+from sudachipy import tokenizer
+from sudachipy import dictionary
+from sklearn.preprocessing import LabelEncoder
+
+sample = sample[(sample.追加説明及び具体的状況の説明=='−')|(sample.追加説明及び具体的状況の説明=='＊')==False|(sample.景気の現状判断=='□')]
+```
+
+次に、文書のトークン化を行います。日本語のような言語では英語などと異なり単語ごとの間にスペースがないため、別途区切りを入れてやる必要があります。区切られた各語は形態素と呼ばれ、言葉が意味を持つまとまりの単語の最小単位を指します。また、文章を形態素へ分割することを形態素解析と言います(英語のような場合単にTokenizationと言ったりします)。形態素解析を行うツールは以下のようなものが存在します。
+
+-   MeCab
+-   JUMAN
+-   JANOME
+-   Ginza
+-   Sudachi
+
+おそらく最も使用されているものはMecabではないかと思いますが、標準装備されている辞書(ipadic)は更新がストップしており、最近の新語に対応できないという問題があります。この点については新語に強いNEologd辞書を加えることで、対処可能であることを別記事で紹介していますが、今回はワークスアプリケーションズが提供しているSudachi[@TAKAOKA18.8884]を使用することにしたいと思います。公式GithubからSudachiの特長を引用します。
+
+-   複数の分割単位の併用
+
+    -   必要に応じて切り替え
+    -   形態素解析と固有表現抽出の融合
+
+-   多数の収録語彙
+
+    -   UniDic と NEologd をベースに調整
+
+-   機能のプラグイン化
+
+    -   文字正規化や未知語処理に機能追加が可能
+
+-   同義語辞書との連携
+
+    -   後日公開予定
+
+特質すべきは「複数の分割単位の併用」でしょう。Sudachiでは短い方から A, B, Cの3つの分割モードを提供しています。AはUniDic短単位相当、Cは固有表現相当、BはA, Cの中間的な単位となっており、以下のように同じ「選挙管理委員会」という単語でも形態素が異なることが確認できます。これはSudachi特有の特長になります。
+
+```{python}
+tokenizer_obj = dictionary.Dictionary().create()
+
+mode = tokenizer.Tokenizer.SplitMode.A
+[m.normalized_form() for m in tokenizer_obj.tokenize("選挙管理委員会", mode)]
+
+mode = tokenizer.Tokenizer.SplitMode.B
+[m.normalized_form() for m in tokenizer_obj.tokenize("選挙管理委員会", mode)]
+
+mode = tokenizer.Tokenizer.SplitMode.C
+[m.normalized_form() for m in tokenizer_obj.tokenize("選挙管理委員会", mode)]
+```
+
+また、辞書についてもUniDicとNEologdをベースとして更新が続けられており、新語にも対応できます。
+
+```{python}
+mode = tokenizer.Tokenizer.SplitMode.C
+[m.normalized_form() for m in tokenizer_obj.tokenize("新型コロナウイルス", mode)]
+```
+
+個人的に素晴らしいと思うポイントは表記正規化や文字正規化ができると言うことです。以下のように旧字等で同じ意味だが表記が異なる単語や英語/日本語、書き間違え等を正規化する機能があります。
+
+```{python}
+tokenizer_obj.tokenize("附属", mode)[0].normalized_form()
+tokenizer_obj.tokenize("SUMMER", mode)[0].normalized_form()
+tokenizer_obj.tokenize("シュミレーション", mode)[0].normalized_form()
+```
+
+このような高性能な形態素解析ツールが無償でしかも商用利用も可というところに驚きを隠せません。後述しますが、このSudachiで形態素解析を行ったWord2vecモデルであるChiveもワークスアプリケーションズは提供をしています。
+
+説明が長くなりましたがSudachiでTokenizationを行いましょう。Sudachiは`Python`で使用することができます。説明が前後していますが、上記コードで行っているように`tokenizer`オブジェクトを作成し、`tokenize()`メソッドで文章をTokenizeします。Tokenizeされた結果は`MorphemeList`オブジェクトに格納されます。`MorphemeList`オブジェクトの各要素に対して`normalized_form()`メソッドを実行することで正規化された形態素を取得することができます。ここまでをやってみます。
+
+```{python}
+tokenizer_obj = dictionary.Dictionary().create()
+mode = tokenizer.Tokenizer.SplitMode.C
+tokenizer_sudachi = lambda t: [m.normalized_form() for m in tokenizer_obj.tokenize(t, mode)]
+tokens = sample.追加説明及び具体的状況の説明.map(tokenizer_sudachi)
+tokens.head()
+```
+
+Tokenizeすることができました。次に5段階の景況判断をLabel Encodingに変換します。変換には`Scikit-Learn`の`LabelEncoder`を使用します。
+
+```{python}
+score_mapping = {'◎': 1, '○': 1, '▲': 0, '×':0}
+label = sample.景気の現状判断.map(score_mapping)
+```
+
+これで前処理は完了です。
+
+### 2.1 辞書ベース
+
+では、辞書ベースから行きましょう。`R`でやります。
+
+```{r,echo=FALSE}
+library(magrittr)
+sample <- readr::read_csv(r"(C:\Users\aashi\Desktop\TextMining\景気ウオッチャー\watcher_2016.csv)",locale=readr::locale(encoding="Shift-JIS"))
+sample <- sample[sample$追加説明及び具体的状況の説明!="-"|sample$追加説明及び具体的状況の説明!="*",]
+
+# sudachiによる形態素解析→Token化
+ja_stopwords <- quanteda::dictionary(yaml::read_yaml(r"(C:\Users\aashi\Desktop\TextMining\marimo-master\yaml\stopwords_ja.yml)"))
+corp <- quanteda::corpus(sample,text_field="追加説明及び具体的状況の説明")
+toks_sent <- corp %>% quanteda::texts() %>% 
+              sudachir::form(mode = "C",type = "normalized") %>% 
+              quanteda::as.tokens() %>% 
+              quanteda::tokens_remove(ja_stopwords, padding = TRUE)
+```
+
+```{r}
+# メタデータをTokenに再付与
+quanteda::docvars(toks_sent) <- quanteda::docvars(corp)
+
+# 文書行列の生成
+dfmt_sent <- toks_sent %>% 
+              quanteda::dfm(remove = "") %>% 
+              quanteda::dfm_trim(min_termfreq = 10)
+```
+
+文書行列$D$と各単語のスコアベクトルの内積を取り、文書のセンチメントスコアを算出します。
+
+```{r}
+# 単語感情極性対応表
+PNdict <- read.delim("http://www.lr.pi.titech.ac.jp/~takamura/pubs/pn_ja.dic",header=FALSE,sep=":")
+
+# 辞書の並びに合わせて文書行列の列を入れ替える。
+dfmt_sent <- quanteda::dfm_match(dfmt_sent, PNdict$V1)
+
+# 文書のセンチメントスコア算出
+n <- unname(quanteda::rowSums(dfmt_sent))
+score_dict <- ifelse(n>0, quanteda::rowSums(dfmt_sent %*% PNdict$V4)/n, NA)
+sample %>% cbind(score_dict) %>% head()
+```
+
+### 2.2 ナイーブベイズ分類器
+
+### 2.3 単語埋め込み
+
+Latent Semantic Scalingによるセンチメントスコアの算出を行います。まず種語として以下の単語を定義します。
+
+```{r}
+require(LSX)
+
+ja_seedwords <- list(positive = c("安心","好調","秀逸","改善","良好","適切","安堵"),
+                     negative=c("不安","不調","稚拙","悪化","不良","過剰","過少","懸念")) %>% 
+                as.seedwords()
+```
+
+では、実行します。Word Embeddingのサイズ$k$は300とします。
+
+```{r}
+lss <- textmodel_lss(dfmt_sent, ja_seedwords, k = 300)
+
+# センチメントスコア上位下位20語
+head(coef(lss), 30) # most positive words
+tail(coef(lss), 30) # most negative words
+```
+
+### 2.4 Recurrent Neural Network
+
+```{python}
+import tensorflow as tf
+import tensorflow_datasets as tfds
+import time
+import numpy as np
+import pandas as pd
+import matplotlib as plt
+from sudachipy import tokenizer
+from sudachipy import dictionary
+import gensim
+from sklearn.preprocessing import LabelEncoder
+
+# 1.3 Word-Encoder by chive
+chive = gensim.models.KeyedVectors.load(r"C:\Users\aashi\Desktop\TextMining\chive-1.2-mc15_gensim\chive-1.2-mc15.kv")
+vocab_size = len(chive.vocab.items())
+
+def encoder_chive(tokens):
+  word_induces = []
+  i = 1 
+  for token in tokens:
+    if token in chive.vocab:
+      word_induces.append(chive.vocab[token].index)
+    else:
+      word_induces.append(vocab_size+i)
+      i = i + 1
+  word_induces = [vocab_size+i+1] + word_induces + [vocab_size+i+2]
+  return word_induces
+
+BUFFER = 20000
+BATCH_SIZE = 64
+
+tokenizer_ja = tfds.deprecated.text.SubwordTextEncoder.build_from_corpus(corps, target_vocab_size=2**15)
+
+def encode(lang):
+  lang = [tokenizer_ja.vocab_size] + tokenizer_ja.encode(
+  lang) + [tokenizer_ja.vocab_size+1]
+  return lang
+
+word_induces = tokens.map(encode)
+padded_word_induces = tf.keras.preprocessing.sequence.pad_sequences(word_induces, padding='post',value=vocab_size+3)
+train_preprocessed = (tf.data.Dataset.from_tensor_slices((padded_word_induces,label)))
+train_dataset = train_preprocessed.padded_batch(BATCH_SIZE, tf.compat.v1.data.get_output_shapes(train_preprocessed)).prefetch(tf.data.experimental.AUTOTUNE)
+
+input_vocab_size = vocab_size + 4
+
+null_word = np.zeros(300)
+embedding_matrix = np.zeros((input_vocab_size, 300))
+for word in chive.vocab:
+  embedding_matrix[chive.vocab[word].index] = chive[word]
+
+model = tf.keras.Sequential([
+    tf.keras.layers.Embedding(input_vocab_size, 300),
+    tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(300)),
+    tf.keras.layers.Dense(150, activation='relu'),
+    tf.keras.layers.Dropout(0.5),
+    tf.keras.layers.Dense(1)
+])
+
+model.compile(loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
+              optimizer=tf.keras.optimizers.Adam(1e-4),
+              metrics=['accuracy'])
+
+history = model.fit(train_dataset, epochs=40)
+```
+
+
+### 2.5 Attention
+
+```{python}
+from transformers import BertJapaneseTokenizer
+from transformers import BertForSequenceClassification
+tokenizer = BertJapaneseTokenizer.from_pretrained('cl-tohoku/bert-base-japanese-whole-word-masking')
+[m for m in tokenizer.tokenize()]
+net = BertForSequenceClassification.from_pretrained('bert-base-japanese-whole-word-masking', num_labels=9)
+```
+

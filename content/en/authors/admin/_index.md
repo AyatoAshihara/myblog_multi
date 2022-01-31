@@ -27,7 +27,7 @@ social:
   link: https://www.facebook.com/ASSIY
 - icon: github
   icon_pack: fab
-  link: https://github.com/AyatoAshihara/myblog_jp
+  link: https://github.com/AyatoAshihara/myblog_multi
 - icon: linkedin
   icon_pack: fab
   link: https://www.linkedin.com/in/%E5%BD%A9%E4%BA%BA-%E8%91%A6%E5%8E%9F-9391b7143/
@@ -37,4 +37,4 @@ user_groups:
 - Principal Investigators
 ---
 
-I'm 26 years old, from Nara, Japan and currently in my third year since completing graduate studies. I majored in macroeconomics (mainly Dynamic Stochastic General Equilibruim models), and also experimented with time series analysis and text mining. Recently, I'm interested in data wrangling and am studying for certification to advance my career as an (infrastructure) engineer. Currently, I am working in the Investment Planning Group at an asset management company.
+I'm 28 years old, from Nara, Japan and currently in my forth year since completing graduate studies. I majored in macroeconomics (mainly Dynamic Stochastic General Equilibruim models), and also experimented with time series analysis and text mining. Recently, I'm interested in data wrangling and am studying for certification to advance my career as an data engineer. Currently, I am working in the Investment Planning Group at an asset management company.
