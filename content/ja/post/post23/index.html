@@ -4,7 +4,7 @@ author: admin
 date: 2020-11-08T00:00:00Z
 categories: ["マクロ経済学"]
 tags: ["Python","時系列解析","カルマンフィルタ","前処理"]
-draft: false
+draft: True
 featured: false
 slug: ["RBC_with_Python"]
 image:
@@ -22,9 +22,7 @@ output:
     toc: true
 ---
 
-<script src="index_files/header-attrs/header-attrs.js"></script>
-<link href="index_files/anchor-sections/anchor-sections.css" rel="stylesheet" />
-<script src="index_files/anchor-sections/anchor-sections.js"></script>
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
 
 <div id="TOC">
 <ul>
@@ -184,7 +182,7 @@ k_t = (1-\delta)k_{t-1} - z_tk_t^\alpha l_t^{(1-\alpha)} + c_t \tag{11}
 <h3><code>Canonical form</code>とは</h3>
 <p>おそらく聞き慣れない単語であろう<code>Canonical form</code>について説明しておきます。先ほど導出したRBCモデルの均衡条件式は非線形差分方程式システムとなっています。動学的確率的一般均衡モデルでは、これを定常値周りで対数線形近似して線形化するのが一般的です。線形化されたシステムを行列形式で表現すると以下のようになります。</p>
 <p><span class="math display">\[
-Bs_{t+1} = Cs_{t} + \Psi\epsilon_t
+Bs_{t} = Cs_{t-1} + \Psi\epsilon_t
 \]</span>
 ここで<span class="math inline">\(s_t\)</span>は内生変数で<span class="math inline">\(\epsilon_t\)</span>は外生変数、<span class="math inline">\(B,C,\Psi\)</span>は係数行列です。このシステムを<code>Canonical form</code>と呼びます。今回は均衡条件式をこちらの形式へ整形することがゴールです。</p>
 </div>
@@ -192,71 +190,93 @@ Bs_{t+1} = Cs_{t} + \Psi\epsilon_t
 <h3>利用するモジュール群のインポート</h3>
 <p>以下を使用します。</p>
 <pre class="python"><code>import numpy as np
-import pandas as pd
-import statsmodels.api as sm
-import matplotlib.pyplot as plt
 import sympy as sym</code></pre>
 </div>
 <div id="sympyでの方程式の定義" class="section level3">
 <h3>Sympyでの方程式の定義</h3>
 <p>先ほど導出した方程式を<code>Sympy</code>で定義します。
-まず内生変数を宣言します。</p>
+まず、変数を宣言します。</p>
 <pre class="python"><code>sym.init_printing()
-var = sym.var(&#39;l, c, k, l, z, r, LEAD_c, LEAD_k, LEAD_l, LEAD_r, LEAD_z, LEAD_R&#39;)
-endog = sym.var(&#39;l, c, k, z&#39;)
-LEADs = sym.var(&#39;LEAD_l, LEAD_c, LEAD_k, LEAD_z&#39;)</code></pre>
+endog = sym.var(&#39;r, w, l, c, k, z, LEAD_c, LEAD_r&#39;)
+exog = sym.var(&#39;epsilon_z&#39;)
+jump = sym.var(&#39;c, r&#39;)
+LEADs = sym.var(&#39;LEAD_c, LEAD_r&#39;)
+LAGs = sym.var(&#39;LAG_r, LAG_w, LAG_l, LAG_c, LAG_k, LAG_z, LAG_LEAD_c, LAG_LEAD_r&#39;)
+eta = sym.var(&#39;eta_c, eta_r&#39;)</code></pre>
 <p>次にパラメータを宣言します。</p>
 <pre class="python"><code>params = sym.var(&#39;beta, theta, varphi, alpha, delta, phi, Psi&#39;)</code></pre>
 <p>方程式を定義します。</p>
-<pre class="python"><code># Eliminate Price  
-LEAD_R  = (LEAD_z*alpha*(LEAD_k/LEAD_l)**(alpha-1))
-w       = (1-alpha)*z*(k/l)**alpha
-  
-# Optimal Conditions  &amp; state transition
-labor   = l**varphi-w/(Psi*c**(theta))
-euler   = c**(-theta) -(LEAD_c**(-theta))*beta*(1+LEAD_R-delta)
-capital = LEAD_k - (1-delta)*k - z*(k**alpha)*(l**(1-alpha)) + c
-tech    = LEAD_z - phi*z
-  
-optcon  = sym.Matrix([labor, euler, capital, tech])</code></pre>
+<pre class="python"><code># Optimal Conditions  &amp; state transition
+inter   = r - (z*alpha*(k/l)**(alpha-1))
+wage    = w - (1-alpha)*z*(k/l)**alpha
+labor   = Psi*varphi*l**(varphi-1)-w*(c**(-theta))
+euler   = c**(-theta) -(LEAD_c**(-theta))*beta*(1+LEAD_r)
+capital = k - (1-delta)*LAG_k - LAG_z*(LAG_k**alpha)*(LAG_l**(1-alpha)) + LAG_c
+tech    = z - phi*LAG_z - epsilon_z
+cpred   = c - LAG_LEAD_c - eta_c
+rpred   = r - LAG_LEAD_r - eta_r
+
+optcon  = sym.Matrix([inter, wage, labor, euler, capital, tech, cpred, rpred])</code></pre>
 </div>
 <div id="sympyの自動数式処理機能を用いた自動対数線形近似の実施" class="section level3">
 <h3><code>Sympy</code>の自動数式処理機能を用いた自動対数線形近似の実施</h3>
 <p><code>optcon</code>に保存されているのは非線形差分方程式システムとなっています。次に対数線形近似を行い、線形システムへ変換を行います。対数線形近似はそれ自体に特別な意味があるとは思えませんので、<code>Sympy</code>の<code>jacobian</code>を用いてヤコビ行列を計算し、自動処理します。</p>
-<pre class="python"><code># Differentiation 
-jopt    = optcon.jacobian(endog).subs([(LEAD,endog[i]) for i, LEAD in enumerate(LEADs)])
-jopt_LEAD = optcon.jacobian(LEADs).subs([(LEAD,endog[i]) for i, LEAD in enumerate(LEADs)])</code></pre>
+<pre class="python"><code># Differentiation
+jopt    = optcon.jacobian(endog).subs([(LAG,endog[i]) for i, LAG in enumerate(LAGs)]).\
+                                 subs([(LEAD,jump[i]) for i, LEAD in enumerate(LEADs)])
+jopt_LAG = -optcon.jacobian(LAGs).subs([(LAG,endog[i]) for i, LAG in enumerate(LAGs)]).\
+                                 subs([(LEAD,jump[i]) for i, LEAD in enumerate(LEADs)])</code></pre>
 <p>ここでは、内生変数<span class="math inline">\(s_t\)</span>と<span class="math inline">\(s_{t+1}\)</span>を分けて処理しています。</p>
 <p>対数線形近似後の係数を得るためには、ヤコビ行列のそれぞれの要素に、対応する変数の定常均衡値を掛け合わせる必要があります。ヤコビ行列の各要素は<span class="math inline">\(\partial f(x_t)/\partial x_t\)</span>ですが、対数線形近似=関数<span class="math inline">\(f(x_t)\)</span>を定常値からの乖離<span class="math inline">\(x_t/x\)</span>で(定常値周りで)一次近似することですので、定常値<span class="math inline">\(x\)</span>を掛け合わせることで係数<span class="math inline">\(\partial f(x_t)/(\partial x_t/x)\)</span>を求めることができます。<br />
 よって、定常値の計算が必要です。数値的に求めることもできますが、定常均衡はそれを求めること自体もモデルの特性を知る上で重要ですので、解析的に解いた数式を<code>Sympy expression</code>として定義します。</p>
 <pre class="python"><code># Steady State Equation needed to be calculated by hand
-kls     = (((1/beta)+delta-1)/alpha)**(1/(alpha-1))
+rstar   = beta**(-1) - 1
+kls     = ((rstar+delta)/alpha)**(1/(alpha-1))
 wstar   = (1-alpha)*(kls)**alpha
 clstar  = kls**alpha - delta*kls
-lstar   = ((wstar/Psi)*(clstar**(-theta)))**(1/(varphi+theta))
+lstar   = 8/24
 kstar   = kls*lstar
 cstar   = clstar*lstar
 zstar   = 1
 Ystar   = (kstar**alpha)*(lstar**(1-alpha))
-ss_eq   = sym.Matrix([lstar, cstar, kstar, zstar])</code></pre>
+ss_eq   = sym.Matrix([rstar, wstar, lstar, cstar, kstar, zstar, cstar, rstar])
+
+# 
+lss   = Psi*(varphi*1/3**(varphi-1))- (clstar*1/3**theta)*(1-alpha)*(kls**alpha)</code></pre>
 <p>次に、この定常均衡方程式システムを構造パラメータを引数とする<code>Python</code>関数へ変換します。<code>MCMC</code>で構造パラメータの推定を行う際などは頻繁にパラメータを更新しますので、関数化しておくことは便利です。また、構造パラメータと定常値を引数として対数線形システムの係数行列を評価する関数も<code>Python</code>関数へ変換しておきます。</p>
 <pre class="python"><code># Translating Sympy expressions into Python functions for steady state and coefficient matrix
 fss     = sym.lambdify([params],ss_eq)
 fcoef   = sym.lambdify([params,endog],jopt)
-fcoef_LEAD = sym.lambdify([params,endog],jopt_LEAD)</code></pre>
+fcoef_LAG = sym.lambdify([params,endog],jopt_LAG)</code></pre>
 <p>これで解析的には準備が整いました。では、構造パラメータに数値を代入して、係数を計算してみます。</p>
-<pre class="python"><code># Evaluate steady state and each derivative in terms of % deviations from ss
-vparams = np.array([0.99, 1.5 ,2 , 0.3, 0.025, 0.8, 1])
+<pre class="python"><code>#
+lev = lss.subs([(beta,0.99), (theta,1.5) ,(varphi,2) , (alpha,0.3), (delta,0.025)])
+vPsi = sym.solve(lev,Psi)[0]
+
+# Evaluate steady state and each derivative in terms of % deviations from ss
+vparams = np.array([0.99, 1.5 ,2 , 0.3, 0.025, 0.8, vPsi])
 ss = fss(vparams)
-B = np.matrix(fcoef_LEAD(vparams,ss)*ss, dtype=&#39;float&#39;)
-C = np.matrix(fcoef(vparams,ss)*ss, dtype=&#39;float&#39;)
-A = np.dot(np.linalg.inv(np.matrix(C)),B)
+B = np.matrix(fcoef(vparams,ss)*ss, dtype=&#39;float&#39;)
+C = np.matrix(fcoef_LAG(vparams,ss)*ss, dtype=&#39;float&#39;)
+A = np.dot(np.linalg.inv(B),C)
 
 print(A)</code></pre>
-<pre><code>## [[-1.02747592e-02  3.21263317e-01 -5.48161413e-03 -4.68593779e-01]
-##  [ 3.19823603e-02 -1.00000000e+00 -1.49198793e-03  4.01094076e-02]
-##  [ 4.95211793e-02 -1.54839039e+00 -9.81949430e-01  3.57889915e+00]
-##  [ 0.00000000e+00  0.00000000e+00  0.00000000e+00 -1.25000000e+00]]</code></pre>
+<pre><code>## [[ 0.00000000e+00  0.00000000e+00 -2.02850148e-03  1.15540363e-03
+##   -1.16707438e-03  4.53503143e-02 -1.52864580e-01  1.61675644e-01]
+##  [ 0.00000000e+00  0.00000000e+00  4.34831032e-02 -2.47673151e-02
+##    2.50174900e-02  1.03434146e+00  3.27681609e+00 -3.46569069e+00]
+##  [ 0.00000000e+00  0.00000000e+00  5.43831179e-02 -3.09757979e-02
+##    3.12886848e-02  2.73284249e-01 -2.07380519e+00  2.19333864e+00]
+##  [ 0.00000000e+00  0.00000000e+00 -3.61075745e-03  2.05663260e-03
+##   -2.07740667e-03  1.85510461e-01  1.36960047e+00 -1.44854379e+00]
+##  [ 0.00000000e+00  0.00000000e+00  1.75566479e+00 -1.00000000e+00
+##    1.01010101e+00  8.36030854e-01  0.00000000e+00  0.00000000e+00]
+##  [ 0.00000000e+00  0.00000000e+00  0.00000000e+00  0.00000000e+00
+##    0.00000000e+00  8.00000000e-01  0.00000000e+00  0.00000000e+00]
+##  [ 0.00000000e+00  0.00000000e+00 -1.44166532e+14  8.21150669e+13
+##   -8.29445120e+13  3.91650393e+15 -6.61762035e+15 -5.92910141e+16]
+##  [ 0.00000000e+00  0.00000000e+00 -3.32271314e+14  1.89256694e+14
+##   -1.91168377e+14  9.02665749e+15 -1.52521211e+16 -1.36652404e+17]]</code></pre>
 </div>
 </div>
 <div id="まとめ" class="section level2">

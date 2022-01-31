@@ -75,259 +75,65 @@
     </item>
     
     <item>
-      <title>PythonでReal Business Cycle Model その1</title>
-      <link>/post/post23/</link>
+      <title>転職します</title>
+      <link>/post/post26/</link>
       <pubDate>Sun, 08 Nov 2020 00:00:00 +0000</pubDate>
-      <guid>/post/post23/</guid>
+      <guid>/post/post26/</guid>
       <description>
-&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
-&lt;link href=&#34;index_files/anchor-sections/anchor-sections.css&#34; rel=&#34;stylesheet&#34; /&gt;
-&lt;script src=&#34;index_files/anchor-sections/anchor-sections.js&#34;&gt;&lt;/script&gt;
+&lt;script src=&#34;./post/post26/index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
 
 &lt;div id=&#34;TOC&#34;&gt;
 &lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;#マクロ経済モデル系の記事をこれから書いていきます&#34;&gt;0. マクロ経済モデル系の記事をこれから書いていきます&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#real-business-cyclerbc-モデル&#34;&gt;1. Real Business Cycle(RBC) モデル&lt;/a&gt;
+&lt;li&gt;&lt;a href=&#34;#転職しました&#34;&gt;1. 転職しました&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#転職理由&#34;&gt;2. 転職理由&lt;/a&gt;
 &lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;#rbcモデルは新古典派系動学的一般均衡モデル&#34;&gt;RBCモデルは新古典派系動学的一般均衡モデル&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#kydland-and-prescott1982がその嚆矢&#34;&gt;Kydland and Prescott(1982)がその嚆矢&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#現在ではnew-keynesian-モデルが主流だが議論の発射台として重用されている&#34;&gt;現在ではNew Keynesian モデルが主流だが、議論の発射台として重用されている&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#モデル概観&#34;&gt;モデル概観&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#入社してエコノミストが求められていないことに気づいた&#34;&gt;入社してエコノミストが求められていないことに気づいた&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#転職理由の半分は結婚&#34;&gt;転職理由の半分は結婚&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#残りの半分は現職でのキャリアパスが想像できなかったから&#34;&gt;残りの半分は現職でのキャリアパスが想像できなかったから&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#rbc-modelを分析できるプログラミング言語&#34;&gt;2. RBC Modelを分析できるプログラミング言語&lt;/a&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;#matlaboctave-dynareがデファクトスタンダード&#34;&gt;&lt;code&gt;Matlab&lt;/code&gt;(&lt;code&gt;Octave&lt;/code&gt;) + &lt;code&gt;Dynare&lt;/code&gt;がデファクトスタンダード&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#pythonでrbc-modelを分析する意義&#34;&gt;&lt;code&gt;Python&lt;/code&gt;でRBC Modelを分析する意義&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#pythonでの実装&#34;&gt;3. &lt;code&gt;Python&lt;/code&gt;での実装&lt;/a&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;#このpostでやり遂げたいこと&#34;&gt;このPostでやり遂げたいこと&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#canonical-formとは&#34;&gt;&lt;code&gt;Canonical form&lt;/code&gt;とは&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#利用するモジュール群のインポート&#34;&gt;利用するモジュール群のインポート&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#sympyでの方程式の定義&#34;&gt;Sympyでの方程式の定義&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#sympyの自動数式処理機能を用いた自動対数線形近似の実施&#34;&gt;&lt;code&gt;Sympy&lt;/code&gt;の自動数式処理機能を用いた自動対数線形近似の実施&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#まとめ&#34;&gt;4. まとめ&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#次の会社仕事&#34;&gt;3. 次の会社・仕事&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#今後のブログ更新について&#34;&gt;4. 今後のブログ更新について&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/div&gt;
 
-&lt;div id=&#34;マクロ経済モデル系の記事をこれから書いていきます&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;0. マクロ経済モデル系の記事をこれから書いていきます&lt;/h2&gt;
-&lt;p&gt;おはこんばんにちは。ブログをリニューアルしたことに伴い、記事の整理が行いやすくなり、また開発したパッケージのサポートページへの連携などもできると考えたため、専門であるマクロ経済モデル系の記事を書いていきたいと思います。本記事を含むシリーズ第一弾では、分析の土台となる動学的一般均衡モデルの&lt;code&gt;Class&lt;/code&gt;を&lt;code&gt;Python&lt;/code&gt;で開発します。Real Business Cycleモデルを例に開発状況を記事にまとめました。初学者の方にも配慮した内容となるよう気を使っていますが、高難易度になっている部分はご容赦ください。&lt;/p&gt;
+&lt;div id=&#34;転職しました&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;1. 転職しました&lt;/h2&gt;
+&lt;p&gt;おはこんばんにちは。かなり久しぶりの更新になってしまいました。この間、7月7日に結婚し、既婚者になりました。また、2021年4月に同じ部署内のチームを移動し、BPR・業務インフラ整備・金融規制対応などロジ周りの企画に役割が変わりました。そして、2022年2月28日に現職を退社し、3月1日から関西の電子部品メーカーで働くことになりました。&lt;/p&gt;
 &lt;/div&gt;
-&lt;div id=&#34;real-business-cyclerbc-モデル&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;1. Real Business Cycle(RBC) モデル&lt;/h2&gt;
-&lt;div id=&#34;rbcモデルは新古典派系動学的一般均衡モデル&#34; class=&#34;section level3&#34;&gt;
-&lt;h3&gt;RBCモデルは新古典派系動学的一般均衡モデル&lt;/h3&gt;
-&lt;p&gt;さて、まずRBCモデルについての説明から行う必要がありますね。RBCモデルとは、マクロ経済学の中でも景気循環分析(Business Cycle Analysis)で用いられる&lt;strong&gt;新古典派系動学的一般均衡モデル&lt;/strong&gt;で、景気変動の源泉を実物要因、特に財の生産技術に対する確率的なショックに求めている点が特徴です。日本語訳は実物景気循環モデルで、その名からわかるように価格は伸縮的で貨幣中立が成り立っており、名目変数が景気循環に影響しないモデルとなっています。&lt;/p&gt;
+&lt;div id=&#34;転職理由&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;2. 転職理由&lt;/h2&gt;
+&lt;div id=&#34;入社してエコノミストが求められていないことに気づいた&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;入社してエコノミストが求められていないことに気づいた&lt;/h3&gt;
+&lt;p&gt;もともと、現職の資産運用会社にはエコノミストを志望して入社しました。金銭的問題から博士課程後期の進学を断念し、大学院時代の研究内容に近い職種に就きたかったためです。バイサイドのエコノミストを志望したのは、単にファンドマネージャー相手の方が高度な分析をしても許されるんじゃないかという短絡的な理由からでした。&lt;/p&gt;
+&lt;p&gt;しかし、入社してみると、希望の部署に配属することは出来ませんでした。最初は機関投資家向けの顧客報告書をひたすら作成し、そのあとは運用企画グループというなにをしているかよくわからないところに異動になり、なにに使われるか定かではない資料を作成していました。&lt;/p&gt;
+&lt;p&gt;また、その中で資産運用会社において、エコノミストの言動を参考にしているファンドマネージャーなど存在しないことも分かりました。社外の機関投資家などに自社のセミナーなどで講演をするのがメインで、自分で分析をすると言うよりシンクタンクなどのレポートを要約して資料を再構成し、説明するという非生産的な仕事をしているようでした。やはり、マクロ経済ではお金にならないんだなと再確認しました。&lt;/p&gt;
 &lt;/div&gt;
-&lt;div id=&#34;kydland-and-prescott1982がその嚆矢&#34; class=&#34;section level3&#34;&gt;
-&lt;h3&gt;Kydland and Prescott(1982)がその嚆矢&lt;/h3&gt;
-&lt;p&gt;RBCモデルは以下の論文で公開されました。&lt;/p&gt;
-&lt;p&gt;Kydland, F. and E. Prescott (1982), “Time to Build and Aggregate Fluctuations,” Econometrica 50, 1345-1371.&lt;/p&gt;
-&lt;p&gt;それまでの動学的一般均衡モデルとしては、ラムゼイモデルが有名でした。RBCモデルはこのラムゼイモデルで外生として扱われていた労働供給を内生化し、また生産関数に対する技術的なショックを導入しています。のちにKydlandとPrescottはこの業績からノーベル経済学賞を受賞しています。&lt;/p&gt;
+&lt;div id=&#34;転職理由の半分は結婚&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;転職理由の半分は結婚&lt;/h3&gt;
+&lt;p&gt;先述の通り、2021年7月7日に結婚しました。妻とは大学生以来の付き合いであり、7年の交際期間がありました。どちらも地元が関西であり、子供には関西弁をしゃべらせたいという最大の目的から生活拠点を東京から関西に移したいと思うようになりました(他にもお互いの身寄りがいるとか理由はあります)。もうその時点では、エコノミスト志望でもなくなっていたので、もはや東京にいる意味もないなと感じていました。&lt;/p&gt;
+&lt;p&gt;2021年4月から配属になった新しい部署では、プロジェクトマネジメントを行う立場になり、ノウハウもない中で業務コンサルのような業務を行っていました。コンサル会社であるケンブリッジの書籍などを読みあさり、トライアンドエラーを繰り返す中で、やりがいも感じつつあり、またこの仕事だったら業種も選ばないし、関西でも働けるなと転職を考え出したのが8月頃でした。&lt;/p&gt;
 &lt;/div&gt;
-&lt;div id=&#34;現在ではnew-keynesian-モデルが主流だが議論の発射台として重用されている&#34; class=&#34;section level3&#34;&gt;
-&lt;h3&gt;現在ではNew Keynesian モデルが主流だが、議論の発射台として重用されている&lt;/h3&gt;
-&lt;p&gt;少なくとも実務の世界ではRBCモデルを使用している機関は存在しないと思います。RBCが仮定している価格の伸縮性が現実的な仮定ではないからです。現在は価格の硬直性を導入したNew Keynesianモデルが広く使用されています&lt;a href=&#34;#fn1&#34; class=&#34;footnote-ref&#34; id=&#34;fnref1&#34;&gt;&lt;sup&gt;1&lt;/sup&gt;&lt;/a&gt;。では、RBCモデルは有用ではないのかというと、そういうわけではありません。New KeynesianモデルはRBCモデルに比べて、モデルが複雑になるため、モデルを拡張した際にその拡張が経済的にどのような意味を持っているかを解釈するのが大変です。そのため、モデル拡張の初期においてはプレーンなRBCモデルを用いて研究を行い、その特徴を調べ、その後実際のデータにフィッテイングする際にNew Keynesianモデルが使用されるケースがあります。よって、現在においてもRBCモデルは議論の発射台として有用です。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;モデル概観&#34; class=&#34;section level3&#34;&gt;
-&lt;h3&gt;モデル概観&lt;/h3&gt;
-&lt;p&gt;ここで、簡単にモデルを概観しておきましょう。経済主体として、無期限間&lt;a href=&#34;#fn2&#34; class=&#34;footnote-ref&#34; id=&#34;fnref2&#34;&gt;&lt;sup&gt;2&lt;/sup&gt;&lt;/a&gt;生きる代表的家計&lt;a href=&#34;#fn3&#34; class=&#34;footnote-ref&#34; id=&#34;fnref3&#34;&gt;&lt;sup&gt;3&lt;/sup&gt;&lt;/a&gt;と企業が存在します。家計は企業に労働と資本&lt;a href=&#34;#fn4&#34; class=&#34;footnote-ref&#34; id=&#34;fnref4&#34;&gt;&lt;sup&gt;4&lt;/sup&gt;&lt;/a&gt;を供給し、企業はそれらを用いて財を生産します。家計は企業から受け取る賃金と資本のレンタル料を、消費と貯蓄に振り分け、財の消費から効用を得ます。この経済には、資本と国債の2つの資産が存在し、家計はこれらを購入することで貯蓄を行うことができます。
-ここまでの議論から、経済には以下4つの市場が存在します。&lt;/p&gt;
-&lt;ol style=&#34;list-style-type: decimal&#34;&gt;
-&lt;li&gt;財市場&lt;/li&gt;
-&lt;li&gt;労働市場&lt;/li&gt;
-&lt;li&gt;資本市場&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;これらの市場は完全競争市場であると仮定します。家計は生涯効用の最大化を、企業は利潤最大化を達成するよう最適な行動を行うと仮定します。つまり、以下のような最適化問題に議論を帰着させることができます。&lt;/p&gt;
-&lt;div id=&#34;家計の最適化問題&#34; class=&#34;section level4&#34;&gt;
-&lt;h4&gt;家計の最適化問題&lt;/h4&gt;
-&lt;p&gt;家計の効用関数をCRRA型効用関数に特定化します。家計の効用最大化のための最適消費計画問題は以下のように定式化されます。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\max_{c_t,~l_t,~k_t}\sum_{t=0}^{\infty}\beta^{t}[\frac{c_t^{1-\theta}}{1-\theta}-\Psi\frac{l_t^{1+\varphi}}{1+\varphi}] \\
-\]&lt;/span&gt;
-&lt;span class=&#34;math display&#34;&gt;\[
-s.t.~~c_t + k_t = w_tl_t + r_tk_{t-1} + (1-\delta)k_{t-1} - \tau_t \\
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;ここで、&lt;span class=&#34;math inline&#34;&gt;\(c_t,k_t,l_t,w_t,r_t^k, \tau_t\)&lt;/span&gt;はそれぞれ消費、資本、労働量、賃金、資本のレンタル料を表しています。また、&lt;span class=&#34;math inline&#34;&gt;\(\beta,\theta,\Psi,\varphi,\delta\)&lt;/span&gt;は構造パラメータで主観的割引率、消費の異時点間の代替弾力性の逆数、不効用のスケールパラメータ、労働供給の弾力性の逆数、資本減耗率を表しています。この問題は制約付き最適化問題ですので、ラグランジアンを用いることで一階の条件を導出することができます。一階の条件は以下になります。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-c_t^{-\theta} = \beta E_t[(1+r_{t+1}-\delta)c_{t+1}^{-\theta}] \tag{1} \\
-\]&lt;/span&gt;
-&lt;span class=&#34;math display&#34;&gt;\[
-l_t^{\varphi} = c_t^{-\theta}w_t \tag{2} \\ 
-\]&lt;/span&gt;
-(1)式は消費のオイラー方程式、(2)式は労働の最適化条件と呼ばれます。オイラー方程式は消費から得る効用の割引現在価値が異時点で無差別であることを保証する条件です。労働の最適化条件は家計の労働供給が負効用とその対価である賃金×効用が無差別となる点まで行われることを表します。これらに加え、以下の横断性条件を加えることで家計は消費計画問題を最適化します。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\lim_{t\rightarrow\infty} \beta^{t}\lambda_tk_t=0 \\
-\]&lt;/span&gt;
-横断性条件が示していることは、無限大の将来において資本と国債の割引現在価値が0となることです。つまり、現時点においては遠い将来に資産を保有するような消費計画は行わないということです。そもそも資産形成は最終的に消費、ひいては効用の最大化のために行っているわけですので、保有するだけでは効用を得ることができない資産を保有し続けるということは最適化行動と矛盾します。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;企業の最適化問題&#34; class=&#34;section level4&#34;&gt;
-&lt;h4&gt;企業の最適化問題&lt;/h4&gt;
-&lt;p&gt;企業は以下のコブ=ダグラス型生産関数により、財の生産を行います。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-y_t = z_tk_{t-1}^{\alpha}l_t^{1-\alpha} \tag{4}
-\]&lt;/span&gt;
-ここで、&lt;span class=&#34;math inline&#34;&gt;\(y_t,z_t\)&lt;/span&gt;はそれぞれ生産量、技術水準を表しており、&lt;span class=&#34;math inline&#34;&gt;\(\alpha\)&lt;/span&gt;は資本装備率です。&lt;span class=&#34;math inline&#34;&gt;\(z_t\)&lt;/span&gt;は一階の自己回帰過程に従い、外生変数によって確率的に変動します。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-z_t = \rho_zz_{t-1} + \epsilon_t^z \tag{5}
-\]&lt;/span&gt;
-ここで、&lt;span class=&#34;math inline&#34;&gt;\(\rho_z\)&lt;/span&gt;は自己回帰係数、&lt;span class=&#34;math inline&#34;&gt;\(\epsilon_t^z\)&lt;/span&gt;は外生(確率)ショックです。先述した通り、RBCはこの財の生産技術水準に対する確率的ショックを景気変動の源泉としています。
-資本&lt;span class=&#34;math inline&#34;&gt;\(k_{t-1}\)&lt;/span&gt;の時点が&lt;span class=&#34;math inline&#34;&gt;\(t-1\)&lt;/span&gt;となっていることからもわかるように、&lt;span class=&#34;math inline&#34;&gt;\(t\)&lt;/span&gt;期の投資活動の結果実現した資本が実際に稼働するまでには1期必要と仮定します。企業は完全競争の労働市場、資本市場から生産要素を収集し、同じく完全競争の財市場で財を販売します。よって、企業の利潤最大化問題は以下のようになります。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\max_{k_t,~l_t}~ y_t - r_t^kk_{t-1} - w_tl_t \\
-\]&lt;/span&gt;
-&lt;span class=&#34;math display&#34;&gt;\[
-s.t.~~y_t = z_tk_{t-1}^{\alpha}l_t^{1-\alpha}
-\]&lt;/span&gt;
-利潤最大化の一階の条件は以下の通り。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-r_t = z_t\alpha(\frac{l_t}{k_{t-1}})^{1-\alpha} \tag{6} \\
-\]&lt;/span&gt;
-&lt;span class=&#34;math display&#34;&gt;\[
-w_t = z_t(1-\alpha)(\frac{k_{t-1}}{l_t})^{\alpha} \tag{7}
-\]&lt;/span&gt;
-生産要素市場は完全競争市場であるので、限界生産性=要素価格が成立する点を需要することになります。また、利潤はゼロです。よって、以下のように完全分配が成り立ちます。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-y_t = r_tk_{t-1} + w_tl_t 
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;財市場の均衡条件&#34; class=&#34;section level4&#34;&gt;
-&lt;h4&gt;財市場の均衡条件&lt;/h4&gt;
-&lt;p&gt;&lt;span class=&#34;math inline&#34;&gt;\(t\)&lt;/span&gt;期に生産された財は消費されるか、投資されるかのいずれかです。よって、財市場の均衡条件は以下のようになります。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-y_t = c_t + i_t \tag{10}
-\]&lt;/span&gt;
-なお、ここで&lt;span class=&#34;math inline&#34;&gt;\(i_t\)&lt;/span&gt;は投資であり、資本遷移式を表す以下の方程式に(10)を代入することで資本の動学が定まります。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-k_t = (1-\delta)k_{t-1} - z_tk_t^\alpha l_t^{(1-\alpha)} + c_t \tag{11}
-\]&lt;/span&gt;
-モデルの概観は以上になります。このモデルをどうやって解くのかやパラメータをどう推定するのかは次回、次々回のPostで説明します。&lt;/p&gt;
+&lt;div id=&#34;残りの半分は現職でのキャリアパスが想像できなかったから&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;残りの半分は現職でのキャリアパスが想像できなかったから&lt;/h3&gt;
+&lt;p&gt;生活拠点を関西に移し、プロジェクトマネジメントを行うのは、現職でも遠隔地勤務という勤務形態を利用すれば可能でした。現に、同じ部署にはその制度を利用している方がいたし、少なくとも2年はほぼリモートワークだったので。可能だろうなというイメージも湧いていました。ただ、その選択をしなかったのは、現職でこの職種でキャリアパスを歩んでいく事が想像できなかったからです。&lt;/p&gt;
+&lt;p&gt;資産運用会社の花形はファンドマネージャーです。新卒入社の大半がファンドマネージャー志望で入社します。業界内で有名な方も複数存在し、運用者のキャリアパスはそれなりにイメージできると思います&lt;a href=&#34;#fn1&#34; class=&#34;footnote-ref&#34; id=&#34;fnref1&#34;&gt;&lt;sup&gt;1&lt;/sup&gt;&lt;/a&gt;。一方で、運用者以外のキャリアパスとなると、かなり不透明でモチベーションを持って仕事に当たっている人は限定的です。私が所属していた部署も同様で、若手にとっては運用への通過点という位置づけで、この部署でのキャリアパスをイメージ出来る人は上司含めて存在していなかったと思います。運用者志望ではなく、社内コンサル業を志望する自分にとっては、キャリアパスのイメージができなかったし、部署にノウハウが皆無で目指したいと思える人物も存在しませんでした&lt;a href=&#34;#fn2&#34; class=&#34;footnote-ref&#34; id=&#34;fnref2&#34;&gt;&lt;sup&gt;2&lt;/sup&gt;&lt;/a&gt;。&lt;/p&gt;
+&lt;p&gt;運用者志望の希望が全員叶うわけではなく、若手の早期退職者に悩む人事は多いと思いますが、じゃあ運用者以外の受け皿が用意されているのかと若手のほうは思ってしまうと思います。少なくとも、フロントとそれ以外では温度感が全く違います(後者はシニアまでほぼオペレーション担当の印象でした)。&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
+&lt;div id=&#34;次の会社仕事&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;3. 次の会社・仕事&lt;/h2&gt;
+&lt;p&gt;上記のような理由から、9月頃に転職活動をはじめました。複数のエージェントサービスを利用し、書類審査を本格的に出し始めたのが10月初旬ごろ、面接を受け出したのが10月半ばでした。そして、11月に内定を頂き、次の会社へ入社を決めました。この会社では、自分が求めていた自部署でのキャリアステップの典型例を示してくださり、それが入社の決定打となりました。&lt;/p&gt;
+&lt;p&gt;次の会社は関西の電子部品メーカーです。業務内容は現職で行っている業務とさほど変わらないものと認識しています。ただ、現職よりもデータを起点にした企画を行うということで、BIツールや統計処理なども守備範囲に入ってきそうです。これまでは必要な材料は現場へのヒアリングのみをベースとしており、Excelをこねくり回して出た結果をPowerPointスライドにするというやり方だったので、ひとつステップアップかなと思います。また、扱うデータも売上情報や受注情報などこれまでの金融時系列データとは異なってきそうです。ただ、ビジネスへの深い理解が必要という点は変わらないと思うので、その点は早くキャッチアップできるように頑張りたいと思います。&lt;/p&gt;
 &lt;/div&gt;
-&lt;div id=&#34;rbc-modelを分析できるプログラミング言語&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;2. RBC Modelを分析できるプログラミング言語&lt;/h2&gt;
-&lt;div id=&#34;matlaboctave-dynareがデファクトスタンダード&#34; class=&#34;section level3&#34;&gt;
-&lt;h3&gt;&lt;code&gt;Matlab&lt;/code&gt;(&lt;code&gt;Octave&lt;/code&gt;) + &lt;code&gt;Dynare&lt;/code&gt;がデファクトスタンダード&lt;/h3&gt;
-&lt;p&gt;動学的確率的一般均衡モデルには&lt;code&gt;Dynare&lt;/code&gt;と呼ばれる専用のプログラミング言語が存在します。この&lt;code&gt;Dynare&lt;/code&gt;は単体で動くのではなく、&lt;code&gt;Matlab&lt;/code&gt;(&lt;code&gt;Octave&lt;/code&gt;)上で動かす必要がありますが、インパルス応答関数等の数値シミュレーションに加え、状態空間モデルの推定や構造パラメータのMCMC推定など動学的一般均衡モデルの基本的な分析を行うには十分な機能を備えています。ただ、先進的な研究を行う場合、特に推定方法の高度化、&lt;code&gt;Matlab&lt;/code&gt;単体を使用して分析が行われることが多いと感じます。&lt;code&gt;Dynare&lt;/code&gt;は手を動かして既存のモデルを動かしたい人に向けたソフトウェアであるといってもよいかもしれません(もちろん&lt;code&gt;Dynare&lt;/code&gt;でも論文は書けますし、実際に存在もします)。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;pythonでrbc-modelを分析する意義&#34; class=&#34;section level3&#34;&gt;
-&lt;h3&gt;&lt;code&gt;Python&lt;/code&gt;でRBC Modelを分析する意義&lt;/h3&gt;
-&lt;p&gt;&lt;code&gt;Matlab&lt;/code&gt; + &lt;code&gt;Dynare&lt;/code&gt;がデファクトスタンダードであるのに、&lt;code&gt;Python&lt;/code&gt;を使用する理由は以下3点です。&lt;/p&gt;
-&lt;ol style=&#34;list-style-type: decimal&#34;&gt;
-&lt;li&gt;モデル分析以外の部分の利便性が高い
-&lt;ul&gt;
-&lt;li&gt;このブログでも紹介したように&lt;code&gt;Python&lt;/code&gt;には&lt;code&gt;pandasdmx&lt;/code&gt;や&lt;code&gt;pandas_datareader&lt;/code&gt;等APIを使用してマクロ経済データを直接取得できる便利な関数群があります。これまでの分析では、実際にWEBサイトへ行き、手でcsvファイルをダウンロードして、それをExcelで加工し分析用のデータを作成していました。&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;より高度な分析のための外部ライブラリの統合が容易
-&lt;ul&gt;
-&lt;li&gt;動学的一般均衡モデルの実装に際して、状態空間モデルであったりMCMCに関する実装を一から行う気は毛頭ありません。&lt;code&gt;statsmodels&lt;/code&gt;や&lt;code&gt;Pymc3&lt;/code&gt;といった外部ライブラリを利用することを考えています。また、粒子フィルタなどさ らに発展的な技術についてもPythonの方が実装済みコードが存在しており、かつ&lt;code&gt;Class&lt;/code&gt;という概念を用いればこれ らの特性が容易に継承可能である点からも&lt;code&gt;Python&lt;/code&gt;での実装がBestであると考えました。&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;みんな&lt;code&gt;Python&lt;/code&gt;を使っているから
-&lt;ul&gt;
-&lt;li&gt;せっかくであれば、自分だけじゃなくいろんな人に使ってほしいので、利用者が多い&lt;code&gt;Python&lt;/code&gt;を選びました。&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;/ol&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;div id=&#34;pythonでの実装&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;3. &lt;code&gt;Python&lt;/code&gt;での実装&lt;/h2&gt;
-&lt;div id=&#34;このpostでやり遂げたいこと&#34; class=&#34;section level3&#34;&gt;
-&lt;h3&gt;このPostでやり遂げたいこと&lt;/h3&gt;
-&lt;p&gt;各モデル方程式を&lt;code&gt;Sympy&lt;/code&gt;で定義し、それを対数線形化、その後&lt;code&gt;Canonical form&lt;/code&gt;と呼ばれる行列形式に整理するまでをクラス化したいと思います。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;canonical-formとは&#34; class=&#34;section level3&#34;&gt;
-&lt;h3&gt;&lt;code&gt;Canonical form&lt;/code&gt;とは&lt;/h3&gt;
-&lt;p&gt;おそらく聞き慣れない単語であろう&lt;code&gt;Canonical form&lt;/code&gt;について説明しておきます。先ほど導出したRBCモデルの均衡条件式は非線形差分方程式システムとなっています。動学的確率的一般均衡モデルでは、これを定常値周りで対数線形近似して線形化するのが一般的です。線形化されたシステムを行列形式で表現すると以下のようになります。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-Bs_{t+1} = Cs_{t} + \Psi\epsilon_t
-\]&lt;/span&gt;
-ここで&lt;span class=&#34;math inline&#34;&gt;\(s_t\)&lt;/span&gt;は内生変数で&lt;span class=&#34;math inline&#34;&gt;\(\epsilon_t\)&lt;/span&gt;は外生変数、&lt;span class=&#34;math inline&#34;&gt;\(B,C,\Psi\)&lt;/span&gt;は係数行列です。このシステムを&lt;code&gt;Canonical form&lt;/code&gt;と呼びます。今回は均衡条件式をこちらの形式へ整形することがゴールです。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;利用するモジュール群のインポート&#34; class=&#34;section level3&#34;&gt;
-&lt;h3&gt;利用するモジュール群のインポート&lt;/h3&gt;
-&lt;p&gt;以下を使用します。&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import numpy as np
-import pandas as pd
-import statsmodels.api as sm
-import matplotlib.pyplot as plt
-import sympy as sym&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-&lt;div id=&#34;sympyでの方程式の定義&#34; class=&#34;section level3&#34;&gt;
-&lt;h3&gt;Sympyでの方程式の定義&lt;/h3&gt;
-&lt;p&gt;先ほど導出した方程式を&lt;code&gt;Sympy&lt;/code&gt;で定義します。
-まず内生変数を宣言します。&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;sym.init_printing()
-var = sym.var(&amp;#39;l, c, k, l, z, r, LEAD_c, LEAD_k, LEAD_l, LEAD_r, LEAD_z, LEAD_R&amp;#39;)
-endog = sym.var(&amp;#39;l, c, k, z&amp;#39;)
-LEADs = sym.var(&amp;#39;LEAD_l, LEAD_c, LEAD_k, LEAD_z&amp;#39;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;次にパラメータを宣言します。&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;params = sym.var(&amp;#39;beta, theta, varphi, alpha, delta, phi, Psi&amp;#39;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;方程式を定義します。&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;# Eliminate Price  
-LEAD_R  = (LEAD_z*alpha*(LEAD_k/LEAD_l)**(alpha-1))
-w       = (1-alpha)*z*(k/l)**alpha
-  
-# Optimal Conditions  &amp;amp; state transition
-labor   = l**varphi-w/(Psi*c**(theta))
-euler   = c**(-theta) -(LEAD_c**(-theta))*beta*(1+LEAD_R-delta)
-capital = LEAD_k - (1-delta)*k - z*(k**alpha)*(l**(1-alpha)) + c
-tech    = LEAD_z - phi*z
-  
-optcon  = sym.Matrix([labor, euler, capital, tech])&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-&lt;div id=&#34;sympyの自動数式処理機能を用いた自動対数線形近似の実施&#34; class=&#34;section level3&#34;&gt;
-&lt;h3&gt;&lt;code&gt;Sympy&lt;/code&gt;の自動数式処理機能を用いた自動対数線形近似の実施&lt;/h3&gt;
-&lt;p&gt;&lt;code&gt;optcon&lt;/code&gt;に保存されているのは非線形差分方程式システムとなっています。次に対数線形近似を行い、線形システムへ変換を行います。対数線形近似はそれ自体に特別な意味があるとは思えませんので、&lt;code&gt;Sympy&lt;/code&gt;の&lt;code&gt;jacobian&lt;/code&gt;を用いてヤコビ行列を計算し、自動処理します。&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;# Differentiation 
-jopt    = optcon.jacobian(endog).subs([(LEAD,endog[i]) for i, LEAD in enumerate(LEADs)])
-jopt_LEAD = optcon.jacobian(LEADs).subs([(LEAD,endog[i]) for i, LEAD in enumerate(LEADs)])&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;ここでは、内生変数&lt;span class=&#34;math inline&#34;&gt;\(s_t\)&lt;/span&gt;と&lt;span class=&#34;math inline&#34;&gt;\(s_{t+1}\)&lt;/span&gt;を分けて処理しています。&lt;/p&gt;
-&lt;p&gt;対数線形近似後の係数を得るためには、ヤコビ行列のそれぞれの要素に、対応する変数の定常均衡値を掛け合わせる必要があります。ヤコビ行列の各要素は&lt;span class=&#34;math inline&#34;&gt;\(\partial f(x_t)/\partial x_t\)&lt;/span&gt;ですが、対数線形近似=関数&lt;span class=&#34;math inline&#34;&gt;\(f(x_t)\)&lt;/span&gt;を定常値からの乖離&lt;span class=&#34;math inline&#34;&gt;\(x_t/x\)&lt;/span&gt;で(定常値周りで)一次近似することですので、定常値&lt;span class=&#34;math inline&#34;&gt;\(x\)&lt;/span&gt;を掛け合わせることで係数&lt;span class=&#34;math inline&#34;&gt;\(\partial f(x_t)/(\partial x_t/x)\)&lt;/span&gt;を求めることができます。&lt;br /&gt;
-よって、定常値の計算が必要です。数値的に求めることもできますが、定常均衡はそれを求めること自体もモデルの特性を知る上で重要ですので、解析的に解いた数式を&lt;code&gt;Sympy expression&lt;/code&gt;として定義します。&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;# Steady State Equation needed to be calculated by hand
-kls     = (((1/beta)+delta-1)/alpha)**(1/(alpha-1))
-wstar   = (1-alpha)*(kls)**alpha
-clstar  = kls**alpha - delta*kls
-lstar   = ((wstar/Psi)*(clstar**(-theta)))**(1/(varphi+theta))
-kstar   = kls*lstar
-cstar   = clstar*lstar
-zstar   = 1
-Ystar   = (kstar**alpha)*(lstar**(1-alpha))
-ss_eq   = sym.Matrix([lstar, cstar, kstar, zstar])&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;次に、この定常均衡方程式システムを構造パラメータを引数とする&lt;code&gt;Python&lt;/code&gt;関数へ変換します。&lt;code&gt;MCMC&lt;/code&gt;で構造パラメータの推定を行う際などは頻繁にパラメータを更新しますので、関数化しておくことは便利です。また、構造パラメータと定常値を引数として対数線形システムの係数行列を評価する関数も&lt;code&gt;Python&lt;/code&gt;関数へ変換しておきます。&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;# Translating Sympy expressions into Python functions for steady state and coefficient matrix
-fss     = sym.lambdify([params],ss_eq)
-fcoef   = sym.lambdify([params,endog],jopt)
-fcoef_LEAD = sym.lambdify([params,endog],jopt_LEAD)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;これで解析的には準備が整いました。では、構造パラメータに数値を代入して、係数を計算してみます。&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;# Evaluate steady state and each derivative in terms of % deviations from ss
-vparams = np.array([0.99, 1.5 ,2 , 0.3, 0.025, 0.8, 1])
-ss = fss(vparams)
-B = np.matrix(fcoef_LEAD(vparams,ss)*ss, dtype=&amp;#39;float&amp;#39;)
-C = np.matrix(fcoef(vparams,ss)*ss, dtype=&amp;#39;float&amp;#39;)
-A = np.dot(np.linalg.inv(np.matrix(C)),B)
-
-print(A)&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## [[-1.02747592e-02  3.21263317e-01 -5.48161413e-03 -4.68593779e-01]
-##  [ 3.19823603e-02 -1.00000000e+00 -1.49198793e-03  4.01094076e-02]
-##  [ 4.95211793e-02 -1.54839039e+00 -9.81949430e-01  3.57889915e+00]
-##  [ 0.00000000e+00  0.00000000e+00  0.00000000e+00 -1.25000000e+00]]&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;div id=&#34;まとめ&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;4. まとめ&lt;/h2&gt;
-&lt;p&gt;今回はReal Business Cycleモデルを&lt;code&gt;python&lt;/code&gt;で解くために前段階となるモデルのparseと&lt;code&gt;Canonical form&lt;/code&gt;への整形を行いました。次回は実際にこのモデルの合理的期待均衡解を解き、インパルスレスポンス応答を数値的に計算するところまで進みます。お楽しみに！！&lt;/p&gt;
+&lt;div id=&#34;今後のブログ更新について&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;4. 今後のブログ更新について&lt;/h2&gt;
+&lt;p&gt;これまでの投稿は金融・経済に関連するものでしたが、今後は可視化・プロジェクトマネジメントなどに内容が移ってきそうです。これまでよりも、気軽に投稿することは増えてくると思うので、更新頻度を上げていきたいと思います。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&#34;footnotes&#34;&gt;
 &lt;hr /&gt;
 &lt;ol&gt;
-&lt;li id=&#34;fn1&#34;&gt;&lt;p&gt;このほか、金融市場の情報の非対称性や労働市場での失業の発生などさまざまな不完全性を取り込んでいる場合が多いです。&lt;a href=&#34;#fnref1&#34; class=&#34;footnote-back&#34;&gt;↩︎&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
-&lt;li id=&#34;fn2&#34;&gt;&lt;p&gt;代表的家計とはその名の通り無数存在する家計を代表する家計です。一世帯ずつモデル化していると埒が明かないので、このような単純化を行っているわけです。「平均的な消費者」とも言えるかもしれません。&lt;a href=&#34;#fnref2&#34; class=&#34;footnote-back&#34;&gt;↩︎&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
-&lt;li id=&#34;fn3&#34;&gt;&lt;p&gt;無限期間生きる家計は現実的でない仮定ですが、単一の家計が無限期間生きるということではなく、ある家計が自身のみではなく、代々脈々と無数に続く子孫までの消費計画を自身の問題として捉えて行動していると考える方が適切だと個人的に思っています。利他性100%の世代重複モデルとも解釈できます。&lt;a href=&#34;#fnref3&#34; class=&#34;footnote-back&#34;&gt;↩︎&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
-&lt;li id=&#34;fn4&#34;&gt;&lt;p&gt;家計が資本を供給することに違和感を持たれる人がいらっしゃるかもしれません。資本とは生産に必要な設備などですが、ここではその元となる原資である資金を社債等を通じて企業へ供給をしていると考えてもらった方がいいと思います。つまり、このモデルでは資本財価格は消費財価格と同じであると仮定していることになります。&lt;a href=&#34;#fnref4&#34; class=&#34;footnote-back&#34;&gt;↩︎&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;li id=&#34;fn1&#34;&gt;&lt;p&gt;アシスタント→アナリスト→FMやオペレーション担当→投資判断者などでしょうか&lt;a href=&#34;#fnref1&#34; class=&#34;footnote-back&#34;&gt;↩︎&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;li id=&#34;fn2&#34;&gt;&lt;p&gt;会議のファシリテーションにはかなり悩んでいました。本当であれば、会議が終わった後に細かいフィードバックを頂きたかったし、自分の課題はどこにあるのか指摘して頂きたかったですが、そのようなことが出来る人がいませんでした。「今のやり方のまま仕事を進めてくれたらいいから」しか言われなかった。。。&lt;a href=&#34;#fnref2&#34; class=&#34;footnote-back&#34;&gt;↩︎&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
 &lt;/ol&gt;
 &lt;/div&gt;
 </description>
