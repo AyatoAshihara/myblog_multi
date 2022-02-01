@@ -23,13 +23,13 @@ output:
 
 ## 0. What I want to do
 
-What I'm going to show you is pre-processing (and analysis) using the Tick data of the exchange rate, as I mentioned above. I won't go into the details of this article because my main focus is to improve efficiency using `Rcpp`, but I will briefly describe what I want to do first. I will not go into details, but I will show what we want to do in a nutshell first.
+As mentioned above, what I will show you this time is the pre-processing (and analysis) of currency tick data. I won't go into details since my main focus is to improve efficiency of analysis using Rcpp, but I will give you a rough idea of what I want to do.
 
-What we want to do is to detect a *Jump* from the five-minute incremental return of the JPY/USD rate. Here, a jump is the point at which the exchange rate has risen (fallen) sharply compared to the previous rate. During the day, the exchange rate moves in small increments, but when there is an event, it rises (or falls) significantly. It is very interesting to see what kind of event causes the jump. In order to test this, we first need to detect jumps. The following paper is a reference point.
+What we want to do is to detect **jumps** in the 5-minute returns of the JPY/USD rate. A jump here is a sudden rise (or fall) in the exchange rate compared to the previous point. During the day, exchange rates move in small increments, but when there is an event, they rise (or fall) significantly. It is very interesting to see what kind of event causes a jump. In order to verify this, we first need to detect jumps. The following paper will be used as a reference.
 
 [Suzanne S. Lee & Per A. Mykland, 2008. "Jumps in Financial Markets: A New Nonparametric Test and Jump Dynamics," Review of Financial Studies, Society for Financial Studies, vol. 21(6), pages 2535-2563, November.](https://academic.oup.com/rfs/article-abstract/21/6/2535/1574138?redirectedFrom=fulltext)
 
-It is a very well-respected paper with 204 Citation. We will scratch out the estimation method. First, let the continuous compound return be $d\log S(t)$ for $t>0$. where $S(t)$ is the price of the asset at $t$. If there are no jumps in the market, $S(t)$ is assumed to follow the following stochastic process
+It is a highly regarded paper with a Citation of 204. I will explain the estimation method in brief. First, let the continuous compound return be $d\log S(t)$ for $t>0$. where $S(t)$ is the price of the asset at $t$. If there are no jumps in the market, $S(t)$ is assumed to follow the following stochastic process
 
 $$
 d\log S(t) = \mu(t)dt + \sigma(t)dW(t) \tag{1}
@@ -41,31 +41,30 @@ $$
 d\log S(t) = \mu(t)dt + \sigma(t)dW(t) + Y(t)dJ(t) \tag{2}
 $$
 
+where $J(t)$ and $W(t)$ are  counting processes independent of each other. [^1] $Y(t)$ represents the size of the jump and is a predictable process.
+
 [^1]: A stochastic process with non-negative, integer, non-decreasing values.
 
-where $J(t)$ is a counting process independent of $W(t)$. [^2] $Y(t)$ represents the size of the jump and is a predictable process.
+Next, consider the logarithmic return of $S(t)$. That is, $\log S(t_i)/S(t_{i-1})$, which follows a normal distribution $N(0, \sigma(t_i))$. [^2] Now, we define the statistic $\mathcal{L(i)}$ at $t_i$ when there is a jump from $t_{i-1}$ to $t_{i}$ as follows.
 
-[^2]: A stochastic process with non-negative, integer, non-decreasing values.
-
-Next, consider the logarithmic return of $S(t)$. That is, $\log S(t_i)/S(t_{i-1})$, which follows a normal distribution $N(0, \sigma(t_i))$. [^3]Now, we define the statistic $\mathcal{L(i)}$ at $t_i$ when there is a jump from $t_{i-1}$ to $t_{i}$ as follows.
-
-[^3]: The mean is not necessarily zero, depending on the shape of the drift term, but we are assuming a small enough drift term now. In the paper, it is defined more precisely.
+[^2]: The mean is not necessarily zero, depending on the shape of the drift term, but we are assuming a small enough drift term now. In the paper, it is defined more precisely.
 
 $$
 \mathcal{L(i)} \equiv \frac{|\log S(t_i)/S(t_{i-1})|}{\hat{\sigma}_{t_i}} \tag{3}
 $$
 
-It is a simple standardization of the absolute value of the log return, but uses the "Realized Bipower Variation" defined below as an estimator of the standard deviation. 
+This is a simple standardization of the absolute value of the log return, but uses the "Realized Bipower Variation" defined below as an estimator of the standard deviation. 
 
 $$
 \hat{\sigma}_{t_i} = \frac{1}{K-2}\sum_{j=i-K+2}^{i-2}|\log S(t_j)/\log S(t_{j-1})||\log S(t_{j-1})/\log S(t_{j-2})| \tag{4}
 $$ 
     
-$K$ is the number of sample sizes contained in the Window. If we use a return in 5-minute increments and the jump occurs at 10:00 on 9/10/2020, and $K=270$, then we will calculate using samples from the previous day, 9/9/2020 11:30 to 9/11/2020 09:55. What we're doing is adding up the absolute value of the return multiplied by the absolute value of the return, which seems to make it difficult for the estimate of the next instant after the jump occurs (i.e., $t_{i+1}$ and so on) to be affected by the jump. Incidentally, $K=270$ is introduced in another paper as a recommended value for returns in 5-minute increments.
+where $K$ is the number of sample sizes contained in the Window. If we use a return in 5-minute increments and the jump occurs at 10:00 on 9/10/2020, and $K=270$, then we will calculate using samples from the previous day, 9/9/2020 11:30 to 9/11/2020 09:55. What we're doing is adding up the absolute value of the return multiplied by the absolute value of the return, which seems to make it difficult for the estimate of the next instant after the jump occurs (i.e., $t_{i+1}$ and so on) to be affected by the jump. Incidentally, $K=270$ is introduced in another paper as a recommended value for returns in 5-minute increments.
 
-Let us move on to how the calculated jump statistic $\mathcal{L(i)}$ is used in the statistical test to detect jumps. This is done by considering the maximum value of the random variable $\mathcal{L(i)}$ (also a random variable), and if it deviates significantly from that distribution (like 95% of points), the return of the statistic is the jump. 
+Let's move on to how the Jump statistic calculated in this way can be used in a statistical test to detect a Jump. This is done by considering the maximum value of $\mathcal{L(i)}$, and when a value deviates greatly from its distribution (such as the 95th percentile), the return is considered to be a Jump.
 
-If there is no Jump in the period $[t_{i-1},t_{i}]$, then with the length of this period $\Delta=t_{i}-t_{i-1}$ approached to $0$, i.e., $\Delta\rightarrow0$, the sample maximum of the absolute value of the standard normal variable converges to the Gumbel distribution.  Thus, Jump can reject and detect the null hypothesis when the following conditions are met 
+If we assume that there is no Jump in period $[t_{i-1},t_i]$, then let the length of this period $\Delta=t_i-t_{i-1}$
+ close to 0, that is, $\Delta\rightarrow 0$, the (absolute) maximum of the standard normal variable converges to the Gumbel distribution. Therefore, Jump can be detected if the null hypothesis is rejected when the following conditions are met.
 
 $$
 \mathcal{L(i)} > G^{-1}(1-\alpha)S_{n} + C_{n} \tag{5}
@@ -414,4 +413,4 @@ I've spent quite a bit of time writing this, and it's 23:37 right now, so I'll r
 
 ## 5. Summary
 
-I introduced the use of `Rcpp` to improve the efficiency of `R` analysis. The `C++` is much faster than `R` even if you write the code honestly, so it is hard to make coding mistakes. The `C++` is much faster than `R` even if you write the code in a simple way. Also, even if a compile error occurs, RStudio gives you a clue as to where the compile error is occurring, so there is no stress in that respect either, which is why I recommend it.
+I introduced the use of `Rcpp` to improve the efficiency of `R` analysis. The `C++` is much faster than `R` even if you write the code in a simple way, so it is hard to make coding mistakes. Also, even if a compile error occurs, RStudio gives you a clue as to where the compile error is occurring, so there is no stress in that respect either, which is why I recommend it.

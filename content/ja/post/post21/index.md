@@ -73,15 +73,10 @@ $$
 
 では、推定方法がわかったのでまずTickデータの読み込みをしましょう。データは`QuantDataManager`からcsvを取得し、それを作業ディレクトリに保存しています。
 
-```{r,include=FALSE}
-library(magrittr)
 
-# Tick dataの読み込み
-strPath <- r"(C:\Users\aashi\Documents\QuantDataManager\export\2020.9.13USDJPY-TICK-NoSession.csv)"
-JPYUSD <- readr::read_csv(strPath) %>% dplyr::filter(DateTime>=as.POSIXct("2011-01-03 07:00:00",tz="UTC"),DateTime<=as.POSIXct("2011-12-30 07:00:00",tz="UTC"))
-```
 
-```{r,eval=FALSE}
+
+```r
 library(magrittr)
 
 # Tick dataの読み込み
@@ -92,21 +87,38 @@ JPYUSD <- readr::read_csv(strPath)
 関係ないんですが、最近Rを4.0.2へ上げました。4.0以上では`Python`でできた文字列のEscapeができるとうことで今までのストレスが解消されてかなりうれしいです。
 データは以下のような感じで、日付の他にBid値、Ask値と取引量が格納されています。なお、ここでは2011年のTickを使用しています。東日本大震災の時のドル円を対象とするためです。
 
-```{r}
+
+```r
 summary(JPYUSD)
+```
+
+```
+##     DateTime                        Bid             Ask            Volume     
+##  Min.   :2011-01-03 07:00:00   Min.   :75.57   Min.   :75.58   Min.   : 1.00  
+##  1st Qu.:2011-03-30 15:09:23   1st Qu.:77.43   1st Qu.:77.44   1st Qu.: 2.00  
+##  Median :2011-06-15 14:00:09   Median :80.40   Median :80.42   Median : 2.00  
+##  Mean   :2011-06-22 05:43:11   Mean   :79.91   Mean   :79.92   Mean   : 2.55  
+##  3rd Qu.:2011-09-09 13:54:51   3rd Qu.:81.93   3rd Qu.:81.94   3rd Qu.: 3.00  
+##  Max.   :2011-12-30 06:59:59   Max.   :85.52   Max.   :85.54   Max.   :90.00
 ```
 
 ちなみに、`DateTime`はUTC基準で日本時間だと2011/1/3 07:00:00から2011-12-30 06:59::59(米国時間2011-12-30 16:59:59)までを含んでいます。サンプルサイズは約1200万件です。
 
-```{r}
+
+```r
 NROW(JPYUSD)
+```
+
+```
+## [1] 11946621
 ```
 
 ## 2. 前処理
 
 では次にBidとAskから仲値を計算し、後でリターンを算出するために対数を取っておきます。
 
-```{r}
+
+```r
 # AskとBidの仲値を計算し、対数化(対数リターン算出用)
 JPYUSD <- JPYUSD %>% dplyr::mutate(Mid = (Ask+Bid)/2) %>% 
                      dplyr::mutate(logMid = log(Mid))
@@ -118,7 +130,8 @@ JPYUSD <- JPYUSD %>% dplyr::mutate(Mid = (Ask+Bid)/2) %>%
 3. 実行。
 という計画です。まず、1.のベクトルを作成します。
 
-```{r}
+
+```r
 # 5min刻みでのリターンを算出するためのPOSIXベクトルを作成(288×日数)
 start <- as.POSIXct("2011-01-02 22:00:00",tz="UTC")
 end <- as.POSIXct("2011-12-31 21:55:00",tz="UTC")
@@ -132,7 +145,8 @@ from <- seq(from=start,to=end,by=5*60)
 
 では、2.にあたるコードを書いていきます。コーディングに当たってはネット上の記事を参考にしました。`C++`は`R`よりも歴史があるし、使用者も多いので知りたい情報はすぐ見つけられます。
 
-```{Rcpp}
+
+```cpp
 #include <Rcpp.h>
 #include <algorithm>
 
@@ -222,19 +236,38 @@ DataFrame Rolling_r_cpp(
 
 `Rcpp::sourceCpp`でコンパイルしたら、以下のように`R`の関数として実行します。
 
-```{r}
+
+```r
 system.time(results <- Rolling_r_cpp(JPYUSD,from))
+```
+
+```
+##    ユーザ   システム       経過  
+##       0.05       0.00       0.04
 ```
 
 はい。1200万件のデータの処理に1秒かかりません。便利ー。
 
-```{r}
+
+```r
 summary(results)
+```
+
+```
+##       from                           r         
+##  Min.   :2011-01-02 22:00:00   Min.   :-1.823  
+##  1st Qu.:2011-04-03 15:58:45   1st Qu.:-0.014  
+##  Median :2011-07-03 09:57:30   Median : 0.000  
+##  Mean   :2011-07-03 09:57:30   Mean   : 0.000  
+##  3rd Qu.:2011-10-02 03:56:15   3rd Qu.: 0.015  
+##  Max.   :2011-12-31 21:55:00   Max.   : 2.880  
+##                                NA's   :29977
 ```
 
 問題なく、リターンが計算されています。では、`Realized Bipower Variation`の計算に移りましょう。5min刻みの場合はWindowの長さは270が推奨でしたが、そこも引数として柔軟を持たせた作りにします。また、`NA`の処理についても丁寧に行います。
 
-```{Rcpp}
+
+```cpp
 #include <Rcpp.h>
 #include <cmath>
 
@@ -334,8 +367,14 @@ DataFrame Rolling_rbv_cpp(
 
 では、これもコンパイルし、`R`で実行します。
 
-```{r}
+
+```r
 system.time(results <- results %>% Rolling_rbv_cpp(na_remove = FALSE))
+```
+
+```
+##    ユーザ   システム       経過  
+##       1.40       0.45       1.89
 ```
 
 こちらも一瞬ですね。
@@ -344,20 +383,34 @@ system.time(results <- results %>% Rolling_rbv_cpp(na_remove = FALSE))
 
 では、次に今計算したリターンと標準偏差から統計量$\mathcal{L}_{t_i}$を計算しましょう。
 
-```{r}
+
+```r
 # 対数リターンの絶対値を標準化=Jump統計量
 results <- results %>% dplyr::mutate(J=ifelse(rbv>0,abs(r)/rbv,NA))
 ```
 
 今こんな感じです。
 
-```{r}
+
+```r
 summary(results)
+```
+
+```
+##       from                           r               rbv              J        
+##  Min.   :2011-01-02 22:00:00   Min.   :-1.823   Min.   :0.00    Min.   : 0.00  
+##  1st Qu.:2011-04-03 15:58:45   1st Qu.:-0.014   1st Qu.:0.02    1st Qu.: 0.28  
+##  Median :2011-07-03 09:57:30   Median : 0.000   Median :0.02    Median : 0.64  
+##  Mean   :2011-07-03 09:57:30   Mean   : 0.000   Mean   :0.03    Mean   : 0.93  
+##  3rd Qu.:2011-10-02 03:56:15   3rd Qu.: 0.015   3rd Qu.:0.03    3rd Qu.: 1.23  
+##  Max.   :2011-12-31 21:55:00   Max.   : 2.880   Max.   :0.16    Max.   :58.60  
+##                                NA's   :29977    NA's   :44367   NA's   :44423
 ```
 
 では、Jump検定に移りましょう。まず、必要な関数を定義しておきます。
 
-```{r}
+
+```r
 # Jump検定を計算するための定数&関数を準備
 c <- (2/pi)^0.5
 Cn <- function(n){
@@ -370,18 +423,39 @@ Sn <- function(n){
 
 では検定を行います。棄却されたサンプルは1、それ以外は0を返します。
 
-```{r}
+
+```r
 # Jump検定(10%)を実行(返り値はlogical)
 N <- NROW(results$J)
 results <- results %>% dplyr::mutate(Jump = J > 2.25*Sn(N) + Cn(N))
 summary(results)
 ```
 
+```
+##       from                           r               rbv              J        
+##  Min.   :2011-01-02 22:00:00   Min.   :-1.823   Min.   :0.00    Min.   : 0.00  
+##  1st Qu.:2011-04-03 15:58:45   1st Qu.:-0.014   1st Qu.:0.02    1st Qu.: 0.28  
+##  Median :2011-07-03 09:57:30   Median : 0.000   Median :0.02    Median : 0.64  
+##  Mean   :2011-07-03 09:57:30   Mean   : 0.000   Mean   :0.03    Mean   : 0.93  
+##  3rd Qu.:2011-10-02 03:56:15   3rd Qu.: 0.015   3rd Qu.:0.03    3rd Qu.: 1.23  
+##  Max.   :2011-12-31 21:55:00   Max.   : 2.880   Max.   :0.16    Max.   :58.60  
+##                                NA's   :29977    NA's   :44367   NA's   :44423  
+##     Jump        
+##  Mode :logical  
+##  FALSE:59864    
+##  TRUE :257      
+##  NA's :44423    
+##                 
+##                 
+## 
+```
+
 ## 4. ggplot2を用いた可視化
 
 数値が計算できましたので可視化しましょう。2011/03/11の日中のJPY/USDの5min刻み対数リターンの推移とJumpを重ねてPlotします。ちなみに横軸は日本時間に修正しています。
 
-```{r}
+
+```r
 # 2011/03/11の東日本大震災発生時のJumpについてPlot
 results %>% 
   dplyr::filter(from >= as.POSIXct("2011-03-11 00:00:00",tz="UTC"),from < as.POSIXct("2011-03-12 00:00:00",tz="UTC")) %>% 
@@ -391,6 +465,14 @@ results %>%
   ggplot2::scale_x_datetime(date_breaks = "2 hours", labels = scales::date_format(format="%H:%M",tz="Asia/Tokyo")) +
   ggplot2::ggtitle("JPY/USD Jumps within Tohoku earthquake on 2011-3-11")
 ```
+
+```
+## Warning: Removed 36 row(s) containing missing values (geom_path).
+
+## Warning: Removed 36 row(s) containing missing values (geom_path).
+```
+
+<img src="index_files/figure-html/unnamed-chunk-16-1.png" width="672" />
 
 ここまで執筆するのに結構時間使っていて、今23:37なんで深い考察は控えますが、震災が発生したのが14:46:18ですから市場は震災直後即座に円安に反応したことが分かります。その後なぜか円高方向へ進み19:00にはピークになっています。安全資産の円とか言われますが、この時ばかりは不確実性の高まりからして安全じゃないだろと思いますが。。。
 

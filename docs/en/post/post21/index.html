@@ -778,15 +778,15 @@
 
     <div class="article-style">
       
-<script src="index_files/header-attrs/header-attrs.js"></script>
+<script src="../../../en/post/post21/index_files/header-attrs/header-attrs.js"></script>
 
 
 <div id="what-i-want-to-do" class="section level2">
 <h2>0. What I want to do</h2>
-<p>What I’m going to show you is pre-processing (and analysis) using the Tick data of the exchange rate, as I mentioned above. I won’t go into the details of this article because my main focus is to improve efficiency using <code>Rcpp</code>, but I will briefly describe what I want to do first. I will not go into details, but I will show what we want to do in a nutshell first.</p>
-<p>What we want to do is to detect a <em>Jump</em> from the five-minute incremental return of the JPY/USD rate. Here, a jump is the point at which the exchange rate has risen (fallen) sharply compared to the previous rate. During the day, the exchange rate moves in small increments, but when there is an event, it rises (or falls) significantly. It is very interesting to see what kind of event causes the jump. In order to test this, we first need to detect jumps. The following paper is a reference point.</p>
+<p>As mentioned above, what I will show you this time is the pre-processing (and analysis) of currency tick data. I won’t go into details since my main focus is to improve efficiency of analysis using Rcpp, but I will give you a rough idea of what I want to do.</p>
+<p>What we want to do is to detect <strong>jumps</strong> in the 5-minute returns of the JPY/USD rate. A jump here is a sudden rise (or fall) in the exchange rate compared to the previous point. During the day, exchange rates move in small increments, but when there is an event, they rise (or fall) significantly. It is very interesting to see what kind of event causes a jump. In order to verify this, we first need to detect jumps. The following paper will be used as a reference.</p>
 <p><a href="https://academic.oup.com/rfs/article-abstract/21/6/2535/1574138?redirectedFrom=fulltext">Suzanne S. Lee &amp; Per A. Mykland, 2008. “Jumps in Financial Markets: A New Nonparametric Test and Jump Dynamics,” Review of Financial Studies, Society for Financial Studies, vol. 21(6), pages 2535-2563, November.</a></p>
-<p>It is a very well-respected paper with 204 Citation. We will scratch out the estimation method. First, let the continuous compound return be <span class="math inline">\(d\log S(t)\)</span> for <span class="math inline">\(t&gt;0\)</span>. where <span class="math inline">\(S(t)\)</span> is the price of the asset at <span class="math inline">\(t\)</span>. If there are no jumps in the market, <span class="math inline">\(S(t)\)</span> is assumed to follow the following stochastic process</p>
+<p>It is a highly regarded paper with a Citation of 204. I will explain the estimation method in brief. First, let the continuous compound return be <span class="math inline">\(d\log S(t)\)</span> for <span class="math inline">\(t&gt;0\)</span>. where <span class="math inline">\(S(t)\)</span> is the price of the asset at <span class="math inline">\(t\)</span>. If there are no jumps in the market, <span class="math inline">\(S(t)\)</span> is assumed to follow the following stochastic process</p>
 <p><span class="math display">\[
 d\log S(t) = \mu(t)dt + \sigma(t)dW(t) \tag{1}
 \]</span></p>
@@ -794,18 +794,19 @@ d\log S(t) = \mu(t)dt + \sigma(t)dW(t) \tag{1}
 <p><span class="math display">\[
 d\log S(t) = \mu(t)dt + \sigma(t)dW(t) + Y(t)dJ(t) \tag{2}
 \]</span></p>
-<p>where <span class="math inline">\(J(t)\)</span> is a counting process independent of <span class="math inline">\(W(t)\)</span>. <a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> <span class="math inline">\(Y(t)\)</span> represents the size of the jump and is a predictable process.</p>
-<p>Next, consider the logarithmic return of <span class="math inline">\(S(t)\)</span>. That is, <span class="math inline">\(\log S(t_i)/S(t_{i-1})\)</span>, which follows a normal distribution <span class="math inline">\(N(0, \sigma(t_i))\)</span>. <a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>Now, we define the statistic <span class="math inline">\(\mathcal{L(i)}\)</span> at <span class="math inline">\(t_i\)</span> when there is a jump from <span class="math inline">\(t_{i-1}\)</span> to <span class="math inline">\(t_{i}\)</span> as follows.</p>
+<p>where <span class="math inline">\(J(t)\)</span> and <span class="math inline">\(W(t)\)</span> are counting processes independent of each other. <a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> <span class="math inline">\(Y(t)\)</span> represents the size of the jump and is a predictable process.</p>
+<p>Next, consider the logarithmic return of <span class="math inline">\(S(t)\)</span>. That is, <span class="math inline">\(\log S(t_i)/S(t_{i-1})\)</span>, which follows a normal distribution <span class="math inline">\(N(0, \sigma(t_i))\)</span>. <a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a> Now, we define the statistic <span class="math inline">\(\mathcal{L(i)}\)</span> at <span class="math inline">\(t_i\)</span> when there is a jump from <span class="math inline">\(t_{i-1}\)</span> to <span class="math inline">\(t_{i}\)</span> as follows.</p>
 <p><span class="math display">\[
 \mathcal{L(i)} \equiv \frac{|\log S(t_i)/S(t_{i-1})|}{\hat{\sigma}_{t_i}} \tag{3}
 \]</span></p>
-<p>It is a simple standardization of the absolute value of the log return, but uses the “Realized Bipower Variation” defined below as an estimator of the standard deviation.</p>
+<p>This is a simple standardization of the absolute value of the log return, but uses the “Realized Bipower Variation” defined below as an estimator of the standard deviation.</p>
 <p><span class="math display">\[
 \hat{\sigma}_{t_i} = \frac{1}{K-2}\sum_{j=i-K+2}^{i-2}|\log S(t_j)/\log S(t_{j-1})||\log S(t_{j-1})/\log S(t_{j-2})| \tag{4}
 \]</span></p>
-<p><span class="math inline">\(K\)</span> is the number of sample sizes contained in the Window. If we use a return in 5-minute increments and the jump occurs at 10:00 on 9/10/2020, and <span class="math inline">\(K=270\)</span>, then we will calculate using samples from the previous day, 9/9/2020 11:30 to 9/11/2020 09:55. What we’re doing is adding up the absolute value of the return multiplied by the absolute value of the return, which seems to make it difficult for the estimate of the next instant after the jump occurs (i.e., <span class="math inline">\(t_{i+1}\)</span> and so on) to be affected by the jump. Incidentally, <span class="math inline">\(K=270\)</span> is introduced in another paper as a recommended value for returns in 5-minute increments.</p>
-<p>Let us move on to how the calculated jump statistic <span class="math inline">\(\mathcal{L(i)}\)</span> is used in the statistical test to detect jumps. This is done by considering the maximum value of the random variable <span class="math inline">\(\mathcal{L(i)}\)</span> (also a random variable), and if it deviates significantly from that distribution (like 95% of points), the return of the statistic is the jump.</p>
-<p>If there is no Jump in the period <span class="math inline">\([t_{i-1},t_{i}]\)</span>, then with the length of this period <span class="math inline">\(\Delta=t_{i}-t_{i-1}\)</span> approached to <span class="math inline">\(0\)</span>, i.e., <span class="math inline">\(\Delta\rightarrow0\)</span>, the sample maximum of the absolute value of the standard normal variable converges to the Gumbel distribution. Thus, Jump can reject and detect the null hypothesis when the following conditions are met</p>
+<p>where <span class="math inline">\(K\)</span> is the number of sample sizes contained in the Window. If we use a return in 5-minute increments and the jump occurs at 10:00 on 9/10/2020, and <span class="math inline">\(K=270\)</span>, then we will calculate using samples from the previous day, 9/9/2020 11:30 to 9/11/2020 09:55. What we’re doing is adding up the absolute value of the return multiplied by the absolute value of the return, which seems to make it difficult for the estimate of the next instant after the jump occurs (i.e., <span class="math inline">\(t_{i+1}\)</span> and so on) to be affected by the jump. Incidentally, <span class="math inline">\(K=270\)</span> is introduced in another paper as a recommended value for returns in 5-minute increments.</p>
+<p>Let’s move on to how the Jump statistic calculated in this way can be used in a statistical test to detect a Jump. This is done by considering the maximum value of <span class="math inline">\(\mathcal{L(i)}\)</span>, and when a value deviates greatly from its distribution (such as the 95th percentile), the return is considered to be a Jump.</p>
+<p>If we assume that there is no Jump in period <span class="math inline">\([t_{i-1},t_i]\)</span>, then let the length of this period <span class="math inline">\(\Delta=t_i-t_{i-1}\)</span>
+close to 0, that is, <span class="math inline">\(\Delta\rightarrow 0\)</span>, the (absolute) maximum of the standard normal variable converges to the Gumbel distribution. Therefore, Jump can be detected if the null hypothesis is rejected when the following conditions are met.</p>
 <p><span class="math display">\[
 \mathcal{L(i)} &gt; G^{-1}(1-\alpha)S_{n} + C_{n} \tag{5}
 \]</span></p>
@@ -950,7 +951,7 @@ DataFrame Rolling_r_cpp(
 <p>If you compile the program with <code>Rcpp::sourceCpp</code>, the function of <code>R</code> can be executed as follows.</p>
 <pre class="r"><code>system.time(results &lt;- Rolling_r_cpp(JPYUSD,from))</code></pre>
 <pre><code>##    ユーザ   システム       経過  
-##       0.02       0.00       0.02</code></pre>
+##       0.07       0.00       0.06</code></pre>
 <p>It takes less than a second to process 12 million records. So Convenient!!</p>
 <pre class="r"><code>summary(results)</code></pre>
 <pre><code>##       from                           r         
@@ -1060,7 +1061,7 @@ DataFrame Rolling_rbv_cpp(
 <p>Now, compile it and run it with <code>R</code>.</p>
 <pre class="r"><code>system.time(results &lt;- results %&gt;% Rolling_rbv_cpp(na_remove = FALSE))</code></pre>
 <pre><code>##    ユーザ   システム       経過  
-##       0.24       0.09       0.33</code></pre>
+##       0.76       0.35       1.16</code></pre>
 <p>So fast!</p>
 </div>
 <div id="calculating-jump-statistics" class="section level2">
@@ -1123,12 +1124,12 @@ results %&gt;%
 <pre><code>## Warning: Removed 36 row(s) containing missing values (geom_path).
 
 ## Warning: Removed 36 row(s) containing missing values (geom_path).</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
+<p><img src="../../../en/post/post21/index_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
 <p>I’ve spent quite a bit of time writing this, and it’s 23:37 right now, so I’ll refrain from discussing it in depth, but since the earthquake occurred at 14:46:18, you can see that the market reacted to the weakening of the yen immediately after the disaster. After that, for some reason, the yen moved higher and peaked at 19:00. It is said that the yen is a safe asset, but this is the only time it is not safe given the heightened uncertainty.</p>
 </div>
 <div id="summary" class="section level2">
 <h2>5. Summary</h2>
-<p>I introduced the use of <code>Rcpp</code> to improve the efficiency of <code>R</code> analysis. The <code>C++</code> is much faster than <code>R</code> even if you write the code honestly, so it is hard to make coding mistakes. The <code>C++</code> is much faster than <code>R</code> even if you write the code in a simple way. Also, even if a compile error occurs, RStudio gives you a clue as to where the compile error is occurring, so there is no stress in that respect either, which is why I recommend it.</p>
+<p>I introduced the use of <code>Rcpp</code> to improve the efficiency of <code>R</code> analysis. The <code>C++</code> is much faster than <code>R</code> even if you write the code in a simple way, so it is hard to make coding mistakes. Also, even if a compile error occurs, RStudio gives you a clue as to where the compile error is occurring, so there is no stress in that respect either, which is why I recommend it.</p>
 </div>
 <div class="footnotes">
 <hr />

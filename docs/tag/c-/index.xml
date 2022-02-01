@@ -18,7 +18,7 @@
       <pubDate>Thu, 10 Sep 2020 00:00:00 +0000</pubDate>
       <guid>/post/post21/</guid>
       <description>
-&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+&lt;script src=&#34;../../post/post21/index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
 
 
 &lt;div id=&#34;やりたいこと&#34; class=&#34;section level2&#34;&gt;
@@ -26,21 +26,39 @@
 &lt;p&gt;今回お見せするのは前述の通り、為替のTickデータを使った前処理(と解析)になります。主眼を&lt;code&gt;Rcpp&lt;/code&gt;を用いた効率化に置いていますので詳しくは踏み入りませんが、やりたいことをざっくりと先に示しておきます。&lt;br /&gt;
 やりたいのは、JPY/USDレートの5分刻みリターンから&lt;em&gt;Jump&lt;/em&gt;を検知することです。ここでのJumpとはそれまでと比べて為替レートがガクッと上昇(下落)した点です。日中為替レートは小刻みに動きますが、なにかイベントがあると大きく上昇(下落)します。どんなイベントがJumpを引き起こすのかは非常に興味深い点です。これを検証するにはまずJumpを検知する必要があるのです。 参考とするのは以下の論文です。&lt;/p&gt;
 &lt;p&gt;&lt;a href=&#34;https://academic.oup.com/rfs/article-abstract/21/6/2535/1574138?redirectedFrom=fulltext&#34;&gt;Suzanne S. Lee &amp;amp; Per A. Mykland, 2008. “Jumps in Financial Markets: A New Nonparametric Test and Jump Dynamics,” Review of Financial Studies, Society for Financial Studies, vol. 21(6), pages 2535-2563, November.&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;Citationが204もある非常に評価されている論文です。推定方法を掻い摘んで説明します。まず、連続複利リターンを&lt;span class=&#34;math inline&#34;&gt;\(d\log S(t)\)&lt;/span&gt; for &lt;span class=&#34;math inline&#34;&gt;\(t&amp;gt;0\)&lt;/span&gt;とします。ここで、&lt;span class=&#34;math inline&#34;&gt;\(S(t)\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(t\)&lt;/span&gt;時点での資産価格です。市場にJumpがない場合、&lt;span class=&#34;math inline&#34;&gt;\(S(t)\)&lt;/span&gt;は以下の確率過程に従うと仮定します。 &lt;span class=&#34;math display&#34;&gt;\[
+&lt;p&gt;Citationが204もある非常に評価されている論文です。推定方法を掻い摘んで説明します。まず、連続複利リターンを&lt;span class=&#34;math inline&#34;&gt;\(d\log S(t)\)&lt;/span&gt; for &lt;span class=&#34;math inline&#34;&gt;\(t&amp;gt;0\)&lt;/span&gt;とします。ここで、&lt;span class=&#34;math inline&#34;&gt;\(S(t)\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(t\)&lt;/span&gt;時点での資産価格です。市場にJumpがない場合、&lt;span class=&#34;math inline&#34;&gt;\(S(t)\)&lt;/span&gt;は以下の確率過程に従うと仮定します。
+&lt;span class=&#34;math display&#34;&gt;\[
 d\log S(t) = \mu(t)dt + \sigma(t)dW(t) \tag{1}
-\]&lt;/span&gt; ここで、&lt;span class=&#34;math inline&#34;&gt;\(W(t)\)&lt;/span&gt;は標準ブラウン運動、&lt;span class=&#34;math inline&#34;&gt;\(\mu(t)\)&lt;/span&gt;はドリフト項、&lt;span class=&#34;math inline&#34;&gt;\(\sigma(t)\)&lt;/span&gt;はスポットボラティリティです。また、Jumpがあるとき、&lt;span class=&#34;math inline&#34;&gt;\(S(t)\)&lt;/span&gt;は &lt;span class=&#34;math display&#34;&gt;\[
+\]&lt;/span&gt;
+ここで、&lt;span class=&#34;math inline&#34;&gt;\(W(t)\)&lt;/span&gt;は標準ブラウン運動、&lt;span class=&#34;math inline&#34;&gt;\(\mu(t)\)&lt;/span&gt;はドリフト項、&lt;span class=&#34;math inline&#34;&gt;\(\sigma(t)\)&lt;/span&gt;はスポットボラティリティです。また、Jumpがあるとき、&lt;span class=&#34;math inline&#34;&gt;\(S(t)\)&lt;/span&gt;は
+&lt;span class=&#34;math display&#34;&gt;\[
 d\log S(t) = \mu(t)dt + \sigma(t)dW(t) + Y(t)dJ(t) \tag{2}
-\]&lt;/span&gt; に従うと仮定します。ここで、&lt;span class=&#34;math inline&#34;&gt;\(J(t)\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(W(t)\)&lt;/span&gt;とは独立したカウント過程です。&lt;a href=&#34;#fn1&#34; class=&#34;footnote-ref&#34; id=&#34;fnref1&#34;&gt;&lt;sup&gt;1&lt;/sup&gt;&lt;/a&gt;&lt;span class=&#34;math inline&#34;&gt;\(Y(t)\)&lt;/span&gt;はジャンプのサイズを表現しており、予測可能な過程であるとします。&lt;/p&gt;
+\]&lt;/span&gt;
+に従うと仮定します。ここで、&lt;span class=&#34;math inline&#34;&gt;\(J(t)\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(W(t)\)&lt;/span&gt;とは独立したカウント過程です。&lt;a href=&#34;#fn1&#34; class=&#34;footnote-ref&#34; id=&#34;fnref1&#34;&gt;&lt;sup&gt;1&lt;/sup&gt;&lt;/a&gt;&lt;span class=&#34;math inline&#34;&gt;\(Y(t)\)&lt;/span&gt;はジャンプのサイズを表現しており、予測可能な過程であるとします。&lt;/p&gt;
 &lt;p&gt;次に、&lt;span class=&#34;math inline&#34;&gt;\(S(t)\)&lt;/span&gt;の対数リターンを考えます。それはつまり&lt;span class=&#34;math inline&#34;&gt;\(\log S(t_i)/S(t_{i-1})\)&lt;/span&gt;ですが、これは正規分布&lt;span class=&#34;math inline&#34;&gt;\(N(0,\sigma(t_i))\)&lt;/span&gt;に従います。&lt;a href=&#34;#fn2&#34; class=&#34;footnote-ref&#34; id=&#34;fnref2&#34;&gt;&lt;sup&gt;2&lt;/sup&gt;&lt;/a&gt;ここで、&lt;span class=&#34;math inline&#34;&gt;\(t_{i-1}\)&lt;/span&gt;から&lt;span class=&#34;math inline&#34;&gt;\(t_{i}\)&lt;/span&gt;にJumpがあった際の&lt;span class=&#34;math inline&#34;&gt;\(t_i\)&lt;/span&gt;時点の統計量&lt;span class=&#34;math inline&#34;&gt;\(\mathcal{L(i)}\)&lt;/span&gt;を以下で定義します。&lt;/p&gt;
-&lt;p&gt;こうして計算されたJump統計量&lt;span class=&#34;math inline&#34;&gt;\(\mathcal{L(i)}\)&lt;/span&gt;をどのように統計的検定に用いてJumpを検出するかに話を移しましょう。これは確率変数である&lt;span class=&#34;math inline&#34;&gt;\(\mathcal{L(i)}\)&lt;/span&gt;の最大値(こちらも確率変数)を考え、その分布から大きく逸脱した値を取った場合(95%点とか)、そのリターンをJumpとします。&lt;br /&gt;
-期間&lt;span class=&#34;math inline&#34;&gt;\([t_{i-1},t_{i}]\)&lt;/span&gt;にJumpがないとした場合、この期間の長さ&lt;span class=&#34;math inline&#34;&gt;\(\Delta=t_{i}-t_{i-1}\)&lt;/span&gt;を&lt;span class=&#34;math inline&#34;&gt;\(0\)&lt;/span&gt;に近づけると、つまり&lt;span class=&#34;math inline&#34;&gt;\(\Delta\rightarrow0\)&lt;/span&gt;とすると、標準正規変数の絶対値の標本最大値は、ガンベル分布に収束します。皆さん大好き極値統計ですね。よって、Jumpは以下の条件が満たされた際に帰無仮説が棄却され、検出することができます。 &lt;span class=&#34;math display&#34;&gt;\[
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+    \mathcal{L(i)} \equiv \frac{|\log S(t_i)/S(t_{i-1})|}{\hat{\sigma}_{t_i}} \tag{3}
+\]&lt;/span&gt;
+上記は対数リターンの絶対値を単純に標準化したものですが、標準偏差の推定量には以下で定義される”Realized Bipower Variation”を使用しています。
+&lt;span class=&#34;math display&#34;&gt;\[
+    \hat{\sigma}_{t_i} = \frac{1}{K-2}\sum_{j=i-K+2}^{i-2}|\log S(t_j)/\log S(t_{j-1})||\log S(t_{j-1})/\log S(t_{j-2})| \tag{4}
+\]&lt;/span&gt;
+&lt;span class=&#34;math inline&#34;&gt;\(K\)&lt;/span&gt;はWindowに含まれるサンプルサイズの数です。仮に5min刻みリターンを用い、2020/9/10 10:00にJumpが発生した場合、&lt;span class=&#34;math inline&#34;&gt;\(K=270\)&lt;/span&gt;としている場合は前日2020/9/9 11:30から2020/9/11 09:55までのサンプルを用いて計算することになります。やっていることは、リターンの絶対値をかけたものを足し合わせるということですが、これでJumpが生じた次の瞬間(つまり&lt;span class=&#34;math inline&#34;&gt;\(t_{i+1}\)&lt;/span&gt;とか）の推定値がJumpに影響されにくいようです。ちなみに&lt;span class=&#34;math inline&#34;&gt;\(K=270\)&lt;/span&gt;は5min刻みリターンの場合の推奨値と別の文献で紹介されています。&lt;/p&gt;
+&lt;p&gt;こうして計算されたJump統計量&lt;span class=&#34;math inline&#34;&gt;\(\mathcal{L(i)}\)&lt;/span&gt;をどのように統計的検定に用いてJumpを検出するかに話を移しましょう。これは確率変数である&lt;span class=&#34;math inline&#34;&gt;\(\mathcal{L(i)}\)&lt;/span&gt;の最大値(こちらも確率変数)を考え、その分布から大きく逸脱した値を取った場合(95%点とか)、そのリターンをJumpとします。
+期間&lt;span class=&#34;math inline&#34;&gt;\([t_{i-1},t_{i}]\)&lt;/span&gt;にJumpがないとした場合、この期間の長さ&lt;span class=&#34;math inline&#34;&gt;\(\Delta=t_{i}-t_{i-1}\)&lt;/span&gt;を&lt;span class=&#34;math inline&#34;&gt;\(0\)&lt;/span&gt;に近づけると、つまり&lt;span class=&#34;math inline&#34;&gt;\(\Delta\rightarrow0\)&lt;/span&gt;とすると、標準正規変数の絶対値の最大値は、ガンベル分布に収束します。皆さん大好き極値統計ですね。よって、Jumpは以下の条件が満たされた際に帰無仮説が棄却され、検出することができます。
+&lt;span class=&#34;math display&#34;&gt;\[
 \mathcal{L(i)} &amp;gt; G^{-1}(1-\alpha)S_{n} + C_{n} \tag{5}
-\]&lt;/span&gt; ここで、&lt;span class=&#34;math inline&#34;&gt;\(G^{-1}(1-\alpha)\)&lt;/span&gt;は標準ガンベル分布の&lt;span class=&#34;math inline&#34;&gt;\((1-\alpha)\)&lt;/span&gt;分位関数です。&lt;span class=&#34;math inline&#34;&gt;\(\alpha=10%\)&lt;/span&gt;だと2.25になります。また、 &lt;span class=&#34;math display&#34;&gt;\[
+\]&lt;/span&gt;
+ここで、&lt;span class=&#34;math inline&#34;&gt;\(G^{-1}(1-\alpha)\)&lt;/span&gt;は標準ガンベル分布の&lt;span class=&#34;math inline&#34;&gt;\((1-\alpha)\)&lt;/span&gt;分位関数です。&lt;span class=&#34;math inline&#34;&gt;\(\alpha=10%\)&lt;/span&gt;だと2.25になります。また、
+&lt;span class=&#34;math display&#34;&gt;\[
 S_{n} = \frac{1}{c(2\log n)^{0.5}} \\
 C_{n} = \frac{(2\log n)^{0.5}}{c}-\frac{\log \pi+\log(\log n)}{2c(2\log n)^{0.5}}
-\]&lt;/span&gt; です(導出はしませんが、1式と2式を使って証明できます)。ここで、&lt;span class=&#34;math inline&#34;&gt;\(c=(2/\pi)^{0.5}\)&lt;/span&gt;で、&lt;span class=&#34;math inline&#34;&gt;\(n\)&lt;/span&gt;は推定に使用する総サンプルサイズです。 最終的に、&lt;span class=&#34;math inline&#34;&gt;\(Jump_{t_i}\)&lt;/span&gt;は &lt;span class=&#34;math display&#34;&gt;\[
+\]&lt;/span&gt;
+です(導出はしませんが、1式と2式を使って証明できます)。ここで、&lt;span class=&#34;math inline&#34;&gt;\(c=(2/\pi)^{0.5}\)&lt;/span&gt;で、&lt;span class=&#34;math inline&#34;&gt;\(n\)&lt;/span&gt;は推定に使用する総サンプルサイズです。 最終的に、&lt;span class=&#34;math inline&#34;&gt;\(Jump_{t_i}\)&lt;/span&gt;は
+&lt;span class=&#34;math display&#34;&gt;\[
 Jump_{t_i} = \log\frac{S(t_i)}{S(t_{i-1})}×I(\mathcal{L(i)} - G^{-1}(1-\alpha)S_{n} + C_{n})\tag{6}
-\]&lt;/span&gt; で求められることになります。ここで、&lt;span class=&#34;math inline&#34;&gt;\(I(・)\)&lt;/span&gt;は中身が0より大きいと1、それ以外は0を返すIndicator関数です。&lt;/p&gt;
+\]&lt;/span&gt;
+で求められることになります。ここで、&lt;span class=&#34;math inline&#34;&gt;\(I(・)\)&lt;/span&gt;は中身が0より大きいと1、それ以外は0を返すIndicator関数です。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div id=&#34;データの読み込み&#34; class=&#34;section level2&#34;&gt;
 &lt;h2&gt;1. データの読み込み&lt;/h2&gt;
@@ -171,7 +189,7 @@ DataFrame Rolling_r_cpp(
 &lt;p&gt;&lt;code&gt;Rcpp::sourceCpp&lt;/code&gt;でコンパイルしたら、以下のように&lt;code&gt;R&lt;/code&gt;の関数として実行します。&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;system.time(results &amp;lt;- Rolling_r_cpp(JPYUSD,from))&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;##    ユーザ   システム       経過  
-##       0.01       0.00       0.01&lt;/code&gt;&lt;/pre&gt;
+##       0.05       0.00       0.04&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;はい。1200万件のデータの処理に1秒かかりません。便利ー。&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;summary(results)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;##       from                           r         
@@ -281,7 +299,7 @@ DataFrame Rolling_rbv_cpp(
 &lt;p&gt;では、これもコンパイルし、&lt;code&gt;R&lt;/code&gt;で実行します。&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;system.time(results &amp;lt;- results %&amp;gt;% Rolling_rbv_cpp(na_remove = FALSE))&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;##    ユーザ   システム       経過  
-##       0.22       0.10       0.33&lt;/code&gt;&lt;/pre&gt;
+##       1.40       0.45       1.89&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;こちらも一瞬ですね。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div id=&#34;jump統計量の計算&#34; class=&#34;section level2&#34;&gt;
@@ -344,7 +362,7 @@ results %&amp;gt;%
 &lt;pre&gt;&lt;code&gt;## Warning: Removed 36 row(s) containing missing values (geom_path).
 
 ## Warning: Removed 36 row(s) containing missing values (geom_path).&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-16-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;../../post/post21/index_files/figure-html/unnamed-chunk-16-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
 &lt;p&gt;ここまで執筆するのに結構時間使っていて、今23:37なんで深い考察は控えますが、震災が発生したのが14:46:18ですから市場は震災直後即座に円安に反応したことが分かります。その後なぜか円高方向へ進み19:00にはピークになっています。安全資産の円とか言われますが、この時ばかりは不確実性の高まりからして安全じゃないだろと思いますが。。。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div id=&#34;まとめ&#34; class=&#34;section level2&#34;&gt;
@@ -355,11 +373,7 @@ results %&amp;gt;%
 &lt;hr /&gt;
 &lt;ol&gt;
 &lt;li id=&#34;fn1&#34;&gt;&lt;p&gt;非負、整数、非減少の値を持つ確率過程のこと。&lt;a href=&#34;#fnref1&#34; class=&#34;footnote-back&#34;&gt;↩︎&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
-&lt;li id=&#34;fn2&#34;&gt;&lt;p&gt;平均はドリフト項の形状により必ずしも0にはなりませんが、今ドリフト項は十分小さい値を想定しているのでこの書き方にさせてください。論文ではより厳密に定義しています。 &lt;span class=&#34;math display&#34;&gt;\[
-\mathcal{L(i)} \equiv \frac{|\log S(t_i)/S(t_{i-1})|}{\hat{\sigma}_{t_i}} \tag{3}
-\]&lt;/span&gt; 対数リターンの絶対値を単純に標準化したものですが、標準偏差の推定量には以下で定義される“Realized Bipower Variation”を使用しています。 &lt;span class=&#34;math display&#34;&gt;\[
-\hat{\sigma}_{t_i} = \frac{1}{K-2}\sum_{j=i-K+2}^{i-2}|\log S(t_j)/\log S(t_{j-1})||\log S(t_{j-1})/\log S(t_{j-2})| \tag{4}
-\]&lt;/span&gt; &lt;span class=&#34;math inline&#34;&gt;\(K\)&lt;/span&gt;はWindowに含まれるサンプルサイズの数です。仮に5min刻みリターンを用い、2020/9/10 10:00にJumpが発生した場合、&lt;span class=&#34;math inline&#34;&gt;\(K=270\)&lt;/span&gt;としている場合は前日2020/9/9 11:30から2020/9/11 09:55までのサンプルを用いて計算することになります。やっていることは、リターンの絶対値をかけたものを足し合わせるということですが、これでJumpが生じた次の瞬間(つまり&lt;span class=&#34;math inline&#34;&gt;\(t_{i+1}\)&lt;/span&gt;とか）の推定値がJumpに影響されにくいようです。ちなみに&lt;span class=&#34;math inline&#34;&gt;\(K=270\)&lt;/span&gt;は5min刻みリターンの場合の推奨値と別の文献で紹介されています。&lt;a href=&#34;#fnref2&#34; class=&#34;footnote-back&#34;&gt;↩︎&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;li id=&#34;fn2&#34;&gt;&lt;p&gt;平均はドリフト項の形状により必ずしも0にはなりませんが、今ドリフト項は十分小さい値を想定しているのでこの書き方にさせてください。論文ではより厳密に定義しています。&lt;a href=&#34;#fnref2&#34; class=&#34;footnote-back&#34;&gt;↩︎&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
 &lt;/ol&gt;
 &lt;/div&gt;
 </description>

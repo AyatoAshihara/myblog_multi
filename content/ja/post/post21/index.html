@@ -21,7 +21,7 @@ output:
     keep_md: true
 ---
 
-<script src="index_files/header-attrs/header-attrs.js"></script>
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
 
 
 <div id="やりたいこと" class="section level2">
@@ -29,21 +29,39 @@ output:
 <p>今回お見せするのは前述の通り、為替のTickデータを使った前処理(と解析)になります。主眼を<code>Rcpp</code>を用いた効率化に置いていますので詳しくは踏み入りませんが、やりたいことをざっくりと先に示しておきます。<br />
 やりたいのは、JPY/USDレートの5分刻みリターンから<em>Jump</em>を検知することです。ここでのJumpとはそれまでと比べて為替レートがガクッと上昇(下落)した点です。日中為替レートは小刻みに動きますが、なにかイベントがあると大きく上昇(下落)します。どんなイベントがJumpを引き起こすのかは非常に興味深い点です。これを検証するにはまずJumpを検知する必要があるのです。 参考とするのは以下の論文です。</p>
 <p><a href="https://academic.oup.com/rfs/article-abstract/21/6/2535/1574138?redirectedFrom=fulltext">Suzanne S. Lee &amp; Per A. Mykland, 2008. “Jumps in Financial Markets: A New Nonparametric Test and Jump Dynamics,” Review of Financial Studies, Society for Financial Studies, vol. 21(6), pages 2535-2563, November.</a></p>
-<p>Citationが204もある非常に評価されている論文です。推定方法を掻い摘んで説明します。まず、連続複利リターンを<span class="math inline">\(d\log S(t)\)</span> for <span class="math inline">\(t&gt;0\)</span>とします。ここで、<span class="math inline">\(S(t)\)</span>は<span class="math inline">\(t\)</span>時点での資産価格です。市場にJumpがない場合、<span class="math inline">\(S(t)\)</span>は以下の確率過程に従うと仮定します。 <span class="math display">\[
+<p>Citationが204もある非常に評価されている論文です。推定方法を掻い摘んで説明します。まず、連続複利リターンを<span class="math inline">\(d\log S(t)\)</span> for <span class="math inline">\(t&gt;0\)</span>とします。ここで、<span class="math inline">\(S(t)\)</span>は<span class="math inline">\(t\)</span>時点での資産価格です。市場にJumpがない場合、<span class="math inline">\(S(t)\)</span>は以下の確率過程に従うと仮定します。
+<span class="math display">\[
 d\log S(t) = \mu(t)dt + \sigma(t)dW(t) \tag{1}
-\]</span> ここで、<span class="math inline">\(W(t)\)</span>は標準ブラウン運動、<span class="math inline">\(\mu(t)\)</span>はドリフト項、<span class="math inline">\(\sigma(t)\)</span>はスポットボラティリティです。また、Jumpがあるとき、<span class="math inline">\(S(t)\)</span>は <span class="math display">\[
+\]</span>
+ここで、<span class="math inline">\(W(t)\)</span>は標準ブラウン運動、<span class="math inline">\(\mu(t)\)</span>はドリフト項、<span class="math inline">\(\sigma(t)\)</span>はスポットボラティリティです。また、Jumpがあるとき、<span class="math inline">\(S(t)\)</span>は
+<span class="math display">\[
 d\log S(t) = \mu(t)dt + \sigma(t)dW(t) + Y(t)dJ(t) \tag{2}
-\]</span> に従うと仮定します。ここで、<span class="math inline">\(J(t)\)</span>は<span class="math inline">\(W(t)\)</span>とは独立したカウント過程です。<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a><span class="math inline">\(Y(t)\)</span>はジャンプのサイズを表現しており、予測可能な過程であるとします。</p>
+\]</span>
+に従うと仮定します。ここで、<span class="math inline">\(J(t)\)</span>は<span class="math inline">\(W(t)\)</span>とは独立したカウント過程です。<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a><span class="math inline">\(Y(t)\)</span>はジャンプのサイズを表現しており、予測可能な過程であるとします。</p>
 <p>次に、<span class="math inline">\(S(t)\)</span>の対数リターンを考えます。それはつまり<span class="math inline">\(\log S(t_i)/S(t_{i-1})\)</span>ですが、これは正規分布<span class="math inline">\(N(0,\sigma(t_i))\)</span>に従います。<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>ここで、<span class="math inline">\(t_{i-1}\)</span>から<span class="math inline">\(t_{i}\)</span>にJumpがあった際の<span class="math inline">\(t_i\)</span>時点の統計量<span class="math inline">\(\mathcal{L(i)}\)</span>を以下で定義します。</p>
-<p>こうして計算されたJump統計量<span class="math inline">\(\mathcal{L(i)}\)</span>をどのように統計的検定に用いてJumpを検出するかに話を移しましょう。これは確率変数である<span class="math inline">\(\mathcal{L(i)}\)</span>の最大値(こちらも確率変数)を考え、その分布から大きく逸脱した値を取った場合(95%点とか)、そのリターンをJumpとします。<br />
-期間<span class="math inline">\([t_{i-1},t_{i}]\)</span>にJumpがないとした場合、この期間の長さ<span class="math inline">\(\Delta=t_{i}-t_{i-1}\)</span>を<span class="math inline">\(0\)</span>に近づけると、つまり<span class="math inline">\(\Delta\rightarrow0\)</span>とすると、標準正規変数の絶対値の標本最大値は、ガンベル分布に収束します。皆さん大好き極値統計ですね。よって、Jumpは以下の条件が満たされた際に帰無仮説が棄却され、検出することができます。 <span class="math display">\[
+<p><span class="math display">\[
+    \mathcal{L(i)} \equiv \frac{|\log S(t_i)/S(t_{i-1})|}{\hat{\sigma}_{t_i}} \tag{3}
+\]</span>
+上記は対数リターンの絶対値を単純に標準化したものですが、標準偏差の推定量には以下で定義される”Realized Bipower Variation”を使用しています。
+<span class="math display">\[
+    \hat{\sigma}_{t_i} = \frac{1}{K-2}\sum_{j=i-K+2}^{i-2}|\log S(t_j)/\log S(t_{j-1})||\log S(t_{j-1})/\log S(t_{j-2})| \tag{4}
+\]</span>
+<span class="math inline">\(K\)</span>はWindowに含まれるサンプルサイズの数です。仮に5min刻みリターンを用い、2020/9/10 10:00にJumpが発生した場合、<span class="math inline">\(K=270\)</span>としている場合は前日2020/9/9 11:30から2020/9/11 09:55までのサンプルを用いて計算することになります。やっていることは、リターンの絶対値をかけたものを足し合わせるということですが、これでJumpが生じた次の瞬間(つまり<span class="math inline">\(t_{i+1}\)</span>とか）の推定値がJumpに影響されにくいようです。ちなみに<span class="math inline">\(K=270\)</span>は5min刻みリターンの場合の推奨値と別の文献で紹介されています。</p>
+<p>こうして計算されたJump統計量<span class="math inline">\(\mathcal{L(i)}\)</span>をどのように統計的検定に用いてJumpを検出するかに話を移しましょう。これは確率変数である<span class="math inline">\(\mathcal{L(i)}\)</span>の最大値(こちらも確率変数)を考え、その分布から大きく逸脱した値を取った場合(95%点とか)、そのリターンをJumpとします。
+期間<span class="math inline">\([t_{i-1},t_{i}]\)</span>にJumpがないとした場合、この期間の長さ<span class="math inline">\(\Delta=t_{i}-t_{i-1}\)</span>を<span class="math inline">\(0\)</span>に近づけると、つまり<span class="math inline">\(\Delta\rightarrow0\)</span>とすると、標準正規変数の絶対値の最大値は、ガンベル分布に収束します。皆さん大好き極値統計ですね。よって、Jumpは以下の条件が満たされた際に帰無仮説が棄却され、検出することができます。
+<span class="math display">\[
 \mathcal{L(i)} &gt; G^{-1}(1-\alpha)S_{n} + C_{n} \tag{5}
-\]</span> ここで、<span class="math inline">\(G^{-1}(1-\alpha)\)</span>は標準ガンベル分布の<span class="math inline">\((1-\alpha)\)</span>分位関数です。<span class="math inline">\(\alpha=10%\)</span>だと2.25になります。また、 <span class="math display">\[
+\]</span>
+ここで、<span class="math inline">\(G^{-1}(1-\alpha)\)</span>は標準ガンベル分布の<span class="math inline">\((1-\alpha)\)</span>分位関数です。<span class="math inline">\(\alpha=10%\)</span>だと2.25になります。また、
+<span class="math display">\[
 S_{n} = \frac{1}{c(2\log n)^{0.5}} \\
 C_{n} = \frac{(2\log n)^{0.5}}{c}-\frac{\log \pi+\log(\log n)}{2c(2\log n)^{0.5}}
-\]</span> です(導出はしませんが、1式と2式を使って証明できます)。ここで、<span class="math inline">\(c=(2/\pi)^{0.5}\)</span>で、<span class="math inline">\(n\)</span>は推定に使用する総サンプルサイズです。 最終的に、<span class="math inline">\(Jump_{t_i}\)</span>は <span class="math display">\[
+\]</span>
+です(導出はしませんが、1式と2式を使って証明できます)。ここで、<span class="math inline">\(c=(2/\pi)^{0.5}\)</span>で、<span class="math inline">\(n\)</span>は推定に使用する総サンプルサイズです。 最終的に、<span class="math inline">\(Jump_{t_i}\)</span>は
+<span class="math display">\[
 Jump_{t_i} = \log\frac{S(t_i)}{S(t_{i-1})}×I(\mathcal{L(i)} - G^{-1}(1-\alpha)S_{n} + C_{n})\tag{6}
-\]</span> で求められることになります。ここで、<span class="math inline">\(I(・)\)</span>は中身が0より大きいと1、それ以外は0を返すIndicator関数です。</p>
+\]</span>
+で求められることになります。ここで、<span class="math inline">\(I(・)\)</span>は中身が0より大きいと1、それ以外は0を返すIndicator関数です。</p>
 </div>
 <div id="データの読み込み" class="section level2">
 <h2>1. データの読み込み</h2>
@@ -174,7 +192,7 @@ DataFrame Rolling_r_cpp(
 <p><code>Rcpp::sourceCpp</code>でコンパイルしたら、以下のように<code>R</code>の関数として実行します。</p>
 <pre class="r"><code>system.time(results &lt;- Rolling_r_cpp(JPYUSD,from))</code></pre>
 <pre><code>##    ユーザ   システム       経過  
-##       0.01       0.00       0.01</code></pre>
+##       0.05       0.00       0.04</code></pre>
 <p>はい。1200万件のデータの処理に1秒かかりません。便利ー。</p>
 <pre class="r"><code>summary(results)</code></pre>
 <pre><code>##       from                           r         
@@ -284,7 +302,7 @@ DataFrame Rolling_rbv_cpp(
 <p>では、これもコンパイルし、<code>R</code>で実行します。</p>
 <pre class="r"><code>system.time(results &lt;- results %&gt;% Rolling_rbv_cpp(na_remove = FALSE))</code></pre>
 <pre><code>##    ユーザ   システム       経過  
-##       0.22       0.10       0.33</code></pre>
+##       1.40       0.45       1.89</code></pre>
 <p>こちらも一瞬ですね。</p>
 </div>
 <div id="jump統計量の計算" class="section level2">
@@ -347,7 +365,7 @@ results %&gt;%
 <pre><code>## Warning: Removed 36 row(s) containing missing values (geom_path).
 
 ## Warning: Removed 36 row(s) containing missing values (geom_path).</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
 <p>ここまで執筆するのに結構時間使っていて、今23:37なんで深い考察は控えますが、震災が発生したのが14:46:18ですから市場は震災直後即座に円安に反応したことが分かります。その後なぜか円高方向へ進み19:00にはピークになっています。安全資産の円とか言われますが、この時ばかりは不確実性の高まりからして安全じゃないだろと思いますが。。。</p>
 </div>
 <div id="まとめ" class="section level2">
@@ -358,10 +376,6 @@ results %&gt;%
 <hr />
 <ol>
 <li id="fn1"><p>非負、整数、非減少の値を持つ確率過程のこと。<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
-<li id="fn2"><p>平均はドリフト項の形状により必ずしも0にはなりませんが、今ドリフト項は十分小さい値を想定しているのでこの書き方にさせてください。論文ではより厳密に定義しています。 <span class="math display">\[
-\mathcal{L(i)} \equiv \frac{|\log S(t_i)/S(t_{i-1})|}{\hat{\sigma}_{t_i}} \tag{3}
-\]</span> 対数リターンの絶対値を単純に標準化したものですが、標準偏差の推定量には以下で定義される“Realized Bipower Variation”を使用しています。 <span class="math display">\[
-\hat{\sigma}_{t_i} = \frac{1}{K-2}\sum_{j=i-K+2}^{i-2}|\log S(t_j)/\log S(t_{j-1})||\log S(t_{j-1})/\log S(t_{j-2})| \tag{4}
-\]</span> <span class="math inline">\(K\)</span>はWindowに含まれるサンプルサイズの数です。仮に5min刻みリターンを用い、2020/9/10 10:00にJumpが発生した場合、<span class="math inline">\(K=270\)</span>としている場合は前日2020/9/9 11:30から2020/9/11 09:55までのサンプルを用いて計算することになります。やっていることは、リターンの絶対値をかけたものを足し合わせるということですが、これでJumpが生じた次の瞬間(つまり<span class="math inline">\(t_{i+1}\)</span>とか）の推定値がJumpに影響されにくいようです。ちなみに<span class="math inline">\(K=270\)</span>は5min刻みリターンの場合の推奨値と別の文献で紹介されています。<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>平均はドリフト項の形状により必ずしも0にはなりませんが、今ドリフト項は十分小さい値を想定しているのでこの書き方にさせてください。論文ではより厳密に定義しています。<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
 </ol>
 </div>
