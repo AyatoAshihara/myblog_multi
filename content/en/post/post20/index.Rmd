@@ -21,7 +21,7 @@ output:
     toc: true
 ---
 
-Hi. In the last post, I built a model to predict the order of a racehorse using CNN based on its body image. The results were not so good, and we needed to refine our analysis, especially when we analyzed the factors using `shap` values, we found that the horses responded more to the stables in the background than to their bodies. This time, I would like to re-analyze the background from the horse's body photo using `Pytorch` pre-trained model, and analyze the photo with only the horse's body.
+Hi. In the last post, I built a model to predict the order of a racehorse using CNN based on its body image. The results were not so good, and we needed to refine our analysis, especially when we analyzed the factors using `shap` values, we found that the horses responded more to the stables in the background than to their bodies. This time, I would like to use Pytorch's Pre-trained model to cut out the background from the horse photo and re-analyze the photo with only the horse body.
 
 ```{r,include=FALSE}
 library(reticulate)

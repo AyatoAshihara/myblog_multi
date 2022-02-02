@@ -27,7 +27,18 @@ date_format: 2006年1月
 experience:
 - company: とある資産運用会社
   company_url: ""
-  date_end: ""
+  date_end: "2022-02-28"
+  date_start: "2021-04-01"
+  description: |-
+    * BPR
+    * 各種運用インフラ開発・メンテナンス
+    * 規制・制度対応
+    * 運用事務リスク管理
+  location: 東京都千代田区
+  title: 正社員
+- company: とある資産運用会社
+  company_url: ""
+  date_end: "2021-03-31"
   date_start: "2020-06-01"
   description: |-
     * 予算管理

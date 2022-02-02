@@ -54,7 +54,7 @@ d\log S(t) = \mu(t)dt + \sigma(t)dW(t) + Y(t)dJ(t) \tag{2}
 \]</span>
 ここで、<span class="math inline">\(G^{-1}(1-\alpha)\)</span>は標準ガンベル分布の<span class="math inline">\((1-\alpha)\)</span>分位関数です。<span class="math inline">\(\alpha=10%\)</span>だと2.25になります。また、
 <span class="math display">\[
-S_{n} = \frac{1}{c(2\log n)^{0.5}} \\
+S_{n} = \frac{1}{c(2\log n)^{0.5}},~ \\
 C_{n} = \frac{(2\log n)^{0.5}}{c}-\frac{\log \pi+\log(\log n)}{2c(2\log n)^{0.5}}
 \]</span>
 です(導出はしませんが、1式と2式を使って証明できます)。ここで、<span class="math inline">\(c=(2/\pi)^{0.5}\)</span>で、<span class="math inline">\(n\)</span>は推定に使用する総サンプルサイズです。 最終的に、<span class="math inline">\(Jump_{t_i}\)</span>は
@@ -192,7 +192,7 @@ DataFrame Rolling_r_cpp(
 <p><code>Rcpp::sourceCpp</code>でコンパイルしたら、以下のように<code>R</code>の関数として実行します。</p>
 <pre class="r"><code>system.time(results &lt;- Rolling_r_cpp(JPYUSD,from))</code></pre>
 <pre><code>##    ユーザ   システム       経過  
-##       0.05       0.00       0.04</code></pre>
+##       0.06       0.00       0.07</code></pre>
 <p>はい。1200万件のデータの処理に1秒かかりません。便利ー。</p>
 <pre class="r"><code>summary(results)</code></pre>
 <pre><code>##       from                           r         
@@ -302,7 +302,7 @@ DataFrame Rolling_rbv_cpp(
 <p>では、これもコンパイルし、<code>R</code>で実行します。</p>
 <pre class="r"><code>system.time(results &lt;- results %&gt;% Rolling_rbv_cpp(na_remove = FALSE))</code></pre>
 <pre><code>##    ユーザ   システム       経過  
-##       1.40       0.45       1.89</code></pre>
+##       1.00       0.38       1.45</code></pre>
 <p>こちらも一瞬ですね。</p>
 </div>
 <div id="jump統計量の計算" class="section level2">

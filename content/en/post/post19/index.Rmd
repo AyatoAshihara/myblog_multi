@@ -34,21 +34,21 @@ So, when you receive a backtest with good results from a fund manager, it is ver
 
 ## 2. Backtesting overfits.
 
-[Bailey, Borwein, López de Prado and Zhu (2015)](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2308659), which shows that any financial time series can be used to backtest We argue that it is (relatively) easy to overfit (overlearn) a simulation. Here, overfitting is a machine learning concept that describes a situation in which the model focuses on specific observational data (IS data) rather than on the general structure.
+[Bailey, Borwein, López de Prado and Zhu (2015)](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2308659) argue that it is (relatively) easy to overfit (overlearn) a backtesting simulation for any financial time series. Here, overfitting is a machine learning concept that describes a situation in which a model focuses on a particular set of observed data (IS data) rather than on a general structure.
 
 Bailey et. al. (2015) cite a situation where the backtesting results of a stock strategy are not good as an example of this claim. As the name implies, backtesting uses historical data, so it is possible to identify specific stocks that are experiencing losses and design the trading system to improve performance by adding some parameters to remove recommendations for those stocks ( (a technique known as "data snooping"). With a few repetitions of the simulation, you can derive "optimal parameters" that benefit from characteristics that are present in a particular sample but may be rare in the population.
 
 There is a vast accumulation of research in the machine learning literature to address the problem of overfitting. But Bailey et. al. (2015) argue that the methods proposed in the context of machine learning are generally not applicable to multiple investment problems. The reasons for this seem to be the following four points.
 
 1. Machine learning methods to prevent overfitting require explicit point estimates and confidence intervals in the domain in which the event is defined in order to assess the explanatory power and quality of the prediction, because few investment strategies make such explicit predictions.
-    + "The E-mini S&P 500 is predicted to close around 1,600 with one standard deviation of 5 points at Friday's close," for example, but rather qualitative recommendations such as "buy" or "strong buy" are typically provided. Moreover, these forecasts do not have an explicit expiration date and are subject to change in the event of an unexpected event. On the other hand, the quantitative forecast is stated as Friday's close.
+    + For example, it is not often said that "the E-mini S&P 500 is expected to be around 1,600 at 5 points per standard deviation as of Friday's close," but rather qualitative recommendations such as "buy" or "strong buy" are usually provided. Moreover, these forecasts do not specify the expiration date of the forecast and are subject to change when some unexpected event occurs.
 
-2. even if a particular investment strategy relies on a prediction formula, other components of the investment strategy may be overfitted.
+2. Even if a particular investment strategy relies on a prediction formula, other components of the investment strategy may be overfitted.
     + In other words, there are many ways to overfit an investment strategy other than simply adjusting the prediction equation.
 
-3. because the methods of regression overfitting are parametric and involve many assumptions about data that are unobservable in the case of finance.
+3. The methods of regression overfitting are parametric and involve many assumptions about data that are unobservable in the case of finance.
 
-4. because some methods do not control for the number of trials.
+4. Some methods do not control for the number of trials.
 
 Bailey et. al. (2015) show that a **comparatively low number of trials** is needed to identify investment strategies with relatively poor backtesting performance. Think of the number of trials here as the number of trials and errors. It also calculates `the minimum backtest length` (MinBTL), which is the length of the backtest required for the number of trials. In this paper, the Sharpe ratio is always used to evaluate performance, but it can be applied to other performance measures as well. Let's take a look at what it does.
 
@@ -91,7 +91,7 @@ $$
 \sqrt{T}\hat{\mu}\sim^{a}\mathcal{N}(\mu,\sigma^2), \\
 \sqrt{T}\hat{\sigma}^2\sim^a\mathcal{N}(\sigma^2,2\sigma^4)
 $$
-ince the Sharpe ratio is a random variable which is calculated from this $\hat{\mu}$ and $\hat{\sigma}^2$, let us denote this function as $g(\hat{{\boldsymbol \theta}})$ where $\hat{{\boldsymbol \theta}}=(\hat{\mu},\hat{\sigma}^2)$. Now, since it is i.i.d., $\hat{{\boldsymbol \theta}}$ is independent of each other, and, from the above discussion, the asymptotic joint distribution is written as
+Since the Sharpe ratio is a random variable which is calculated from this $\hat{\mu}$ and $\hat{\sigma}^2$, let us denote this function as $g(\hat{{\boldsymbol \theta}})$ where $\hat{{\boldsymbol \theta}}=(\hat{\mu},\hat{\sigma}^2)$. Now, since it is i.i.d., $\hat{{\boldsymbol \theta}}$ is independent of each other, and, from the above discussion, the asymptotic joint distribution is written as
 
 $$
 \sqrt{T}\hat{{\boldsymbol \theta}} \sim^a \mathcal{N}({\boldsymbol \theta},{\boldsymbol V_{\boldsymbol \theta}})
@@ -111,12 +111,11 @@ Since the sharp ratio estimates are now only a function of $g(\hat{{\boldsymbol 
 $$
 \hat{SR} = g(\hat{{\boldsymbol \theta}}) \sim^a \mathcal{N}(g({\boldsymbol \theta}),\boldsymbol V_g)
 $$
-asymptotically follows a normal distribution. where $\boldsymbol V_g$ is
+asymptotically follows a normal distribution where $\boldsymbol V_g$ is
 
 $$
 \boldsymbol V_g=\frac{\partial g}{\partial{\boldsymbol \theta}}{\boldsymbol V_{\boldsymbol \theta}}\frac{\partial g}{\partial{\boldsymbol \theta}'}
 $$
-$g({\boldsymbol \theta})=\mu/\sigma$なので、
 Since $g({\boldsymbol \theta})=\mu/\sigma$, then
 
 $$
@@ -210,7 +209,7 @@ M_x(t) &=& \int_{\infty}^0-e^{-t\log(y)}e^{-y}dy \\
 &=& \Gamma(1-t)
 \end{eqnarray}
 $$
-where $Gamma(x)$ is a gamma function. From here, the expected value (mean) of the standardized maximum statistic is
+where $\Gamma(x)$ is a gamma function. From here, the expected value (mean) of the standardized maximum statistic is
 
 $$
 \begin{eqnarray}

@@ -27,7 +27,18 @@ date_format: 2006 Jan
 experience:
 - company: An asset management company
   company_url: ""
-  date_end: ""
+  date_end: "2022-02-28"
+  date_start: "2021-04-01"
+  description: |-
+    * BPR
+    * Development and maintenance of business infrastructures
+    * Regulatory and institutional compliance
+    * Operational Risk Management
+  location: Chiyoda Ward, Tokyo, Japan
+  title: Company employee
+- company: An asset management company
+  company_url: ""
+  date_end: "2021-03-31"
   date_start: "2020-06-01"
   description: |-
     * Budget management

@@ -73,7 +73,7 @@ $$
 where $G^{-1}(1-\alpha)$ is the $(1-\alpha)$ quantile function of the standard Gumbell distribution. If $\alpha=10%$, $G^{-1}(1-\alpha)=2.25$. Note that (We won't derive it, but we can prove it using equations 1 and 2)
 
 $$
-S_{n} = \frac{1}{c(2\log n)^{0.5}} \\
+S_{n} = \frac{1}{c(2\log n)^{0.5}},~ \\
 C_{n} = \frac{(2\log n)^{0.5}}{c}-\frac{\log \pi+\log(\log n)}{2c(2\log n)^{0.5}}
 $$ 
 
@@ -260,7 +260,7 @@ system.time(results <- Rolling_r_cpp(JPYUSD,from))
 
 ```
 ##    ユーザ   システム       経過  
-##       0.07       0.00       0.06
+##       0.04       0.02       0.07
 ```
 
 It takes less than a second to process 12 million records. So Convenient!!
@@ -391,7 +391,7 @@ system.time(results <- results %>% Rolling_rbv_cpp(na_remove = FALSE))
 
 ```
 ##    ユーザ   システム       経過  
-##       0.76       0.35       1.16
+##       1.00       0.36       1.36
 ```
 
 So fast!
