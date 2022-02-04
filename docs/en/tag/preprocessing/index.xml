@@ -241,7 +241,7 @@ close to 0, that is, &lt;span class=&#34;math inline&#34;&gt;\(\Delta\rightarrow
 \]&lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;where &lt;span class=&#34;math inline&#34;&gt;\(G^{-1}(1-\alpha)\)&lt;/span&gt; is the &lt;span class=&#34;math inline&#34;&gt;\((1-\alpha)\)&lt;/span&gt; quantile function of the standard Gumbell distribution. If &lt;span class=&#34;math inline&#34;&gt;\(\alpha=10%\)&lt;/span&gt;, &lt;span class=&#34;math inline&#34;&gt;\(G^{-1}(1-\alpha)=2.25\)&lt;/span&gt;. Note that (We won’t derive it, but we can prove it using equations 1 and 2)&lt;/p&gt;
 &lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-S_{n} = \frac{1}{c(2\log n)^{0.5}} \\
+S_{n} = \frac{1}{c(2\log n)^{0.5}},~ \\
 C_{n} = \frac{(2\log n)^{0.5}}{c}-\frac{\log \pi+\log(\log n)}{2c(2\log n)^{0.5}}
 \]&lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;where &lt;span class=&#34;math inline&#34;&gt;\(c=(2/\pi)^{0.5}\)&lt;/span&gt; and &lt;span class=&#34;math inline&#34;&gt;\(n\)&lt;/span&gt; is the total sample size used for estimation.
@@ -380,7 +380,7 @@ DataFrame Rolling_r_cpp(
 &lt;p&gt;If you compile the program with &lt;code&gt;Rcpp::sourceCpp&lt;/code&gt;, the function of &lt;code&gt;R&lt;/code&gt; can be executed as follows.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;system.time(results &amp;lt;- Rolling_r_cpp(JPYUSD,from))&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;##    ユーザ   システム       経過  
-##       0.07       0.00       0.06&lt;/code&gt;&lt;/pre&gt;
+##       0.04       0.02       0.07&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;It takes less than a second to process 12 million records. So Convenient!!&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;summary(results)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;##       from                           r         
@@ -490,7 +490,7 @@ DataFrame Rolling_rbv_cpp(
 &lt;p&gt;Now, compile it and run it with &lt;code&gt;R&lt;/code&gt;.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;system.time(results &amp;lt;- results %&amp;gt;% Rolling_rbv_cpp(na_remove = FALSE))&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;##    ユーザ   システム       経過  
-##       0.76       0.35       1.16&lt;/code&gt;&lt;/pre&gt;
+##       1.00       0.36       1.36&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;So fast!&lt;/p&gt;
 &lt;/div&gt;
 &lt;div id=&#34;calculating-jump-statistics&#34; class=&#34;section level2&#34;&gt;

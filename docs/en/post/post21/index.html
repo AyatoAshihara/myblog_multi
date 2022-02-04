@@ -812,7 +812,7 @@ close to 0, that is, <span class="math inline">\(\Delta\rightarrow 0\)</span>, t
 \]</span></p>
 <p>where <span class="math inline">\(G^{-1}(1-\alpha)\)</span> is the <span class="math inline">\((1-\alpha)\)</span> quantile function of the standard Gumbell distribution. If <span class="math inline">\(\alpha=10%\)</span>, <span class="math inline">\(G^{-1}(1-\alpha)=2.25\)</span>. Note that (We won’t derive it, but we can prove it using equations 1 and 2)</p>
 <p><span class="math display">\[
-S_{n} = \frac{1}{c(2\log n)^{0.5}} \\
+S_{n} = \frac{1}{c(2\log n)^{0.5}},~ \\
 C_{n} = \frac{(2\log n)^{0.5}}{c}-\frac{\log \pi+\log(\log n)}{2c(2\log n)^{0.5}}
 \]</span></p>
 <p>where <span class="math inline">\(c=(2/\pi)^{0.5}\)</span> and <span class="math inline">\(n\)</span> is the total sample size used for estimation.
@@ -951,7 +951,7 @@ DataFrame Rolling_r_cpp(
 <p>If you compile the program with <code>Rcpp::sourceCpp</code>, the function of <code>R</code> can be executed as follows.</p>
 <pre class="r"><code>system.time(results &lt;- Rolling_r_cpp(JPYUSD,from))</code></pre>
 <pre><code>##    ユーザ   システム       経過  
-##       0.07       0.00       0.06</code></pre>
+##       0.04       0.02       0.07</code></pre>
 <p>It takes less than a second to process 12 million records. So Convenient!!</p>
 <pre class="r"><code>summary(results)</code></pre>
 <pre><code>##       from                           r         
@@ -1061,7 +1061,7 @@ DataFrame Rolling_rbv_cpp(
 <p>Now, compile it and run it with <code>R</code>.</p>
 <pre class="r"><code>system.time(results &lt;- results %&gt;% Rolling_rbv_cpp(na_remove = FALSE))</code></pre>
 <pre><code>##    ユーザ   システム       経過  
-##       0.76       0.35       1.16</code></pre>
+##       1.00       0.36       1.36</code></pre>
 <p>So fast!</p>
 </div>
 <div id="calculating-jump-statistics" class="section level2">

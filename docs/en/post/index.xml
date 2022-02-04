@@ -241,7 +241,7 @@ close to 0, that is, &lt;span class=&#34;math inline&#34;&gt;\(\Delta\rightarrow
 \]&lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;where &lt;span class=&#34;math inline&#34;&gt;\(G^{-1}(1-\alpha)\)&lt;/span&gt; is the &lt;span class=&#34;math inline&#34;&gt;\((1-\alpha)\)&lt;/span&gt; quantile function of the standard Gumbell distribution. If &lt;span class=&#34;math inline&#34;&gt;\(\alpha=10%\)&lt;/span&gt;, &lt;span class=&#34;math inline&#34;&gt;\(G^{-1}(1-\alpha)=2.25\)&lt;/span&gt;. Note that (We won’t derive it, but we can prove it using equations 1 and 2)&lt;/p&gt;
 &lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-S_{n} = \frac{1}{c(2\log n)^{0.5}} \\
+S_{n} = \frac{1}{c(2\log n)^{0.5}},~ \\
 C_{n} = \frac{(2\log n)^{0.5}}{c}-\frac{\log \pi+\log(\log n)}{2c(2\log n)^{0.5}}
 \]&lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;where &lt;span class=&#34;math inline&#34;&gt;\(c=(2/\pi)^{0.5}\)&lt;/span&gt; and &lt;span class=&#34;math inline&#34;&gt;\(n\)&lt;/span&gt; is the total sample size used for estimation.
@@ -380,7 +380,7 @@ DataFrame Rolling_r_cpp(
 &lt;p&gt;If you compile the program with &lt;code&gt;Rcpp::sourceCpp&lt;/code&gt;, the function of &lt;code&gt;R&lt;/code&gt; can be executed as follows.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;system.time(results &amp;lt;- Rolling_r_cpp(JPYUSD,from))&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;##    ユーザ   システム       経過  
-##       0.07       0.00       0.06&lt;/code&gt;&lt;/pre&gt;
+##       0.04       0.02       0.07&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;It takes less than a second to process 12 million records. So Convenient!!&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;summary(results)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;##       from                           r         
@@ -490,7 +490,7 @@ DataFrame Rolling_rbv_cpp(
 &lt;p&gt;Now, compile it and run it with &lt;code&gt;R&lt;/code&gt;.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;system.time(results &amp;lt;- results %&amp;gt;% Rolling_rbv_cpp(na_remove = FALSE))&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;##    ユーザ   システム       経過  
-##       0.76       0.35       1.16&lt;/code&gt;&lt;/pre&gt;
+##       1.00       0.36       1.36&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;So fast!&lt;/p&gt;
 &lt;/div&gt;
 &lt;div id=&#34;calculating-jump-statistics&#34; class=&#34;section level2&#34;&gt;
@@ -743,7 +743,7 @@ for layer_name, layer_activation in zip(layer_names, activations):
       <pubDate>Wed, 08 Jul 2020 00:00:00 +0000</pubDate>
       <guid>/en/post/post19/</guid>
       <description>
-&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+&lt;script src=&#34;../../en/post/post19/index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
 
 &lt;div id=&#34;TOC&#34;&gt;
 &lt;ul&gt;
@@ -765,20 +765,20 @@ From an investor’s perspective, it is important to distinguish between in-samp
 &lt;/div&gt;
 &lt;div id=&#34;backtesting-overfits.&#34; class=&#34;section level2&#34;&gt;
 &lt;h2&gt;2. Backtesting overfits.&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2308659&#34;&gt;Bailey, Borwein, López de Prado and Zhu (2015)&lt;/a&gt;, which shows that any financial time series can be used to backtest We argue that it is (relatively) easy to overfit (overlearn) a simulation. Here, overfitting is a machine learning concept that describes a situation in which the model focuses on specific observational data (IS data) rather than on the general structure.&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2308659&#34;&gt;Bailey, Borwein, López de Prado and Zhu (2015)&lt;/a&gt; argue that it is (relatively) easy to overfit (overlearn) a backtesting simulation for any financial time series. Here, overfitting is a machine learning concept that describes a situation in which a model focuses on a particular set of observed data (IS data) rather than on a general structure.&lt;/p&gt;
 &lt;p&gt;Bailey et. al. (2015) cite a situation where the backtesting results of a stock strategy are not good as an example of this claim. As the name implies, backtesting uses historical data, so it is possible to identify specific stocks that are experiencing losses and design the trading system to improve performance by adding some parameters to remove recommendations for those stocks ( (a technique known as “data snooping”). With a few repetitions of the simulation, you can derive “optimal parameters” that benefit from characteristics that are present in a particular sample but may be rare in the population.&lt;/p&gt;
 &lt;p&gt;There is a vast accumulation of research in the machine learning literature to address the problem of overfitting. But Bailey et. al. (2015) argue that the methods proposed in the context of machine learning are generally not applicable to multiple investment problems. The reasons for this seem to be the following four points.&lt;/p&gt;
 &lt;ol style=&#34;list-style-type: decimal&#34;&gt;
 &lt;li&gt;&lt;p&gt;Machine learning methods to prevent overfitting require explicit point estimates and confidence intervals in the domain in which the event is defined in order to assess the explanatory power and quality of the prediction, because few investment strategies make such explicit predictions.&lt;/p&gt;
 &lt;ul&gt;
-&lt;li&gt;“The E-mini S&amp;amp;P 500 is predicted to close around 1,600 with one standard deviation of 5 points at Friday’s close,” for example, but rather qualitative recommendations such as “buy” or “strong buy” are typically provided. Moreover, these forecasts do not have an explicit expiration date and are subject to change in the event of an unexpected event. On the other hand, the quantitative forecast is stated as Friday’s close.&lt;/li&gt;
+&lt;li&gt;For example, it is not often said that “the E-mini S&amp;amp;P 500 is expected to be around 1,600 at 5 points per standard deviation as of Friday’s close,” but rather qualitative recommendations such as “buy” or “strong buy” are usually provided. Moreover, these forecasts do not specify the expiration date of the forecast and are subject to change when some unexpected event occurs.&lt;/li&gt;
 &lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;even if a particular investment strategy relies on a prediction formula, other components of the investment strategy may be overfitted.&lt;/p&gt;
+&lt;li&gt;&lt;p&gt;Even if a particular investment strategy relies on a prediction formula, other components of the investment strategy may be overfitted.&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;In other words, there are many ways to overfit an investment strategy other than simply adjusting the prediction equation.&lt;/li&gt;
 &lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;because the methods of regression overfitting are parametric and involve many assumptions about data that are unobservable in the case of finance.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;because some methods do not control for the number of trials.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;The methods of regression overfitting are parametric and involve many assumptions about data that are unobservable in the case of finance.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Some methods do not control for the number of trials.&lt;/p&gt;&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;Bailey et. al. (2015) show that a &lt;strong&gt;comparatively low number of trials&lt;/strong&gt; is needed to identify investment strategies with relatively poor backtesting performance. Think of the number of trials here as the number of trials and errors. It also calculates &lt;code&gt;the minimum backtest length&lt;/code&gt; (MinBTL), which is the length of the backtest required for the number of trials. In this paper, the Sharpe ratio is always used to evaluate performance, but it can be applied to other performance measures as well. Let’s take a look at what it does.&lt;/p&gt;
 &lt;/div&gt;
@@ -812,7 +812,7 @@ As an inevitable consequence, the calculation of &lt;span class=&#34;math inline
 \sqrt{T}\hat{\mu}\sim^{a}\mathcal{N}(\mu,\sigma^2), \\
 \sqrt{T}\hat{\sigma}^2\sim^a\mathcal{N}(\sigma^2,2\sigma^4)
 \]&lt;/span&gt;
-ince the Sharpe ratio is a random variable which is calculated from this &lt;span class=&#34;math inline&#34;&gt;\(\hat{\mu}\)&lt;/span&gt; and &lt;span class=&#34;math inline&#34;&gt;\(\hat{\sigma}^2\)&lt;/span&gt;, let us denote this function as &lt;span class=&#34;math inline&#34;&gt;\(g(\hat{{\boldsymbol \theta}})\)&lt;/span&gt; where &lt;span class=&#34;math inline&#34;&gt;\(\hat{{\boldsymbol \theta}}=(\hat{\mu},\hat{\sigma}^2)\)&lt;/span&gt;. Now, since it is i.i.d., &lt;span class=&#34;math inline&#34;&gt;\(\hat{{\boldsymbol \theta}}\)&lt;/span&gt; is independent of each other, and, from the above discussion, the asymptotic joint distribution is written as&lt;/p&gt;
+Since the Sharpe ratio is a random variable which is calculated from this &lt;span class=&#34;math inline&#34;&gt;\(\hat{\mu}\)&lt;/span&gt; and &lt;span class=&#34;math inline&#34;&gt;\(\hat{\sigma}^2\)&lt;/span&gt;, let us denote this function as &lt;span class=&#34;math inline&#34;&gt;\(g(\hat{{\boldsymbol \theta}})\)&lt;/span&gt; where &lt;span class=&#34;math inline&#34;&gt;\(\hat{{\boldsymbol \theta}}=(\hat{\mu},\hat{\sigma}^2)\)&lt;/span&gt;. Now, since it is i.i.d., &lt;span class=&#34;math inline&#34;&gt;\(\hat{{\boldsymbol \theta}}\)&lt;/span&gt; is independent of each other, and, from the above discussion, the asymptotic joint distribution is written as&lt;/p&gt;
 &lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
 \sqrt{T}\hat{{\boldsymbol \theta}} \sim^a \mathcal{N}({\boldsymbol \theta},{\boldsymbol V_{\boldsymbol \theta}})
 \]&lt;/span&gt;
@@ -829,11 +829,10 @@ Since the sharp ratio estimates are now only a function of &lt;span class=&#34;m
 &lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
 \hat{SR} = g(\hat{{\boldsymbol \theta}}) \sim^a \mathcal{N}(g({\boldsymbol \theta}),\boldsymbol V_g)
 \]&lt;/span&gt;
-asymptotically follows a normal distribution. where &lt;span class=&#34;math inline&#34;&gt;\(\boldsymbol V_g\)&lt;/span&gt; is&lt;/p&gt;
+asymptotically follows a normal distribution where &lt;span class=&#34;math inline&#34;&gt;\(\boldsymbol V_g\)&lt;/span&gt; is&lt;/p&gt;
 &lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
 \boldsymbol V_g=\frac{\partial g}{\partial{\boldsymbol \theta}}{\boldsymbol V_{\boldsymbol \theta}}\frac{\partial g}{\partial{\boldsymbol \theta}&amp;#39;}
 \]&lt;/span&gt;
-&lt;span class=&#34;math inline&#34;&gt;\(g({\boldsymbol \theta})=\mu/\sigma\)&lt;/span&gt;なので、
 Since &lt;span class=&#34;math inline&#34;&gt;\(g({\boldsymbol \theta})=\mu/\sigma\)&lt;/span&gt;, then&lt;/p&gt;
 &lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
 \frac{\partial g}{\partial{\boldsymbol \theta}&amp;#39;} = \left[ 
@@ -918,7 +917,7 @@ M_x(t) &amp;amp;=&amp;amp; \int_{\infty}^0-e^{-t\log(y)}e^{-y}dy \\
 &amp;amp;=&amp;amp; \Gamma(1-t)
 \end{eqnarray}
 \]&lt;/span&gt;
-where &lt;span class=&#34;math inline&#34;&gt;\(Gamma(x)\)&lt;/span&gt; is a gamma function. From here, the expected value (mean) of the standardized maximum statistic is&lt;/p&gt;
+where &lt;span class=&#34;math inline&#34;&gt;\(\Gamma(x)\)&lt;/span&gt; is a gamma function. From here, the expected value (mean) of the standardized maximum statistic is&lt;/p&gt;
 &lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
 \begin{eqnarray}
 \lim_{N\rightarrow\infty} E[\frac{\max[\hat{SR}]_N-\alpha}{\beta}] &amp;amp;=&amp;amp; M_x&amp;#39;(t)|_{t=0} \\
@@ -931,8 +930,9 @@ Here, $… $ is the Euler-Mascheroni constant. Thus, when &lt;span class=&#34;ma
 E[\max[\hat{SR}]] \approx \alpha + \gamma\beta = (1-\gamma)Z^{-1}[1-\frac{1}{N}]+\gamma Z^{-1}[1-\frac{1}{N}e^{-1}] \tag{2}
 \]&lt;/span&gt;
 This is Proposition 1 of Bailey et. al. (2015). We plot &lt;span class=&#34;math inline&#34;&gt;\(E[\max[\hat{SR}]]\)&lt;/span&gt; as a function of the number of strategies (number of trials and errors) &lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;, which is shown below.&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(ggplot2)
-ExMaxSR = function(N){
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(ggplot2)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: パッケージ &amp;#39;ggplot2&amp;#39; はバージョン 4.0.3 の R の下で造られました&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ExMaxSR = function(N){
   gamma_ct = -digamma(1)
   Z = qnorm(0.99)
   return((1-gamma_ct)*Z*(1-1/N) + gamma_ct*Z*(1-1/N*exp(1)^{-1}))
@@ -941,7 +941,7 @@ N = list(0:100)
 result = purrr::map(N,ExMaxSR)
 ggplot2::ggplot(data.frame(ExpMaxSR = unlist(result),N = unlist(N)),aes(x=N,y=ExpMaxSR)) +
   geom_line(size=1) + ylim(0,3)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-1-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;../../en/post/post19/index_files/figure-html/unnamed-chunk-1-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
 &lt;p&gt;You can see that the expected value of &lt;span class=&#34;math inline&#34;&gt;\(\max[\hat{SR}]\)&lt;/span&gt; is rapidly increasing for the small &lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;. At &lt;span class=&#34;math inline&#34;&gt;\(N=10\)&lt;/span&gt;, we expect to find at least one apparently quite good performing strategy, even though the true value of the Sharpe ratio of all strategies is zero. In finance, hold-out back-testing is often used, but this method does not take into account the number of trials, which is why it does not return reliable results when &lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt; is large. Don’t you think it’s very risky to do a lot of simulations in order to improve the backtest results? In the end, only the best performing of the &lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt; strategies will show up in the presentation material, so even if you consider 10 strategies, as in this example, any of them will have a Sharpe ratio distributed around 1.87. Of course, we don’t include the number of trials and errors in our materials, so it’s very misleading. When evaluating these materials, you might want to suspect false positives first.&lt;/p&gt;
 &lt;p&gt;So, as for what to do, Bailey et. al. (2015) calculate the Minimum Backtest Length. In short, they caution that as the number of trials (errors) &lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt; is increased, the number of years of backtesting &lt;span class=&#34;math inline&#34;&gt;\(y\)&lt;/span&gt; should also increase. Let’s show the relationship between &lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt; and the Minimum Backtest Length. As before, we will assume that &lt;span class=&#34;math inline&#34;&gt;\(\mu=0\)&lt;/span&gt;, but consider the case with &lt;span class=&#34;math inline&#34;&gt;\(y\neq 1\)&lt;/span&gt;. The expected value of the maximum statistic of the annualized Sharpe ratio is from equation (2)&lt;/p&gt;
 &lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
@@ -959,7 +959,7 @@ N = list(1:100)
 result = purrr::map2(N,1,MinBTL)
 ggplot2::ggplot(data.frame(MinBTL = unlist(result),N = unlist(N)),aes(x=N,y=MinBTL)) +
   geom_line(size=1) + ylim(0,6)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-2-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;../../en/post/post19/index_files/figure-html/unnamed-chunk-2-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;simSR &amp;lt;- function(T1){
     r = rnorm(T1)
     return(mean(r)/sd(r))
