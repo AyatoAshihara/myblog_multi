@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>テキスト解析 | 東京の資産運用会社で働く社会人が研究に没頭するブログ</title>
+    <title>テキスト解析 | 京都の電子部品メーカーで働く社会人が研究に没頭するブログ</title>
     <link>/tag/%E3%83%86%E3%82%AD%E3%82%B9%E3%83%88%E8%A7%A3%E6%9E%90/</link>
       <atom:link href="/tag/%E3%83%86%E3%82%AD%E3%82%B9%E3%83%88%E8%A7%A3%E6%9E%90/index.xml" rel="self" type="application/rss+xml" />
     <description>テキスト解析</description>
-    <generator>Wowchemy (https://wowchemy.com)</generator><language>ja</language><lastBuildDate>Tue, 23 Feb 2021 00:00:00 +0000</lastBuildDate>
+    <generator>Wowchemy (https://wowchemy.com)</generator><language>ja</language><lastBuildDate>Mon, 21 Mar 2022 00:00:00 +0000</lastBuildDate>
     <image>
       <url>/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
       <title>テキスト解析</title>
@@ -13,282 +13,1046 @@
     </image>
     
     <item>
-      <title>【徹底比較】センチメントスコア算出手法！！</title>
-      <link>/post/post25/</link>
-      <pubDate>Tue, 23 Feb 2021 00:00:00 +0000</pubDate>
-      <guid>/post/post25/</guid>
+      <title>【徹底比較】センチメントスコア算出手法！！ - 第1回</title>
+      <link>/post/post27/</link>
+      <pubDate>Mon, 21 Mar 2022 00:00:00 +0000</pubDate>
+      <guid>/post/post27/</guid>
       <description>
-&lt;script src=&#34;../../post/post25/index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
-&lt;link href=&#34;../../post/post25/index_files/anchor-sections/anchor-sections.css&#34; rel=&#34;stylesheet&#34; /&gt;
-&lt;script src=&#34;../../post/post25/index_files/anchor-sections/anchor-sections.js&#34;&gt;&lt;/script&gt;
+&lt;script src=&#34;../../post/post27/index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+&lt;script src=&#34;../../post/post27/index_files/kePrint/kePrint.js&#34;&gt;&lt;/script&gt;
+&lt;link href=&#34;../../post/post27/index_files/lightable/lightable.css&#34; rel=&#34;stylesheet&#34; /&gt;
+&lt;link href=&#34;../../post/post27/index_files/bsTable/bootstrapTable.min.css&#34; rel=&#34;stylesheet&#34; /&gt;
+&lt;script src=&#34;../../post/post27/index_files/bsTable/bootstrapTable.js&#34;&gt;&lt;/script&gt;
 
 &lt;div id=&#34;TOC&#34;&gt;
 &lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;#テキスト解析手法の進化の譜系&#34;&gt;1. テキスト解析手法の進化の譜系&lt;/a&gt;
+&lt;li&gt;&lt;a href=&#34;#解きたい問題&#34;&gt;1. 解きたい問題&lt;/a&gt;
 &lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;#辞書ベース&#34;&gt;1.1 辞書ベース&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#ナイーブベイズ分類器&#34;&gt;1.2 ナイーブベイズ分類器&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#単語埋め込みword-embedding&#34;&gt;1.3 単語埋め込み(Word Embedding)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#recurrent-neural-net-work&#34;&gt;1.4 Recurrent neural net work&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#attention&#34;&gt;1.5 Attention&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#景気ウオッチャー調査とは&#34;&gt;1.1 景気ウオッチャー調査とは&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#調査の対象範囲&#34;&gt;1.1.1 調査の対象範囲&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#調査期日および期間&#34;&gt;1.1.2 調査期日および期間&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#調査の実施方法&#34;&gt;1.1.3 調査の実施方法&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#問題設定&#34;&gt;1.2 問題設定&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#各手法の性能比較&#34;&gt;2. 各手法の性能比較&lt;/a&gt;
+&lt;li&gt;&lt;a href=&#34;#テキスト解析手法の進化の譜系&#34;&gt;2. テキスト解析手法の進化の譜系&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#サンプルデータ概観&#34;&gt;3. サンプルデータ概観&lt;/a&gt;
 &lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;#前処理&#34;&gt;2.0 前処理&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#辞書ベース-1&#34;&gt;2.1 辞書ベース&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#サンプルデータの読み込み&#34;&gt;3.1 サンプルデータの読み込み&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#サンプルサイズ&#34;&gt;3.2 サンプルサイズ&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#景気の現状判断の分布&#34;&gt;3.3 &lt;code&gt;景気の現状判断&lt;/code&gt;の分布&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#回答者の属性&#34;&gt;3.4 回答者の属性&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#景気判断の理由の分布&#34;&gt;3.5 &lt;code&gt;(景気)判断の理由&lt;/code&gt;の分布&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#終わりに&#34;&gt;4. 終わりに&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/div&gt;
 
-&lt;p&gt;おはこんばんにちは。テキスト解析はデータ分析界隈ではもうかなり当たり前になってきています。自分も研究を行ううえで、テキストの感性情報(センチメント)を抽出する必要があり、どのような手法があるのか調べたところかなり時代は進んでいると実感しました。今回は実際に&lt;code&gt;R&lt;/code&gt;や&lt;code&gt;Python&lt;/code&gt;で作成した機械学習モデルを用いて、それらの精度を比較してみたいと思います。&lt;/p&gt;
+&lt;p&gt;おはこんばんにちは。テキスト解析はデータ分析界隈ではもうかなり当たり前になってきています。テキストの感性情報(センチメント)を抽出する手法には、どのようなものがあるかあるのか調べたところかなり時代は進んでいると実感しました。今回は実際に&lt;code&gt;R&lt;/code&gt;や&lt;code&gt;Python&lt;/code&gt;で作成した機械学習モデルを用いて、それらの精度を比較してみたいと思います。 今回はその第１回目ということで、データセットや全体感のお話です。&lt;/p&gt;
+&lt;div id=&#34;解きたい問題&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;1. 解きたい問題&lt;/h2&gt;
+&lt;p&gt;今回解きたい問題は「景況感を表す文書表現を学習し、実際の景気判断を予測する」というタスクです。 データセットには、内閣府が出している景気ウオッチャー調査を使用します。&lt;/p&gt;
+&lt;div id=&#34;景気ウオッチャー調査とは&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;1.1 景気ウオッチャー調査とは&lt;/h3&gt;
+&lt;p&gt;景気ウオッチャー調査とは、内閣府が月次で公表している景気動向判断のための統計情報です。調査の目的は以下の通りです(&lt;a href=&#34;https://www5.cao.go.jp/keizai3/watcher/watcher_mokuteki.html#mokuteki&#34;&gt;内閣府Webサイト&lt;/a&gt;より)。&lt;/p&gt;
+&lt;dl&gt;
+&lt;dt&gt;&amp;lt;調査の目的&amp;gt;&lt;/dt&gt;
+&lt;dd&gt;&lt;p&gt;地域の景気に関連の深い動きを観察できる立場にある人々の協力を得て、地域ごとの景気動向を的確かつ迅速に把握し、景気動向判断の基礎資料とすることを目的とする。&lt;/p&gt;
+&lt;/dd&gt;
+&lt;/dl&gt;
+&lt;p&gt;では、この「地域の景気に関連の深い動きを観察できる立場にある人々」、「地域ごとの景気動向」、「的確かつ迅速に」という部分について少し深掘ってみます。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;調査の対象範囲&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;1.1.1 調査の対象範囲&lt;/h3&gt;
+&lt;p&gt;調査の対象範囲は47都道府県となっています。また、調査対象者は「家計動向、企業動向、雇用等、代表的な経済活動項目の動向を敏感に反映する現象を観察できる業種の適当な職種の中から選定した2,050人」となっており、例えば小売店や飲食店の店員・店長、タクシー運転手、製造業・非製造業企業の経営者・従業員、人材派遣会社社員などを対象に行われています。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;調査期日および期間&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;1.1.2 調査期日および期間&lt;/h3&gt;
+&lt;p&gt;調査は月次で行われ、毎月25日から月末にかけて実施されます。当月の景況感について調査が行われ、翌月に公表されます。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;調査の実施方法&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;1.1.3 調査の実施方法&lt;/h3&gt;
+&lt;p&gt;アンケート調査を電話・Webサイト・電子メールのいずれかで回答することになっています。質問項目は以下の通りです(&lt;a href=&#34;https://www5.cao.go.jp/keizai3/watcher/chousahyo.pdf&#34;&gt;調査票&lt;/a&gt;)。&lt;/p&gt;
+&lt;ol style=&#34;list-style-type: decimal&#34;&gt;
+&lt;li&gt;&lt;p&gt;景気の現状に対する判断（方向性）&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;1.の理由&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;2.の追加説明及び具体的状況の説明(自由記述)&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;景気の先行きに対する判断(方向性)&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;(4)の理由&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;(参考)景気の現状に対する判断(水準)&lt;/p&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;ご参考までに2016年1月調査のサンプルデータをお見せします。&lt;/p&gt;
+&lt;table class=&#34;table table-striped&#34; style=&#34;margin-left: auto; margin-right: auto;&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+基準年
+&lt;/th&gt;
+&lt;th style=&#34;text-align:left;&#34;&gt;
+基準日
+&lt;/th&gt;
+&lt;th style=&#34;text-align:left;&#34;&gt;
+景気の現状判断
+&lt;/th&gt;
+&lt;th style=&#34;text-align:left;&#34;&gt;
+業種・職種
+&lt;/th&gt;
+&lt;th style=&#34;text-align:left;&#34;&gt;
+判断の理由
+&lt;/th&gt;
+&lt;th style=&#34;text-align:left;&#34;&gt;
+追加説明及び具体的状況の説明
+&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2016
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+1月31日
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+◎
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+旅行代理店（従業員）
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+販売量の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+・店頭の取扱額が前年比約120％と好調であった。
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2016
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+1月31日
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+◎
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+観光名所（従業員）
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+来客数の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+・当施設の利用乗降客数は１月26日時点で前年比130.1％となっており、１月としては過去最高の利用乗降客数になることが確定したほどの入込状況にある。
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2016
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+1月31日
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+○
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+一般小売店［酒］（経営者）
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+単価の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+・年末の消費の反動もあってか、客の動きがやや鈍い。ただ、相変わらず高額商材が売れているということもあり、売上はそれなりの金額をキープしている。
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2016
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+1月31日
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+○
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+百貨店（売場主任）
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+お客様の様子
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+・外国人観光客による売上が前年比152％と好調を継続しているほか、来客数が前年比102％と好調を維持している。月半ばに停滞した売上も下旬に入ってから回復傾向にあり、定価品、バーゲン品とも前年を上回っている。
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2016
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+1月31日
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+○
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+百貨店（担当者）
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+来客数の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+・積極的に景気が上向きにあるとまではいいづらいものの、３か月前との比較では改善している。
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2016
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+1月31日
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+○
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+百貨店（販売促進担当）
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+それ以外
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+・気温が平年並みとなり、これまでの温暖、少雪の状態がみられなくなってきたことで、防寒衣料、雑貨商材を中心に多少改善の傾向がみられる。
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div id=&#34;問題設定&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;1.2 問題設定&lt;/h3&gt;
+&lt;p&gt;今回の問題設定は、「追加説明及び具体的状況の説明」に記載されているテキスト情報をもとに、「景気の現状判断」を予測するタスクになります。
+「景気の現状判断」は「良い」、「やや良い」、「どちらとも言えない」、「やや悪い」、「悪い」となっており、これを2値分類問題にして学習を行います(どちらとも言えないはネガティブに分類)。&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
 &lt;div id=&#34;テキスト解析手法の進化の譜系&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;1. テキスト解析手法の進化の譜系&lt;/h2&gt;
-&lt;p&gt;私が調べた浅い知識によると、感性情報の抽出方法には以下のような手法があります。&lt;/p&gt;
+&lt;h2&gt;2. テキスト解析手法の進化の譜系&lt;/h2&gt;
+&lt;p&gt;上記問題設定を解くためには、テキスト情報から感性情報(センチメント)を抽出する必要があります。私が調べた浅い知識によると、感性情報の抽出方法には以下のような手法があります。&lt;/p&gt;
 &lt;ol style=&#34;list-style-type: decimal&#34;&gt;
 &lt;li&gt;辞書ベース&lt;/li&gt;
 &lt;li&gt;ナイーブベイズ分類器&lt;/li&gt;
 &lt;li&gt;単語埋め込み(Word Embedding)を用いた方法&lt;/li&gt;
 &lt;li&gt;Recurrent neural network(RNN)&lt;/li&gt;
-&lt;li&gt;Attention&lt;/li&gt;
+&lt;li&gt;Transformer&lt;/li&gt;
 &lt;/ol&gt;
-&lt;p&gt;おそらく、下に行くにつれてより最新の手法になっており、精度も高いのではないかと推察されます。 また、1と2はやり方にもよるんでしょうが文章が与えられた際にその語順関係を考慮しません。 各手法について、細かく見ていきましょう。なお、今回の記事では文書内容からポジティブ・ネガティブ度を判定する問題を念頭に置いています。&lt;/p&gt;
-&lt;div id=&#34;辞書ベース&#34; class=&#34;section level3&#34;&gt;
-&lt;h3&gt;1.1 辞書ベース&lt;/h3&gt;
-&lt;p&gt;辞書ベースの手法はその名の通り、辞書を用いる手法です。各単語が持つ感情極性分類(各単語が良い意味か悪い意味か)をスコア化したものを単語と紐付ける形で辞書として保存し、文書内で出現した単語とそれぞれのスコアを紐付けることでその文書のセンチメントスコアを算出します。&lt;/p&gt;
-&lt;p&gt;スコアをどのように算出するのかが重要になるわけですが、日本語において有名な感情極性辞書である東京工業大学の高村教授が作成した辞書&lt;span class=&#34;citation&#34;&gt;(&lt;a href=&#34;#ref-takamura2005&#34; role=&#34;doc-biblioref&#34;&gt;Takamura, Inui, and Okumura 2005&lt;/a&gt;)&lt;/span&gt;では以下のような方法で算出を行っているようです(&lt;a href=&#34;http://lr-www.pi.titech.ac.jp/wp/?page_id=4&#34;&gt;こちら&lt;/a&gt;)。&lt;/p&gt;
-&lt;blockquote&gt;
-&lt;p&gt;まず，辞書，シソーラス（類義語辞典），コーパスデータを用いて，極性が同じになりやすい単語ペアを抽出し，そしてそれらのペアを連結することにより巨大な語彙ネットワークを構築します．たとえば，「良い」と「良好」が類義語関係にあるので，この二単語を結ぶなどの作業を行います．ここで，単語の感情極性を電子スピンの方向とみなし，語彙ネットワークをスピン系とみなして，語彙ネットワークの状態（各スピンがどの方向を向いているか）を計算します．この計算結果を見ることにより，単語の感情極性がわかるのです．&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;p&gt;こちらの辞書はHPで公開されており、非営利目的であれば利用が可能のようです。ちょっと覗いてみましょう。&lt;/p&gt;
+&lt;p&gt;おそらく、下に行くにつれてより最新の手法になっており、精度も高いのではないかと推察されます。 また、1,2,3はやり方にもよるんでしょうが文章が与えられた際にその語順関係を考慮しません。 今後、各手法について解析結果の記事を投稿する予定ですので、詳しい中身についてはそれぞれの回で触れたいと思います。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;サンプルデータ概観&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;3. サンプルデータ概観&lt;/h2&gt;
+&lt;div id=&#34;サンプルデータの読み込み&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;3.1 サンプルデータの読み込み&lt;/h3&gt;
+&lt;p&gt;今回使用する景気ウオッチャー調査のサンプルは2016年~2020年のものとなっています。現状判断の調査結果を格のしたcsvファイル(景気判断理由集)を月ごとに内閣府のWebページからダウンロードし、整形したものを年ごとに連結しています。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;filepath = r&amp;quot;(C:\Users\hogehoge\Watcher\RawData)&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;files &amp;lt;- stringr::str_c(filepath, &amp;quot;\\&amp;quot;,list.files(filepath, pattern = &amp;quot;*.csv&amp;quot;))
+sample &amp;lt;- readr::read_csv(files, locale=readr::locale(encoding=&amp;quot;SHIFT-JIS&amp;quot;), show_col_types = FALSE)
+# 「－」は回答が存在しない、「＊」は主だった回答等が存在しないため、除外
+sample &amp;lt;- sample[sample$追加説明及び具体的状況の説明 != &amp;quot;－&amp;quot;,]
+sample &amp;lt;- sample[sample$追加説明及び具体的状況の説明 != &amp;quot;＊&amp;quot;,]&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;知らなかったんですが、&lt;code&gt;readr::read_csv&lt;/code&gt;って2.0.0からファイルパスのリストを引数としてcsvを読み込み、その結果を連結してくれるようになったんですね。地味に便利です。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;サンプルサイズ&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;3.2 サンプルサイズ&lt;/h3&gt;
+&lt;p&gt;サンプルサイズは76800でした。サンプルサイズとしては申し分ないかと思います。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;NROW(sample)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 76800&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;念のため、各年ごとにも見てみます。&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(magrittr)
-# 単語感情極性対応表
-PNtable &amp;lt;- read.delim(&amp;quot;http://www.lr.pi.titech.ac.jp/~takamura/pubs/pn_ja.dic&amp;quot;,header=FALSE,sep=&amp;quot;:&amp;quot;) 
-PNtable %&amp;gt;% head()&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;##           V1       V2                 V3       V4
-## 1 \u512aれる すぐれる       \u52d5\u8a5e 1.000000
-## 2   \u826fい     よい \u5f62\u5bb9\u8a5e 0.999995
-## 3   \u559cぶ よろこぶ       \u52d5\u8a5e 0.999979
-## 4 \u8912める   ほめる       \u52d5\u8a5e 0.999979
-## 5   めでたい めでたい \u5f62\u5bb9\u8a5e 0.999645
-## 6   \u8ce2い かしこい \u5f62\u5bb9\u8a5e 0.999486&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;センチメントスコアは1から-1までを取り、1に近いほどポジティブを表します。最もポジティブな単語は「優れる」となっていることがわかります。 辞書を利用する良い点は、手法のわかりやすさと教師データを必要としない点です。特に後者は辞書ベースならではの長所です。通常、文書分類器を作成するためには、その文書がポジティブ・ネガティブのどちらであるか正解ラベルの付いた教師データが必要です。必要なデータは文脈にもよると思いますが、少なくとも100件は必要でしょう。これは分析者が少なくとも100件以上の文書を読んで、ラベルを付与しなければならないことを意味します。 短所としては、特殊な文脈におけるセンチメントスコアを参集する場合は専用の辞書が必要になるという点です。辞書ベースの分類法の場合、辞書に含まれない単語はセンチメントスコアへ影響を全く与えません。また、通常辞書はwikipedia等のオールジャンルの文書を学習することによって開発されているため、感情極性が文脈に対してニュートラルになっています。例えば、金融等の文脈におけるセンチメントスコアを算出する場合は直感とは異なる結果が出る可能性もあります。&lt;/p&gt;
+sample %&amp;gt;% 
+  dplyr::group_by(基準年) %&amp;gt;% 
+  dplyr::summarise(サンプルサイズ=dplyr::n()) %&amp;gt;% 
+  dplyr::mutate(`割合(%)`=round(サンプルサイズ/sum(サンプルサイズ)*100, digits=1)) %&amp;gt;% 
+  knitr::kable() %&amp;gt;% 
+  kableExtra::kable_styling(bootstrap_options = c(&amp;quot;striped&amp;quot;))&lt;/code&gt;&lt;/pre&gt;
+&lt;table class=&#34;table table-striped&#34; style=&#34;margin-left: auto; margin-right: auto;&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+基準年
+&lt;/th&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+サンプルサイズ
+&lt;/th&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+割合(%)
+&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2016
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+15168
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+19.8
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2017
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+16724
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+21.8
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2018
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+14756
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+19.2
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2019
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+14588
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+19.0
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2020
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+15564
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+20.3
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;各年およそ14,000~16,000サンプルほど存在するようです。大きなバラツキもありません。&lt;/p&gt;
 &lt;/div&gt;
-&lt;div id=&#34;ナイーブベイズ分類器&#34; class=&#34;section level3&#34;&gt;
-&lt;h3&gt;1.2 ナイーブベイズ分類器&lt;/h3&gt;
-&lt;p&gt;ナイーブベイズ分類器、または単純ベイズ分類器と呼ばれる手法です。分類問題をベイズの定理を用いて解く手法を指します。ベイズの定理の復習からしましょう。入力情報&lt;span class=&#34;math inline&#34;&gt;\(X\)&lt;/span&gt;が与えられた時に、出力&lt;span class=&#34;math inline&#34;&gt;\(Y\)&lt;/span&gt;が得られる確率は以下で表すことができます。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-P(Y|X) = \frac{P(X|Y)P(Y)}{P(X)}
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;これがベイズの定理で、&lt;span class=&#34;math inline&#34;&gt;\(P(Y)\)&lt;/span&gt;は事前分布、&lt;span class=&#34;math inline&#34;&gt;\(P(X|Y)\)&lt;/span&gt;は尤度と呼ばれます。ナイーブベイズ分類器が利用される典型的な問題に迷惑メールの分類問題があります。この問題だと、&lt;span class=&#34;math inline&#34;&gt;\(X\)&lt;/span&gt;は受信メールに含まれている単語、&lt;span class=&#34;math inline&#34;&gt;\(Y\)&lt;/span&gt;は迷惑メールかどうかを表すバイナリのデータとなります。&lt;/p&gt;
-&lt;p&gt;実際に分類を行う際には、上式の確率を計算する必要はありません。知りたいのは確率の値ではなく、ある&lt;span class=&#34;math inline&#34;&gt;\(X\)&lt;/span&gt;が与えられた時に&lt;span class=&#34;math inline&#34;&gt;\(P(Y=ポジティブ|X)\)&lt;/span&gt;と&lt;span class=&#34;math inline&#34;&gt;\(P(Y=ネガティブ|X)\)&lt;/span&gt;のどちらが大きいかですので、共通している分母は計算から除外することができ、分子の&lt;span class=&#34;math inline&#34;&gt;\(P(X|Y)P(Y)\)&lt;/span&gt;をそれぞれ計算し、その大小関係によってポジティブ・ネガティブを割り振ればよいことになります。&lt;/p&gt;
-&lt;p&gt;なお、&lt;span class=&#34;math inline&#34;&gt;\(X=\{x_1,x_2,...,x_N\}\)&lt;/span&gt;とします。各&lt;span class=&#34;math inline&#34;&gt;\(x_n\)&lt;/span&gt;は単語を表します。各単語の条件付確率は語順や他の単語に依存しないとすると、&lt;span class=&#34;math inline&#34;&gt;\(P(X|Y)\)&lt;/span&gt;は以下のように書き替えることができます。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-P(X|Y) = \Pi_{i=1}^N P(x_i|Y)
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math inline&#34;&gt;\(Y\)&lt;/span&gt;はバイナリのスカラーですので、確率分布さえわかれば分類を行うことが可能です。&lt;/p&gt;
-&lt;p&gt;では、どのように確率分布を求めるかに話を移しましょう。今、学習データセットとして&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\{(S,T)\} = (Y=S_1,X=T_1), (Y=S_2,X=T_2), ...,(Y=S_D,X=T_D)
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;が得られているとします。ここで、&lt;span class=&#34;math inline&#34;&gt;\(D\)&lt;/span&gt;はサンプルサイズです。&lt;span class=&#34;math inline&#34;&gt;\(Y\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(1\)&lt;/span&gt;の時にポジティブ、&lt;span class=&#34;math inline&#34;&gt;\(0\)&lt;/span&gt;の時にネガティブとします。また、&lt;span class=&#34;math inline&#34;&gt;\(Y\)&lt;/span&gt;についても独立を仮定します。今、&lt;span class=&#34;math inline&#34;&gt;\(P(・)\)&lt;/span&gt;にある確率分布を仮定すると、&lt;span class=&#34;math inline&#34;&gt;\(\{(S,T)\}\)&lt;/span&gt;が得られたもとでの事後分布は&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-M(\Theta,\Phi) = \Pi_{j=1}^{D}P(T_j;\Theta|S_j)P(S_j;\Theta,\Phi)
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;に比例します。ここで、&lt;span class=&#34;math inline&#34;&gt;\(\Theta=\{\theta_1,\theta2,...,\theta_M\}, \Phi=\{\phi_1,\phi_2,...,\phi_L\}\)&lt;/span&gt;は確率分布のパラメータです。この事後分布は確率分布のパラメータによってさまざまな値を取りますが、事後分布を最大にするパラメータを推定値として選択することにします。&lt;span class=&#34;math inline&#34;&gt;\(M(\Theta,\Phi)\)&lt;/span&gt;は以下のように変形することができます。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\begin{eqnarray*}
-M(\Theta,\Phi) &amp;amp;=&amp;amp; P(T_1;\Theta|0)P(0;\Theta,\Phi)×P(T_2;\Theta|0)P(0;\Theta,\Phi)×...×P(T_Q;\Theta|0)P(0;\Theta,\Phi)×P(T_{Q+1};\Theta|1)P(1;\Theta,\Phi) \\
-&amp;amp;=&amp;amp; \Pi_{k=0}^1P(k;\Theta,\Phi)\Pi_{i=1}^{Q_k}P(T_{Q_i};\Theta|k)
-\end{eqnarray*}
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math inline&#34;&gt;\(Q_k\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(Y=k\)&lt;/span&gt;となる学習データの個数を表しています。&lt;/p&gt;
-&lt;p&gt;確率分布&lt;span class=&#34;math inline&#34;&gt;\(P(・)\)&lt;/span&gt;ですが、尤度には多項分布、事前分布にはディリクレ分布を仮定するのが一般的です。これらの確率分布を仮定すると、&lt;span class=&#34;math inline&#34;&gt;\(M(\Theta,\Phi)\)&lt;/span&gt;は以下のようになります。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\begin{eqnarray*}
-M(\vec{p};\vec{\alpha}) &amp;amp;\propto&amp;amp; \frac{1}{Z(\vec{\alpha})}\Pi_{k=0}^1\Pi_{i=1}^Vp_{ki}^{\alpha_{i}-1}\Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}} \\
-&amp;amp;=&amp;amp; \frac{1}{Z(\vec{\alpha})}\Pi_{k=0}^1 \Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1}
-\end{eqnarray*}
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;ここで、&lt;span class=&#34;math inline&#34;&gt;\(p_{k_j}\)&lt;/span&gt;はポジティブ(またはネガティブ)である文書で単語&lt;span class=&#34;math inline&#34;&gt;\(j\)&lt;/span&gt;が出現する確率、&lt;span class=&#34;math inline&#34;&gt;\(\tau_{k_j}=\sum_{i=1}^{Q_k}c_{kij}\)&lt;/span&gt;はポジティブ(またはネガティブ)である教師データに含まれる単語&lt;span class=&#34;math inline&#34;&gt;\(j\)&lt;/span&gt;の総数、&lt;span class=&#34;math inline&#34;&gt;\(\alpha_j\)&lt;/span&gt;は単語&lt;span class=&#34;math inline&#34;&gt;\(j\)&lt;/span&gt;のディリクレ分布のハイパーパラメータ、&lt;span class=&#34;math inline&#34;&gt;\(V\)&lt;/span&gt;は単語数の上限を表しています。&lt;span class=&#34;math inline&#34;&gt;\(Z(\vec{\alpha})=\sum_{k=0}^1\Pi_{i=1}^V p_{k_i}^{\alpha_i-1}\)&lt;/span&gt;は確率の総和を1とするための正規化定数で、ベイズ統計学では分配関数と呼ばれます。 ここから、パラメータ&lt;span class=&#34;math inline&#34;&gt;\(p_{k_{j}}\)&lt;/span&gt;を求めます。ただし、以下の制約条件があります。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\sum_{j=1}^V p_{k_{j}}=1
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;この制約の下で&lt;span class=&#34;math inline&#34;&gt;\(M(\vec{p};\vec{\alpha})\)&lt;/span&gt;を最大化するためにラグランジュ未定乗数法を使用します。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\begin{eqnarray*}
-L &amp;amp;=&amp;amp; (\Pi_{k=0}^1 \Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1}-\lambda(1-\sum_{k=1}^V p_{k_{j}})) \\
-\frac{\partial L}{\partial p_{l_m}}
-&amp;amp;=&amp;amp; (\tau_{l_m}+\alpha_m-1)p_{l_m}^{\tau_{l_m}+\alpha_m-2}\Pi_{k\neq l}^1 \Pi_{j\neq m}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1}-\lambda \\
-&amp;amp;=&amp;amp; (\tau_{l_m}+\alpha_m-1)p_{l_m}^{-1}\Pi_{k=0}^1 \Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1}-\lambda \\
-p_{l_m} &amp;amp;=&amp;amp; \frac{(\tau_{l_m}+\alpha_m-1)}{\lambda}\Pi_{k=0}^1 \Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1}
-\end{eqnarray*}
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;となります。ここで、制約条件を用いて上式の両辺で総和を取ると、&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\begin{eqnarray*}
-1 &amp;amp;=&amp;amp; \sum_{m=1}^V \frac{(\tau_{l_m}+\alpha_m-1)}{\lambda}\Pi_{k=0}^1 \Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1} \\
-\lambda &amp;amp;=&amp;amp; \sum_{m=1}^V (\tau_{l_m}+\alpha_m-1)\Pi_{k=0}^1 \Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1}
-\end{eqnarray*}
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;となるので、&lt;span class=&#34;math inline&#34;&gt;\(\lambda\)&lt;/span&gt;を先ほどの式に代入すると、&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-p_{l_m} = \frac{(\tau_{l_m}+\alpha_m-1)}{\sum_{m=1}^V (\tau_{l_m}+\alpha_m-1)}
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;と、事後分布を最大にするパラメータを求めることができます。&lt;span class=&#34;math inline&#34;&gt;\(p_{l_m}\)&lt;/span&gt;の直感的な解釈は、ポジティブ(ネガティブ)な文脈で単語&lt;span class=&#34;math inline&#34;&gt;\(m\)&lt;/span&gt;が使用された頻度が全ての単語の頻度に占める割合です(+事前分布)。学習データに含まれない単語が出現した場合でもディリクレ分布を事前分布とすることで、&lt;span class=&#34;math inline&#34;&gt;\(p_{l_m}\)&lt;/span&gt;が0にならないこともわかります。所謂頻度ゼロ問題を解決しています。&lt;/p&gt;
-&lt;p&gt;ところで、ディリクレ分布の&lt;span class=&#34;math inline&#34;&gt;\(\alpha_m\)&lt;/span&gt;はどのようにして求めるのでしょうか？推定値を見ればわかる通り、&lt;span class=&#34;math inline&#34;&gt;\(\alpha_m\)&lt;/span&gt;は(文脈を考慮しない)文書内における単語&lt;span class=&#34;math inline&#34;&gt;\(m\)&lt;/span&gt;の主観的な出現頻度を表していると解釈できます。ですが正直、&lt;span class=&#34;math inline&#34;&gt;\(\alpha_m\)&lt;/span&gt;に意味を持たせている人は少なく、先述した頻度ゼロ問題を解決できればよいと考えている人が大半ではないでしょうか？つまり、&lt;span class=&#34;math inline&#34;&gt;\(\alpha_m=\alpha+1\)&lt;/span&gt;(&lt;span class=&#34;math inline&#34;&gt;\(\alpha\)&lt;/span&gt;は定数、例えば1とか)としてしまうということです。これは加算スクリーニングと呼ばれます。&lt;/p&gt;
-&lt;p&gt;さて、このようにして求めた分類器ではどのように分類を行っているのでしょうか？思考実験として、1つの単語を除いて他の単語がポジティブな文書、ネガティブな文書で出現頻度が全て同じ文章を考えます。この場合、その1つの単語が両文脈のうち相対的に頻出である文脈へ分類されることになります。&lt;/p&gt;
-&lt;p&gt;ナイーブベイズ分類器は教師あり学習です。つまり、辞書ベース分類法のセクションで言及した正解ラベルデータを用意する必要があります。これがナイーブベイズ分類器の欠点ですが、一方でデータがある場合には特殊な文脈でも分類が可能です。&lt;/p&gt;
+&lt;div id=&#34;景気の現状判断の分布&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;3.3 &lt;code&gt;景気の現状判断&lt;/code&gt;の分布&lt;/h3&gt;
+&lt;p&gt;これから予測を行う&lt;code&gt;景気の現状判断&lt;/code&gt;はどのような分布になっているでしょうか。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;sample$景気の現状判断 &amp;lt;- factor(sample$景気の現状判断, levels=c(&amp;quot;◎&amp;quot;,&amp;quot;○&amp;quot;,&amp;quot;□&amp;quot;,&amp;quot;▲&amp;quot;,&amp;quot;×&amp;quot;))
+sample %&amp;gt;% 
+  dplyr::group_by(景気の現状判断) %&amp;gt;%
+  dplyr::summarise(サンプルサイズ=dplyr::n()) %&amp;gt;% 
+  dplyr::mutate(`割合(%)`=round(サンプルサイズ/sum(サンプルサイズ)*100, digits=1)) %&amp;gt;% 
+  knitr::kable() %&amp;gt;% 
+  kableExtra::kable_styling(bootstrap_options = c(&amp;quot;striped&amp;quot;))&lt;/code&gt;&lt;/pre&gt;
+&lt;table class=&#34;table table-striped&#34; style=&#34;margin-left: auto; margin-right: auto;&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th style=&#34;text-align:left;&#34;&gt;
+景気の現状判断
+&lt;/th&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+サンプルサイズ
+&lt;/th&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+割合(%)
+&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+◎
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+1569
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2.0
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+○
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+14370
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+18.7
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+□
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+34438
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+44.8
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+▲
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+18642
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+24.3
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+×
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+7781
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+10.1
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;思ったよりキレイな分布をしている印象です。このサンプル期間では、「どちらとも言えない」が最も多く、また、比較的「やや悪い」や「悪い」が多いことがわかります。このあたりは2019年度以降のコロナ禍の影響を反映している可能性があるので、新たに時間軸を追加し、クロス集計をしてみましょう。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;sample %&amp;gt;% 
+  dplyr::group_by(基準年, 景気の現状判断) %&amp;gt;% 
+  dplyr::tally() %&amp;gt;% 
+  tidyr::spread(景気の現状判断, n) %&amp;gt;% 
+  knitr::kable() %&amp;gt;% 
+  kableExtra::kable_styling(bootstrap_options = c(&amp;quot;striped&amp;quot;))&lt;/code&gt;&lt;/pre&gt;
+&lt;table class=&#34;table table-striped&#34; style=&#34;margin-left: auto; margin-right: auto;&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+基準年
+&lt;/th&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+◎
+&lt;/th&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+○
+&lt;/th&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+□
+&lt;/th&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+▲
+&lt;/th&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+×
+&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2016
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+235
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2455
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+7546
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+4129
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+803
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2017
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+375
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+4031
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+8681
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+3053
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+584
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2018
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+349
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+3105
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+7340
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+3336
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+626
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2019
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+237
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2050
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+6743
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+4516
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+1042
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2020
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+373
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2729
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+4128
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+3608
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+4726
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;やはり、2019年以降「悪い」が多く出現していることがわかります。一方で、「やや悪い」はそれ以前の年でも恒常的に多いようです。&lt;/p&gt;
 &lt;/div&gt;
-&lt;div id=&#34;単語埋め込みword-embedding&#34; class=&#34;section level3&#34;&gt;
-&lt;h3&gt;1.3 単語埋め込み(Word Embedding)&lt;/h3&gt;
-&lt;p&gt;ここまでの議論で、辞書ベース分類法と教師あり学習であるナイーブベイズ分類器が甲乙つけがたい分類法であることがわかったと思います。教師あり学習のほうが精度は出そうだが、教師データの準備にコストがかかるところで、この両者を埋め合わせる良い手法はないのかと調べていると1つ準教師学習を用いた手法を発見しました。&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;Latent Semantic Scaling: A Semisupervised Text Analysis Technique for New Domains and Languages&lt;/strong&gt;&lt;span class=&#34;citation&#34;&gt;(&lt;a href=&#34;#ref-watanabe2020&#34; role=&#34;doc-biblioref&#34;&gt;Watanabe 2020&lt;/a&gt;)&lt;/span&gt;&lt;/p&gt;
-&lt;div id=&#34;単語埋め込みword-embeddingとは&#34; class=&#34;section level4&#34;&gt;
-&lt;h4&gt;1.3.1 単語埋め込み(Word Embedding)とは&lt;/h4&gt;
-&lt;p&gt;この論文では単語埋め込み(Word Embedding)を使用しています。単語埋め込み(Word Embedding)とは、&lt;strong&gt;自然言語処理における言語モデリング手法の一種であり、単語や語句を固定長の実数ベクトルとして表現する手法のこと&lt;/strong&gt;です。&lt;/p&gt;
-&lt;p&gt;例としてWorks Applicationsが提供しているモデルChiveを使うと、以下のように各単語にその単語を表現する実数ベクトルを見ることができます(ここでは300次元ベクトル)。&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import gensim
-vectors = gensim.models.KeyedVectors.load(r&amp;quot;C:\Users\aashi\Desktop\TextMining\chive-1.2-mc15_gensim\chive-1.2-mc15.kv&amp;quot;)
-vectors[&amp;quot;王&amp;quot;][1:10]&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## array([-0.33642125, -0.10056135, -0.21042922, -0.16654314, -0.24036592,
-##        -0.1122508 , -0.13620219,  0.0592143 ,  0.04542897], dtype=float32)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;この実数ベクトルを用いて、単語同士の演算を行うことも可能です。例えば、「王様 - 男 + 女 = 女王」と言った演算を行うことができます。&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;vectors.most_similar(positive=[&amp;quot;王様&amp;quot;,&amp;quot;女&amp;quot;], negative=[&amp;quot;男&amp;quot;], topn=3)&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## [(&amp;#39;王女&amp;#39;, 0.5806534290313721), (&amp;#39;女王&amp;#39;, 0.5754266381263733), (&amp;#39;王妃&amp;#39;, 0.5491030216217041)]&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;以下のように、各単語ベクトルとのコサイン類似度を測ることによって、或る単語と意味が近い単語を調べることも可能です。&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;vectors.most_similar([&amp;quot;関西学院大学&amp;quot;],topn=3)&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## [(&amp;#39;関西大学&amp;#39;, 0.7983702421188354), (&amp;#39;立命館大学&amp;#39;, 0.793748140335083), (&amp;#39;同志社大学&amp;#39;, 0.7829926013946533)]&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Word Embeddingの手法としては、Word2Vec(&lt;a href=&#34;https://arxiv.org/abs/1301.3781&#34;&gt;Efficient Estimation of Word Representations in Vector Space (arxiv.org)&lt;/a&gt;)が有名です。&lt;/p&gt;
+&lt;div id=&#34;回答者の属性&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;3.4 回答者の属性&lt;/h3&gt;
+&lt;p&gt;次に回答者の属性を確認しましょう。回答者の属性は&lt;code&gt;業種・職種&lt;/code&gt;から取得できます。まず、どういった業種が多く回答しているのか確認してみます。回答数上位10番目までの業種を表示させます。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;sample %&amp;gt;% 
+  dplyr::mutate(業種 = stringr::str_remove(sample$`業種・職種`, &amp;quot;（.+）&amp;quot;) %&amp;gt;% 
+stringr::str_remove(&amp;quot;［.+］&amp;quot;)) %&amp;gt;% 
+  dplyr::group_by(業種) %&amp;gt;% 
+  dplyr::summarise(サンプルサイズ=dplyr::n()) %&amp;gt;% 
+  dplyr::arrange(desc(サンプルサイズ)) %&amp;gt;% 
+  dplyr::top_n(10, サンプルサイズ) %&amp;gt;% 
+  dplyr::mutate(`割合(%)`=round(サンプルサイズ/sum(サンプルサイズ)*100, digits=1)) %&amp;gt;% 
+  knitr::kable() %&amp;gt;% 
+  kableExtra::kable_styling(bootstrap_options = c(&amp;quot;striped&amp;quot;))&lt;/code&gt;&lt;/pre&gt;
+&lt;table class=&#34;table table-striped&#34; style=&#34;margin-left: auto; margin-right: auto;&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th style=&#34;text-align:left;&#34;&gt;
+業種
+&lt;/th&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+サンプルサイズ
+&lt;/th&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+割合(%)
+&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+百貨店
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+4959
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+15.1
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+スーパー
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+4738
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+14.4
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+一般小売店
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+3851
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+11.7
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+コンビニ
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+3772
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+11.5
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+乗用車販売店
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2967
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+9.0
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+通信会社
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2866
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+8.7
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+商店街
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2734
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+8.3
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+人材派遣会社
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2700
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+8.2
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+衣料品専門店
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2128
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+6.5
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+職業安定所
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2088
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+6.4
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;回答数上位には、百貨店やスーパーなど小売店が目立ちます。また、車のディーラーの方や人材派遣会社など生産・雇用に関連する業種の回答者も多いようです。&lt;/p&gt;
+&lt;p&gt;次に、経営者や職員など職種の分布を確認します。こちらも上位10位までを表示します。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;sample %&amp;gt;% 
+  dplyr::mutate(職種 = stringr::str_extract(sample$`業種・職種`, &amp;quot;（.+）&amp;quot;) %&amp;gt;% 
+  stringr::str_remove(&amp;quot;（&amp;quot;) %&amp;gt;%
+  stringr::str_remove(&amp;quot;）&amp;quot;)) %&amp;gt;% 
+  dplyr::group_by(職種) %&amp;gt;% 
+  dplyr::summarise(サンプルサイズ=dplyr::n()) %&amp;gt;% 
+  dplyr::arrange(desc(サンプルサイズ)) %&amp;gt;% 
+  dplyr::top_n(10, サンプルサイズ) %&amp;gt;% 
+  dplyr::mutate(`割合(%)`=round(サンプルサイズ/sum(サンプルサイズ)*100, digits=1)) %&amp;gt;% 
+  knitr::kable() %&amp;gt;% 
+  kableExtra::kable_styling(bootstrap_options = c(&amp;quot;striped&amp;quot;))&lt;/code&gt;&lt;/pre&gt;
+&lt;table class=&#34;table table-striped&#34; style=&#34;margin-left: auto; margin-right: auto;&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th style=&#34;text-align:left;&#34;&gt;
+職種
+&lt;/th&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+サンプルサイズ
+&lt;/th&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+割合(%)
+&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+経営者
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+20612
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+40.0
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+営業担当
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+7057
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+13.7
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+従業員
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+4371
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+8.5
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+店長
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+4343
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+8.4
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+NA
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+3145
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+6.1
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+職員
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+3118
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+6.1
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+総務担当
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2930
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+5.7
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+代表者
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2615
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+5.1
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+社員
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+1796
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+3.5
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+役員
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+1518
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2.9
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;職種別では経営者がダントツで多い結果となりました。代表者など表記揺れもありますので、実態はもう少し多いと思います。想像では、現場の職員の方の回答が多いと思っていましたが予想とは異なる結果となりました。&lt;/p&gt;
 &lt;/div&gt;
-&lt;div id=&#34;latent-semantic-scalingとは&#34; class=&#34;section level4&#34;&gt;
-&lt;h4&gt;1.3.2 Latent Semantic Scalingとは&lt;/h4&gt;
-&lt;p&gt;計量政治学者である渡辺耕平さんによって提案されたWord Embeddingを利用してセンチメントスコアを単語へ付与する手法です。種語(Seed Words)と呼ばれる抽象的な意味を持つ幾つかの単語と対象とする単語群のEmbeddingベクトルの類似度(距離)をセンチメントスコアとする準教師学習となっており、教師あり学習、教師なし学習のメリデメを補完しています。&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;p&gt;教師あり学習&lt;/p&gt;
-&lt;p&gt;メリット - 学習のスピードが速く、精度も高い&lt;/p&gt;
-&lt;p&gt;デメリット - 教師データを整備するのが大変&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;教師なし学習&lt;/p&gt;
-&lt;p&gt;メリット - 教師データを用意する必要がないので、分析を始めやすい&lt;/p&gt;
-&lt;p&gt;デメリット - 学習のスピードが遅く、精度も低い&lt;/p&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;Word Embeddingの算出には特異値分解を用いています。各要素がその文書(行)におけるその単語(列)の出現頻度が入力されている行列である文書行列に対して特異値分解を行い、各単語のEmbeddingベクトルを計算します。ここで文書行列を&lt;span class=&#34;math inline&#34;&gt;\(D\)&lt;/span&gt;、文書行列&lt;span class=&#34;math inline&#34;&gt;\(D\)&lt;/span&gt;における単語(列)数を&lt;span class=&#34;math inline&#34;&gt;\(n\)&lt;/span&gt;とすると、&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-D \approx U \Sigma V&amp;#39;
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;と分解でき、&lt;span class=&#34;math inline&#34;&gt;\(V\)&lt;/span&gt;が&lt;span class=&#34;math inline&#34;&gt;\(k×n\)&lt;/span&gt;行列となるので各単語の特徴量ベクトルと見なすことができます(&lt;span class=&#34;math inline&#34;&gt;\(k\)&lt;/span&gt;は分析者が決定)。&lt;span class=&#34;math inline&#34;&gt;\(V\)&lt;/span&gt;のうち&lt;span class=&#34;math inline&#34;&gt;\(i\)&lt;/span&gt;列目のベクトルと&lt;span class=&#34;math inline&#34;&gt;\(V_i\)&lt;/span&gt;と表すと、センチメントスコアは種語&lt;span class=&#34;math inline&#34;&gt;\(s \in S\)&lt;/span&gt;の特徴量ベクトル&lt;span class=&#34;math inline&#34;&gt;\(V_s\)&lt;/span&gt;と各単語の特徴量ベクトル&lt;span class=&#34;math inline&#34;&gt;\(V_j\)&lt;/span&gt;のコサイン類似度から算出します。単語&lt;span class=&#34;math inline&#34;&gt;\(f\)&lt;/span&gt;のセンチメントスコアを&lt;span class=&#34;math inline&#34;&gt;\(g_f\)&lt;/span&gt;とすると、算出式は&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-g_f = \frac{1}{|S|}\sum_{s\in S} \cos(v_s,v_f)p_s
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;となります。ここで、&lt;span class=&#34;math inline&#34;&gt;\(p_s\)&lt;/span&gt;は分析者が定める種語のセンチメントスコアです。種語が複数個存在する場合には平均値を使用します。&lt;/p&gt;
-&lt;p&gt;次に、単語のセンチメントスコアを用いて文書のセンチメントスコアを算出します。文書&lt;span class=&#34;math inline&#34;&gt;\(d\)&lt;/span&gt;のセンチメントスコアを&lt;span class=&#34;math inline&#34;&gt;\(y_d\)&lt;/span&gt;とすると、その文書に含まれる単語&lt;span class=&#34;math inline&#34;&gt;\(f\in F\)&lt;/span&gt;を用いて&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-y_d = \frac{1}{N}\sum_{f\in F}g_fh_f
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;で計算します。ここで、&lt;span class=&#34;math inline&#34;&gt;\(h_f\)&lt;/span&gt;は各単語&lt;span class=&#34;math inline&#34;&gt;\(f\)&lt;/span&gt;のその文書内での出現回数、&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;はその文書に含まれる単語の総数です(&lt;span class=&#34;math inline&#34;&gt;\(V\)&lt;/span&gt;に含まれない単語は除く)。&lt;/p&gt;
+&lt;div id=&#34;景気判断の理由の分布&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;3.5 &lt;code&gt;(景気)判断の理由&lt;/code&gt;の分布&lt;/h3&gt;
+&lt;p&gt;次に&lt;code&gt;(景気)判断の理由&lt;/code&gt;の分布を見ます。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;results &amp;lt;- sample %&amp;gt;% 
+            dplyr::group_by(判断の理由) %&amp;gt;% 
+            dplyr::summarise(サンプルサイズ=dplyr::n()) %&amp;gt;% 
+            dplyr::arrange(desc(サンプルサイズ)) %&amp;gt;% 
+            dplyr::mutate(`割合(%)`=round(サンプルサイズ/sum(サンプルサイズ)*100, digits=1))
+            
+results %&amp;gt;% 
+  knitr::kable() %&amp;gt;% 
+  kableExtra::kable_styling(bootstrap_options = c(&amp;quot;striped&amp;quot;))&lt;/code&gt;&lt;/pre&gt;
+&lt;table class=&#34;table table-striped&#34; style=&#34;margin-left: auto; margin-right: auto;&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th style=&#34;text-align:left;&#34;&gt;
+判断の理由
+&lt;/th&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+サンプルサイズ
+&lt;/th&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+割合(%)
+&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+来客数の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+17432
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+22.7
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+販売量の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+16153
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+21.0
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+お客様の様子
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+11511
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+15.0
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+受注量や販売量の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+9033
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+11.8
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+取引先の様子
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+5034
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+6.6
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+求人数の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+4155
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+5.4
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+それ以外
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+4007
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+5.2
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+単価の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+3654
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+4.8
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+競争相手の様子
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+1603
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2.1
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+周辺企業の様子
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+1161
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+1.5
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+受注価格や販売価格の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+1099
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+1.4
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+求職者数の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+930
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+1.2
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+採用者数の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+666
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+0.9
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+雇用形態の様子
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+361
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+0.5
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+販売量の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+1
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+0.0
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;「来客数の動き」と「販売量の動き」が多く、「お客様の様子」や「受注量や販売量の動き」まで含めると7割を占めます。回答業種に小売店が多いことから、このような項目が上位にきているのだと推察されます。&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;div id=&#34;recurrent-neural-net-work&#34; class=&#34;section level3&#34;&gt;
-&lt;h3&gt;1.4 Recurrent neural net work&lt;/h3&gt;
-&lt;/div&gt;
-&lt;div id=&#34;attention&#34; class=&#34;section level3&#34;&gt;
-&lt;h3&gt;1.5 Attention&lt;/h3&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;div id=&#34;各手法の性能比較&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;2. 各手法の性能比較&lt;/h2&gt;
-&lt;p&gt;ここまで各手法の概要について見てきました。ここからは、同じデータセットを用いて各手法の性能を比較していきたいと思います。&lt;/p&gt;
-&lt;p&gt;使用するデータセットは景気ウオッチャー調査です。景気ウオッチャー調査では、タクシー運転手や小売店の店主、旅館の経営者など景気に敏感な方々(景気ウオッチャー)に対して、5段階の景況感とその理由を毎月アンケートしています。5段階は、「良い(◎)」、「やや良い(○)」、「変わらない(■)」、「やや悪い(▲)」、「悪い(×)」となっています。&lt;/p&gt;
-&lt;p&gt;データを覗いてみると、以下のようになっています。&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;sample.head(10)&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;##      基準日 景気の現状判断  ...   判断の理由                                     追加説明及び具体的状況の説明
-## 0  1月31日       ◎  ...  販売量の動き                           ・店頭の取扱額が前年比約120％と好調であった。
-## 1  1月31日       ◎  ...  来客数の動き  ・当施設の利用乗降客数は１月26日時点で前年比130.1％となっており、１月としては過去最高...
-## 2  1月31日       ○  ...   単価の動き  ・年末の消費の反動もあってか、客の動きがやや鈍い。ただ、相変わらず高額商材が売れているという...
-## 3  1月31日       ○  ...  お客様の様子  ・外国人観光客による売上が前年比152％と好調を継続しているほか、来客数が前年比102％と好...
-## 4  1月31日       ○  ...  来客数の動き       ・積極的に景気が上向きにあるとまではいいづらいものの、３か月前との比較では改善している。
-## 5  1月31日       ○  ...    それ以外  ・気温が平年並みとなり、これまでの温暖、少雪の状態がみられなくなってきたことで、防寒衣料、雑...
-## 6  1月31日       ○  ...  お客様の様子  ・灯油やガソリンの価格が低下していることに加えて、電気料金が下がったこともあり、客の節約意識...
-## 7  1月31日       ○  ...  来客数の動き  ・１月の売上は前年比105％であった。商材の単品管理に加えて、販促の強化により、１月も今売れ...
-## 8  1月31日       ○  ...   単価の動き  ・ガソリンや灯油の価格が低下していることもあり、前年とは異なり、新春初売りなどでは多くの市民...
-## 9  1月31日       ○  ...   単価の動き  ・依然として必要な物しか買わないという客の状況は変わらないが、客の視点が質の良い商材を志向す...
-## 
-## [10 rows x 5 columns]&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;「景気の現状判断」が景況感を表しており、その判断の理由が「追加説明及び具体的状況の説明」にある形です。よって、前者を教師データ、後者を説明データとする教師あり学習データになっています。&lt;/p&gt;
-&lt;div id=&#34;前処理&#34; class=&#34;section level3&#34;&gt;
-&lt;h3&gt;2.0 前処理&lt;/h3&gt;
-&lt;p&gt;まず、各手法で共通の前処理を行います。以下では、使用するモジュールを呼び出し、学習データのうち有効回答のみを抽出しています。&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;from sudachipy import tokenizer
-from sudachipy import dictionary
-from sklearn.preprocessing import LabelEncoder
-
-sample = sample[(sample.追加説明及び具体的状況の説明==&amp;#39;−&amp;#39;)|(sample.追加説明及び具体的状況の説明==&amp;#39;＊&amp;#39;)==False]&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;次に、文書のトークン化を行います。日本語のような言語では英語などと異なり単語ごとの間にスペースがないため、別途区切りを入れてやる必要があります。区切られた各語は形態素と呼ばれ、言葉が意味を持つまとまりの単語の最小単位を指します。また、文章を形態素へ分割することを形態素解析と言います。形態素解析を行うツールは以下のようなものが存在します。&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;MeCab&lt;/li&gt;
-&lt;li&gt;JUMAN&lt;/li&gt;
-&lt;li&gt;JANOME&lt;/li&gt;
-&lt;li&gt;Ginza&lt;/li&gt;
-&lt;li&gt;Sudachi&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;おそらく最も使用されているものはMecabではないかと思いますが、標準装備されている辞書(ipadic)は更新がストップしており、最近の新語に対応できないという問題があります。この点については新語に強いNEologd辞書を加えることで、対処可能であることを別記事で紹介していますが、今回はワークスアプリケーションズが提供しているSudachi&lt;span class=&#34;citation&#34;&gt;(&lt;a href=&#34;#ref-TAKAOKA18.8884&#34; role=&#34;doc-biblioref&#34;&gt;Takaoka et al. 2018&lt;/a&gt;)&lt;/span&gt;を使用することにしたいと思います。公式GithubからSudachiの特長を引用します。&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;複数の分割単位の併用
-&lt;ul&gt;
-&lt;li&gt;必要に応じて切り替え&lt;/li&gt;
-&lt;li&gt;形態素解析と固有表現抽出の融合&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;多数の収録語彙
-&lt;ul&gt;
-&lt;li&gt;UniDic と NEologd をベースに調整&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;機能のプラグイン化
-&lt;ul&gt;
-&lt;li&gt;文字正規化や未知語処理に機能追加が可能&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;同義語辞書との連携
-&lt;ul&gt;
-&lt;li&gt;後日公開予定&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;特質すべきは「複数の分割単位の併用」でしょう。Sudachiでは短い方から A, B, Cの3つの分割モードを提供しています。AはUniDic短単位相当、Cは固有表現相当、BはA, Cの中間的な単位となっており、以下のように同じ「選挙管理委員会」という単語でも形態素が異なることが確認できます。これはSudachi特有の特長になります。&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;tokenizer_obj = dictionary.Dictionary().create()
-
-mode = tokenizer.Tokenizer.SplitMode.A
-[m.normalized_form() for m in tokenizer_obj.tokenize(&amp;quot;選挙管理委員会&amp;quot;, mode)]&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## [&amp;#39;選挙&amp;#39;, &amp;#39;管理&amp;#39;, &amp;#39;委員&amp;#39;, &amp;#39;会&amp;#39;]&lt;/code&gt;&lt;/pre&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;mode = tokenizer.Tokenizer.SplitMode.B
-[m.normalized_form() for m in tokenizer_obj.tokenize(&amp;quot;選挙管理委員会&amp;quot;, mode)]&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## [&amp;#39;選挙&amp;#39;, &amp;#39;管理&amp;#39;, &amp;#39;委員会&amp;#39;]&lt;/code&gt;&lt;/pre&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;mode = tokenizer.Tokenizer.SplitMode.C
-[m.normalized_form() for m in tokenizer_obj.tokenize(&amp;quot;選挙管理委員会&amp;quot;, mode)]&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## [&amp;#39;選挙管理委員会&amp;#39;]&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;また、辞書についてもUniDicとNEologdをベースとして更新が続けられており、新語にも対応できます。&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;mode = tokenizer.Tokenizer.SplitMode.C
-[m.normalized_form() for m in tokenizer_obj.tokenize(&amp;quot;新型コロナウイルス&amp;quot;, mode)]&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## [&amp;#39;新型コロナウイルス&amp;#39;]&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;個人的に素晴らしいと思うポイントは表記正規化や文字正規化ができると言うことです。以下のように旧字等で同じ意味だが表記が異なる単語や英語/日本語、書き間違え等を正規化する機能があります。&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;tokenizer_obj.tokenize(&amp;quot;附属&amp;quot;, mode)[0].normalized_form()&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## &amp;#39;付属&amp;#39;&lt;/code&gt;&lt;/pre&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;tokenizer_obj.tokenize(&amp;quot;SUMMER&amp;quot;, mode)[0].normalized_form()&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## &amp;#39;サマー&amp;#39;&lt;/code&gt;&lt;/pre&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;tokenizer_obj.tokenize(&amp;quot;シュミレーション&amp;quot;, mode)[0].normalized_form()&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## &amp;#39;シミュレーション&amp;#39;&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;このような高性能な形態素解析ツールが無償でしかも商用利用も可というところに驚きを隠せません。後述しますが、このSudachiで形態素解析を行ったWord2vecモデルであるChiveもワークスアプリケーションズは提供をしています。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;辞書ベース-1&#34; class=&#34;section level3 unnumbered&#34;&gt;
-&lt;h3&gt;2.1 辞書ベース&lt;/h3&gt;
-&lt;div id=&#34;refs&#34; class=&#34;references csl-bib-body hanging-indent&#34;&gt;
-&lt;div id=&#34;ref-takamura2005&#34; class=&#34;csl-entry&#34;&gt;
-Takamura, Hiroya, Takashi Inui, and Manabu Okumura. 2005. &lt;span&gt;“The 43rd Annual Meeting.”&lt;/span&gt; In. Association for Computational Linguistics. &lt;a href=&#34;https://doi.org/10.3115/1219840.1219857&#34;&gt;https://doi.org/10.3115/1219840.1219857&lt;/a&gt;.
-&lt;/div&gt;
-&lt;div id=&#34;ref-TAKAOKA18.8884&#34; class=&#34;csl-entry&#34;&gt;
-Takaoka, Kazuma, Sorami Hisamoto, Noriko Kawahara, Miho Sakamoto, Yoshitaka Uchida, and Yuji Matsumoto. 2018. &lt;span&gt;“Sudachi: A Japanese Tokenizer for Business.”&lt;/span&gt; In &lt;em&gt;Proceedings of the Eleventh International Conference on Language Resources and Evaluation (LREC 2018)&lt;/em&gt;, edited by Nicoletta Calzolari (Conference chair), Khalid Choukri, Christopher Cieri, Thierry Declerck, Sara Goggi, Koiti Hasida, Hitoshi Isahara, et al. Paris, France: European Language Resources Association (ELRA).
-&lt;/div&gt;
-&lt;div id=&#34;ref-watanabe2020&#34; class=&#34;csl-entry&#34;&gt;
-Watanabe, Kohei. 2020. &lt;span&gt;“Latent Semantic Scaling: A Semisupervised Text Analysis Technique for New Domains and Languages.”&lt;/span&gt; &lt;em&gt;Communication Methods and Measures&lt;/em&gt;, November, 1–22. &lt;a href=&#34;https://doi.org/10.1080/19312458.2020.1832976&#34;&gt;https://doi.org/10.1080/19312458.2020.1832976&lt;/a&gt;.
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;/div&gt;
+&lt;div id=&#34;終わりに&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;4. 終わりに&lt;/h2&gt;
+&lt;p&gt;これから各回で以下の手法を用いた予測モデルの構築を行っていきます。次回は、辞書ベースに基づくセンチメントの抽出を行い、文書のポジネガ分類を行います。&lt;/p&gt;
+&lt;ol style=&#34;list-style-type: decimal&#34;&gt;
+&lt;li&gt;辞書ベース&lt;/li&gt;
+&lt;li&gt;ナイーブベイズ分類器&lt;/li&gt;
+&lt;li&gt;単語埋め込み(Word Embedding)を用いた方法&lt;/li&gt;
+&lt;li&gt;Recurrent neural network(RNN)&lt;/li&gt;
+&lt;li&gt;Transformer&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;実は、解析自体は全て完了しており、文書を書くだけのフェーズになっています。ちゃんと結果も出ていますので、乞うご期待です！&lt;/p&gt;
 &lt;/div&gt;
 </description>
     </item>

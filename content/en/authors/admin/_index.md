@@ -1,5 +1,5 @@
 ---
-bio: This blog is a nightly update by a man who is working in his third year since completing graduate school. The content of this blog has nothing to do with the official position of the author's organization.
+bio: This blog is a nightly update by a man who is working in his forth year since completing graduate school. The content of this blog has nothing to do with the official position of the author's organization.
 education:
   courses:
   - course: Policy Studies Master
@@ -13,9 +13,11 @@ highlight_name: false
 interests:
 - Macroeconomics
 - Machine Learning
+- Data Visualization
+- Business Process Restructuring/Business Process Management
 - Design, construction, and operation of database
 organizations:
-- name: An asset management company in Tokyo
+- name: An electronic components manufacturer
   url: 
 role: company employee
 social:
@@ -37,4 +39,4 @@ user_groups:
 - Principal Investigators
 ---
 
-I'm 28 years old, from Nara, Japan and currently in my forth year since completing graduate studies. I majored in macroeconomics (mainly Dynamic Stochastic General Equilibruim models), and also experimented with time series analysis and text mining. Recently, I'm interested in data wrangling and am studying for certification to advance my career as an data engineer. Currently, I am working in the Investment Planning Group at an asset management company.
+I'm 28 years old, from Nara, Japan and currently in my forth year since completing graduate studies. I majored in macroeconomics (mainly Dynamic Stochastic General Equilibruim models), and also experimented with time series analysis and text mining. In 2018, I graduated and started working for an asset management company in Tokyo, mainly in strategic planning. In March 2022, I changed jobs and started my career path as a data consultant for an electronic components manufacturer in Kyoto, Japan.

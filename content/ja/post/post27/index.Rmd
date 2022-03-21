@@ -1,0 +1,239 @@
+---
+title: "【徹底比較】センチメントスコア算出手法！！ - 第1回"
+author: admin
+date: 2022-03-21T00:00:00Z
+categories: ["単発"]
+tags: ["Python","前処理","機械学習","テキスト解析"]
+draft: false
+featured: false
+slug: ["sentiment_score"]
+image:
+  caption: ''
+  focal_point: ""
+  placement: 2
+  preview_only: false
+lastmod: ""
+projects: []
+summary: 機械学習を用いたセンチメントスコアの算出方法の発展を簡単にさらっていきます。
+output: 
+  blogdown::html_page:
+    number_sections: false
+    toc: true
+---
+
+おはこんばんにちは。テキスト解析はデータ分析界隈ではもうかなり当たり前になってきています。テキストの感性情報(センチメント)を抽出する手法には、どのようなものがあるかあるのか調べたところかなり時代は進んでいると実感しました。今回は実際に`R`や`Python`で作成した機械学習モデルを用いて、それらの精度を比較してみたいと思います。 今回はその第１回目ということで、データセットや全体感のお話です。
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+```{python,include=FALSE}
+import os
+os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = r'C:\Users\aashi\Anaconda3\Library\plugins\platforms'
+```
+
+## 1. 解きたい問題
+
+今回解きたい問題は「景況感を表す文書表現を学習し、実際の景気判断を予測する」というタスクです。 データセットには、内閣府が出している景気ウオッチャー調査を使用します。
+
+### 1.1 景気ウオッチャー調査とは
+
+景気ウオッチャー調査とは、内閣府が月次で公表している景気動向判断のための統計情報です。調査の目的は以下の通りです([内閣府Webサイト](https://www5.cao.go.jp/keizai3/watcher/watcher_mokuteki.html#mokuteki)より)。
+
+\<調査の目的>
+
+:   地域の景気に関連の深い動きを観察できる立場にある人々の協力を得て、地域ごとの景気動向を的確かつ迅速に把握し、景気動向判断の基礎資料とすることを目的とする。
+
+では、この「地域の景気に関連の深い動きを観察できる立場にある人々」、「地域ごとの景気動向」、「的確かつ迅速に」という部分について少し深掘ってみます。
+
+### 1.1.1 調査の対象範囲
+
+調査の対象範囲は47都道府県となっています。また、調査対象者は「家計動向、企業動向、雇用等、代表的な経済活動項目の動向を敏感に反映する現象を観察できる業種の適当な職種の中から選定した2,050人」となっており、例えば小売店や飲食店の店員・店長、タクシー運転手、製造業・非製造業企業の経営者・従業員、人材派遣会社社員などを対象に行われています。
+
+### 1.1.2 調査期日および期間
+
+調査は月次で行われ、毎月25日から月末にかけて実施されます。当月の景況感について調査が行われ、翌月に公表されます。
+
+### 1.1.3 調査の実施方法
+
+アンケート調査を電話・Webサイト・電子メールのいずれかで回答することになっています。質問項目は以下の通りです([調査票](https://www5.cao.go.jp/keizai3/watcher/chousahyo.pdf))。
+
+1.  景気の現状に対する判断（方向性）
+
+2.  1.の理由
+
+3.  2.の追加説明及び具体的状況の説明(自由記述)
+
+4.  景気の先行きに対する判断(方向性)
+
+5.  (4)の理由
+
+6.  (参考)景気の現状に対する判断(水準)
+
+ご参考までに2016年1月調査のサンプルデータをお見せします。
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE}
+library(magrittr)
+sample <- readr::read_csv(r"(C:\Users\aashi\Desktop\TextMining\景気ウオッチャー\生データ\watcher_2016.csv)",locale=readr::locale(encoding="SHIFT-JIS"), show_col_types=FALSE)
+options(kableExtra.html.bsTable = TRUE)
+knitr::kable(head(sample)) %>% 
+  kableExtra::kable_styling(bootstrap_options = c("striped"))
+```
+
+### 1.2 問題設定
+
+今回の問題設定は、「追加説明及び具体的状況の説明」に記載されているテキスト情報をもとに、「景気の現状判断」を予測するタスクになります。
+「景気の現状判断」は「良い」、「やや良い」、「どちらとも言えない」、「やや悪い」、「悪い」となっており、これを2値分類問題にして学習を行います(どちらとも言えないはネガティブに分類)。
+
+## 2. テキスト解析手法の進化の譜系
+
+上記問題設定を解くためには、テキスト情報から感性情報(センチメント)を抽出する必要があります。私が調べた浅い知識によると、感性情報の抽出方法には以下のような手法があります。
+
+1.  辞書ベース
+2.  ナイーブベイズ分類器
+3.  単語埋め込み(Word Embedding)を用いた方法
+4.  Recurrent neural network(RNN)
+5.  Transformer
+
+おそらく、下に行くにつれてより最新の手法になっており、精度も高いのではないかと推察されます。 また、1,2,3はやり方にもよるんでしょうが文章が与えられた際にその語順関係を考慮しません。 今後、各手法について解析結果の記事を投稿する予定ですので、詳しい中身についてはそれぞれの回で触れたいと思います。
+
+## 3. サンプルデータ概観
+
+### 3.1 サンプルデータの読み込み
+
+今回使用する景気ウオッチャー調査のサンプルは2016年~2020年のものとなっています。現状判断の調査結果を格のしたcsvファイル(景気判断理由集)を月ごとに内閣府のWebページからダウンロードし、整形したものを年ごとに連結しています。
+
+```{r, include=FALSE}
+filepath = r"(C:\Users\aashi\Desktop\TextMining\景気ウオッチャー\生データ)"
+```
+
+```{r eval=FALSE}
+filepath = r"(C:\Users\hogehoge\Watcher\RawData)"
+```
+
+```{r}
+files <- stringr::str_c(filepath, "\\",list.files(filepath, pattern = "*.csv"))
+sample <- readr::read_csv(files, locale=readr::locale(encoding="SHIFT-JIS"), show_col_types = FALSE)
+# 「－」は回答が存在しない、「＊」は主だった回答等が存在しないため、除外
+sample <- sample[sample$追加説明及び具体的状況の説明 != "－",]
+sample <- sample[sample$追加説明及び具体的状況の説明 != "＊",]
+```
+
+知らなかったんですが、`readr::read_csv`って2.0.0からファイルパスのリストを引数としてcsvを読み込み、その結果を連結してくれるようになったんですね。地味に便利です。
+
+### 3.2 サンプルサイズ
+
+サンプルサイズは`r NROW(sample)`でした。サンプルサイズとしては申し分ないかと思います。
+
+```{r}
+NROW(sample)
+```
+
+念のため、各年ごとにも見てみます。
+
+```{r}
+library(magrittr)
+sample %>% 
+  dplyr::group_by(基準年) %>% 
+  dplyr::summarise(サンプルサイズ=dplyr::n()) %>% 
+  dplyr::mutate(`割合(%)`=round(サンプルサイズ/sum(サンプルサイズ)*100, digits=1)) %>% 
+  knitr::kable() %>% 
+  kableExtra::kable_styling(bootstrap_options = c("striped"))
+```
+
+各年およそ14,000~16,000サンプルほど存在するようです。大きなバラツキもありません。
+
+### 3.3 `景気の現状判断`の分布
+
+これから予測を行う`景気の現状判断`はどのような分布になっているでしょうか。
+
+```{r}
+sample$景気の現状判断 <- factor(sample$景気の現状判断, levels=c("◎","○","□","▲","×"))
+sample %>% 
+  dplyr::group_by(景気の現状判断) %>%
+  dplyr::summarise(サンプルサイズ=dplyr::n()) %>% 
+  dplyr::mutate(`割合(%)`=round(サンプルサイズ/sum(サンプルサイズ)*100, digits=1)) %>% 
+  knitr::kable() %>% 
+  kableExtra::kable_styling(bootstrap_options = c("striped"))
+```
+
+思ったよりキレイな分布をしている印象です。このサンプル期間では、「どちらとも言えない」が最も多く、また、比較的「やや悪い」や「悪い」が多いことがわかります。このあたりは2019年度以降のコロナ禍の影響を反映している可能性があるので、新たに時間軸を追加し、クロス集計をしてみましょう。
+
+```{r}
+sample %>% 
+  dplyr::group_by(基準年, 景気の現状判断) %>% 
+  dplyr::tally() %>% 
+  tidyr::spread(景気の現状判断, n) %>% 
+  knitr::kable() %>% 
+  kableExtra::kable_styling(bootstrap_options = c("striped"))
+```
+
+やはり、2019年以降「悪い」が多く出現していることがわかります。一方で、「やや悪い」はそれ以前の年でも恒常的に多いようです。
+
+### 3.4 回答者の属性
+
+次に回答者の属性を確認しましょう。回答者の属性は`業種・職種`から取得できます。まず、どういった業種が多く回答しているのか確認してみます。回答数上位10番目までの業種を表示させます。
+
+```{r}
+sample %>% 
+  dplyr::mutate(業種 = stringr::str_remove(sample$`業種・職種`, "（.+）") %>% 
+stringr::str_remove("［.+］")) %>% 
+  dplyr::group_by(業種) %>% 
+  dplyr::summarise(サンプルサイズ=dplyr::n()) %>% 
+  dplyr::arrange(desc(サンプルサイズ)) %>% 
+  dplyr::top_n(10, サンプルサイズ) %>% 
+  dplyr::mutate(`割合(%)`=round(サンプルサイズ/sum(サンプルサイズ)*100, digits=1)) %>% 
+  knitr::kable() %>% 
+  kableExtra::kable_styling(bootstrap_options = c("striped"))
+```
+
+回答数上位には、百貨店やスーパーなど小売店が目立ちます。また、車のディーラーの方や人材派遣会社など生産・雇用に関連する業種の回答者も多いようです。
+
+次に、経営者や職員など職種の分布を確認します。こちらも上位10位までを表示します。
+
+```{r}
+sample %>% 
+  dplyr::mutate(職種 = stringr::str_extract(sample$`業種・職種`, "（.+）") %>% 
+  stringr::str_remove("（") %>%
+  stringr::str_remove("）")) %>% 
+  dplyr::group_by(職種) %>% 
+  dplyr::summarise(サンプルサイズ=dplyr::n()) %>% 
+  dplyr::arrange(desc(サンプルサイズ)) %>% 
+  dplyr::top_n(10, サンプルサイズ) %>% 
+  dplyr::mutate(`割合(%)`=round(サンプルサイズ/sum(サンプルサイズ)*100, digits=1)) %>% 
+  knitr::kable() %>% 
+  kableExtra::kable_styling(bootstrap_options = c("striped"))
+```
+
+職種別では経営者がダントツで多い結果となりました。代表者など表記揺れもありますので、実態はもう少し多いと思います。想像では、現場の職員の方の回答が多いと思っていましたが予想とは異なる結果となりました。
+
+### 3.5 `(景気)判断の理由`の分布
+
+次に`(景気)判断の理由`の分布を見ます。
+
+```{r}
+results <- sample %>% 
+            dplyr::group_by(判断の理由) %>% 
+            dplyr::summarise(サンプルサイズ=dplyr::n()) %>% 
+            dplyr::arrange(desc(サンプルサイズ)) %>% 
+            dplyr::mutate(`割合(%)`=round(サンプルサイズ/sum(サンプルサイズ)*100, digits=1))
+            
+results %>% 
+  knitr::kable() %>% 
+  kableExtra::kable_styling(bootstrap_options = c("striped"))
+```
+
+「来客数の動き」と「販売量の動き」が多く、「お客様の様子」や「受注量や販売量の動き」まで含めると7割を占めます。回答業種に小売店が多いことから、このような項目が上位にきているのだと推察されます。
+
+## 4. 終わりに
+
+これから各回で以下の手法を用いた予測モデルの構築を行っていきます。次回は、辞書ベースに基づくセンチメントの抽出を行い、文書のポジネガ分類を行います。
+
+1.  辞書ベース
+2.  ナイーブベイズ分類器
+3.  単語埋め込み(Word Embedding)を用いた方法
+4.  Recurrent neural network(RNN)
+5.  Transformer
+
+実は、解析自体は全て完了しており、文書を書くだけのフェーズになっています。ちゃんと結果も出ていますので、乞うご期待です！

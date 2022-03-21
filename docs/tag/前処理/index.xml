@@ -1,16 +1,1061 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>前処理 | 東京の資産運用会社で働く社会人が研究に没頭するブログ</title>
+    <title>前処理 | 京都の電子部品メーカーで働く社会人が研究に没頭するブログ</title>
     <link>/tag/%E5%89%8D%E5%87%A6%E7%90%86/</link>
       <atom:link href="/tag/%E5%89%8D%E5%87%A6%E7%90%86/index.xml" rel="self" type="application/rss+xml" />
     <description>前処理</description>
-    <generator>Wowchemy (https://wowchemy.com)</generator><language>ja</language><lastBuildDate>Tue, 03 Nov 2020 00:00:00 +0000</lastBuildDate>
+    <generator>Wowchemy (https://wowchemy.com)</generator><language>ja</language><lastBuildDate>Mon, 21 Mar 2022 00:00:00 +0000</lastBuildDate>
     <image>
       <url>/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
       <title>前処理</title>
       <link>/tag/%E5%89%8D%E5%87%A6%E7%90%86/</link>
     </image>
+    
+    <item>
+      <title>【徹底比較】センチメントスコア算出手法！！ - 第1回</title>
+      <link>/post/post27/</link>
+      <pubDate>Mon, 21 Mar 2022 00:00:00 +0000</pubDate>
+      <guid>/post/post27/</guid>
+      <description>
+&lt;script src=&#34;../../post/post27/index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+&lt;script src=&#34;../../post/post27/index_files/kePrint/kePrint.js&#34;&gt;&lt;/script&gt;
+&lt;link href=&#34;../../post/post27/index_files/lightable/lightable.css&#34; rel=&#34;stylesheet&#34; /&gt;
+&lt;link href=&#34;../../post/post27/index_files/bsTable/bootstrapTable.min.css&#34; rel=&#34;stylesheet&#34; /&gt;
+&lt;script src=&#34;../../post/post27/index_files/bsTable/bootstrapTable.js&#34;&gt;&lt;/script&gt;
+
+&lt;div id=&#34;TOC&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#解きたい問題&#34;&gt;1. 解きたい問題&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#景気ウオッチャー調査とは&#34;&gt;1.1 景気ウオッチャー調査とは&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#調査の対象範囲&#34;&gt;1.1.1 調査の対象範囲&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#調査期日および期間&#34;&gt;1.1.2 調査期日および期間&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#調査の実施方法&#34;&gt;1.1.3 調査の実施方法&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#問題設定&#34;&gt;1.2 問題設定&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#テキスト解析手法の進化の譜系&#34;&gt;2. テキスト解析手法の進化の譜系&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#サンプルデータ概観&#34;&gt;3. サンプルデータ概観&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#サンプルデータの読み込み&#34;&gt;3.1 サンプルデータの読み込み&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#サンプルサイズ&#34;&gt;3.2 サンプルサイズ&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#景気の現状判断の分布&#34;&gt;3.3 &lt;code&gt;景気の現状判断&lt;/code&gt;の分布&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#回答者の属性&#34;&gt;3.4 回答者の属性&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#景気判断の理由の分布&#34;&gt;3.5 &lt;code&gt;(景気)判断の理由&lt;/code&gt;の分布&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#終わりに&#34;&gt;4. 終わりに&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+
+&lt;p&gt;おはこんばんにちは。テキスト解析はデータ分析界隈ではもうかなり当たり前になってきています。テキストの感性情報(センチメント)を抽出する手法には、どのようなものがあるかあるのか調べたところかなり時代は進んでいると実感しました。今回は実際に&lt;code&gt;R&lt;/code&gt;や&lt;code&gt;Python&lt;/code&gt;で作成した機械学習モデルを用いて、それらの精度を比較してみたいと思います。 今回はその第１回目ということで、データセットや全体感のお話です。&lt;/p&gt;
+&lt;div id=&#34;解きたい問題&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;1. 解きたい問題&lt;/h2&gt;
+&lt;p&gt;今回解きたい問題は「景況感を表す文書表現を学習し、実際の景気判断を予測する」というタスクです。 データセットには、内閣府が出している景気ウオッチャー調査を使用します。&lt;/p&gt;
+&lt;div id=&#34;景気ウオッチャー調査とは&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;1.1 景気ウオッチャー調査とは&lt;/h3&gt;
+&lt;p&gt;景気ウオッチャー調査とは、内閣府が月次で公表している景気動向判断のための統計情報です。調査の目的は以下の通りです(&lt;a href=&#34;https://www5.cao.go.jp/keizai3/watcher/watcher_mokuteki.html#mokuteki&#34;&gt;内閣府Webサイト&lt;/a&gt;より)。&lt;/p&gt;
+&lt;dl&gt;
+&lt;dt&gt;&amp;lt;調査の目的&amp;gt;&lt;/dt&gt;
+&lt;dd&gt;&lt;p&gt;地域の景気に関連の深い動きを観察できる立場にある人々の協力を得て、地域ごとの景気動向を的確かつ迅速に把握し、景気動向判断の基礎資料とすることを目的とする。&lt;/p&gt;
+&lt;/dd&gt;
+&lt;/dl&gt;
+&lt;p&gt;では、この「地域の景気に関連の深い動きを観察できる立場にある人々」、「地域ごとの景気動向」、「的確かつ迅速に」という部分について少し深掘ってみます。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;調査の対象範囲&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;1.1.1 調査の対象範囲&lt;/h3&gt;
+&lt;p&gt;調査の対象範囲は47都道府県となっています。また、調査対象者は「家計動向、企業動向、雇用等、代表的な経済活動項目の動向を敏感に反映する現象を観察できる業種の適当な職種の中から選定した2,050人」となっており、例えば小売店や飲食店の店員・店長、タクシー運転手、製造業・非製造業企業の経営者・従業員、人材派遣会社社員などを対象に行われています。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;調査期日および期間&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;1.1.2 調査期日および期間&lt;/h3&gt;
+&lt;p&gt;調査は月次で行われ、毎月25日から月末にかけて実施されます。当月の景況感について調査が行われ、翌月に公表されます。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;調査の実施方法&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;1.1.3 調査の実施方法&lt;/h3&gt;
+&lt;p&gt;アンケート調査を電話・Webサイト・電子メールのいずれかで回答することになっています。質問項目は以下の通りです(&lt;a href=&#34;https://www5.cao.go.jp/keizai3/watcher/chousahyo.pdf&#34;&gt;調査票&lt;/a&gt;)。&lt;/p&gt;
+&lt;ol style=&#34;list-style-type: decimal&#34;&gt;
+&lt;li&gt;&lt;p&gt;景気の現状に対する判断（方向性）&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;1.の理由&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;2.の追加説明及び具体的状況の説明(自由記述)&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;景気の先行きに対する判断(方向性)&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;(4)の理由&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;(参考)景気の現状に対する判断(水準)&lt;/p&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;ご参考までに2016年1月調査のサンプルデータをお見せします。&lt;/p&gt;
+&lt;table class=&#34;table table-striped&#34; style=&#34;margin-left: auto; margin-right: auto;&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+基準年
+&lt;/th&gt;
+&lt;th style=&#34;text-align:left;&#34;&gt;
+基準日
+&lt;/th&gt;
+&lt;th style=&#34;text-align:left;&#34;&gt;
+景気の現状判断
+&lt;/th&gt;
+&lt;th style=&#34;text-align:left;&#34;&gt;
+業種・職種
+&lt;/th&gt;
+&lt;th style=&#34;text-align:left;&#34;&gt;
+判断の理由
+&lt;/th&gt;
+&lt;th style=&#34;text-align:left;&#34;&gt;
+追加説明及び具体的状況の説明
+&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2016
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+1月31日
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+◎
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+旅行代理店（従業員）
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+販売量の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+・店頭の取扱額が前年比約120％と好調であった。
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2016
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+1月31日
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+◎
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+観光名所（従業員）
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+来客数の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+・当施設の利用乗降客数は１月26日時点で前年比130.1％となっており、１月としては過去最高の利用乗降客数になることが確定したほどの入込状況にある。
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2016
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+1月31日
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+○
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+一般小売店［酒］（経営者）
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+単価の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+・年末の消費の反動もあってか、客の動きがやや鈍い。ただ、相変わらず高額商材が売れているということもあり、売上はそれなりの金額をキープしている。
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2016
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+1月31日
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+○
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+百貨店（売場主任）
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+お客様の様子
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+・外国人観光客による売上が前年比152％と好調を継続しているほか、来客数が前年比102％と好調を維持している。月半ばに停滞した売上も下旬に入ってから回復傾向にあり、定価品、バーゲン品とも前年を上回っている。
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2016
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+1月31日
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+○
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+百貨店（担当者）
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+来客数の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+・積極的に景気が上向きにあるとまではいいづらいものの、３か月前との比較では改善している。
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2016
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+1月31日
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+○
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+百貨店（販売促進担当）
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+それ以外
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+・気温が平年並みとなり、これまでの温暖、少雪の状態がみられなくなってきたことで、防寒衣料、雑貨商材を中心に多少改善の傾向がみられる。
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div id=&#34;問題設定&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;1.2 問題設定&lt;/h3&gt;
+&lt;p&gt;今回の問題設定は、「追加説明及び具体的状況の説明」に記載されているテキスト情報をもとに、「景気の現状判断」を予測するタスクになります。
+「景気の現状判断」は「良い」、「やや良い」、「どちらとも言えない」、「やや悪い」、「悪い」となっており、これを2値分類問題にして学習を行います(どちらとも言えないはネガティブに分類)。&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&#34;テキスト解析手法の進化の譜系&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;2. テキスト解析手法の進化の譜系&lt;/h2&gt;
+&lt;p&gt;上記問題設定を解くためには、テキスト情報から感性情報(センチメント)を抽出する必要があります。私が調べた浅い知識によると、感性情報の抽出方法には以下のような手法があります。&lt;/p&gt;
+&lt;ol style=&#34;list-style-type: decimal&#34;&gt;
+&lt;li&gt;辞書ベース&lt;/li&gt;
+&lt;li&gt;ナイーブベイズ分類器&lt;/li&gt;
+&lt;li&gt;単語埋め込み(Word Embedding)を用いた方法&lt;/li&gt;
+&lt;li&gt;Recurrent neural network(RNN)&lt;/li&gt;
+&lt;li&gt;Transformer&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;おそらく、下に行くにつれてより最新の手法になっており、精度も高いのではないかと推察されます。 また、1,2,3はやり方にもよるんでしょうが文章が与えられた際にその語順関係を考慮しません。 今後、各手法について解析結果の記事を投稿する予定ですので、詳しい中身についてはそれぞれの回で触れたいと思います。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;サンプルデータ概観&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;3. サンプルデータ概観&lt;/h2&gt;
+&lt;div id=&#34;サンプルデータの読み込み&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;3.1 サンプルデータの読み込み&lt;/h3&gt;
+&lt;p&gt;今回使用する景気ウオッチャー調査のサンプルは2016年~2020年のものとなっています。現状判断の調査結果を格のしたcsvファイル(景気判断理由集)を月ごとに内閣府のWebページからダウンロードし、整形したものを年ごとに連結しています。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;filepath = r&amp;quot;(C:\Users\hogehoge\Watcher\RawData)&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;files &amp;lt;- stringr::str_c(filepath, &amp;quot;\\&amp;quot;,list.files(filepath, pattern = &amp;quot;*.csv&amp;quot;))
+sample &amp;lt;- readr::read_csv(files, locale=readr::locale(encoding=&amp;quot;SHIFT-JIS&amp;quot;), show_col_types = FALSE)
+# 「－」は回答が存在しない、「＊」は主だった回答等が存在しないため、除外
+sample &amp;lt;- sample[sample$追加説明及び具体的状況の説明 != &amp;quot;－&amp;quot;,]
+sample &amp;lt;- sample[sample$追加説明及び具体的状況の説明 != &amp;quot;＊&amp;quot;,]&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;知らなかったんですが、&lt;code&gt;readr::read_csv&lt;/code&gt;って2.0.0からファイルパスのリストを引数としてcsvを読み込み、その結果を連結してくれるようになったんですね。地味に便利です。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;サンプルサイズ&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;3.2 サンプルサイズ&lt;/h3&gt;
+&lt;p&gt;サンプルサイズは76800でした。サンプルサイズとしては申し分ないかと思います。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;NROW(sample)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 76800&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;念のため、各年ごとにも見てみます。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(magrittr)
+sample %&amp;gt;% 
+  dplyr::group_by(基準年) %&amp;gt;% 
+  dplyr::summarise(サンプルサイズ=dplyr::n()) %&amp;gt;% 
+  dplyr::mutate(`割合(%)`=round(サンプルサイズ/sum(サンプルサイズ)*100, digits=1)) %&amp;gt;% 
+  knitr::kable() %&amp;gt;% 
+  kableExtra::kable_styling(bootstrap_options = c(&amp;quot;striped&amp;quot;))&lt;/code&gt;&lt;/pre&gt;
+&lt;table class=&#34;table table-striped&#34; style=&#34;margin-left: auto; margin-right: auto;&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+基準年
+&lt;/th&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+サンプルサイズ
+&lt;/th&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+割合(%)
+&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2016
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+15168
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+19.8
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2017
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+16724
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+21.8
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2018
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+14756
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+19.2
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2019
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+14588
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+19.0
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2020
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+15564
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+20.3
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;各年およそ14,000~16,000サンプルほど存在するようです。大きなバラツキもありません。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;景気の現状判断の分布&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;3.3 &lt;code&gt;景気の現状判断&lt;/code&gt;の分布&lt;/h3&gt;
+&lt;p&gt;これから予測を行う&lt;code&gt;景気の現状判断&lt;/code&gt;はどのような分布になっているでしょうか。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;sample$景気の現状判断 &amp;lt;- factor(sample$景気の現状判断, levels=c(&amp;quot;◎&amp;quot;,&amp;quot;○&amp;quot;,&amp;quot;□&amp;quot;,&amp;quot;▲&amp;quot;,&amp;quot;×&amp;quot;))
+sample %&amp;gt;% 
+  dplyr::group_by(景気の現状判断) %&amp;gt;%
+  dplyr::summarise(サンプルサイズ=dplyr::n()) %&amp;gt;% 
+  dplyr::mutate(`割合(%)`=round(サンプルサイズ/sum(サンプルサイズ)*100, digits=1)) %&amp;gt;% 
+  knitr::kable() %&amp;gt;% 
+  kableExtra::kable_styling(bootstrap_options = c(&amp;quot;striped&amp;quot;))&lt;/code&gt;&lt;/pre&gt;
+&lt;table class=&#34;table table-striped&#34; style=&#34;margin-left: auto; margin-right: auto;&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th style=&#34;text-align:left;&#34;&gt;
+景気の現状判断
+&lt;/th&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+サンプルサイズ
+&lt;/th&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+割合(%)
+&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+◎
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+1569
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2.0
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+○
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+14370
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+18.7
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+□
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+34438
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+44.8
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+▲
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+18642
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+24.3
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+×
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+7781
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+10.1
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;思ったよりキレイな分布をしている印象です。このサンプル期間では、「どちらとも言えない」が最も多く、また、比較的「やや悪い」や「悪い」が多いことがわかります。このあたりは2019年度以降のコロナ禍の影響を反映している可能性があるので、新たに時間軸を追加し、クロス集計をしてみましょう。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;sample %&amp;gt;% 
+  dplyr::group_by(基準年, 景気の現状判断) %&amp;gt;% 
+  dplyr::tally() %&amp;gt;% 
+  tidyr::spread(景気の現状判断, n) %&amp;gt;% 
+  knitr::kable() %&amp;gt;% 
+  kableExtra::kable_styling(bootstrap_options = c(&amp;quot;striped&amp;quot;))&lt;/code&gt;&lt;/pre&gt;
+&lt;table class=&#34;table table-striped&#34; style=&#34;margin-left: auto; margin-right: auto;&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+基準年
+&lt;/th&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+◎
+&lt;/th&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+○
+&lt;/th&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+□
+&lt;/th&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+▲
+&lt;/th&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+×
+&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2016
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+235
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2455
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+7546
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+4129
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+803
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2017
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+375
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+4031
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+8681
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+3053
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+584
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2018
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+349
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+3105
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+7340
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+3336
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+626
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2019
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+237
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2050
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+6743
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+4516
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+1042
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2020
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+373
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2729
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+4128
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+3608
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+4726
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;やはり、2019年以降「悪い」が多く出現していることがわかります。一方で、「やや悪い」はそれ以前の年でも恒常的に多いようです。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;回答者の属性&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;3.4 回答者の属性&lt;/h3&gt;
+&lt;p&gt;次に回答者の属性を確認しましょう。回答者の属性は&lt;code&gt;業種・職種&lt;/code&gt;から取得できます。まず、どういった業種が多く回答しているのか確認してみます。回答数上位10番目までの業種を表示させます。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;sample %&amp;gt;% 
+  dplyr::mutate(業種 = stringr::str_remove(sample$`業種・職種`, &amp;quot;（.+）&amp;quot;) %&amp;gt;% 
+stringr::str_remove(&amp;quot;［.+］&amp;quot;)) %&amp;gt;% 
+  dplyr::group_by(業種) %&amp;gt;% 
+  dplyr::summarise(サンプルサイズ=dplyr::n()) %&amp;gt;% 
+  dplyr::arrange(desc(サンプルサイズ)) %&amp;gt;% 
+  dplyr::top_n(10, サンプルサイズ) %&amp;gt;% 
+  dplyr::mutate(`割合(%)`=round(サンプルサイズ/sum(サンプルサイズ)*100, digits=1)) %&amp;gt;% 
+  knitr::kable() %&amp;gt;% 
+  kableExtra::kable_styling(bootstrap_options = c(&amp;quot;striped&amp;quot;))&lt;/code&gt;&lt;/pre&gt;
+&lt;table class=&#34;table table-striped&#34; style=&#34;margin-left: auto; margin-right: auto;&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th style=&#34;text-align:left;&#34;&gt;
+業種
+&lt;/th&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+サンプルサイズ
+&lt;/th&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+割合(%)
+&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+百貨店
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+4959
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+15.1
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+スーパー
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+4738
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+14.4
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+一般小売店
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+3851
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+11.7
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+コンビニ
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+3772
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+11.5
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+乗用車販売店
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2967
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+9.0
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+通信会社
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2866
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+8.7
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+商店街
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2734
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+8.3
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+人材派遣会社
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2700
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+8.2
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+衣料品専門店
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2128
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+6.5
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+職業安定所
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2088
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+6.4
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;回答数上位には、百貨店やスーパーなど小売店が目立ちます。また、車のディーラーの方や人材派遣会社など生産・雇用に関連する業種の回答者も多いようです。&lt;/p&gt;
+&lt;p&gt;次に、経営者や職員など職種の分布を確認します。こちらも上位10位までを表示します。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;sample %&amp;gt;% 
+  dplyr::mutate(職種 = stringr::str_extract(sample$`業種・職種`, &amp;quot;（.+）&amp;quot;) %&amp;gt;% 
+  stringr::str_remove(&amp;quot;（&amp;quot;) %&amp;gt;%
+  stringr::str_remove(&amp;quot;）&amp;quot;)) %&amp;gt;% 
+  dplyr::group_by(職種) %&amp;gt;% 
+  dplyr::summarise(サンプルサイズ=dplyr::n()) %&amp;gt;% 
+  dplyr::arrange(desc(サンプルサイズ)) %&amp;gt;% 
+  dplyr::top_n(10, サンプルサイズ) %&amp;gt;% 
+  dplyr::mutate(`割合(%)`=round(サンプルサイズ/sum(サンプルサイズ)*100, digits=1)) %&amp;gt;% 
+  knitr::kable() %&amp;gt;% 
+  kableExtra::kable_styling(bootstrap_options = c(&amp;quot;striped&amp;quot;))&lt;/code&gt;&lt;/pre&gt;
+&lt;table class=&#34;table table-striped&#34; style=&#34;margin-left: auto; margin-right: auto;&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th style=&#34;text-align:left;&#34;&gt;
+職種
+&lt;/th&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+サンプルサイズ
+&lt;/th&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+割合(%)
+&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+経営者
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+20612
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+40.0
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+営業担当
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+7057
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+13.7
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+従業員
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+4371
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+8.5
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+店長
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+4343
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+8.4
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+NA
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+3145
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+6.1
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+職員
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+3118
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+6.1
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+総務担当
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2930
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+5.7
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+代表者
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2615
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+5.1
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+社員
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+1796
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+3.5
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+役員
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+1518
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2.9
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;職種別では経営者がダントツで多い結果となりました。代表者など表記揺れもありますので、実態はもう少し多いと思います。想像では、現場の職員の方の回答が多いと思っていましたが予想とは異なる結果となりました。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;景気判断の理由の分布&#34; class=&#34;section level3&#34;&gt;
+&lt;h3&gt;3.5 &lt;code&gt;(景気)判断の理由&lt;/code&gt;の分布&lt;/h3&gt;
+&lt;p&gt;次に&lt;code&gt;(景気)判断の理由&lt;/code&gt;の分布を見ます。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;results &amp;lt;- sample %&amp;gt;% 
+            dplyr::group_by(判断の理由) %&amp;gt;% 
+            dplyr::summarise(サンプルサイズ=dplyr::n()) %&amp;gt;% 
+            dplyr::arrange(desc(サンプルサイズ)) %&amp;gt;% 
+            dplyr::mutate(`割合(%)`=round(サンプルサイズ/sum(サンプルサイズ)*100, digits=1))
+            
+results %&amp;gt;% 
+  knitr::kable() %&amp;gt;% 
+  kableExtra::kable_styling(bootstrap_options = c(&amp;quot;striped&amp;quot;))&lt;/code&gt;&lt;/pre&gt;
+&lt;table class=&#34;table table-striped&#34; style=&#34;margin-left: auto; margin-right: auto;&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th style=&#34;text-align:left;&#34;&gt;
+判断の理由
+&lt;/th&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+サンプルサイズ
+&lt;/th&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+割合(%)
+&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+来客数の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+17432
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+22.7
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+販売量の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+16153
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+21.0
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+お客様の様子
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+11511
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+15.0
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+受注量や販売量の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+9033
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+11.8
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+取引先の様子
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+5034
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+6.6
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+求人数の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+4155
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+5.4
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+それ以外
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+4007
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+5.2
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+単価の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+3654
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+4.8
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+競争相手の様子
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+1603
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2.1
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+周辺企業の様子
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+1161
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+1.5
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+受注価格や販売価格の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+1099
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+1.4
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+求職者数の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+930
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+1.2
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+採用者数の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+666
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+0.9
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+雇用形態の様子
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+361
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+0.5
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+販売量の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+1
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+0.0
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;「来客数の動き」と「販売量の動き」が多く、「お客様の様子」や「受注量や販売量の動き」まで含めると7割を占めます。回答業種に小売店が多いことから、このような項目が上位にきているのだと推察されます。&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&#34;終わりに&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;4. 終わりに&lt;/h2&gt;
+&lt;p&gt;これから各回で以下の手法を用いた予測モデルの構築を行っていきます。次回は、辞書ベースに基づくセンチメントの抽出を行い、文書のポジネガ分類を行います。&lt;/p&gt;
+&lt;ol style=&#34;list-style-type: decimal&#34;&gt;
+&lt;li&gt;辞書ベース&lt;/li&gt;
+&lt;li&gt;ナイーブベイズ分類器&lt;/li&gt;
+&lt;li&gt;単語埋め込み(Word Embedding)を用いた方法&lt;/li&gt;
+&lt;li&gt;Recurrent neural network(RNN)&lt;/li&gt;
+&lt;li&gt;Transformer&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;実は、解析自体は全て完了しており、文書を書くだけのフェーズになっています。ちゃんと結果も出ていますので、乞うご期待です！&lt;/p&gt;
+&lt;/div&gt;
+</description>
+    </item>
     
     <item>
       <title>Pythonのpandas_datareaderから色々なデータを取得してみる</title>
