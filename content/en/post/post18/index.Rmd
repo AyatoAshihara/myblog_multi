@@ -160,7 +160,7 @@ import os
 ```
 
 ```{python,include=FALSE}
-os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = 'C:/Users/aashi/Anaconda3/envs/umanalytics/Library/plugins/platforms'
+os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = 'C:/Users/aashi/Anaconda3/Library/plugins/platforms'
 ```
 
 The first step is to convert the collected image data to numerical data to create the training data.
@@ -372,52 +372,6 @@ shap.image_plot(shap_values[1],X_test[[0]])
 ```
 
 It's very subtle, but it looks like you're appreciating the legs and buttocks, etc. It needs to be cropped to take out the horse's body only, since it seems to be responding to the background. I think I need to build a model for object detection. I'll think about this another time.
-I'd like to visualize which aspects of the image are captured at each layer.
-
-```{python}
-from keras import models
-
-layer_outputs = [layer.output for layer in model.layers[:8]]
-layer_names = []
-for layer in model.layers[:8]:
-    layer_names.append(layer.name)
-images_per_row = 16
-
-activation_model = models.Model(inputs=model.input, outputs=layer_outputs)
-activations = activation_model.predict(X_train[[0]])
-
-for layer_name, layer_activation in zip(layer_names, activations):
-    n_features = layer_activation.shape[-1]
-
-    size = layer_activation.shape[1]
-
-    n_cols = n_features // images_per_row
-    display_grid = np.zeros((size * n_cols, images_per_row * size))
-
-    for col in range(n_cols):
-        for row in range(images_per_row):
-            channel_image = layer_activation[0,
-                                             :, :,
-                                             col * images_per_row + row]
-            channel_image -= channel_image.mean()
-            channel_image /= channel_image.std()
-            channel_image *= 64
-            channel_image += 128
-            channel_image = np.clip(channel_image, 0, 255).astype('uint8')
-            display_grid[col * size : (col + 1) * size,
-                         row * size : (row + 1) * size] = channel_image
-
-    scale = 1. / size
-    plt.figure(figsize=(scale * display_grid.shape[1],
-                        scale * display_grid.shape[0]))
-    plt.title(layer_name)
-    plt.grid(False)
-    plt.imshow(display_grid, cmap='viridis')
-    plt.show()
-    plt.close()
-```
-
-It's hard to interpret, partly because I'm inexperienced.
 
 ## 4. Finally
 

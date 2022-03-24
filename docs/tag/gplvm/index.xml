@@ -17,437 +17,374 @@
       <link>/post/post8/</link>
       <pubDate>Sun, 26 May 2019 00:00:00 +0000</pubDate>
       <guid>/post/post8/</guid>
-      <description>
-&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
-&lt;link href=&#34;index_files/pagedtable/css/pagedtable.css&#34; rel=&#34;stylesheet&#34; /&gt;
-&lt;script src=&#34;index_files/pagedtable/js/pagedtable.js&#34;&gt;&lt;/script&gt;
-
-&lt;div id=&#34;TOC&#34;&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;#gplvmとは&#34;&gt;1. GPLVMとは&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#最もprimitiveなgp-lvm&#34;&gt;2. &lt;span&gt;最もPrimitiveなGP-LVM&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#rでの実装&#34;&gt;3. Rでの実装&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/div&gt;
-
-&lt;p&gt;おはこんばんにちは。
+      <description>&lt;p&gt;おはこんばんにちは。
 ずいぶん前にGianonne et al (2008)のマルチファクターモデルで四半期GDPの予想を行いました。
 結果としては、ある程度は予測精度が出ていたものの彼らの論文ほどは満足のいくものではありませんでした。原因としてはクロスセクショナルなデータ不足が大きいと思われ、現在収集方法についてもEXCELを用いて改修中です。しかし一方で、マルチファクターモデルの改善も考えたいと思っています。前回は月次経済統計を主成分分析（実際にはカルマンフィルタ）を用いて次元削減を行い、主成分得点を説明変数としてGDPに回帰しました。今回はこの主成分分析のド発展版である&lt;code&gt;Gaussian Process Latent Variable Model&lt;/code&gt;(GPLVM)を用いてファクターを計算し、それをGDPに回帰したいと思います。&lt;/p&gt;
-&lt;div id=&#34;gplvmとは&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;1. GPLVMとは&lt;/h2&gt;
+&lt;h2 id=&#34;1-gplvmとは&#34;&gt;1. GPLVMとは&lt;/h2&gt;
 &lt;p&gt;GPLVMとは、&lt;code&gt;Gaussian Process&lt;/code&gt; Modelの一種です。以前、&lt;code&gt;Gaussian Process Regression&lt;/code&gt;の記事を書きました。&lt;/p&gt;
-&lt;p&gt;最も基本的な&lt;code&gt;Gaussian Process&lt;/code&gt; Modelは上の記事のようなモデルで、非説明変数&lt;span class=&#34;math inline&#34;&gt;\(Y=(y_{1},y_{2},...,y_{n})\)&lt;/span&gt;と説明変数&lt;span class=&#34;math inline&#34;&gt;\(X=(\textbf{x}_{1},\textbf{x}_{2},...,\textbf{x}_{n})\)&lt;/span&gt;があり、以下のような関係式で表される際にそのモデルを直接推定することなしに新たな説明変数&lt;span class=&#34;math inline&#34;&gt;\(X\)&lt;/span&gt;の入力に対し、非説明変数&lt;span class=&#34;math inline&#34;&gt;\(Y\)&lt;/span&gt;の予測値をはじき出すというものでした。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+&lt;p&gt;最も基本的な&lt;code&gt;Gaussian Process&lt;/code&gt; Modelは上の記事のようなモデルで、非説明変数$Y=(y_{1},y_{2},&amp;hellip;,y_{n})$と説明変数$X=(\textbf{x}_{1},\textbf{x}_{2},&amp;hellip;,\textbf{x}_{n})$があり、以下のような関係式で表される際にそのモデルを直接推定することなしに新たな説明変数$X$の入力に対し、非説明変数$Y$の予測値をはじき出すというものでした。&lt;/p&gt;
+&lt;p&gt;$$
 \displaystyle y_{i}  = \textbf{w}^{T}\phi(\textbf{x}_{i})
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;ここで、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{x}_{i}\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(i\)&lt;/span&gt;番目の説明変数ベクトル、&lt;span class=&#34;math inline&#34;&gt;\(\phi(・)\)&lt;/span&gt;は非線形関数、 &lt;span class=&#34;math inline&#34;&gt;\(\textbf{w}^{T}\)&lt;/span&gt;は各入力データに対する重み係数（回帰係数）ベクトルです。非線形関数としては、&lt;span class=&#34;math inline&#34;&gt;\(\phi(\textbf{x}_{i}) = (x_{1,i}, x_{1,i}^{2},...,x_{1,i}x_{2,i},...)\)&lt;/span&gt;を想定しています（&lt;span class=&#34;math inline&#34;&gt;\(x_{1,i}\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(i\)&lt;/span&gt;番目の入力データ&lt;span class=&#34;math inline&#34;&gt;\(\textbf{x}_{i}\)&lt;/span&gt;の１番目の変数）。詳しくは過去記事を参照してください。&lt;/p&gt;
+$$&lt;/p&gt;
+&lt;p&gt;ここで、$\textbf{x}&lt;em&gt;{i}$は$i$番目の説明変数ベクトル、$\phi(・)$は非線形関数、 &lt;code&gt;\(\textbf{w}^{T}\)&lt;/code&gt;は各入力データに対する重み係数（回帰係数）ベクトルです。非線形関数としては、$\phi(\textbf{x}&lt;/em&gt;{i}) = (x_{1,i}, x_{1,i}^{2},&amp;hellip;,x_{1,i}x_{2,i},&amp;hellip;)$を想定しています（$x_{1,i}$は$i$番目の入力データ$\textbf{x}_{i}$の１番目の変数）。詳しくは過去記事を参照してください。&lt;/p&gt;
 &lt;p&gt;今回やるGPLVMは説明変数ベクトルが観測できない潜在変数（Latent Variable）であるところが特徴です。以下のスライドが非常にわかりやすいですが、GP-LVMは確率的主成分分析（PPCA）の非線形版という位置付けになっています。&lt;/p&gt;
-&lt;p&gt;&lt;a href=&#34;https://www.slideshare.net/antiplastics/pcagplvm&#34;&gt;資料&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;では具体的な説明に移ります。GPLVMは主成分分析の発展版ですので、主に次元削減のために行われることを想定しています。つまり、データセットがあったとして、サンプルサイズ&lt;span class=&#34;math inline&#34;&gt;\(n\)&lt;/span&gt;よりも変数の次元&lt;span class=&#34;math inline&#34;&gt;\(p\)&lt;/span&gt;が大きいような場合を想定しています。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;最もprimitiveなgp-lvm&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;2. &lt;a href=&#34;http://papers.nips.cc/paper/2540-gaussian-process-latent-variable-models-for-visualisation-of-high-dimensional-data.pdf&#34;&gt;最もPrimitiveなGP-LVM&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;先述したようにGPLVMはPPCAの非線形版です。なので、GPLVMを説明するスタートはPPCAになります。観測可能な&lt;span class=&#34;math inline&#34;&gt;\(D\)&lt;/span&gt;次元データセットを&lt;span class=&#34;math inline&#34;&gt;\(\{\textbf{y}_{n}\}_{n=1}^{N}\)&lt;/span&gt;とします。そして、潜在変数を&lt;span class=&#34;math inline&#34;&gt;\(\textbf{x}_{n}\)&lt;/span&gt;とおきます。今、データセットと潜在変数の間には以下のような関係があるとします。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\textbf{y}_{n} = \textbf{W}\textbf{x}_{n} + \epsilon_{n}
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;ここで、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{W}\)&lt;/span&gt;はウェイト行列、&lt;span class=&#34;math inline&#34;&gt;\(\epsilon_{n}\)&lt;/span&gt;はかく乱項で&lt;span class=&#34;math inline&#34;&gt;\(N(0,\beta^{-1}\textbf{I})\)&lt;/span&gt;に従います（被説明変数が多次元になることに注意）。また、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{x}_{n}\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(N(0,\textbf{I})\)&lt;/span&gt;に従います。このとき、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{y}_{n}\)&lt;/span&gt;の尤度を&lt;span class=&#34;math inline&#34;&gt;\(\textbf{x}_{n}\)&lt;/span&gt;を周辺化することで表現すると、&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\begin{eqnarray*}
-\displaystyle p(\textbf{y}_{n}|\textbf{W},\beta) &amp;amp;=&amp;amp; \int p(\textbf{y}_{n}|\textbf{x}_{n},\textbf{W},\beta)N(0,\textbf{I})d\textbf{x}_{n} \\
-\displaystyle &amp;amp;=&amp;amp; \int N(\textbf{W}\textbf{x}_{n},\beta^{-1}\textbf{I})N(0,\textbf{I})d\textbf{x}_{n} \\
-&amp;amp;=&amp;amp; N(0,\textbf{W}\textbf{W}^{T} + \beta^{-1}\textbf{I}) \\
-\displaystyle &amp;amp;=&amp;amp; \frac{1}{(2\pi)^{DN/2}|\textbf{W}\textbf{W}^{T} + \beta^{-1}\textbf{I}|^{N/2}}\exp(\frac{1}{2}\textbf{tr}( (\textbf{W}\textbf{W}^{T} + \beta^{-1}\textbf{I})^{-1}\textbf{YY}^{T}))
-\end{eqnarray*}
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;となります。ここで、&lt;span class=&#34;math inline&#34;&gt;\(p(\textbf{y}_{n}|\textbf{x}_{n},\textbf{W},\beta)=N(\textbf{W}\textbf{x}_{n},\beta^{-1}\textbf{I})\)&lt;/span&gt;です。平均と分散は以下から求めました。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\begin{eqnarray*}
-E(\textbf{y}_{n}|\textbf{W},\beta) &amp;amp;=&amp;amp; E(\textbf{W}\textbf{x}_{n} + \epsilon_{n}) \\
-&amp;amp;=&amp;amp; E(\textbf{W}\textbf{x}_{n}) + E(\epsilon_{n}) \\
-&amp;amp;=&amp;amp; \textbf{W}E(\textbf{x}_{n}) + E(\epsilon_{n}) = 0
-\end{eqnarray*}
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\begin{eqnarray*}
-E[(\textbf{y}_{n}|\textbf{W},\beta)(\textbf{y}_{n}|\textbf{W},\beta)^{T}] &amp;amp;=&amp;amp; E[ (\textbf{W}\textbf{x}_{n} + \epsilon_{n} - 0)(\textbf{W}\textbf{x}_{n} + \epsilon_{n} - 0)^{T} ] \\
-&amp;amp;=&amp;amp; E[ (\textbf{W}\textbf{x}_{n} + \epsilon_{n})(\textbf{W}\textbf{x}_{n} + \epsilon_{n})^{T} ] \\
-&amp;amp;=&amp;amp; E[ \textbf{W}\textbf{x}_{n}(\textbf{W}\textbf{x}_{n})^{T} + \textbf{W}\textbf{x}_{n}\epsilon_{n}^{T} + \epsilon_{n}\textbf{W}\textbf{x}_{n}^{T} + \epsilon_{n}\epsilon_{n}^{T} ] \\
-&amp;amp;=&amp;amp; E[ \textbf{W}\textbf{x}_{n}(\textbf{W}\textbf{x}_{n})^{T} + \epsilon_{n}\epsilon_{n}^{T} ] \\
-&amp;amp;=&amp;amp; E[ \textbf{W}\textbf{x}_{n}\textbf{x}_{n}^{T}\textbf{W}^{T} + \epsilon_{n}\epsilon_{n}^{T} ] \\
-&amp;amp;=&amp;amp; E[ \textbf{W}\textbf{x}_{n}\textbf{x}_{n}^{T}\textbf{W}^{T}] + E[\epsilon_{n}\epsilon_{n}^{T} ] \\
-&amp;amp;=&amp;amp; \textbf{W}\textbf{W}^{T} + \beta^{-1}\textbf{I}
-\end{eqnarray*}
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math inline&#34;&gt;\(\textbf{W}\)&lt;/span&gt;を求めるためには&lt;span class=&#34;math inline&#34;&gt;\(\textbf{y}_{n}\)&lt;/span&gt;がi.i.d.と仮定し、以下のようなデータセット全体の尤度を最大化すれば良いことになります。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+&lt;p&gt;&lt;a href=&#34;https://www.slideshare.net/antiplastics/pcagplvm&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;資料&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;では具体的な説明に移ります。GPLVMは主成分分析の発展版ですので、主に次元削減のために行われることを想定しています。つまり、データセットがあったとして、サンプルサイズ$n$よりも変数の次元$p$が大きいような場合を想定しています。&lt;/p&gt;
+&lt;h2 id=&#34;2-最もprimitiveなgp-lvmhttppapersnipsccpaper2540-gaussian-process-latent-variable-models-for-visualisation-of-high-dimensional-datapdf&#34;&gt;2. &lt;a href=&#34;http://papers.nips.cc/paper/2540-gaussian-process-latent-variable-models-for-visualisation-of-high-dimensional-data.pdf&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;最もPrimitiveなGP-LVM&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;先述したようにGPLVMはPPCAの非線形版です。なので、GPLVMを説明するスタートはPPCAになります。観測可能な$D$次元データセットを${\textbf{y}&lt;em&gt;{n}}&lt;/em&gt;{n=1}^{N}$とします。そして、潜在変数を$\textbf{x}_{n}$とおきます。今、データセットと潜在変数の間には以下のような関係があるとします。&lt;/p&gt;
+&lt;p&gt;$$
+\textbf{y}&lt;em&gt;{n} = \textbf{W}\textbf{x}&lt;/em&gt;{n} + \epsilon_{n}
+$$&lt;/p&gt;
+&lt;p&gt;ここで、$\textbf{W}$はウェイト行列、$\epsilon_{n}$はかく乱項で$N(0,\beta^{-1}\textbf{I})$に従います（被説明変数が多次元になることに注意）。また、$\textbf{x}_{n}$は$N(0,\textbf{I})$に従います。このとき、$\textbf{y}_{n}$の尤度を$\textbf{x}_{n}$を周辺化することで表現すると、&lt;/p&gt;
+&lt;p&gt;$$
+&lt;code&gt;\begin{eqnarray*} \displaystyle p(\textbf{y}_{n}|\textbf{W},\beta) &amp;amp;=&amp;amp; \int p(\textbf{y}_{n}|\textbf{x}_{n},\textbf{W},\beta)N(0,\textbf{I})d\textbf{x}_{n} \\ \displaystyle &amp;amp;=&amp;amp; \int N(\textbf{W}\textbf{x}_{n},\beta^{-1}\textbf{I})N(0,\textbf{I})d\textbf{x}_{n} \\ &amp;amp;=&amp;amp; N(0,\textbf{W}\textbf{W}^{T} + \beta^{-1}\textbf{I}) \\ \displaystyle &amp;amp;=&amp;amp; \frac{1}{(2\pi)^{DN/2}|\textbf{W}\textbf{W}^{T} + \beta^{-1}\textbf{I}|^{N/2}}\exp(\frac{1}{2}\textbf{tr}( (\textbf{W}\textbf{W}^{T} + \beta^{-1}\textbf{I})^{-1}\textbf{YY}^{T})) \end{eqnarray*}&lt;/code&gt;
+$$&lt;/p&gt;
+&lt;p&gt;となります。ここで、$p(\textbf{y}&lt;em&gt;{n}|\textbf{x}&lt;/em&gt;{n},\textbf{W},\beta)=N(\textbf{W}\textbf{x}_{n},\beta^{-1}\textbf{I})$です。平均と分散は以下から求めました。&lt;/p&gt;
+&lt;p&gt;$$
+&lt;code&gt;\begin{eqnarray*} E(\textbf{y}_{n}|\textbf{W},\beta) &amp;amp;=&amp;amp; E(\textbf{W}\textbf{x}_{n} + \epsilon_{n}) \\ &amp;amp;=&amp;amp; E(\textbf{W}\textbf{x}_{n}) + E(\epsilon_{n}) \\ &amp;amp;=&amp;amp; \textbf{W}E(\textbf{x}_{n}) + E(\epsilon_{n}) = 0 \end{eqnarray*}&lt;/code&gt;
+$$&lt;/p&gt;
+&lt;p&gt;$$
+&lt;code&gt;\begin{eqnarray*} E[(\textbf{y}_{n}|\textbf{W},\beta)(\textbf{y}_{n}|\textbf{W},\beta)^{T}] &amp;amp;=&amp;amp; E[ (\textbf{W}\textbf{x}_{n} + \epsilon_{n} - 0)(\textbf{W}\textbf{x}_{n} + \epsilon_{n} - 0)^{T} ] \\ &amp;amp;=&amp;amp; E[ (\textbf{W}\textbf{x}_{n} + \epsilon_{n})(\textbf{W}\textbf{x}_{n} + \epsilon_{n})^{T} ] \\ &amp;amp;=&amp;amp; E[ \textbf{W}\textbf{x}_{n}(\textbf{W}\textbf{x}_{n})^{T} + \textbf{W}\textbf{x}_{n}\epsilon_{n}^{T} + \epsilon_{n}\textbf{W}\textbf{x}_{n}^{T} + \epsilon_{n}\epsilon_{n}^{T} ] \\ &amp;amp;=&amp;amp; E[ \textbf{W}\textbf{x}_{n}(\textbf{W}\textbf{x}_{n})^{T} + \epsilon_{n}\epsilon_{n}^{T} ] \\ &amp;amp;=&amp;amp; E[ \textbf{W}\textbf{x}_{n}\textbf{x}_{n}^{T}\textbf{W}^{T} + \epsilon_{n}\epsilon_{n}^{T} ] \\ &amp;amp;=&amp;amp; E[ \textbf{W}\textbf{x}_{n}\textbf{x}_{n}^{T}\textbf{W}^{T}] + E[\epsilon_{n}\epsilon_{n}^{T} ] \\ &amp;amp;=&amp;amp; \textbf{W}\textbf{W}^{T} + \beta^{-1}\textbf{I} \end{eqnarray*}&lt;/code&gt;
+$$&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;\(\textbf{W}\)&lt;/code&gt;を求めるためには$\textbf{y}_{n}$がi.i.d.と仮定し、以下のようなデータセット全体の尤度を最大化すれば良いことになります。&lt;/p&gt;
+&lt;p&gt;$$
 \displaystyle p(\textbf{Y}|\textbf{W},\beta) = \prod_{n=1}^{N}p(\textbf{y}_{n}|\textbf{W},\beta)
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;ここで、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{Y}\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(N×D\)&lt;/span&gt;の計画行列です。このように、PPCAでは&lt;span class=&#34;math inline&#34;&gt;\(\textbf{x}_{n}\)&lt;/span&gt;を周辺化し、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{W}\)&lt;/span&gt;を最適化します。逆に、Lawrence(2004)では&lt;span class=&#34;math inline&#34;&gt;\(\textbf{W}\)&lt;/span&gt;を周辺化し、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{x}_{n}\)&lt;/span&gt;します（理由は後述）。&lt;span class=&#34;math inline&#34;&gt;\(\textbf{W}\)&lt;/span&gt;を周辺化するために、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{W}\)&lt;/span&gt;に事前分布を与えましょう。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+$$&lt;/p&gt;
+&lt;p&gt;ここで、$\textbf{Y}$は$N×D$の計画行列です。このように、PPCAでは$\textbf{x}&lt;em&gt;{n}$を周辺化し、$\textbf{W}$を最適化します。逆に、Lawrence(2004)では$\textbf{W}$を周辺化し、$\textbf{x}&lt;/em&gt;{n}$します（理由は後述）。$\textbf{W}$を周辺化するために、$\textbf{W}$に事前分布を与えましょう。&lt;/p&gt;
+&lt;p&gt;$$
 \displaystyle p(\textbf{W}) = \prod_{i=1}^{D}N(\textbf{w}_{i}|0,\alpha^{-1}\textbf{I})
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;ここで、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{w}_{i}\)&lt;/span&gt;はウェイト行列&lt;span class=&#34;math inline&#34;&gt;\(\textbf{W}\)&lt;/span&gt;の&lt;span class=&#34;math inline&#34;&gt;\(i\)&lt;/span&gt;番目の列です。では、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{W}\)&lt;/span&gt;を周辺化して&lt;span class=&#34;math inline&#34;&gt;\(\textbf{Y}\)&lt;/span&gt;の尤度関数を導出してみます。やり方はさっきとほぼ同じなので省略します。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+$$&lt;/p&gt;
+&lt;p&gt;ここで、$\textbf{w}_{i}$はウェイト行列$\textbf{W}$の$i$番目の列です。では、$\textbf{W}$を周辺化して$\textbf{Y}$の尤度関数を導出してみます。やり方はさっきとほぼ同じなので省略します。&lt;/p&gt;
+&lt;p&gt;$$
 \displaystyle p(\textbf{Y}|\textbf{X},\beta) = \frac{1}{(2\pi)^{DN/2}|K|^{D/2}}\exp(\frac{1}{2}\textbf{tr}(\textbf{K}^{-1}\textbf{YY}^{T}))
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;ここで、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{K}=\alpha^2\textbf{X}\textbf{X}^{T} + \beta^{-1}\textbf{I}\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(p(\textbf{Y}|\textbf{X},\beta)\)&lt;/span&gt;の分散共分散行列で、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{X}=(\textbf{x}_{1},\textbf{x}_{2},...,\textbf{x}_{N})^{T}\)&lt;/span&gt;は入力ベクトルです。対数尤度は&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+$$&lt;/p&gt;
+&lt;p&gt;ここで、$\textbf{K}=\alpha^2\textbf{X}\textbf{X}^{T} + \beta^{-1}\textbf{I}$は$p(\textbf{Y}|\textbf{X},\beta)$の分散共分散行列で、$\textbf{X}=(\textbf{x}&lt;em&gt;{1},\textbf{x}&lt;/em&gt;{2},&amp;hellip;,\textbf{x}_{N})^{T}$は入力ベクトルです。対数尤度は&lt;/p&gt;
+&lt;p&gt;$$
 \displaystyle L = - \frac{DN}{2}\ln{2\pi} - \frac{1}{2}\ln{|\textbf{K}|} - \frac{1}{2}\textbf{tr}(\textbf{K}^{-1}\textbf{YY}^{T})
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;周辺化のおかげでウェイト&lt;span class=&#34;math inline&#34;&gt;\(\textbf{W}\)&lt;/span&gt;が消えたのでこれを&lt;span class=&#34;math inline&#34;&gt;\(X\)&lt;/span&gt;で微分してみましょう。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+$$&lt;/p&gt;
+&lt;p&gt;周辺化のおかげでウェイト$\textbf{W}$が消えたのでこれを$X$で微分してみましょう。&lt;/p&gt;
+&lt;p&gt;$$
 \displaystyle\frac{\partial L}{ \partial \textbf{X}} = \alpha^2 \textbf{K}^{-1}\textbf{Y}\textbf{Y}^{T}\textbf{K}^{-1}\textbf{X} - \alpha^2 D\textbf{K}^{-1}\textbf{X}
-\]&lt;/span&gt;&lt;/p&gt;
+$$&lt;/p&gt;
 &lt;p&gt;ここから、&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+&lt;p&gt;$$
 \displaystyle \frac{1}{D}\textbf{Y}\textbf{Y}^{T}\textbf{K}^{-1}\textbf{X} = \textbf{X}
-\]&lt;/span&gt;&lt;/p&gt;
+$$&lt;/p&gt;
 &lt;p&gt;ここで、特異値分解を用いると&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+&lt;p&gt;$$
 \textbf{X} = \textbf{ULV}^{T}
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;となります。&lt;span class=&#34;math inline&#34;&gt;\(\textbf{U} = (\textbf{u}_{1},\textbf{u}_{2},...,\textbf{u}_{q})\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(N×q\)&lt;/span&gt;直交行列、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{L} = diag(l_{1},l_{2},..., l_{q})\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(q×q\)&lt;/span&gt;の特異値を対角成分に並べた行列、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{V}\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(q×q\)&lt;/span&gt;直交行列です。これを先ほどの式に代入すると、&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\begin{eqnarray*}
-\textbf{K}^{-1}\textbf{X} &amp;amp;=&amp;amp; (\alpha^2\textbf{X}\textbf{X}^{T} + \beta^{-1}\textbf{I})^{-1}\textbf{X} \\
-&amp;amp;=&amp;amp; \textbf{X}(\alpha^2\textbf{X}^{T}\textbf{X} + \beta^{-1}\textbf{I})^{-1} \\
-&amp;amp;=&amp;amp; \textbf{ULV}^{T}(\alpha^2\textbf{VLU}^{T}\textbf{ULV}^{T} + \beta^{-1}\textbf{I})^{-1} \\
-&amp;amp;=&amp;amp; \textbf{ULV}^{T}\textbf{V}(\alpha^2\textbf{LU}^{T}\textbf{UL} + \beta^{-1}\textbf{I}^{-1})\textbf{V}^{T} \\
-&amp;amp;=&amp;amp; \textbf{UL}(\alpha^2\textbf{L}^{2} + \beta^{-1}\textbf{I})^{-1}\textbf{V}^{T}
-\end{eqnarray*}
-\]&lt;/span&gt;&lt;/p&gt;
+$$&lt;/p&gt;
+&lt;p&gt;となります。$\textbf{U} = (\textbf{u}&lt;em&gt;{1},\textbf{u}&lt;/em&gt;{2},&amp;hellip;,\textbf{u}&lt;em&gt;{q})$は$N×q$直交行列、$\textbf{L} = diag(l&lt;/em&gt;{1},l_{2},&amp;hellip;, l_{q})$は$q×q$の特異値を対角成分に並べた行列、$\textbf{V}$は$q×q$直交行列です。これを先ほどの式に代入すると、&lt;/p&gt;
+&lt;p&gt;$$
+&lt;code&gt;\begin{eqnarray*} \textbf{K}^{-1}\textbf{X} &amp;amp;=&amp;amp; (\alpha^2\textbf{X}\textbf{X}^{T} + \beta^{-1}\textbf{I})^{-1}\textbf{X} \\ &amp;amp;=&amp;amp; \textbf{X}(\alpha^2\textbf{X}^{T}\textbf{X} + \beta^{-1}\textbf{I})^{-1} \\ &amp;amp;=&amp;amp; \textbf{ULV}^{T}(\alpha^2\textbf{VLU}^{T}\textbf{ULV}^{T} + \beta^{-1}\textbf{I})^{-1} \\ &amp;amp;=&amp;amp; \textbf{ULV}^{T}\textbf{V}(\alpha^2\textbf{LU}^{T}\textbf{UL} + \beta^{-1}\textbf{I}^{-1})\textbf{V}^{T} \\ &amp;amp;=&amp;amp; \textbf{UL}(\alpha^2\textbf{L}^{2} + \beta^{-1}\textbf{I})^{-1}\textbf{V}^{T} \end{eqnarray*}&lt;/code&gt;
+$$&lt;/p&gt;
 &lt;p&gt;なので、&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\begin{eqnarray*}
-\displaystyle \frac{1}{D}\textbf{Y}\textbf{Y}^{T}\textbf{UL}(\alpha^2\textbf{L}^{2} + \beta^{-1}\textbf{I})^{-1})\textbf{V}^{T} &amp;amp;=&amp;amp; \textbf{ULV}^{T}\\
-\displaystyle \textbf{Y}\textbf{Y}^{T}\textbf{UL} &amp;amp;=&amp;amp; D\textbf{U}(\alpha^2\textbf{L}^{2} + \beta^{-1}\textbf{I})^{-1}\textbf{L} \\
-\end{eqnarray*}
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;となります。&lt;span class=&#34;math inline&#34;&gt;\(l_{j}\)&lt;/span&gt;が0でなければ、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{Y}\textbf{Y}^{T}\textbf{u}_{j} = D(\alpha^2 l_{j}^{2} + \beta^{-1})\textbf{u}_{j}\)&lt;/span&gt;となり、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{U}\)&lt;/span&gt;のそれぞれの列は&lt;span class=&#34;math inline&#34;&gt;\(\textbf{Y}\textbf{Y}^{T}\)&lt;/span&gt;の固有ベクトルであり、対応する固有値&lt;span class=&#34;math inline&#34;&gt;\(\lambda_{j}\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(D(\alpha^2 l_{j}^{2} + \beta^{-1})\)&lt;/span&gt;となります。つまり、未知であった&lt;span class=&#34;math inline&#34;&gt;\(X=ULV\)&lt;/span&gt;が実は&lt;span class=&#34;math inline&#34;&gt;\(\textbf{Y}\textbf{Y}^{T}\)&lt;/span&gt;の固有値問題から求めることが出来るというわけです。&lt;span class=&#34;math inline&#34;&gt;\(l_{j}\)&lt;/span&gt;は上式を利用して、&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+&lt;p&gt;$$
+&lt;code&gt;\begin{eqnarray*} \displaystyle \frac{1}{D}\textbf{Y}\textbf{Y}^{T}\textbf{UL}(\alpha^2\textbf{L}^{2} + \beta^{-1}\textbf{I})^{-1})\textbf{V}^{T} &amp;amp;=&amp;amp; \textbf{ULV}^{T}\\ \displaystyle \textbf{Y}\textbf{Y}^{T}\textbf{UL} &amp;amp;=&amp;amp; D\textbf{U}(\alpha^2\textbf{L}^{2} + \beta^{-1}\textbf{I})^{-1}\textbf{L} \\ \end{eqnarray*}&lt;/code&gt;
+$$&lt;/p&gt;
+&lt;p&gt;となります。$l_{j}$が0でなければ、$\textbf{Y}\textbf{Y}^{T}\textbf{u}_{j} = D(\alpha^2 l_{j}^{2} + \beta^{-1})\textbf{u}_{j}$となり、$\textbf{U}$のそれぞれの列は$\textbf{Y}\textbf{Y}^{T}$の固有ベクトルであり、対応する固有値$\lambda_{j}$は$D(\alpha^2 l_{j}^{2} + \beta^{-1})$となります。つまり、未知であった$X=ULV$が実は$\textbf{Y}\textbf{Y}^{T}$の固有値問題から求めることが出来るというわけです。$l_{j}$は上式を利用して、&lt;/p&gt;
+&lt;p&gt;$$
 \displaystyle l_{j} = (\frac{\lambda_{j}}{D\alpha^2} - \frac{1}{\beta\alpha^2})^{1/2}
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;と&lt;span class=&#34;math inline&#34;&gt;\(\textbf{Y}\textbf{Y}^{T}\)&lt;/span&gt;の固有値&lt;span class=&#34;math inline&#34;&gt;\(\lambda_{j}\)&lt;/span&gt;とパラメータから求められることがわかります。よって、&lt;span class=&#34;math inline&#34;&gt;\(X=ULV\)&lt;/span&gt;は&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+$$&lt;/p&gt;
+&lt;p&gt;と$\textbf{Y}\textbf{Y}^{T}$の固有値$\lambda_{j}$とパラメータから求められることがわかります。よって、$X=ULV$は&lt;/p&gt;
+&lt;p&gt;$$
 \textbf{X} = \textbf{U}_{q}\textbf{L}\textbf{V}^{T}
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;となります。ここで、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{U}_{q}\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(\textbf{Y}\textbf{Y}^{T}\)&lt;/span&gt;の固有ベクトルを&lt;span class=&#34;math inline&#34;&gt;\(q\)&lt;/span&gt;個取り出したものです。&lt;span class=&#34;math inline&#34;&gt;\(\beta\)&lt;/span&gt;が限りなく大きければ（=観測誤差が限りなく小さければ）通常のPCAと一致します。&lt;/p&gt;
+$$&lt;/p&gt;
+&lt;p&gt;となります。ここで、$\textbf{U}_{q}$は$\textbf{Y}\textbf{Y}^{T}$の固有ベクトルを$q$個取り出したものです。$\beta$が限りなく大きければ（=観測誤差が限りなく小さければ）通常のPCAと一致します。&lt;/p&gt;
 &lt;p&gt;以上がPPCAです。GPLVMはPPCAで確率モデルとして想定していた以下のモデルを拡張します。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\textbf{y}_{n} = \textbf{W}^{T}\textbf{x}_{n} + \epsilon_{n}
-\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;$$
+\textbf{y}&lt;em&gt;{n} = \textbf{W}^{T}\textbf{x}&lt;/em&gt;{n} + \epsilon_{n}
+$$&lt;/p&gt;
 &lt;p&gt;具体的には、通常のガウス過程と同様、&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\displaystyle \textbf{y}_{n}  = \textbf{W}^{T}\phi(\textbf{x}_{n})+ \epsilon_{n}
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;という風に基底関数&lt;span class=&#34;math inline&#34;&gt;\(\phi(\textbf{x}_{n})\)&lt;/span&gt;をかませて拡張します。&lt;span class=&#34;math inline&#34;&gt;\(\phi(・)\)&lt;/span&gt;は平均&lt;span class=&#34;math inline&#34;&gt;\(\textbf{0}\)&lt;/span&gt;、分散共分散行列&lt;span class=&#34;math inline&#34;&gt;\(\textbf{K}_{\textbf{x}}\)&lt;/span&gt;のガウス過程と仮定します。分散共分散行列&lt;span class=&#34;math inline&#34;&gt;\(\textbf{K}_{\textbf{x}}\)&lt;/span&gt;は&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+&lt;p&gt;$$
+\displaystyle \textbf{y}&lt;em&gt;{n}  = \textbf{W}^{T}\phi(\textbf{x}&lt;/em&gt;{n})+ \epsilon_{n}
+$$&lt;/p&gt;
+&lt;p&gt;という風に基底関数$\phi(\textbf{x}&lt;em&gt;{n})$をかませて拡張します。$\phi(・)$は平均$\textbf{0}$、分散共分散行列$\textbf{K}&lt;/em&gt;{\textbf{x}}$のガウス過程と仮定します。分散共分散行列$\textbf{K}_{\textbf{x}}$は&lt;/p&gt;
+&lt;p&gt;$$
 \textbf{K}_{\textbf{x}} = \alpha^2\phi(\textbf{x})\phi(\textbf{x})^T
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;であり、入力ベクトル&lt;span class=&#34;math inline&#34;&gt;\(\textbf{X}\)&lt;/span&gt;を&lt;span class=&#34;math inline&#34;&gt;\(\phi(\textbf{・})\)&lt;/span&gt;で非線形変換した特徴量&lt;span class=&#34;math inline&#34;&gt;\(\phi(\textbf{x})\)&lt;/span&gt;が近いほど、出力値&lt;span class=&#34;math inline&#34;&gt;\(\textbf{Y}\)&lt;/span&gt;も近くなりやすいという性質があることになります。GPLVMではこの性質を逆に利用しています。つまり、出力値&lt;span class=&#34;math inline&#34;&gt;\(Y_i\)&lt;/span&gt;と&lt;span class=&#34;math inline&#34;&gt;\(Y_j\)&lt;/span&gt;が近い→&lt;span class=&#34;math inline&#34;&gt;\(\phi(\textbf{x}_i)\)&lt;/span&gt;と&lt;span class=&#34;math inline&#34;&gt;\(\phi(\textbf{x}_j)\)&lt;/span&gt;が近い（内積が大きい）→&lt;span class=&#34;math inline&#34;&gt;\(\textbf{K}_{x,ij}\)&lt;/span&gt;が大きい→観測不可能なデータ&lt;span class=&#34;math inline&#34;&gt;\(X_{i}\)&lt;/span&gt;と&lt;span class=&#34;math inline&#34;&gt;\(X_{j}\)&lt;/span&gt;は近い値（or同じようなパターン）をとる。
-この議論からもわかるように、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{K}_{\textbf{x}}\)&lt;/span&gt;は入力ベクトル&lt;span class=&#34;math inline&#34;&gt;\(\textbf{X}\)&lt;/span&gt;それぞれの距離を表したものになります。分散共分散行列の計算には入力ベクトル&lt;span class=&#34;math inline&#34;&gt;\(\textbf{X}\)&lt;/span&gt;を基底関数&lt;span class=&#34;math inline&#34;&gt;\(\phi(\textbf{・})\)&lt;/span&gt;で非線形変換した後、内積を求めるといったことをする必要はなく、カーネル関数を計算するのみでOKです。今回は王道中の王道RBFカーネルを使用していますので、これを例説明します。&lt;/p&gt;
+$$&lt;/p&gt;
+&lt;p&gt;であり、入力ベクトル$\textbf{X}$を$\phi(\textbf{・})$で非線形変換した特徴量$\phi(\textbf{x})$が近いほど、出力値$\textbf{Y}$も近くなりやすいという性質があることになります。GPLVMではこの性質を逆に利用しています。つまり、出力値$Y_i$と$Y_j$が近い→$\phi(\textbf{x}&lt;em&gt;i)$と$\phi(\textbf{x}&lt;em&gt;j)$が近い（内積が大きい）→$\textbf{K}&lt;/em&gt;{x,ij}$が大きい→観測不可能なデータ$X&lt;/em&gt;{i}$と$X_{j}$は近い値（or同じようなパターン）をとる。
+この議論からもわかるように、$\textbf{K}_{\textbf{x}}$は入力ベクトル$\textbf{X}$それぞれの距離を表したものになります。分散共分散行列の計算には入力ベクトル$\textbf{X}$を基底関数$\phi(\textbf{・})$で非線形変換した後、内積を求めるといったことをする必要はなく、カーネル関数を計算するのみでOKです。今回は王道中の王道RBFカーネルを使用していますので、これを例説明します。&lt;/p&gt;
 &lt;p&gt;RBFカーネル（スカラーに対する）
-&lt;span class=&#34;math display&#34;&gt;\[
+$$
 \theta_{1}\exp(-\frac{1}{\theta_{2}}(x-x^T)^2)
-\]&lt;/span&gt;&lt;/p&gt;
+$$&lt;/p&gt;
 &lt;p&gt;このRBFカーネルは以下の基底関数と対応しています。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+&lt;p&gt;$$
 \phi(x)_h = \tau\exp(-\frac{1}{r}(x-h)^2)
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;例えば、この基底関数で入力&lt;span class=&#34;math inline&#34;&gt;\(x\)&lt;/span&gt;を変換したものを&lt;span class=&#34;math inline&#34;&gt;\(2H^2+1\)&lt;/span&gt;個並べた関数を&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\phi(x) = (\phi(x)_{-H^2}, ..., \phi(x)_{0},...,\phi(x)_{H^2})
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;入力&lt;span class=&#34;math inline&#34;&gt;\(x\)&lt;/span&gt;の特徴量だとすると&lt;span class=&#34;math inline&#34;&gt;\(x&amp;#39;\)&lt;/span&gt;との共分散&lt;span class=&#34;math inline&#34;&gt;\(K_{x}(x,x&amp;#39;)\)&lt;/span&gt;は内積の和なので&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-K_{x}(x,x&amp;#39;) = \sum_{h=-H^2}^{H^2}\phi_{h}(x)\phi_{h}(x&amp;#39;)
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;となります。ここで、&lt;span class=&#34;math inline&#34;&gt;\(H \to \infty\)&lt;/span&gt;とし、グリッドを極限まで細かくしてみます。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\begin{eqnarray*}
-K_{x}(x,x&amp;#39;) &amp;amp;=&amp;amp; \lim_{H \to \infty}\sum_{h=-H^2}^{H^2}\phi_{h}(x)\phi_{h}(x&amp;#39;) \\
-&amp;amp;\to&amp;amp;\int_{-\infty}^{\infty}\tau\exp(-\frac{1}{r}(x-h)^2)\tau\exp(-\frac{1}{r}(x&amp;#39;-h)^2)dh \\
-&amp;amp;=&amp;amp; \tau^2 \int_{-\infty}^{\infty}\exp(-\frac{1}{r}\{(x-h)^2+(x&amp;#39;-h)^2\})dh \\
-&amp;amp;=&amp;amp; \tau^2 \int_{-\infty}^{\infty}\exp(-\frac{1}{r}\{2(h-\frac{x+x&amp;#39;}{2})^2+\frac{1}{2}(x-x&amp;#39;)^2\})dh \\
-\end{eqnarray*}
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;となります。&lt;span class=&#34;math inline&#34;&gt;\(h\)&lt;/span&gt;に関係のない部分を積分の外に出します。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\begin{eqnarray*}
-&amp;amp;=&amp;amp; \tau^2 \int_{-\infty}^{\infty}\exp(-\frac{2}{r}(h-\frac{x+x&amp;#39;}{2})^2)dh\exp(-\frac{1}{2r}(x-x&amp;#39;)^2) \\
-\end{eqnarray*}
-\]&lt;/span&gt;&lt;/p&gt;
+$$&lt;/p&gt;
+&lt;p&gt;例えば、この基底関数で入力$x$を変換したものを$2H^2+1$個並べた関数を&lt;/p&gt;
+&lt;p&gt;$$
+\phi(x) = (\phi(x)&lt;em&gt;{-H^2}, &amp;hellip;, \phi(x)&lt;/em&gt;{0},&amp;hellip;,\phi(x)_{H^2})
+$$&lt;/p&gt;
+&lt;p&gt;入力$x$の特徴量だとすると$x&#39;$との共分散$K_{x}(x,x&#39;)$は内積の和なので&lt;/p&gt;
+&lt;p&gt;$$
+K_{x}(x,x&#39;) = \sum_{h=-H^2}^{H^2}\phi_{h}(x)\phi_{h}(x&#39;)
+$$&lt;/p&gt;
+&lt;p&gt;となります。ここで、$H \to \infty$とし、グリッドを極限まで細かくしてみます。&lt;/p&gt;
+&lt;p&gt;$$
+&lt;code&gt;\begin{eqnarray*} K_{x}(x,x&#39;) &amp;amp;=&amp;amp; \lim_{H \to \infty}\sum_{h=-H^2}^{H^2}\phi_{h}(x)\phi_{h}(x&#39;) \\ &amp;amp;\to&amp;amp;\int_{-\infty}^{\infty}\tau\exp(-\frac{1}{r}(x-h)^2)\tau\exp(-\frac{1}{r}(x&#39;-h)^2)dh \\ &amp;amp;=&amp;amp; \tau^2 \int_{-\infty}^{\infty}\exp(-\frac{1}{r}\{(x-h)^2+(x&#39;-h)^2\})dh \\ &amp;amp;=&amp;amp; \tau^2 \int_{-\infty}^{\infty}\exp(-\frac{1}{r}\{2(h-\frac{x+x&#39;}{2})^2+\frac{1}{2}(x-x&#39;)^2\})dh \\ \end{eqnarray*}&lt;/code&gt;
+$$&lt;/p&gt;
+&lt;p&gt;となります。$h$に関係のない部分を積分の外に出します。&lt;/p&gt;
+&lt;p&gt;$$
+&lt;code&gt;\begin{eqnarray*} &amp;amp;=&amp;amp; \tau^2 \int_{-\infty}^{\infty}\exp(-\frac{2}{r}(h-\frac{x+x&#39;}{2})^2)dh\exp(-\frac{1}{2r}(x-x&#39;)^2) \\ \end{eqnarray*}&lt;/code&gt;
+$$&lt;/p&gt;
 &lt;p&gt;残った積分を見ると、正規分布の正規化定数と等しいことがわかります。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\begin{eqnarray*}
-\int_{-\infty}^{\infty}\exp(-\frac{1}{2\sigma}(h-\frac{x+x&amp;#39;}{2})^2)dh &amp;amp;=&amp;amp;  \int_{-\infty}^{\infty}\exp(-\frac{2}{r}(h-\frac{x+x&amp;#39;}{2})^2)dh\\
-\sigma &amp;amp;=&amp;amp; \frac{r}{4}
-\end{eqnarray*}
-\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;$$
+&lt;code&gt;\begin{eqnarray*} \int_{-\infty}^{\infty}\exp(-\frac{1}{2\sigma}(h-\frac{x+x&#39;}{2})^2)dh &amp;amp;=&amp;amp;  \int_{-\infty}^{\infty}\exp(-\frac{2}{r}(h-\frac{x+x&#39;}{2})^2)dh\\ \sigma &amp;amp;=&amp;amp; \frac{r}{4} \end{eqnarray*}&lt;/code&gt;
+$$&lt;/p&gt;
 &lt;p&gt;となるので、ガウス積分の公式を用いて&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\begin{eqnarray*}
-&amp;amp;=&amp;amp; \tau^2 \sqrt{\frac{\pi r}{2}}\exp(-\frac{1}{2r}(x-x&amp;#39;)^2)　\\
-&amp;amp;=&amp;amp; \theta_{1}\exp(-\frac{1}{\theta_{2}}(x-x’)^2)
-\end{eqnarray*}
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;となり、RBFカーネルと等しくなることがわかります。よって、RBFカーネルで計算した共分散は上述した基底関数で入力&lt;span class=&#34;math inline&#34;&gt;\(x\)&lt;/span&gt;を無限次元へ拡張した特徴量ベクトルの内積から計算した共分散と同値になることがわかります。つまり、入力&lt;span class=&#34;math inline&#34;&gt;\(x\)&lt;/span&gt;と&lt;span class=&#34;math inline&#34;&gt;\(x&amp;#39;\)&lt;/span&gt;のスカラーの計算のみで&lt;span class=&#34;math inline&#34;&gt;\(K_{x}(x,x&amp;#39;)\)&lt;/span&gt;ができてしまうという夢のような計算効率化が可能になるわけです。無限次元特徴量ベクトルの回帰問題なんて普通計算できませんからね。。。カーネル関数は偉大です。
-前の記事にも載せましたが、RBFカーネルで分散共分散行列を計算したガウス過程のサンプルパスは以下通りです（&lt;span class=&#34;math inline&#34;&gt;\(\theta_1=1,\theta_2=0.5\)&lt;/span&gt;）。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Define Kernel function
-Kernel_Mat &amp;lt;- function(X,sigma,beta){
-  N &amp;lt;- NROW(X)
-  K &amp;lt;- matrix(0,N,N)
-  for (i in 1:N) {
-    for (k in 1:N) {
-      if(i==k) kdelta = 1 else kdelta = 0
-      K[i,k] &amp;lt;- K[k,i] &amp;lt;- exp(-t(X[i,]-X[k,])%*%(X[i,]-X[k,])/(2*sigma^2)) + beta^{-1}*kdelta
+&lt;p&gt;$$
+&lt;code&gt;\begin{eqnarray*} &amp;amp;=&amp;amp; \tau^2 \sqrt{\frac{\pi r}{2}}\exp(-\frac{1}{2r}(x-x&#39;)^2)　\\ &amp;amp;=&amp;amp; \theta_{1}\exp(-\frac{1}{\theta_{2}}(x-x’)^2) \end{eqnarray*}&lt;/code&gt;
+$$&lt;/p&gt;
+&lt;p&gt;となり、RBFカーネルと等しくなることがわかります。よって、RBFカーネルで計算した共分散は上述した基底関数で入力$x$を無限次元へ拡張した特徴量ベクトルの内積から計算した共分散と同値になることがわかります。つまり、入力$x$と$x&#39;$のスカラーの計算のみで$K_{x}(x,x&#39;)$ができてしまうという夢のような計算効率化が可能になるわけです。無限次元特徴量ベクトルの回帰問題なんて普通計算できませんからね。。。カーネル関数は偉大です。
+前の記事にも載せましたが、RBFカーネルで分散共分散行列を計算したガウス過程のサンプルパスは以下通りです（$\theta_1=1,\theta_2=0.5$）。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Define Kernel function&lt;/span&gt;
+Kernel_Mat &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(X,sigma,beta){
+  N &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;NROW&lt;/span&gt;(X)
+  K &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;matrix&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,N,N)
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;for &lt;/span&gt;(i in &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;N) {
+    &lt;span style=&#34;color:#a6e22e&#34;&gt;for &lt;/span&gt;(k in &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;N) {
+      &lt;span style=&#34;color:#a6e22e&#34;&gt;if&lt;/span&gt;(i&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;k) kdelta &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; else kdelta &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
+      K[i,k] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; K[k,i] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;exp&lt;/span&gt;(&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;t&lt;/span&gt;(X[i,]&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;X[k,])&lt;span style=&#34;color:#f92672&#34;&gt;%*%&lt;/span&gt;(X[i,]&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;X[k,])&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;sigma^2)) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; beta^{&lt;span style=&#34;color:#ae81ff&#34;&gt;-1&lt;/span&gt;}&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;kdelta
     }
   }
-  return(K)
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;return&lt;/span&gt;(K)
 }
 
-N &amp;lt;- 10 # max value of X
-M &amp;lt;- 1000 # sample size
-X &amp;lt;- matrix(seq(1,N,length=M),M,1) # create X
-testK &amp;lt;- Kernel_Mat(X,0.5,1e+18) # calc kernel matrix
+N &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;# max value of X&lt;/span&gt;
+M &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1000&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;# sample size&lt;/span&gt;
+X &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;matrix&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;seq&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,N,length&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;M),M,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) &lt;span style=&#34;color:#75715e&#34;&gt;# create X&lt;/span&gt;
+testK &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Kernel_Mat&lt;/span&gt;(X,&lt;span style=&#34;color:#ae81ff&#34;&gt;0.5&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;1e+18&lt;/span&gt;) &lt;span style=&#34;color:#75715e&#34;&gt;# calc kernel matrix&lt;/span&gt;
 
-library(MASS)
+&lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(MASS)
 
-P &amp;lt;- 6 # num of sample path
-Y &amp;lt;- matrix(0,M,P) # define Y
+P &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;# num of sample path&lt;/span&gt;
+Y &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;matrix&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,M,P) &lt;span style=&#34;color:#75715e&#34;&gt;# define Y&lt;/span&gt;
 
-for(i in 1:P){
-  Y[,i] &amp;lt;- mvrnorm(n=1,rep(0,M),testK) # sample Y
+&lt;span style=&#34;color:#a6e22e&#34;&gt;for&lt;/span&gt;(i in &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;P){
+  Y[,i] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;mvrnorm&lt;/span&gt;(n&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,&lt;span style=&#34;color:#a6e22e&#34;&gt;rep&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,M),testK) &lt;span style=&#34;color:#75715e&#34;&gt;# sample Y&lt;/span&gt;
 }
 
-# Plot
-matplot(x=X,y=Y,type = &amp;quot;l&amp;quot;,lwd = 2)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-1-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# Plot&lt;/span&gt;
+&lt;span style=&#34;color:#a6e22e&#34;&gt;matplot&lt;/span&gt;(x&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;X,y&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;Y,type &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;l&amp;#34;&lt;/span&gt;,lwd &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../post/post8/index_files/figure-html/unnamed-chunk-1-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
 &lt;p&gt;非常に滑らかな関数となっていることがわかります。RBFのほかにもカーネル関数は存在します。カーネル関数を変えると基底関数が変わりますから、サンプルパスは大きく変わることになります。&lt;/p&gt;
-&lt;p&gt;GPLVMの推定方法に話を進めましょう。PPCAの時と同じく、以下の尤度関数を最大化する観測不能な入力&lt;span class=&#34;math inline&#34;&gt;\(x\)&lt;/span&gt;を推定値とします。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+&lt;p&gt;GPLVMの推定方法に話を進めましょう。PPCAの時と同じく、以下の尤度関数を最大化する観測不能な入力$x$を推定値とします。&lt;/p&gt;
+&lt;p&gt;$$
 \displaystyle L = - \frac{DN}{2}\ln{2\pi} - \frac{1}{2}\ln{|\textbf{K}|} - \frac{1}{2}\textbf{tr}(\textbf{K}^{-1}\textbf{YY}^{T})
-\]&lt;/span&gt;&lt;/p&gt;
+$$&lt;/p&gt;
 &lt;p&gt;ただ、PPCAとは異なり、その値は解析的に求めることができません。尤度関数の導関数は今や複雑な関数であり、展開することができないからです。よって、共役勾配法を用いて数値的に計算するのが主流なようです（自分は準ニュートン法で実装）。解析的、数値的のどちらにせよ導関数を求めておくことは必要なので、導関数を求めてみます。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+&lt;p&gt;$$
 \frac{\partial L}{\partial \textbf{K}_x} = \frac{1}{2}(\textbf{K}_x^{-1}\textbf{Y}\textbf{Y}^T\textbf{K}_x^{-1}-D\textbf{K}_x^{-1})
-\]&lt;/span&gt;&lt;/p&gt;
+$$&lt;/p&gt;
 &lt;p&gt;なので、チェーンルールから&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+&lt;p&gt;$$
 \frac{\partial L}{\partial \textbf{x}} = \frac{\partial L}{\partial \textbf{K}_x}\frac{\partial \textbf{K}_x}{\partial \textbf{x}}
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;なので、カーネル関数を決め、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{x}\)&lt;/span&gt;に初期値を与えてやれば勾配法によって尤度&lt;span class=&#34;math inline&#34;&gt;\(L\)&lt;/span&gt;が最大となる点を探索することができます。今回使用するRBFカーネルで&lt;span class=&#34;math inline&#34;&gt;\(\frac{\partial \textbf{K}_x}{\partial x_{nj}}\)&lt;/span&gt;を計算してみます。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\begin{eqnarray*}
-\frac{\partial \textbf{K}_x(\textbf{x}_n,\textbf{x}_n&amp;#39;)}{x_{nj}}&amp;amp;=&amp;amp;\frac{\partial\theta_{1}\exp(-\frac{|\textbf{x}_n-\textbf{x}_n&amp;#39;|^2}{\theta_{2}})}{\partial x_{nk}} \\
-&amp;amp;=&amp;amp; \frac{\partial\theta_{1}\exp(-\frac{(\textbf{x}_n-\textbf{x}_n&amp;#39;)^T(\textbf{x}_n-\textbf{x}_n&amp;#39;)}{\theta_{2}})}{\partial x_{nk}} \\
-&amp;amp;=&amp;amp; \frac{\partial\theta_{1}\exp(-\frac{-(\textbf{x}_n^T\textbf{x}_n-2\textbf{x}_n&amp;#39;^T\textbf{x}_n+\textbf{x}_n&amp;#39;^T\textbf{x}_n&amp;#39;)}{\theta_{2}})}{\partial x_{nk}} \\
-&amp;amp;=&amp;amp; -2\textbf{K}_x(\textbf{x}_n\textbf{x}_n&amp;#39;)\frac{(x_{nj}-x_{n&amp;#39;j})}{\theta_2}
-\end{eqnarray*}
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math inline&#34;&gt;\(j\)&lt;/span&gt;番目の潜在変数の&lt;span class=&#34;math inline&#34;&gt;\(n\)&lt;/span&gt;番目のサンプルそれぞれに導関数を計算し、それを分散共分散行列と同じ行列に整理したものと&lt;span class=&#34;math inline&#34;&gt;\(\frac{\partial L}{\partial \textbf{K}_x}\)&lt;/span&gt;との要素ごとの積を足し合わせたものが勾配となります。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;rでの実装&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;3. Rでの実装&lt;/h2&gt;
+$$&lt;/p&gt;
+&lt;p&gt;なので、カーネル関数を決め、$\textbf{x}$に初期値を与えてやれば勾配法によって尤度$L$が最大となる点を探索することができます。今回使用するRBFカーネルで$\frac{\partial \textbf{K}&lt;em&gt;x}{\partial x&lt;/em&gt;{nj}}$を計算してみます。&lt;/p&gt;
+&lt;p&gt;$$
+&lt;code&gt;\begin{eqnarray*} \frac{\partial \textbf{K}_x(\textbf{x}_n,\textbf{x}_n&#39;)}{x_{nj}}&amp;amp;=&amp;amp;\frac{\partial\theta_{1}\exp(-\frac{|\textbf{x}_n-\textbf{x}_n&#39;|^2}{\theta_{2}})}{\partial x_{nk}} \\ &amp;amp;=&amp;amp; \frac{\partial\theta_{1}\exp(-\frac{(\textbf{x}_n-\textbf{x}_n&#39;)^T(\textbf{x}_n-\textbf{x}_n&#39;)}{\theta_{2}})}{\partial x_{nk}} \\ &amp;amp;=&amp;amp; \frac{\partial\theta_{1}\exp(-\frac{-(\textbf{x}_n^T\textbf{x}_n-2\textbf{x}_n&#39;^T\textbf{x}_n+\textbf{x}_n&#39;^T\textbf{x}_n&#39;)}{\theta_{2}})}{\partial x_{nk}} \\ &amp;amp;=&amp;amp; -2\textbf{K}_x(\textbf{x}_n\textbf{x}_n&#39;)\frac{(x_{nj}-x_{n&#39;j})}{\theta_2} \end{eqnarray*}&lt;/code&gt;
+$$&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;\(j\)&lt;/code&gt;番目の潜在変数の$n$番目のサンプルそれぞれに導関数を計算し、それを分散共分散行列と同じ行列に整理したものと$\frac{\partial L}{\partial \textbf{K}_x}$との要素ごとの積を足し合わせたものが勾配となります。&lt;/p&gt;
+&lt;h2 id=&#34;3-rでの実装&#34;&gt;3. Rでの実装&lt;/h2&gt;
 &lt;p&gt;GPLVMを&lt;code&gt;R&lt;/code&gt;で実装します。使用するデータは以前giannoneの記事で使用したものと同じものです。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ESTIMATE_GPLVM &amp;lt;- function(Y,P,sigma){
-  # 1. Set initial value
-  Y &amp;lt;- as.matrix(Y)
-  eigenvector &amp;lt;- eigen(cov(Y))$vectors
-  X &amp;lt;- Y%*%eigenvector[,1:P] # initial value
-  N &amp;lt;- NROW(Y) # Sample Size
-  D &amp;lt;- NCOL(Y) # Dimention of dataset
-  X0 &amp;lt;- c(as.vector(X))
-  sigma &amp;lt;- var(matrix(Y,dim(Y)[1]*dim(Y)[2],1))
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;ESTIMATE_GPLVM &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(Y,P,sigma){
+  &lt;span style=&#34;color:#75715e&#34;&gt;# 1. Set initial value&lt;/span&gt;
+  Y &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;as.matrix&lt;/span&gt;(Y)
+  eigenvector &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;eigen&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;cov&lt;/span&gt;(Y))&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;vectors
+  X &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; Y&lt;span style=&#34;color:#f92672&#34;&gt;%*%&lt;/span&gt;eigenvector[,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;P] &lt;span style=&#34;color:#75715e&#34;&gt;# initial value&lt;/span&gt;
+  N &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;NROW&lt;/span&gt;(Y) &lt;span style=&#34;color:#75715e&#34;&gt;# Sample Size&lt;/span&gt;
+  D &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;NCOL&lt;/span&gt;(Y) &lt;span style=&#34;color:#75715e&#34;&gt;# Dimention of dataset&lt;/span&gt;
+  X0 &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;as.vector&lt;/span&gt;(X))
+  sigma &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;var&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;matrix&lt;/span&gt;(Y,&lt;span style=&#34;color:#a6e22e&#34;&gt;dim&lt;/span&gt;(Y)[1]&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;dim&lt;/span&gt;(Y)[2],&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;))
   
-  # 2. Define log likelihood function
-  loglik &amp;lt;- function(X0,Y,N,P,D,beta,sigma){
-    X &amp;lt;- matrix(X0,N,P)
-    K &amp;lt;- matrix(0,N,N)
-    scale &amp;lt;- diag(sqrt(3/((apply(X, 2, max) -apply(X, 2, min))^2)))
-    X &amp;lt;- X%*%scale
-    for (i in 1:N) {
-      for (k in 1:N) {
-         if(i==k) kdelta = 1 else kdelta = 0
-         K[i,k] &amp;lt;- K[k,i] &amp;lt;- sigma*exp(-t(X[i,]-X[k,])%*%(X[i,]-X[k,])*0.5) + beta^(-1)*kdelta + beta^(-1)
+  &lt;span style=&#34;color:#75715e&#34;&gt;# 2. Define log likelihood function&lt;/span&gt;
+  loglik &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(X0,Y,N,P,D,beta,sigma){
+    X &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;matrix&lt;/span&gt;(X0,N,P)
+    K &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;matrix&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,N,N)
+    scale &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;diag&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;sqrt&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;((&lt;span style=&#34;color:#a6e22e&#34;&gt;apply&lt;/span&gt;(X, &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;, max) &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;apply&lt;/span&gt;(X, &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;, min))^2)))
+    X &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; X&lt;span style=&#34;color:#f92672&#34;&gt;%*%&lt;/span&gt;scale
+    &lt;span style=&#34;color:#a6e22e&#34;&gt;for &lt;/span&gt;(i in &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;N) {
+      &lt;span style=&#34;color:#a6e22e&#34;&gt;for &lt;/span&gt;(k in &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;N) {
+         &lt;span style=&#34;color:#a6e22e&#34;&gt;if&lt;/span&gt;(i&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;k) kdelta &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; else kdelta &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
+         K[i,k] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; K[k,i] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; sigma&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;exp&lt;/span&gt;(&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;t&lt;/span&gt;(X[i,]&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;X[k,])&lt;span style=&#34;color:#f92672&#34;&gt;%*%&lt;/span&gt;(X[i,]&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;X[k,])&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0.5&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; beta&lt;span style=&#34;color:#a6e22e&#34;&gt;^&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;-1&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;kdelta &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; beta&lt;span style=&#34;color:#a6e22e&#34;&gt;^&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;-1&lt;/span&gt;)
        }
      }
  
-    L &amp;lt;- - D*N/2*log(2*pi) - D/2*log(det(K)) - 1/2*sum(diag(ginv(K)%*%Y%*%t(Y))) #loglikelihood
+    L &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; D&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;N&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;pi&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; D&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;det&lt;/span&gt;(K)) &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;sum&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;diag&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;ginv&lt;/span&gt;(K)&lt;span style=&#34;color:#f92672&#34;&gt;%*%&lt;/span&gt;Y&lt;span style=&#34;color:#f92672&#34;&gt;%*%&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;t&lt;/span&gt;(Y))) &lt;span style=&#34;color:#75715e&#34;&gt;#loglikelihood&lt;/span&gt;
 
-    return(L)
+    &lt;span style=&#34;color:#a6e22e&#34;&gt;return&lt;/span&gt;(L)
   }
   
-  # 3. Define derivatives of log likelihood function
-  dloglik &amp;lt;- function(X0,P,D,N,Y,beta,sigma){
-    X &amp;lt;- matrix(X0,N,P)
-    K &amp;lt;- matrix(0,N,N)
-    for (i in 1:N) {
-      for (k in 1:N) {
-        if(i==k) kdelta = 1 else kdelta = 0
-        K[i,k] &amp;lt;- K[k,i] &amp;lt;- exp(-t(X[i,]-X[k,])%*%(X[i,]-X[k,])*0.5) + beta^(-1)*kdelta + beta^(-1)
+  &lt;span style=&#34;color:#75715e&#34;&gt;# 3. Define derivatives of log likelihood function&lt;/span&gt;
+  dloglik &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(X0,P,D,N,Y,beta,sigma){
+    X &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;matrix&lt;/span&gt;(X0,N,P)
+    K &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;matrix&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,N,N)
+    &lt;span style=&#34;color:#a6e22e&#34;&gt;for &lt;/span&gt;(i in &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;N) {
+      &lt;span style=&#34;color:#a6e22e&#34;&gt;for &lt;/span&gt;(k in &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;N) {
+        &lt;span style=&#34;color:#a6e22e&#34;&gt;if&lt;/span&gt;(i&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;k) kdelta &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; else kdelta &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
+        K[i,k] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; K[k,i] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;exp&lt;/span&gt;(&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;t&lt;/span&gt;(X[i,]&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;X[k,])&lt;span style=&#34;color:#f92672&#34;&gt;%*%&lt;/span&gt;(X[i,]&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;X[k,])&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0.5&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; beta&lt;span style=&#34;color:#a6e22e&#34;&gt;^&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;-1&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;kdelta &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; beta&lt;span style=&#34;color:#a6e22e&#34;&gt;^&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;-1&lt;/span&gt;)
       }
     }
-    invK &amp;lt;- ginv(K)
-    dLdK &amp;lt;- invK%*%Y%*%t(Y)%*%invK - D*invK
-    dLdx &amp;lt;- matrix(0,N,P)
+    invK &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ginv&lt;/span&gt;(K)
+    dLdK &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; invK&lt;span style=&#34;color:#f92672&#34;&gt;%*%&lt;/span&gt;Y&lt;span style=&#34;color:#f92672&#34;&gt;%*%&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;t&lt;/span&gt;(Y)&lt;span style=&#34;color:#f92672&#34;&gt;%*%&lt;/span&gt;invK &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; D&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;invK
+    dLdx &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;matrix&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,N,P)
     
-    for (j in 1:P){
-      for(i in 1:N){
-        dKdx &amp;lt;- matrix(0,N,N)
-        for (k in 1:N){
-          dKdx[i,k] &amp;lt;- dKdx[k,i] &amp;lt;- -exp(-(t(X[i,]-X[k,])%*%(X[i,]-X[k,]))*0.5)*((X[i,j]-X[k,j])*0.5)
+    &lt;span style=&#34;color:#a6e22e&#34;&gt;for &lt;/span&gt;(j in &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;P){
+      &lt;span style=&#34;color:#a6e22e&#34;&gt;for&lt;/span&gt;(i in &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;N){
+        dKdx &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;matrix&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,N,N)
+        &lt;span style=&#34;color:#a6e22e&#34;&gt;for &lt;/span&gt;(k in &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;N){
+          dKdx[i,k] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; dKdx[k,i] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;exp&lt;/span&gt;(&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;t&lt;/span&gt;(X[i,]&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;X[k,])&lt;span style=&#34;color:#f92672&#34;&gt;%*%&lt;/span&gt;(X[i,]&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;X[k,]))&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0.5&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;((X[i,j]&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;X[k,j])&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0.5&lt;/span&gt;)
         }
-        dLdx[i,j] &amp;lt;- sum(dLdK*dKdx)
+        dLdx[i,j] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;sum&lt;/span&gt;(dLdK&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;dKdx)
       }
     }
     
-    return(dLdx)
+    &lt;span style=&#34;color:#a6e22e&#34;&gt;return&lt;/span&gt;(dLdx)
   }
   
-  # 4. Optimization
-  res &amp;lt;- optim(X0, loglik, dloglik, Y = Y, N=N, P=P, D=D, beta = exp(2), sigma = sigma,
-               method = &amp;quot;BFGS&amp;quot;, control = list(fnscale = -1,trace=1000,maxit=10000))
-  output &amp;lt;- matrix(res$par,N,P)
-  result &amp;lt;- list(output,res,P)
-  names(result) &amp;lt;- c(&amp;quot;output&amp;quot;,&amp;quot;res&amp;quot;,&amp;quot;P&amp;quot;)
-  return(result)
+  &lt;span style=&#34;color:#75715e&#34;&gt;# 4. Optimization&lt;/span&gt;
+  res &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;optim&lt;/span&gt;(X0, loglik, dloglik, Y &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Y, N&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;N, P&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;P, D&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;D, beta &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;exp&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;), sigma &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; sigma,
+               method &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;BFGS&amp;#34;&lt;/span&gt;, control &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;list&lt;/span&gt;(fnscale &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;-1&lt;/span&gt;,trace&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1000&lt;/span&gt;,maxit&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;10000&lt;/span&gt;))
+  output &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;matrix&lt;/span&gt;(res&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;par,N,P)
+  result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;list&lt;/span&gt;(output,res,P)
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;names&lt;/span&gt;(result) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;output&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;res&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;P&amp;#34;&lt;/span&gt;)
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;return&lt;/span&gt;(result)
 }
 
-GPLVM_SELECT &amp;lt;- function(Y){
-  D &amp;lt;- NCOL(Y)
-  library(stringr)
-  for (i in 1:D){
-    if (i == 1){
-      result &amp;lt;- ESTIMATE_GPLVM(Y,i)
-      P &amp;lt;- 2
-      print(str_c(&amp;quot;STEP&amp;quot;, i, &amp;quot; loglikelihood &amp;quot;, as.numeric(result$res$value)))
+GPLVM_SELECT &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(Y){
+  D &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;NCOL&lt;/span&gt;(Y)
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(stringr)
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;for &lt;/span&gt;(i in &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;D){
+    &lt;span style=&#34;color:#a6e22e&#34;&gt;if &lt;/span&gt;(i &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;){
+      result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ESTIMATE_GPLVM&lt;/span&gt;(Y,i)
+      P &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;
+      &lt;span style=&#34;color:#a6e22e&#34;&gt;print&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;STEP&amp;#34;&lt;/span&gt;, i, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34; loglikelihood &amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;as.numeric&lt;/span&gt;(result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;res&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;value)))
     }else{
-      temp &amp;lt;- ESTIMATE_GPLVM(Y,i)
-      print(str_c(&amp;quot;STEP&amp;quot;, i, &amp;quot; loglikelihood &amp;quot;, as.numeric(temp$res$value)))
-      if (result$res$value &amp;lt; temp$res$value){
-        result &amp;lt;- temp
-        P &amp;lt;- i
+      temp &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ESTIMATE_GPLVM&lt;/span&gt;(Y,i)
+      &lt;span style=&#34;color:#a6e22e&#34;&gt;print&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;STEP&amp;#34;&lt;/span&gt;, i, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34; loglikelihood &amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;as.numeric&lt;/span&gt;(temp&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;res&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;value)))
+      &lt;span style=&#34;color:#a6e22e&#34;&gt;if &lt;/span&gt;(result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;res&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;value &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; temp&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;res&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;value){
+        result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; temp
+        P &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; i
       }
     }
   }
-  print(str_c(&amp;quot;The optimal number of X is &amp;quot;, P))
-  print(str_c(&amp;quot;loglikelihood &amp;quot;, as.numeric(result$res$value)))
-  return(result)
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;print&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;The optimal number of X is &amp;#34;&lt;/span&gt;, P))
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;print&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;loglikelihood &amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;as.numeric&lt;/span&gt;(result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;res&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;value)))
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;return&lt;/span&gt;(result)
 }
 
-result &amp;lt;- ESTIMATE_GPLVM(scale(Y),5)&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## initial  value 613.864608 
-## final  value 609.080329 
-## converged&lt;/code&gt;&lt;/pre&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(tidyverse)
+result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ESTIMATE_GPLVM&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;scale&lt;/span&gt;(Y),&lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## initial  value 1123.451566 
+## final  value 1111.732375 
+## converged
+&lt;/code&gt;&lt;/pre&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(tidyverse)
 
-ggplot(gather(as.data.frame(result$output),key = name,value = value),
-       aes(x=rep(dataset1$publication,5),y=value,colour=name)) + 
-  geom_line(size=1) +
-  xlab(&amp;quot;Date&amp;quot;) +
-  ggtitle(&amp;quot;5 economic factors&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-3-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(xts)
-X.xts &amp;lt;- xts(result$output,order.by = dataset1$publication)
-X.q.xts &amp;lt;- apply.quarterly(X.xts,mean)
-X.3m.xts &amp;lt;- X.xts[endpoints(X.xts,on=&amp;quot;quarters&amp;quot;),]
+&lt;span style=&#34;color:#a6e22e&#34;&gt;ggplot&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;gather&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;as.data.frame&lt;/span&gt;(result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;output),key &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; name,value &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; value),
+       &lt;span style=&#34;color:#a6e22e&#34;&gt;aes&lt;/span&gt;(x&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;rep&lt;/span&gt;(dataset1&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;publication,&lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;),y&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;value,colour&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;name)) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; 
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;geom_line&lt;/span&gt;(size&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;xlab&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Date&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;ggtitle&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;5 economic factors&amp;#34;&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../post/post8/index_files/figure-html/unnamed-chunk-3-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(xts)
+X.xts &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;xts&lt;/span&gt;(result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;output,order.by &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; dataset1&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;publication)
+X.q.xts &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;apply.quarterly&lt;/span&gt;(X.xts,mean)
+X.3m.xts &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; X.xts&lt;span style=&#34;color:#a6e22e&#34;&gt;[endpoints&lt;/span&gt;(X.xts,on&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;quarters&amp;#34;&lt;/span&gt;),]
 
-if (months(index(X.q.xts)[NROW(X.q.xts)]) %in% c(&amp;quot;3月&amp;quot;,&amp;quot;6月&amp;quot;,&amp;quot;9月&amp;quot;,&amp;quot;12月&amp;quot;)){
-} else X.q.xts &amp;lt;- X.q.xts[-NROW(X.q.xts),]
-if (months(index(X.3m.xts)[NROW(X.3m.xts)]) %in% c(&amp;quot;3月&amp;quot;,&amp;quot;6月&amp;quot;,&amp;quot;9月&amp;quot;,&amp;quot;12月&amp;quot;)){
-} else X.3m.xts &amp;lt;- X.3m.xts[-NROW(X.3m.xts),]
+&lt;span style=&#34;color:#a6e22e&#34;&gt;if &lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;months&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;index&lt;/span&gt;(X.q.xts)&lt;span style=&#34;color:#a6e22e&#34;&gt;[NROW&lt;/span&gt;(X.q.xts)]) &lt;span style=&#34;color:#f92672&#34;&gt;%in%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;3月&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;6月&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;9月&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;12月&amp;#34;&lt;/span&gt;)){
+} else X.q.xts &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; X.q.xts[&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;NROW&lt;/span&gt;(X.q.xts),]
+&lt;span style=&#34;color:#a6e22e&#34;&gt;if &lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;months&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;index&lt;/span&gt;(X.3m.xts)&lt;span style=&#34;color:#a6e22e&#34;&gt;[NROW&lt;/span&gt;(X.3m.xts)]) &lt;span style=&#34;color:#f92672&#34;&gt;%in%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;3月&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;6月&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;9月&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;12月&amp;#34;&lt;/span&gt;)){
+} else X.3m.xts &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; X.3m.xts[&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;NROW&lt;/span&gt;(X.3m.xts),]
 
-colnames(X.xts) &amp;lt;- c(&amp;quot;factor1&amp;quot;,&amp;quot;factor2&amp;quot;,&amp;quot;factor3&amp;quot;,&amp;quot;factor4&amp;quot;,&amp;quot;factor5&amp;quot;) 
+&lt;span style=&#34;color:#a6e22e&#34;&gt;colnames&lt;/span&gt;(X.xts) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;factor1&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;factor2&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;factor3&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;factor4&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;factor5&amp;#34;&lt;/span&gt;) 
 
-GDP$publication &amp;lt;- GDP$publication + months(2)
-GDP.q &amp;lt;- GDP[GDP$publication&amp;gt;=index(X.q.xts)[1] &amp;amp; GDP$publication&amp;lt;=index(X.q.xts)[NROW(X.q.xts)],]
+GDP&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;publication &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; GDP&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;publication &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;months&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;)
+GDP.q &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; GDP[GDP&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;publication&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;index&lt;/span&gt;(X.q.xts)[1] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; GDP&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;publication&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;index&lt;/span&gt;(X.q.xts)&lt;span style=&#34;color:#a6e22e&#34;&gt;[NROW&lt;/span&gt;(X.q.xts)],]
 
-rg &amp;lt;- lm(scale(GDP.q$GDP)~X.q.xts[-54])
-rg2 &amp;lt;- lm(scale(GDP.q$GDP)~X.3m.xts[-54])
+rg &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;lm&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;scale&lt;/span&gt;(GDP.q&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;GDP)&lt;span style=&#34;color:#f92672&#34;&gt;~&lt;/span&gt;X.q.xts[&lt;span style=&#34;color:#ae81ff&#34;&gt;-54&lt;/span&gt;])
+rg2 &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;lm&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;scale&lt;/span&gt;(GDP.q&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;GDP)&lt;span style=&#34;color:#f92672&#34;&gt;~&lt;/span&gt;X.3m.xts[&lt;span style=&#34;color:#ae81ff&#34;&gt;-54&lt;/span&gt;])
 
-summary(rg)&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## 
+&lt;span style=&#34;color:#a6e22e&#34;&gt;summary&lt;/span&gt;(rg)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## 
 ## Call:
 ## lm(formula = scale(GDP.q$GDP) ~ X.q.xts[-54])
 ## 
 ## Residuals:
 ##      Min       1Q   Median       3Q      Max 
-## -0.31774 -0.06927 -0.03224  0.06690  0.31062 
+## -0.48942 -0.13666  0.03985  0.14338  0.28562 
 ## 
 ## Coefficients:
-##                   Estimate Std. Error t value Pr(&amp;gt;|t|)    
-## (Intercept)      0.0445000  0.0317777   1.400    0.177    
-## X.q.xts[-54]X.1 -0.3181108  0.0106335 -29.916  &amp;lt; 2e-16 ***
-## X.q.xts[-54]X.2  0.0004621  0.0175913   0.026    0.979    
-## X.q.xts[-54]X.3  0.1737612  0.0249186   6.973 9.09e-07 ***
-## X.q.xts[-54]X.4 -0.0060035  0.0376324  -0.160    0.875    
-## X.q.xts[-54]X.5  0.0646009  0.0430678   1.500    0.149    
+##                 Estimate Std. Error t value Pr(&amp;gt;|t|)    
+## (Intercept)      0.02841    0.02795   1.017   0.3146    
+## X.q.xts[-54]X.1 -0.31431    0.01090 -28.841  &amp;lt; 2e-16 ***
+## X.q.xts[-54]X.2 -0.19397    0.01247 -15.559  &amp;lt; 2e-16 ***
+## X.q.xts[-54]X.3  0.03879    0.01880   2.063   0.0447 *  
+## X.q.xts[-54]X.4 -0.31876    0.03288  -9.696 8.60e-13 ***
+## X.q.xts[-54]X.5 -0.21523    0.03486  -6.175 1.46e-07 ***
 ## ---
-## Signif. codes:  0 &amp;#39;***&amp;#39; 0.001 &amp;#39;**&amp;#39; 0.01 &amp;#39;*&amp;#39; 0.05 &amp;#39;.&amp;#39; 0.1 &amp;#39; &amp;#39; 1
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
-## Residual standard error: 0.1617 on 20 degrees of freedom
-## Multiple R-squared:  0.9791, Adjusted R-squared:  0.9739 
-## F-statistic: 187.3 on 5 and 20 DF,  p-value: 4.402e-16&lt;/code&gt;&lt;/pre&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;summary(rg2)&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## 
+## Residual standard error: 0.2033 on 47 degrees of freedom
+## Multiple R-squared:  0.9626,	Adjusted R-squared:  0.9587 
+## F-statistic: 242.1 on 5 and 47 DF,  p-value: &amp;lt; 2.2e-16
+&lt;/code&gt;&lt;/pre&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;summary&lt;/span&gt;(rg2)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## 
 ## Call:
 ## lm(formula = scale(GDP.q$GDP) ~ X.3m.xts[-54])
 ## 
 ## Residuals:
 ##      Min       1Q   Median       3Q      Max 
-## -0.35613 -0.11430  0.00258  0.15171  0.36506 
+## -0.71694 -0.16540  0.04863  0.20132  0.79584 
 ## 
 ## Coefficients:
-##                 Estimate Std. Error t value Pr(&amp;gt;|t|)    
-## (Intercept)    -0.003798   0.041789  -0.091    0.928    
-## X.3m.xts[-54]1 -0.312411   0.014008 -22.303 1.34e-15 ***
-## X.3m.xts[-54]2  0.022873   0.025672   0.891    0.384    
-## X.3m.xts[-54]3  0.152350   0.031080   4.902 8.62e-05 ***
-## X.3m.xts[-54]4 -0.019237   0.047809  -0.402    0.692    
-## X.3m.xts[-54]5 -0.032419   0.055662  -0.582    0.567    
+##                Estimate Std. Error t value Pr(&amp;gt;|t|)    
+## (Intercept)     0.06106    0.04843   1.261   0.2136    
+## X.3m.xts[-54]1 -0.30018    0.01593 -18.843  &amp;lt; 2e-16 ***
+## X.3m.xts[-54]2 -0.18521    0.01859  -9.962 3.62e-13 ***
+## X.3m.xts[-54]3  0.05174    0.02803   1.846   0.0712 .  
+## X.3m.xts[-54]4 -0.29361    0.04235  -6.933 1.03e-08 ***
+## X.3m.xts[-54]5 -0.10650    0.04187  -2.544   0.0143 *  
 ## ---
-## Signif. codes:  0 &amp;#39;***&amp;#39; 0.001 &amp;#39;**&amp;#39; 0.01 &amp;#39;*&amp;#39; 0.05 &amp;#39;.&amp;#39; 0.1 &amp;#39; &amp;#39; 1
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
-## Residual standard error: 0.21 on 20 degrees of freedom
-## Multiple R-squared:  0.9647, Adjusted R-squared:  0.9559 
-## F-statistic: 109.3 on 5 and 20 DF,  p-value: 8.102e-14&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;決定係数が大幅に改善しました。
+## Residual standard error: 0.3039 on 47 degrees of freedom
+## Multiple R-squared:  0.9165,	Adjusted R-squared:  0.9076 
+## F-statistic: 103.2 on 5 and 47 DF,  p-value: &amp;lt; 2.2e-16
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;決定係数が大幅に改善しました。
 3ヶ月の平均をとったファクターの方がパフォーマンスが良さそうなので、こちらで実際のGDPと予測値のプロットを行ってみます。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggplot(gather(data.frame(fit=rg$fitted.values,actual=scale(GDP.q$GDP),Date=GDP.q$publication),key,value,-Date),aes(y=value,x=Date,colour=key)) +
-  geom_line(size=1) +
-  ggtitle(&amp;quot;fit v.s. actual GDP&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-4-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;ggplot&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;gather&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;data.frame&lt;/span&gt;(fit&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;rg&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;fitted.values,actual&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;scale&lt;/span&gt;(GDP.q&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;GDP),Date&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;GDP.q&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;publication),key,value,&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;Date),&lt;span style=&#34;color:#a6e22e&#34;&gt;aes&lt;/span&gt;(y&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;value,x&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;Date,colour&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;key)) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;geom_line&lt;/span&gt;(size&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;ggtitle&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;fit v.s. actual GDP&amp;#34;&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../post/post8/index_files/figure-html/unnamed-chunk-4-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
 &lt;p&gt;いかがでしょうか。個人的にはかなりフィッティングできている印象があります（もはや経済理論など不要なのでしょうか）。ただ、最も新しい値を除いては未来の値が情報量として加味された上で推計されていることになりますから、フェアではありません。正しく予測能力を検証するためには四半期ごとに逐次的に回帰を行う必要があります。&lt;/p&gt;
 &lt;p&gt;というわけで、アウトサンプルの予測力がどれほどあるのかをテストしてみたいと思います。まず、2005年4月から2007年3月までの月次統計データでファクターを計算し、データ頻度を四半期に集約します。そして、2007年1Qのデータを除いて、GDPに回帰します。回帰したモデルの係数を用いて、2007年1Qのファクターデータで同時点のGDPの予測値を計算し、それを実績値と比較します。次は2005年4月から2007年6月までのデータを用いて･･･という感じでアウトサンプルの予測を行ってみます。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(lubridate)
-test_df &amp;lt;- data.frame()
-for (i in as.list(seq(as.Date(&amp;quot;2015-04-01&amp;quot;),as.Date(&amp;quot;2019-03-01&amp;quot;),by=&amp;quot;quarter&amp;quot;))){
-  day(i) &amp;lt;- days_in_month(i)
-  traindata &amp;lt;- dataset1[dataset1$publication&amp;lt;=i,]
-  X_train &amp;lt;- ESTIMATE_GPLVM(scale(traindata[,-2]),5)
-  X_train.xts &amp;lt;- xts(X_train$output,order.by = traindata$publication)
-  X_train.q.xts &amp;lt;- apply.quarterly(X_train.xts,mean)
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(lubridate)
+test_df &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;data.frame&lt;/span&gt;()
+&lt;span style=&#34;color:#a6e22e&#34;&gt;for &lt;/span&gt;(i in &lt;span style=&#34;color:#a6e22e&#34;&gt;as.list&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;seq&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;as.Date&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;2015-04-01&amp;#34;&lt;/span&gt;),&lt;span style=&#34;color:#a6e22e&#34;&gt;as.Date&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;2019-03-01&amp;#34;&lt;/span&gt;),by&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;quarter&amp;#34;&lt;/span&gt;))){
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;day&lt;/span&gt;(i) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;days_in_month&lt;/span&gt;(i)
+  traindata &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; dataset1[dataset1&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;publication&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;=&lt;/span&gt;i,]
+  X_train &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ESTIMATE_GPLVM&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;scale&lt;/span&gt;(traindata[,&lt;span style=&#34;color:#ae81ff&#34;&gt;-2&lt;/span&gt;]),&lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;)
+  X_train.xts &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;xts&lt;/span&gt;(X_train&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;output,order.by &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; traindata&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;publication)
+  X_train.q.xts &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;apply.quarterly&lt;/span&gt;(X_train.xts,mean)
   
-  if (months(index(X_train.q.xts)[NROW(X_train.q.xts)]) %in% c(&amp;quot;3月&amp;quot;,&amp;quot;6月&amp;quot;,&amp;quot;9月&amp;quot;,&amp;quot;12月&amp;quot;)){
-  } else X_train.q.xts &amp;lt;- X_train.q.xts[-NROW(X_train.q.xts),]
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;if &lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;months&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;index&lt;/span&gt;(X_train.q.xts)&lt;span style=&#34;color:#a6e22e&#34;&gt;[NROW&lt;/span&gt;(X_train.q.xts)]) &lt;span style=&#34;color:#f92672&#34;&gt;%in%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;3月&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;6月&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;9月&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;12月&amp;#34;&lt;/span&gt;)){
+  } else X_train.q.xts &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; X_train.q.xts[&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;NROW&lt;/span&gt;(X_train.q.xts),]
   
-  colnames(X_train.q.xts) &amp;lt;- c(&amp;quot;factor1&amp;quot;,&amp;quot;factor2&amp;quot;,&amp;quot;factor3&amp;quot;,&amp;quot;factor4&amp;quot;,&amp;quot;factor5&amp;quot;) 
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;colnames&lt;/span&gt;(X_train.q.xts) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;factor1&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;factor2&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;factor3&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;factor4&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;factor5&amp;#34;&lt;/span&gt;) 
 
-  GDP_train.q &amp;lt;- scale(GDP[GDP$publication&amp;gt;=index(X_train.q.xts)[1] &amp;amp; GDP$publication&amp;lt;=index(X_train.q.xts)[NROW(X_train.q.xts)],2])
+  GDP_train.q &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;scale&lt;/span&gt;(GDP[GDP&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;publication&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;index&lt;/span&gt;(X_train.q.xts)[1] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; GDP&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;publication&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;index&lt;/span&gt;(X_train.q.xts)&lt;span style=&#34;color:#a6e22e&#34;&gt;[NROW&lt;/span&gt;(X_train.q.xts)],&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;])
 
-  rg_train &amp;lt;- lm(GDP_train.q[-NROW(GDP_train.q)]~.,data=X_train.q.xts[-NROW(X_train.q.xts)])
-  summary(rg_train)
-  test_df &amp;lt;- rbind(test_df,data.frame(predict(rg_train,X_train.q.xts[NROW(X_train.q.xts)],interval = &amp;quot;prediction&amp;quot;,level=0.90),GDP=GDP_train.q[NROW(GDP_train.q)]))
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;計算できました。グラフにしてみましょう。先ほどのグラフよりは精度が悪くなりました。特にリーマンの後は予測値の信頼区間（90%）が大きく拡大しており、不確実性が増大していることもわかります。2010年以降に関しては実績値は信頼区間にほど入っており、予測モデルとしての性能はまあまあなのかなと思います。ただ、リーマンのような金融危機もズバッと当てるところにロマンがあると思うので元データの改善を図りたいと思います。この記事はいったんここで終了です。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggplot(gather(data.frame(test_df,Date=as.Date(rownames(test_df))),,,-c(lwr,upr,Date)),aes(y=value,x=Date,colour=key)) +
-  geom_ribbon(aes(ymax=upr,ymin=lwr,fill=&amp;quot;band&amp;quot;),alpha=0.1,linetype=&amp;quot;blank&amp;quot;) +
-  geom_line(size=1) +
-  ggtitle(&amp;quot;out-sample test&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-6-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
-&lt;/div&gt;
+  rg_train &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;lm&lt;/span&gt;(GDP_train.q[&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;NROW&lt;/span&gt;(GDP_train.q)]&lt;span style=&#34;color:#f92672&#34;&gt;~&lt;/span&gt;.,data&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;X_train.q.xts[&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;NROW&lt;/span&gt;(X_train.q.xts)])
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;summary&lt;/span&gt;(rg_train)
+  test_df &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;rbind&lt;/span&gt;(test_df,&lt;span style=&#34;color:#a6e22e&#34;&gt;data.frame&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;predict&lt;/span&gt;(rg_train,X_train.q.xts&lt;span style=&#34;color:#a6e22e&#34;&gt;[NROW&lt;/span&gt;(X_train.q.xts)],interval &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;prediction&amp;#34;&lt;/span&gt;,level&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0.90&lt;/span&gt;),GDP&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;GDP_train.q&lt;span style=&#34;color:#a6e22e&#34;&gt;[NROW&lt;/span&gt;(GDP_train.q)]))
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;計算できました。グラフにしてみましょう。先ほどのグラフよりは精度が悪くなりました。特にリーマンの後は予測値の信頼区間（90%）が大きく拡大しており、不確実性が増大していることもわかります。2010年以降に関しては実績値は信頼区間にほど入っており、予測モデルとしての性能はまあまあなのかなと思います。ただ、リーマンのような金融危機もズバッと当てるところにロマンがあると思うので元データの改善を図りたいと思います。この記事はいったんここで終了です。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;ggplot&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;gather&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;data.frame&lt;/span&gt;(test_df,Date&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;as.Date&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;rownames&lt;/span&gt;(test_df))),,,&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(lwr,upr,Date)),&lt;span style=&#34;color:#a6e22e&#34;&gt;aes&lt;/span&gt;(y&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;value,x&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;Date,colour&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;key)) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;geom_ribbon&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;aes&lt;/span&gt;(ymax&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;upr,ymin&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;lwr,fill&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;band&amp;#34;&lt;/span&gt;),alpha&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0.1&lt;/span&gt;,linetype&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blank&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;geom_line&lt;/span&gt;(size&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;ggtitle&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;out-sample test&amp;#34;&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../post/post8/index_files/figure-html/unnamed-chunk-6-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
 </description>
     </item>
     

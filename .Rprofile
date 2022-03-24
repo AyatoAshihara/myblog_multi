@@ -9,3 +9,5 @@ options(
 )
 
 options(blogdown.hugo.version = "0.76.5")
+
+options(blogdown.method = "markdown")

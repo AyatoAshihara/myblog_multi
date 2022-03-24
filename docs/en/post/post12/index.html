@@ -88,8 +88,8 @@
     
       
       
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/xcode.min.css" crossorigin="anonymous" title="hl-light">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/xcode.min.css" crossorigin="anonymous" title="hl-dark" disabled>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/solarized-dark.min.css" crossorigin="anonymous" title="hl-light">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/solarized-dark.min.css" crossorigin="anonymous" title="hl-dark" disabled>
       
     
 
@@ -672,9 +672,21 @@
 
 
 
-  <article class="article">
+  <div class="container-fluid docs">
+  <div class="row flex-xl-nowrap">
 
-  
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <ul class="nav toc-top">
+        <li><a href="#" id="back_to_top" class="docs-toc-title">Contents</a></li>
+      </ul>
+      
+      
+    </div>
+
+    <main class="col-12 col-md-0 col-xl-10 py-md-3 pl-md-5 docs-content" role="main">
+      <article class="article">
+
+        
 
 
 
@@ -705,6 +717,22 @@
   <h1>Obtaining satellite image data with the Google Earth Engine API and do nowcasting on business conditions</h1>
 
   
+
+  
+
+
+<div id="code-folding-buttons" class="dropdown btn-group pull-right">
+  <a class="btn btn-light btn-sm dropdown-toggle" href="#" role="button" id="allCodeToggleButton"
+     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    Code
+  </a>
+  <div class="dropdown-menu" aria-labelledby="allCodeToggleButton">
+    <a id="rmd-show-all-code" class="dropdown-item small" href="#">Show all</a>
+    <a id="rmd-hide-all-code" class="dropdown-item small" href="#">Hide all</a>
+  </div>
+</div>
+
+
 
   
 
@@ -776,10 +804,10 @@
 
 
 
-  <div class="article-container">
+        <div class="article-container">
 
-    <div class="article-style">
-      
+          <div class="article-style">
+            
 <script src="index_files/header-attrs/header-attrs.js"></script>
 
 <div id="TOC">
@@ -899,9 +927,9 @@ nightjp_csv.head()</code></pre>
 </div>
 </div>
 
-    </div>
+          </div>
 
-    
+          
 
 
 
@@ -1176,8 +1204,12 @@ nightjp_csv.head()</code></pre>
 
 
 
+        </div>
+      </article>
+    </main>
+
   </div>
-</article>
+</div>
 
       
 
@@ -1291,11 +1323,9 @@ nightjp_csv.head()</code></pre>
       
     
     
-      
     
     
-    
-    <script src="../../../js/wowchemy.min.2a3f95be2bc4762ba1847fb5d7a28317.js"></script>
+    <script src="../../../js/wowchemy.min.4c2bca31150ce93c5a5e43b8a50f22fd.js"></script>
 
     
 
@@ -1305,6 +1335,16 @@ nightjp_csv.head()</code></pre>
   <div class="container">
     <footer class="site-footer">
   
+
+  
+   
+  <script>
+  $(document).ready(function () {
+    window.initializeCodeFolding("show" === "show");
+  });
+  </script>
+  <script src="../../../js/codefolding.js"></script>
+
 
   <p class="powered-by">
     

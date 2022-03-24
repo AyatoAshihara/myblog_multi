@@ -17,253 +17,202 @@
       <link>/post/post19/</link>
       <pubDate>Wed, 08 Jul 2020 00:00:00 +0000</pubDate>
       <guid>/post/post19/</guid>
-      <description>
-&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
-
-&lt;div id=&#34;TOC&#34;&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;#今回のテーマバックテストとは&#34;&gt;1. 今回のテーマ「バックテスト」とは？&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#バックテストはオーバーフィットする&#34;&gt;2. バックテストはオーバーフィットする&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#シャープレシオが従う分布とは&#34;&gt;3. シャープレシオが従う分布とは&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#the-minimum-backtest-lengthを導出してみる&#34;&gt;4. &lt;code&gt;the minimum backtest length&lt;/code&gt;を導出してみる&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#終わりに&#34;&gt;4. 終わりに&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/div&gt;
-
-&lt;div id=&#34;今回のテーマバックテストとは&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;1. 今回のテーマ「バックテスト」とは？&lt;/h2&gt;
+      <description>&lt;h2 id=&#34;1-今回のテーマバックテストとは&#34;&gt;1. 今回のテーマ「バックテスト」とは？&lt;/h2&gt;
 &lt;p&gt;バックテストは、アルゴリズムによる投資戦略のヒストリカルシミュレーションです。バックテストは、立案した投資戦略がある期間にわたって実行されていた場合に発生したであろう利益と損失をアルゴリズムを用いて計算します。その際、シャープレシオやインフォメーションレシオなどの投資戦略のパフォーマンスを評価する一般的な統計量が使用されています。投資家は通常、これらのバックテストの統計量を調査し、最高のパフォーマンスを発揮する投資(運用)戦略に資産配分を決定するため、資産運用会社は良好なパフォーマンスを血のにじむような回数のバックテストを試行錯誤し、資料を作ってプレゼンしたりするわけです。&lt;/p&gt;
-&lt;div class=&#34;figure&#34;&gt;
-&lt;img src=&#34;https://stat.ameba.jp/user_images/20190212/22/nash210/51/5f/j/o0705061514355131242.jpg&#34; alt=&#34;&#34; /&gt;
-&lt;p class=&#34;caption&#34;&gt;3倍3分法のバックテスト&lt;/p&gt;
-&lt;/div&gt;
+&lt;p&gt;&lt;img src=&#34;https://stat.ameba.jp/user_images/20190212/22/nash210/51/5f/j/o0705061514355131242.jpg&#34; alt=&#34;3倍3分法のバックテスト&#34;&gt;&lt;/p&gt;
 &lt;p&gt;投資家の立場に立つなら、バックテストされた投資戦略のパフォーマンスについては、インサンプル(IS)とアウトオブサンプル(OOS)を区別することが重要です。ISのパフォーマンスは、投資戦略の設計に使用したサンプル（機械学習の文献では「学習期間」や「訓練セット」と呼ばれる物です）でシミュレートしたものです。一方、OOSパフォーマンスは、投資戦略の設計に使用されなかったサンプル（別名「テストセット」）でシミュレーションされたものです。バックテストは、そのパフォーマンスを持ってその投資戦略の有効性を占う物ですので、ISのパフォーマンスがOOSのパフォーマンスと一致している場合に再現性が担保され、現実的であるということができます。ただ、アウトサンプルの結果はこれからの結果であるので、バックテストを受け取った時点でそのバックテストが信頼に足るものか判断することは難しいです。hold-out法などで、以下のように学習データとテストデータを分け、OOSでのテストを行っているものもありますが、OOSの結果をフィードバックして戦略の改善ができる以上、純粋なアウトサンプルとは呼べません。&lt;/p&gt;
-&lt;p&gt;&lt;img src=&#34;http://www.triton.biz/blog1/wp-content/uploads/2018/04/pic001.png&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://www.triton.biz/blog1/wp-content/uploads/2018/04/pic001.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
 &lt;p&gt;ですので、ファンドマネージャーから良い結果のバックテストを受け取った場合、そのシミュレーションがどれだけ現実的であるかをなんとかして評価することが非常に重要となります。また、ファンドマネージャーも自身のバックテスト結果が持つ不確実性を理解しておくことが重要です。今回はバックテストのシミュレーションの現実性をどのようにして評価するのか、再現性のあるバックテストを行うためには何に注意すれば良いのかを調べてみたいと思います。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;バックテストはオーバーフィットする&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;2. バックテストはオーバーフィットする&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2308659&#34;&gt;Bailey, Borwein, López de Prado and Zhu(2015)&lt;/a&gt;は、どのような金融時系列でも、バックテストのシミュレーションをオーバーフィット(過学習)させることが(比較的)簡単にできると主張しています。ここで、オーバーフィットとは、機械学習の概念であり，モデルが一般的な構造よりも特定の観察データ(ISデータ)にフォーカスしてしまう状況を表します。&lt;/p&gt;
+&lt;h2 id=&#34;2-バックテストはオーバーフィットする&#34;&gt;2. バックテストはオーバーフィットする&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2308659&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Bailey, Borwein, López de Prado and Zhu(2015)&lt;/a&gt;は、どのような金融時系列でも、バックテストのシミュレーションをオーバーフィット(過学習)させることが(比較的)簡単にできると主張しています。ここで、オーバーフィットとは、機械学習の概念であり，モデルが一般的な構造よりも特定の観察データ(ISデータ)にフォーカスしてしまう状況を表します。&lt;/p&gt;
 &lt;p&gt;Bailey et. al.(2015)では、この主張の一例として株式戦略のバックテスト結果が芳しくない状況が挙げられています。バックテストではその名の通り過去データを使用しているので、具体的に損失が発生している銘柄を特定することが可能で、その銘柄の推奨を削除するためにいくつかのパラメータを追加し、取引システムを設計することで、パフォーマンスを向上させることができるというわけです（「データ・スヌーピング」として知られているテクニック）。数回シミュレーションを繰り返えせば、特定のサンプルに存在するが、母集団の中では稀であるかもしれない特徴から利益を得る「最適なパラメータ」を導くことができます。&lt;/p&gt;
 &lt;p&gt;機械学習の文献では、オーバーフィッティングの問題を対処するための膨大な研究の蓄積があります。ですが、Bailey et. al.(2015)は、機械学習の文脈で提案されている手法は一般的に複数の投資問題には適用できないと主張します。その理由は以下4点のようです。&lt;/p&gt;
-&lt;ol style=&#34;list-style-type: decimal&#34;&gt;
-&lt;li&gt;&lt;p&gt;機械学習でオーバーフィッティングを防ぐ手法は、予測の説明力や質を評価するために、その事象が定義される領域において明示的な点推定と信頼区間を必要としますが、このような明確な予測を行う投資戦略はほとんどないため。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;機械学習でオーバーフィッティングを防ぐ手法は、予測の説明力や質を評価するために、その事象が定義される領域において明示的な点推定と信頼区間を必要としますが、このような明確な予測を行う投資戦略はほとんどないため。&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;例えば、「E-mini S&amp;amp;P500は、金曜日の終値で1標準偏差5ポイントで1,600前後になると予測されています」とはあまり言われず、むしろ「買い」または「強い買い」といった定性的な推奨が提供されることが一般的です。しかも、この予想は予測の有効期限も明示されず、なにか予期せぬ事象が発生した際に変更がなされます。一方、定量予測では金曜日の終値と明記されています。&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;仮に特定の投資戦略が予測式に依存していたとしても、投資戦略の他の構成要素がオーバーフィットされている可能性がある。&lt;/p&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;仮に特定の投資戦略が予測式に依存していたとしても、投資戦略の他の構成要素がオーバーフィットされている可能性がある。&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;言い換えれば、単に予測式を調整する以外にも、投資戦略をオーバーフィットさせる方法はたくさんあるということです。&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;回帰のオーバーフィットの方法はパラメトリックであり、金融の場合観察不可能なデータに関する多くの仮定を含むため。&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;いくつかの手法は試行回数をコントロールしていないため。&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;回帰のオーバーフィットの方法はパラメトリックであり、金融の場合観察不可能なデータに関する多くの仮定を含むため。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;いくつかの手法は試行回数をコントロールしていないため。&lt;/p&gt;
+&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;Bailey et. al.(2015)では、バックテストのパフォーマンスが比較的低い投資戦略を特定するためには、&lt;strong&gt;比較的少ない試行回数&lt;/strong&gt;が必要であることを示しています。ここでの試行回数とは試行錯誤の回数だと思ってください。また、試行回数に応じて必要とされるバックテストの期間である&lt;code&gt;the minimum backtest length&lt;/code&gt;（MinBTL）を計算しています。この論文では、パフォーマンスを評価するために常にシャープレシオが使用されていますが、他のパフォーマンス指標にも応用できるそうです。その内容を見てみましょう。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;シャープレシオが従う分布とは&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;3. シャープレシオが従う分布とは&lt;/h2&gt;
+&lt;h2 id=&#34;3-シャープレシオが従う分布とは&#34;&gt;3. シャープレシオが従う分布とは&lt;/h2&gt;
 &lt;p&gt;MinBTLを導出するために、まずシャープレシオの(漸近)分布を導出します。そもそも、投資戦略の設計は、通常、特定のパターンが金融変数の将来値を予測するのに役立つかもしれないという事前知識または信念から始まります。例えば、さまざまな満期の債券の間にリードラグ効果を認識している場合は、イールドカーブが上昇した場合に均衡値への回帰に賭ける戦略を設計することができます。このモデルは、cointegration equation、ベクトル誤差補正モデル、確率微分方程式のシステムなどの形をとることが考えられます。&lt;/p&gt;
 &lt;p&gt;このようなモデル構成（または試行）の数は膨大であり、ファンドマネージャーは当然、戦略のパフォーマンスを最大化するものを選択したいと考え、そのためにヒストリカルシミュレーション（バックテスト）を行います(前述)。バックテストでは、最適なサンプルサイズ、シグナルの更新頻度、リスクサイジング、ストップロス、最大保有期間などなどを他の変数との兼ね合いの中で評価します。&lt;/p&gt;
-&lt;p&gt;この論文中でパフォーマンス評価の尺度として使用されるシャープレシオは、過去のリターンのサンプルに基づいて、戦略のパフォーマンスを評価する統計量で、BMに対する平均超過リターン/標準偏差(リスク)として定義されます。通常には、「リスク1標準偏差に対するリターン」と解釈され、資産クラスにもよりますが1を上回っていると非常に良い戦略であると見なせます。以下では、ある戦略の超過リターン&lt;span class=&#34;math inline&#34;&gt;\(r_t\)&lt;/span&gt;がi.i.d.の確率変数であり、正規分布に従うと仮定します。つまり、&lt;span class=&#34;math inline&#34;&gt;\(r_t\)&lt;/span&gt;の分布は&lt;span class=&#34;math inline&#34;&gt;\(r_s(t\neq s)\)&lt;/span&gt;と独立であることを仮定しています。あまり現実的な仮定ではありませんが。。。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+&lt;p&gt;この論文中でパフォーマンス評価の尺度として使用されるシャープレシオは、過去のリターンのサンプルに基づいて、戦略のパフォーマンスを評価する統計量で、BMに対する平均超過リターン/標準偏差(リスク)として定義されます。通常には、「リスク1標準偏差に対するリターン」と解釈され、資産クラスにもよりますが1を上回っていると非常に良い戦略であると見なせます。以下では、ある戦略の超過リターン$r_t$がi.i.d.の確率変数であり、正規分布に従うと仮定します。つまり、$r_t$の分布は$r_s(t\neq s)$と独立であることを仮定しています。あまり現実的な仮定ではありませんが。。。&lt;/p&gt;
+&lt;p&gt;$$
 r_t \sim \mathcal{N}(\mu,\sigma^2)
-\]&lt;/span&gt;
-ここで、&lt;span class=&#34;math inline&#34;&gt;\(\mathcal{N}\)&lt;/span&gt;は平均&lt;span class=&#34;math inline&#34;&gt;\(\mu\)&lt;/span&gt;、分散&lt;span class=&#34;math inline&#34;&gt;\(\sigma^2\)&lt;/span&gt;の正規分布を表しています。今、時点t~t-q+1の超過リターン&lt;span class=&#34;math inline&#34;&gt;\(r_{t}(q)\)&lt;/span&gt;を&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-r_{t}(q) \equiv r_{t} + r_{t-1} + ... + r_{t-q+1}
-\]&lt;/span&gt;
+$$
+ここで、$\mathcal{N}$は平均$\mu$、分散$\sigma^2$の正規分布を表しています。今、時点t~t-q+1の超過リターン$r_{t}(q)$を&lt;/p&gt;
+&lt;p&gt;$$
+r_{t}(q) \equiv r_{t} + r_{t-1} + &amp;hellip; + r_{t-q+1}
+$$
 と定義すると(複利部分を無視してます)、年率化されたシャープレシオは&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\begin{eqnarray}
-SR(q) &amp;amp;=&amp;amp; \frac{E[r_{t}(q)]}{\sqrt{Var(r_{t}(q))}}\\
-&amp;amp;=&amp;amp; \frac{q\mu}{\sqrt{q}\sigma}\\
-&amp;amp;=&amp;amp; \frac{\mu}{\sigma}\sqrt{q}
-\end{eqnarray}
-\]&lt;/span&gt;
-と表すことができます。ここで、&lt;span class=&#34;math inline&#34;&gt;\(q\)&lt;/span&gt;は年毎のリターンの数(頻度)です。例えば、日次リターンの場合&lt;span class=&#34;math inline&#34;&gt;\(q=365\)&lt;/span&gt;となります(閏年を除く)。
-&lt;span class=&#34;math inline&#34;&gt;\(\mu\)&lt;/span&gt;と&lt;span class=&#34;math inline&#34;&gt;\(\sigma\)&lt;/span&gt;は一般に未知ですので、&lt;span class=&#34;math inline&#34;&gt;\(SR\)&lt;/span&gt;の真値を知ることはできません。なので、&lt;span class=&#34;math inline&#34;&gt;\(R_t\)&lt;/span&gt;を標本リターン、リスクフリーレート&lt;span class=&#34;math inline&#34;&gt;\(R^f\)&lt;/span&gt;(定数)とすると、標本平均&lt;span class=&#34;math inline&#34;&gt;\(\hat{\mu}=1/T\sum_{t=1}^T R_{t}-R^f\)&lt;/span&gt;と標本標準偏差&lt;span class=&#34;math inline&#34;&gt;\(\hat{\sigma}=\sqrt{1/T\sum_{t=1}^{T}(R_{t}-\hat{\mu})}\)&lt;/span&gt;を用いてシャープレシオの推定値を計算することになります(&lt;span class=&#34;math inline&#34;&gt;\(T\)&lt;/span&gt;はバックテストを行うサンプルサイズ)。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+&lt;p&gt;$$
+&lt;code&gt;\begin{eqnarray} SR(q) &amp;amp;=&amp;amp; \frac{E[r_{t}(q)]}{\sqrt{Var(r_{t}(q))}}\\ &amp;amp;=&amp;amp; \frac{q\mu}{\sqrt{q}\sigma}\\ &amp;amp;=&amp;amp; \frac{\mu}{\sigma}\sqrt{q} \end{eqnarray}&lt;/code&gt;
+$$
+と表すことができます。ここで、$q$は年毎のリターンの数(頻度)です。例えば、日次リターンの場合$q=365$となります(閏年を除く)。
+&lt;code&gt;\(\mu\)&lt;/code&gt;と$\sigma$は一般に未知ですので、$SR$の真値を知ることはできません。なので、$R_t$を標本リターン、リスクフリーレート$R^f$(定数)とすると、標本平均$\hat{\mu}=1/T\sum_{t=1}^T R_{t}-R^f$と標本標準偏差$\hat{\sigma}=\sqrt{1/T\sum_{t=1}^{T}(R_{t}-\hat{\mu})}$を用いてシャープレシオの推定値を計算することになります($T$はバックテストを行うサンプルサイズ)。&lt;/p&gt;
+&lt;p&gt;$$
 \hat{SR}(q) = \frac{\hat{\mu}}{\hat{\sigma}}\sqrt{q}
-\]&lt;/span&gt;
-必然的な結果として、&lt;span class=&#34;math inline&#34;&gt;\(SR\)&lt;/span&gt;の計算はかなりの推定誤差が伴う可能性が高くなります。では、本節の本題、&lt;span class=&#34;math inline&#34;&gt;\(\hat{SR}\)&lt;/span&gt;の漸近分布を導出してみましょう。まず、&lt;span class=&#34;math inline&#34;&gt;\(\hat{\mu}\)&lt;/span&gt;と&lt;span class=&#34;math inline&#34;&gt;\(\hat{\sigma}^2\)&lt;/span&gt;の漸近分布はi.i.d.と&lt;span class=&#34;math inline&#34;&gt;\(\mu, \sigma\)&lt;/span&gt;が有限な値をとることから中心極限定理を適用することにより、&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\sqrt{T}\hat{\mu}\sim^{a}\mathcal{N}(\mu,\sigma^2), \\
+$$
+必然的な結果として、$SR$の計算はかなりの推定誤差が伴う可能性が高くなります。では、本節の本題、$\hat{SR}$の漸近分布を導出してみましょう。まず、$\hat{\mu}$と$\hat{\sigma}^2$の漸近分布はi.i.d.と$\mu, \sigma$が有限な値をとることから中心極限定理を適用することにより、&lt;/p&gt;
+&lt;p&gt;$$
+\sqrt{T}\hat{\mu}\sim^{a}\mathcal{N}(\mu,\sigma^2), \&lt;br&gt;
 \sqrt{T}\hat{\sigma}^2\sim^a\mathcal{N}(\sigma^2,2\sigma^4)
-\]&lt;/span&gt;
-となります。シャープレシオはこの&lt;span class=&#34;math inline&#34;&gt;\(\hat{\mu}\)&lt;/span&gt;と&lt;span class=&#34;math inline&#34;&gt;\(\hat{\sigma}^2\)&lt;/span&gt;から計算される確率変数であるので、この関数を&lt;span class=&#34;math inline&#34;&gt;\(g(\hat{{\boldsymbol \theta}})\)&lt;/span&gt;と表しましょう。ここで、&lt;span class=&#34;math inline&#34;&gt;\(\hat{{\boldsymbol \theta}}=(\hat{\mu},\hat{\sigma}^2)&amp;#39;\)&lt;/span&gt;です。今、i.i.d.であるので&lt;span class=&#34;math inline&#34;&gt;\(\hat{{\boldsymbol \theta}}\)&lt;/span&gt;は互いに独立となり、上記の議論から漸近同時分布は&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+$$
+となります。シャープレシオはこの$\hat{\mu}$と$\hat{\sigma}^2$から計算される確率変数であるので、この関数を$g(\hat{{\boldsymbol \theta}})$と表しましょう。ここで、$\hat{{\boldsymbol \theta}}=(\hat{\mu},\hat{\sigma}^2)&#39;$です。今、i.i.d.であるので$\hat{{\boldsymbol \theta}}$は互いに独立となり、上記の議論から漸近同時分布は&lt;/p&gt;
+&lt;p&gt;$$
 \sqrt{T}\hat{{\boldsymbol \theta}} \sim^a \mathcal{N}({\boldsymbol \theta},{\boldsymbol V_{\boldsymbol \theta}})
-\]&lt;/span&gt;
-と書けます。ここで、&lt;span class=&#34;math inline&#34;&gt;\({\boldsymbol V_{\boldsymbol \theta}}\)&lt;/span&gt;は&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+$$
+と書けます。ここで、${\boldsymbol V_{\boldsymbol \theta}}$は&lt;/p&gt;
+&lt;p&gt;$$
 {\boldsymbol V_{\boldsymbol \theta}} = \left( 
-    \begin{array}{cccc}
-      \sigma^2 &amp;amp; 0\\
-      0 &amp;amp; 2\sigma^4\\
-    \end{array}
-  \right)
-\]&lt;/span&gt;
-です。シャープレシオの推定値は今&lt;span class=&#34;math inline&#34;&gt;\(g(\hat{{\boldsymbol \theta}})\)&lt;/span&gt;と&lt;span class=&#34;math inline&#34;&gt;\(\hat{{\boldsymbol \theta}}\)&lt;/span&gt;だけの関数になっていますのでデルタ法より、&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\begin{array}{cccc}
+\sigma^2 &amp;amp; 0\&lt;br&gt;
+0 &amp;amp; 2\sigma^4\&lt;br&gt;
+\end{array}
+\right)
+$$
+です。シャープレシオの推定値は今$g(\hat{{\boldsymbol \theta}})$と$\hat{{\boldsymbol \theta}}$だけの関数になっていますのでデルタ法より、&lt;/p&gt;
+&lt;p&gt;$$
 \hat{SR} = g(\hat{{\boldsymbol \theta}}) \sim^a \mathcal{N}(g({\boldsymbol \theta}),\boldsymbol V_g)
-\]&lt;/span&gt;
-と漸近的に正規分布に従います。ここで、&lt;span class=&#34;math inline&#34;&gt;\(\boldsymbol V_g\)&lt;/span&gt;は&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\boldsymbol V_g=\frac{\partial g}{\partial{\boldsymbol \theta}}{\boldsymbol V_{\boldsymbol \theta}}\frac{\partial g}{\partial{\boldsymbol \theta}&amp;#39;}
-\]&lt;/span&gt;
-です。&lt;span class=&#34;math inline&#34;&gt;\(g({\boldsymbol \theta})=\mu/\sigma\)&lt;/span&gt;なので、&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\frac{\partial g}{\partial{\boldsymbol \theta}&amp;#39;} = \left[ 
-    \begin{array}{cccc}
-      \frac{\partial g}{\partial \mu}\\
-      \frac{\partial g}{\partial \sigma^2}\\
-    \end{array}
-  \right]
-  = \left[ 
-    \begin{array}{cccc}
-      \frac{1}{\sigma}\\
-      -\frac{\mu}{2\sigma^3}\\
-    \end{array}
-  \right]
-\]&lt;/span&gt;
+$$
+と漸近的に正規分布に従います。ここで、$\boldsymbol V_g$は&lt;/p&gt;
+&lt;p&gt;$$
+\boldsymbol V_g=\frac{\partial g}{\partial{\boldsymbol \theta}}{\boldsymbol V_{\boldsymbol \theta}}\frac{\partial g}{\partial{\boldsymbol \theta}&#39;}
+$$
+です。$g({\boldsymbol \theta})=\mu/\sigma$なので、&lt;/p&gt;
+&lt;p&gt;$$
+\frac{\partial g}{\partial{\boldsymbol \theta}&#39;} = \left[ 
+\begin{array}{cccc}
+\frac{\partial g}{\partial \mu}\&lt;br&gt;
+\frac{\partial g}{\partial \sigma^2}\&lt;br&gt;
+\end{array}
+\right]
+= \left[ 
+\begin{array}{cccc}
+\frac{1}{\sigma}\&lt;br&gt;
+-\frac{\mu}{2\sigma^3}\&lt;br&gt;
+\end{array}
+\right]
+$$
 よって、&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\begin{eqnarray}
-\boldsymbol V_g &amp;amp;=&amp;amp; \left(
-    \begin{array}{cccc}
-      \frac{\partial g}{\partial \mu}, \frac{\partial g}{\partial \sigma}\\
-    \end{array}
-  \right)
-  \left( 
-    \begin{array}{cccc}
-      \sigma^2 &amp;amp; 0\\
-      0 &amp;amp; 2\sigma^4\\
-    \end{array}
-  \right)
-  \left(
-    \begin{array}{cccc}
-      \frac{\partial g}{\partial \mu}\\
-      \frac{\partial g}{\partial \sigma}\\
-    \end{array}
-  \right) \\
-  &amp;amp;=&amp;amp; \left(
-    \begin{array}{cccc}
-      \frac{\partial g}{\partial \mu}\sigma^2, \frac{\partial g}{\partial \sigma}2\sigma^4\\
-    \end{array}
-  \right)
-    \left(
-    \begin{array}{cccc}
-      \frac{\partial g}{\partial \mu}\\
-      \frac{\partial g}{\partial \sigma}\\
-    \end{array}
-  \right) \\
-  &amp;amp;=&amp;amp; (\frac{\partial g}{\partial \mu})^2\sigma^2 + (\frac{\partial g}{\partial \sigma})^2\sigma^4 \\
-  &amp;amp;=&amp;amp; 1 + \frac{\mu^2}{2\sigma^2} \\
-  &amp;amp;=&amp;amp; 1 + \frac{1}{2}SR^2
-\end{eqnarray}
-\]&lt;/span&gt;
-と導出することができます。シャープレシオの絶対値が大きくなるほど指数的に分散が大きくなる傾向があるので良いパフォーマンスを見た時には注意が必要かもしれません。年率化されたシャープレシオの推定値&lt;span class=&#34;math inline&#34;&gt;\(\hat{SR}(q)\)&lt;/span&gt;が従う分布はここから&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\hat{SR}(q)\sim^a \mathcal{N}(\sqrt{q}SR,\frac{V(q)}{T}) \\
+&lt;p&gt;$$
+&lt;code&gt;\begin{eqnarray} \boldsymbol V_g &amp;amp;=&amp;amp; \left( \begin{array}{cccc} \frac{\partial g}{\partial \mu}, \frac{\partial g}{\partial \sigma}\\ \end{array} \right) \left(  \begin{array}{cccc} \sigma^2 &amp;amp; 0\\ 0 &amp;amp; 2\sigma^4\\ \end{array} \right) \left( \begin{array}{cccc} \frac{\partial g}{\partial \mu}\\ \frac{\partial g}{\partial \sigma}\\ \end{array} \right) \\ &amp;amp;=&amp;amp; \left( \begin{array}{cccc} \frac{\partial g}{\partial \mu}\sigma^2, \frac{\partial g}{\partial \sigma}2\sigma^4\\ \end{array} \right) \left( \begin{array}{cccc} \frac{\partial g}{\partial \mu}\\ \frac{\partial g}{\partial \sigma}\\ \end{array} \right) \\ &amp;amp;=&amp;amp; (\frac{\partial g}{\partial \mu})^2\sigma^2 + (\frac{\partial g}{\partial \sigma})^2\sigma^4 \\ &amp;amp;=&amp;amp; 1 + \frac{\mu^2}{2\sigma^2} \\ &amp;amp;=&amp;amp; 1 + \frac{1}{2}SR^2 \end{eqnarray}&lt;/code&gt;
+$$
+と導出することができます。シャープレシオの絶対値が大きくなるほど指数的に分散が大きくなる傾向があるので良いパフォーマンスを見た時には注意が必要かもしれません。年率化されたシャープレシオの推定値$\hat{SR}(q)$が従う分布はここから&lt;/p&gt;
+&lt;p&gt;$$
+\hat{SR}(q)\sim^a \mathcal{N}(\sqrt{q}SR,\frac{V(q)}{T}) \&lt;br&gt;
 V(q) = q{\boldsymbol V}_g = q(1 + \frac{1}{2}SR^2)
-\]&lt;/span&gt;
-となります。今、&lt;span class=&#34;math inline&#34;&gt;\(y\)&lt;/span&gt;をバックテストを行う年数とすると&lt;span class=&#34;math inline&#34;&gt;\(T=yq\)&lt;/span&gt;と書け、これを用いて上式を以下のように書き換えることができます(日次リターンで3年計測の場合、サンプルサイズ&lt;span class=&#34;math inline&#34;&gt;\(T\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(T=3×365=1095\)&lt;/span&gt;)。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+$$
+となります。今、$y$をバックテストを行う年数とすると$T=yq$と書け、これを用いて上式を以下のように書き換えることができます(日次リターンで3年計測の場合、サンプルサイズ$T$は$T=3×365=1095$)。&lt;/p&gt;
+&lt;p&gt;$$
 \hat{SR}(q)\sim^a \mathcal{N}(\sqrt{q}SR,\frac{1+\frac{1}{2}SR^2}{y}) \tag{1}
-\]&lt;/span&gt;
-頻度&lt;span class=&#34;math inline&#34;&gt;\(q\)&lt;/span&gt;はシャープレシオの平均には影響しますが分散には影響を及ぼしません。これでシャープレシオの推定値の漸近分布を導出することができました。さて、これを使ってなにをしたかったのかということですが、私たちは今バックテストの信頼性について考えていたのでした。つまり、FMが新商品を開発するために頭をひねって考え出した&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;個の投資戦略案のバックテストをした際に、それらのシャープレシオの真値がどれも0であるにも関わらず、非常に高い(良い)値が出る確率はいかほどなのかということです。Bailey et. al.(2015)では以下のように記述されていました。&lt;/p&gt;
+$$
+頻度$q$はシャープレシオの平均には影響しますが分散には影響を及ぼしません。これでシャープレシオの推定値の漸近分布を導出することができました。さて、これを使ってなにをしたかったのかということですが、私たちは今バックテストの信頼性について考えていたのでした。つまり、FMが新商品を開発するために頭をひねって考え出した$N$個の投資戦略案のバックテストをした際に、それらのシャープレシオの真値がどれも0であるにも関わらず、非常に高い(良い)値が出る確率はいかほどなのかということです。Bailey et. al.(2015)では以下のように記述されていました。&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;How high is the expected maximum Sharpe ratio IS among a set of strategy configurations where the true Sharpe ratio is zero?&lt;/em&gt;&lt;/p&gt;
 &lt;p&gt;また、期待最大シャープレシオの値を小さくするためには、いったいどれほどの期間バックテストをすべきなのかも知りたいわけです。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;the-minimum-backtest-lengthを導出してみる&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;4. &lt;code&gt;the minimum backtest length&lt;/code&gt;を導出してみる&lt;/h2&gt;
-&lt;p&gt;今考えている状況は、&lt;span class=&#34;math inline&#34;&gt;\(\mu=0\)&lt;/span&gt;で&lt;span class=&#34;math inline&#34;&gt;\(y\)&lt;/span&gt;を簡単化のために1年とすると(1)式より&lt;span class=&#34;math inline&#34;&gt;\(\hat{SR}(q)\)&lt;/span&gt;は標準正規分布&lt;span class=&#34;math inline&#34;&gt;\(\mathcal{N}(0,1)\)&lt;/span&gt;に従います。さて、今から私たちは&lt;span class=&#34;math inline&#34;&gt;\(\hat{SR}_n(n=1,2,...N)\)&lt;/span&gt;の最大値&lt;span class=&#34;math inline&#34;&gt;\(\max[\hat{SR}]_N\)&lt;/span&gt;の期待値について考えていくのですが、勘の良い人ならお気づきの通り、議論は極値統計の文脈に入っていくことになります。&lt;span class=&#34;math inline&#34;&gt;\(\hat{SR}_n\sim\mathcal{N}(0,1)\)&lt;/span&gt;はi.i.d.なので、その最大統計量の極値分布はFisher-Tippett-Gnedenko定理よりガンベル分布になります(証明追えてないです、ごめんなさい)。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+&lt;h2 id=&#34;4-the-minimum-backtest-lengthを導出してみる&#34;&gt;4. &lt;code&gt;the minimum backtest length&lt;/code&gt;を導出してみる&lt;/h2&gt;
+&lt;p&gt;今考えている状況は、$\mu=0$で$y$を簡単化のために1年とすると(1)式より$\hat{SR}(q)$は標準正規分布$\mathcal{N}(0,1)$に従います。さて、今から私たちは$\hat{SR}_n(n=1,2,&amp;hellip;N)$の最大値$\max[\hat{SR}]_N$の期待値について考えていくのですが、勘の良い人ならお気づきの通り、議論は極値統計の文脈に入っていくことになります。$\hat{SR}_n\sim\mathcal{N}(0,1)$はi.i.d.なので、その最大統計量の極値分布はFisher-Tippett-Gnedenko定理よりガンベル分布になります(証明追えてないです、ごめんなさい)。&lt;/p&gt;
+&lt;p&gt;$$
 \lim_{N\rightarrow\infty}prob[\frac{\max[\hat{SR}]_N-\alpha}{\beta}\leq x] = G(x) = e^{-e^{-x}}
-\]&lt;/span&gt;
-ここで、&lt;span class=&#34;math inline&#34;&gt;\(\alpha=Z(x)^{-1}[1-1/N], \beta=Z(x)^{-1}[1-1/Ne^{-1}]-\alpha\)&lt;/span&gt;で、&lt;span class=&#34;math inline&#34;&gt;\(Z(x)\)&lt;/span&gt;は標準正規分布の累積分布関数を表しています。ガンベル分布のモーメント母関数&lt;span class=&#34;math inline&#34;&gt;\(M_x(t)\)&lt;/span&gt;は&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\begin{eqnarray}
-M_x(t) &amp;amp;=&amp;amp; E[e^{tx}] = \int_{-\infty}^\infty e^{tx}e^{-x}e^{-e^{-x}}dx \\
-\end{eqnarray}
-\]&lt;/span&gt;
-と書け、&lt;span class=&#34;math inline&#34;&gt;\(x=-\log(y)\)&lt;/span&gt;と変数変換すると&lt;span class=&#34;math inline&#34;&gt;\(dx/dy=-1/y=-(e^{-x})^{-1}\)&lt;/span&gt;なので、&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\begin{eqnarray}
-M_x(t) &amp;amp;=&amp;amp; \int_{\infty}^0-e^{-t\log(y)}e^{-y}dy \\
-&amp;amp;=&amp;amp; \int_{0}^\infty y^{-t}e^{-y}dy \\
-&amp;amp;=&amp;amp; \Gamma(1-t)
-\end{eqnarray}
-\]&lt;/span&gt;
-となります。&lt;span class=&#34;math inline&#34;&gt;\(\Gamma(x)\)&lt;/span&gt;はガンマ関数です。ここから、標準化された最大統計量の期待値(平均)は&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\begin{eqnarray}
-\lim_{N\rightarrow\infty} E[\frac{\max[\hat{SR}]_N-\alpha}{\beta}] &amp;amp;=&amp;amp; M_x&amp;#39;(t)|_{t=0} \\
-&amp;amp;=&amp;amp; (-1)\Gamma&amp;#39;(1) \\
-&amp;amp;=&amp;amp; (-1)(-\gamma) = \gamma
-\end{eqnarray}
-\]&lt;/span&gt;
-となります。ここで、&lt;span class=&#34;math inline&#34;&gt;\(\gamma\approx0.5772156649...\)&lt;/span&gt;はEuler-Mascheroni定数です。よって、&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;が大きいとき、i.i.d.の標準正規分布の最大統計量の期待値は&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+$$
+ここで、$\alpha=Z(x)^{-1}[1-1/N], \beta=Z(x)^{-1}[1-1/Ne^{-1}]-\alpha$で、$Z(x)$は標準正規分布の累積分布関数を表しています。ガンベル分布のモーメント母関数$M_x(t)$は&lt;/p&gt;
+&lt;p&gt;$$
+&lt;code&gt;\begin{eqnarray} M_x(t) &amp;amp;=&amp;amp; E[e^{tx}] = \int_{-\infty}^\infty e^{tx}e^{-x}e^{-e^{-x}}dx \\ \end{eqnarray}&lt;/code&gt;
+$$
+と書け、$x=-\log(y)$と変数変換すると$dx/dy=-1/y=-(e^{-x})^{-1}$なので、&lt;/p&gt;
+&lt;p&gt;$$
+&lt;code&gt;\begin{eqnarray} M_x(t) &amp;amp;=&amp;amp; \int_{\infty}^0-e^{-t\log(y)}e^{-y}dy \\ &amp;amp;=&amp;amp; \int_{0}^\infty y^{-t}e^{-y}dy \\ &amp;amp;=&amp;amp; \Gamma(1-t) \end{eqnarray}&lt;/code&gt;
+$$
+となります。$\Gamma(x)$はガンマ関数です。ここから、標準化された最大統計量の期待値(平均)は&lt;/p&gt;
+&lt;p&gt;$$
+&lt;code&gt;\begin{eqnarray} \lim_{N\rightarrow\infty} E[\frac{\max[\hat{SR}]_N-\alpha}{\beta}] &amp;amp;=&amp;amp; M_x&#39;(t)|_{t=0} \\ &amp;amp;=&amp;amp; (-1)\Gamma&#39;(1) \\ &amp;amp;=&amp;amp; (-1)(-\gamma) = \gamma \end{eqnarray}&lt;/code&gt;
+$$
+となります。ここで、$\gamma\approx0.5772156649&amp;hellip;$はEuler-Mascheroni定数です。よって、$N$が大きいとき、i.i.d.の標準正規分布の最大統計量の期待値は&lt;/p&gt;
+&lt;p&gt;$$
 E[\max[\hat{SR}]] \approx \alpha + \gamma\beta = (1-\gamma)Z^{-1}[1-\frac{1}{N}]+\gamma Z^{-1}[1-\frac{1}{N}e^{-1}] \tag{2}
-\]&lt;/span&gt;
-と近似できます(&lt;span class=&#34;math inline&#34;&gt;\(N&amp;gt;1\)&lt;/span&gt;)。これがBailey et. al.(2015)のProposition 1.になります。&lt;span class=&#34;math inline&#34;&gt;\(E[\max[\hat{SR}]]\)&lt;/span&gt;を戦略数(試行錯誤数)&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;の関数としてプロットしたのが以下になります。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(ggplot2)
-ExMaxSR = function(N){
-  gamma_ct = -digamma(1)
-  Z = qnorm(0.99)
-  return((1-gamma_ct)*Z*(1-1/N) + gamma_ct*Z*(1-1/N*exp(1)^{-1}))
+$$
+と近似できます($N&amp;gt;1$)。これがBailey et. al.(2015)のProposition 1.になります。$E[\max[\hat{SR}]]$を戦略数(試行錯誤数)$N$の関数としてプロットしたのが以下になります。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(ggplot2)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## Warning: パッケージ &#39;ggplot2&#39; はバージョン 4.1.3 の R の下で造られました
+&lt;/code&gt;&lt;/pre&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;ExMaxSR &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(N){
+  gamma_ct &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;digamma&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)
+  Z &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;qnorm&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;0.99&lt;/span&gt;)
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;return&lt;/span&gt;((&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;gamma_ct)&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;Z&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1-1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;N) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; gamma_ct&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;Z&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1-1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;N&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;exp&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)^{&lt;span style=&#34;color:#ae81ff&#34;&gt;-1&lt;/span&gt;}))
 }
-N = list(0:100)
-result = purrr::map(N,ExMaxSR)
-ggplot2::ggplot(data.frame(ExpMaxSR = unlist(result),N = unlist(N)),aes(x=N,y=ExpMaxSR)) +
-  geom_line(size=1) + ylim(0,3)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-1-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
-&lt;p&gt;小さい&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;に対して急激に&lt;span class=&#34;math inline&#34;&gt;\(\max[\hat{SR}]\)&lt;/span&gt;の期待値が上昇していることがわかると思います。&lt;span class=&#34;math inline&#34;&gt;\(N=10\)&lt;/span&gt;の時、&lt;span class=&#34;math inline&#34;&gt;\(\max[\hat{SR}]=1.54\)&lt;/span&gt;となっており、全ての戦略のシャープレシオの真値が0にも拘わらず、少なくとも1つは見かけ上かなり良いパフォーマンスの戦略が見つかることが期待されます。金融ではhold-out法でのバックテストはしばしば使用されるかと思いますが、この方法は試行(錯誤)回数を考慮に入れていないため、&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;が大きいときには信頼に足る結果を返してくれないわけです。バックテストの結果を向上させるため、闇雲にあれやこれやとシミュレーションを行うことは非常に危険だと思いませんか？最終的にプレゼン資料に上がってくるのは&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;個の戦略のうち、最もパフォーマンスが良いもののみですから、今回の例のように10個戦略を考えただけでもどれかはシャープレシオが1.87付近に分布しているわけです。試行錯誤数なんてもちろん資料には記載しませんから、非常にミスリーディングなわけです。こういった資料を評価する際にはまず偽陽性を疑ってかかった方がいいかもしれません。&lt;/p&gt;
-&lt;p&gt;では、どうすれば良いのかという話ですが、Bailey et. al.(2015)では、Minimum Backtest Lengthを計算しています。要は試行(錯誤)数&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;を増やすにつれて、バックテストの年数&lt;span class=&#34;math inline&#34;&gt;\(y\)&lt;/span&gt;も伸ばしていけよと戒めているわけです。&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;とMinimum Backtest Lengthの関係性を示していきましょう。先ほどと同じく&lt;span class=&#34;math inline&#34;&gt;\(\mu=0\)&lt;/span&gt;を仮定しますが、&lt;span class=&#34;math inline&#34;&gt;\(y\neq 1\)&lt;/span&gt;であるケースを考えます。年率化シャープレシオの最大統計量の期待値は(2)式より、&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+N &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;list&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt;)
+result &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; purrr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;map&lt;/span&gt;(N,ExMaxSR)
+ggplot2&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;ggplot&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;data.frame&lt;/span&gt;(ExpMaxSR &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;unlist&lt;/span&gt;(result),N &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;unlist&lt;/span&gt;(N)),&lt;span style=&#34;color:#a6e22e&#34;&gt;aes&lt;/span&gt;(x&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;N,y&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;ExpMaxSR)) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;geom_line&lt;/span&gt;(size&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ylim&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../post/post19/index_files/figure-html/unnamed-chunk-1-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;小さい$N$に対して急激に$\max[\hat{SR}]$の期待値が上昇していることがわかると思います。$N=10$の時、$\max[\hat{SR}]=1.54$となっており、全ての戦略のシャープレシオの真値が0にも拘わらず、少なくとも1つは見かけ上かなり良いパフォーマンスの戦略が見つかることが期待されます。金融ではhold-out法でのバックテストはしばしば使用されるかと思いますが、この方法は試行(錯誤)回数を考慮に入れていないため、$N$が大きいときには信頼に足る結果を返してくれないわけです。バックテストの結果を向上させるため、闇雲にあれやこれやとシミュレーションを行うことは非常に危険だと思いませんか？最終的にプレゼン資料に上がってくるのは$N$個の戦略のうち、最もパフォーマンスが良いもののみですから、今回の例のように10個戦略を考えただけでもどれかはシャープレシオが1.87付近に分布しているわけです。試行錯誤数なんてもちろん資料には記載しませんから、非常にミスリーディングなわけです。こういった資料を評価する際にはまず偽陽性を疑ってかかった方がいいかもしれません。&lt;/p&gt;
+&lt;p&gt;では、どうすれば良いのかという話ですが、Bailey et. al.(2015)では、Minimum Backtest Lengthを計算しています。要は試行(錯誤)数$N$を増やすにつれて、バックテストの年数$y$も伸ばしていけよと戒めているわけです。$N$とMinimum Backtest Lengthの関係性を示していきましょう。先ほどと同じく$\mu=0$を仮定しますが、$y\neq 1$であるケースを考えます。年率化シャープレシオの最大統計量の期待値は(2)式より、&lt;/p&gt;
+&lt;p&gt;$$
 E[\max[\hat{SR}(q)]_N] \approx y^{-1/2}((1-\gamma)Z^{-1}[1-\frac{1}{N}]+\gamma Z^{-1}[1-\frac{1}{N}e^{-1}])
-\]&lt;/span&gt;
-となります。これを&lt;span class=&#34;math inline&#34;&gt;\(y\)&lt;/span&gt;に対して解いてやることでMinBTLが求まります。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+$$
+となります。これを$y$に対して解いてやることでMinBTLが求まります。&lt;/p&gt;
+&lt;p&gt;$$
 MinBTL \approx (\frac{(1-\gamma)Z^{-1}[1-\frac{1}{N}]+\gamma Z^{-1}[1-\frac{1}{N}e^{-1}]}{\bar{E[\max[\hat{SR}(q)]_N]}})^2
-\]&lt;/span&gt;
-ここで、&lt;span class=&#34;math inline&#34;&gt;\(\bar{E[\max[\hat{SR}(q)]_N]}\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(E[\max[\hat{SR}(q)]_N]\)&lt;/span&gt;の上限値で、シャープレシオの真値が0である&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;戦略でシャープレシオの最大統計量が取りうる値を抑えます。その際に、必要なバックテスト年数&lt;span class=&#34;math inline&#34;&gt;\(y\)&lt;/span&gt;がMinBTLとして導出されるのです。&lt;span class=&#34;math inline&#34;&gt;\(\bar{E[\max[\hat{SR}(q)]_N]}=1\)&lt;/span&gt;として、MinBTLを&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;の関数としてプロットしたものが以下です。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;MinBTL &amp;lt;- function(N,MaxSR){
-  return((ExMaxSR(N)/MaxSR)^2)
+$$
+ここで、$\bar{E[\max[\hat{SR}(q)]_N]}$は$E[\max[\hat{SR}(q)]_N]$の上限値で、シャープレシオの真値が0である$N$戦略でシャープレシオの最大統計量が取りうる値を抑えます。その際に、必要なバックテスト年数$y$がMinBTLとして導出されるのです。$\bar{E[\max[\hat{SR}(q)]_N]}=1$として、MinBTLを$N$の関数としてプロットしたものが以下です。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;MinBTL &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(N,MaxSR){
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;return&lt;/span&gt;((&lt;span style=&#34;color:#a6e22e&#34;&gt;ExMaxSR&lt;/span&gt;(N)&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;MaxSR)^2)
 }
-N = list(1:100)
-result = purrr::map2(N,1,MinBTL)
-ggplot2::ggplot(data.frame(MinBTL = unlist(result),N = unlist(N)),aes(x=N,y=MinBTL)) +
-  geom_line(size=1) + ylim(0,6)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-2-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;simSR &amp;lt;- function(T1){
-    r = rnorm(T1)
-    return(mean(r)/sd(r))
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;仮にバックテスト年数が3年以内しかできない場合は試行(錯誤)回数&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;はほぼ1回に抑えないといけないことになります。3年以内の場合は一発で当ててねという厳しめの制約です。注意しないといけないのは、MinBTLの範囲内でバックテストを行っていたとしてもオーバーフィットすることは考えられるということです。つまり、MinBTLは必要条件であって十分条件でないというわけです。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;終わりに&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;4. 終わりに&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3257497&#34;&gt;López de Prado(2018)&lt;/a&gt;では、オーバーフィッティングを防ぐ汎用的な手段として以下が挙げられています。&lt;/p&gt;
-&lt;ol style=&#34;list-style-type: decimal&#34;&gt;
-&lt;li&gt;&lt;p&gt;Develop models for entire asset classes or investment universes, rather than for specific securities. Investors diversify, hence they do not make mistake X only on security Y. If you find mistake X only on security Y, no matter how apparently profitable, it is likely a false discovery.
-(拙訳：特定の有価証券ではなく、アセットクラス全体またはユニバース全体のモデルを開発すること。投資家はリスクを分散させているので、彼らはある証券Yだけに対してミスXをすることはありません。あなたが証券YだけにミスXを見つけた場合は、それがどんなに明らかに有益であっても、誤発見である可能性が高い。)&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Apply bagging as a means to both prevent overfitting and reduce the variance of the forecasting error. If bagging deteriorates the performance of a strategy, it was likely overfit to a small number of observations or outliers.
-(拙訳：オーバーフィットを防ぎ、予測誤差の分散を減らすための手段として、バギングを適用すること。バギングが戦略のパフォーマンスを悪化させる場合、それは少数の観測値または外れ値にオーバーフィットした可能性が高い。)&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;&lt;strong&gt;Do not backtest until all your research is complete.&lt;/strong&gt;
-(拙訳：&lt;strong&gt;すべてのリサーチが完了するまでバックテストをしないこと。&lt;/strong&gt;)&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Record every backtest conducted on a dataset so that the probability of backtest overfitting may be estimated on the final selected result (see &lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2326253&#34;&gt;Bailey, Borwein, López de Prado and Zhu(2017)&lt;/a&gt;), and the Sharpe ratio may be properly deflated by the number of trials carried out (&lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2465675&#34;&gt;Bailey and López de Prado(2014.b)&lt;/a&gt;).
-(拙訳：研究者が最終的に選択したバックテスト結果がオーバーフィットしている確率を推定できるように、単一の(同じ)データセットで実施されたバックテストをすべて記録すること（Bailey, Borwein, López de Prado and Zhu [2017]）、また、実施された試行数によってシャープレシオを適切にデフレーションできるようにすること（Bailey and López de Prado [2014]）。)&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Simulate scenarios rather than history. A standard backtest is a historical simulation, which can be easily overfit. History is just the random path that was realized, and it could have been entirely different. Your strategy should be profitable under a wide range of scenarios, not just the anecdotal historical path. It is harder to overfit the outcome of thousands of “what if” scenarios.
-(拙訳：ヒストリカルではなくシナリオをシミュレーションすること。標準的なバックテストはヒストリカルシミュレーションであり、オーバーフィットしやすい。歴史(これまでの実績)はランダムなパスの実現値に過ぎず、全く違ったものになっていた可能性があります。あなたの戦略は、逸話的なヒストリカルパスではなく、様々なシナリオの下で利益を得ることができるものであるべきです。何千もの「もしも」のシナリオ結果をオーバーフィットさせるのは(ヒストリカルシミュレーションで過学習するよりも)より難しいことです。)&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Do not research under the influence of a backtest. If the backtest fails to identify a profitable strategy,
+N &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;list&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt;)
+result &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; purrr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;map2&lt;/span&gt;(N,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,MinBTL)
+ggplot2&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;ggplot&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;data.frame&lt;/span&gt;(MinBTL &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;unlist&lt;/span&gt;(result),N &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;unlist&lt;/span&gt;(N)),&lt;span style=&#34;color:#a6e22e&#34;&gt;aes&lt;/span&gt;(x&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;N,y&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;MinBTL)) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;geom_line&lt;/span&gt;(size&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ylim&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../post/post19/index_files/figure-html/unnamed-chunk-2-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;simSR &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(T1){
+    r &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;rnorm&lt;/span&gt;(T1)
+    &lt;span style=&#34;color:#a6e22e&#34;&gt;return&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;mean&lt;/span&gt;(r)&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;sd&lt;/span&gt;(r))
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;仮にバックテスト年数が3年以内しかできない場合は試行(錯誤)回数$N$はほぼ1回に抑えないといけないことになります。3年以内の場合は一発で当ててねという厳しめの制約です。注意しないといけないのは、MinBTLの範囲内でバックテストを行っていたとしてもオーバーフィットすることは考えられるということです。つまり、MinBTLは必要条件であって十分条件でないというわけです。&lt;/p&gt;
+&lt;h2 id=&#34;4-終わりに&#34;&gt;4. 終わりに&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3257497&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;López de Prado(2018)&lt;/a&gt;では、オーバーフィッティングを防ぐ汎用的な手段として以下が挙げられています。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;Develop models for entire asset classes or investment universes, rather than for specific securities. Investors diversify, hence they do not make mistake X only on security Y. If you find mistake X only on security Y, no matter how apparently profitable, it is likely a false discovery.
+(拙訳：特定の有価証券ではなく、アセットクラス全体またはユニバース全体のモデルを開発すること。投資家はリスクを分散させているので、彼らはある証券Yだけに対してミスXをすることはありません。あなたが証券YだけにミスXを見つけた場合は、それがどんなに明らかに有益であっても、誤発見である可能性が高い。)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Apply bagging as a means to both prevent overfitting and reduce the variance of the forecasting error. If bagging deteriorates the performance of a strategy, it was likely overfit to a small number of observations or outliers.
+(拙訳：オーバーフィットを防ぎ、予測誤差の分散を減らすための手段として、バギングを適用すること。バギングが戦略のパフォーマンスを悪化させる場合、それは少数の観測値または外れ値にオーバーフィットした可能性が高い。)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Do not backtest until all your research is complete.&lt;/strong&gt;
+(拙訳：&lt;strong&gt;すべてのリサーチが完了するまでバックテストをしないこと。&lt;/strong&gt;)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Record every backtest conducted on a dataset so that the probability of backtest overfitting may be estimated on the final selected result (see &lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2326253&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Bailey, Borwein, López de Prado and Zhu(2017)&lt;/a&gt;), and the Sharpe ratio may be properly deflated by the number of trials carried out (&lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2465675&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Bailey and López de Prado(2014.b)&lt;/a&gt;).
+(拙訳：研究者が最終的に選択したバックテスト結果がオーバーフィットしている確率を推定できるように、単一の(同じ)データセットで実施されたバックテストをすべて記録すること（Bailey, Borwein, López de Prado and Zhu [2017]）、また、実施された試行数によってシャープレシオを適切にデフレーションできるようにすること（Bailey and López de Prado [2014]）。)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Simulate scenarios rather than history. A standard backtest is a historical simulation, which can be easily overfit. History is just the random path that was realized, and it could have been entirely different. Your strategy should be profitable under a wide range of scenarios, not just the anecdotal historical path. It is harder to overfit the outcome of thousands of “what if” scenarios.
+(拙訳：ヒストリカルではなくシナリオをシミュレーションすること。標準的なバックテストはヒストリカルシミュレーションであり、オーバーフィットしやすい。歴史(これまでの実績)はランダムなパスの実現値に過ぎず、全く違ったものになっていた可能性があります。あなたの戦略は、逸話的なヒストリカルパスではなく、様々なシナリオの下で利益を得ることができるものであるべきです。何千もの「もしも」のシナリオ結果をオーバーフィットさせるのは(ヒストリカルシミュレーションで過学習するよりも)より難しいことです。)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Do not research under the influence of a backtest. If the backtest fails to identify a profitable strategy,
 start from scratch. Resist the temptation of reusing those results.
-(拙訳：バックテストのフィードバックを受けてリサーチしないこと。バックテストが有益な戦略を見つけ出すことに失敗した場合は、ゼロからリサーチを再始動してください。それらの結果を再利用する誘惑に抗ってください。)&lt;/p&gt;&lt;/li&gt;
+(拙訳：バックテストのフィードバックを受けてリサーチしないこと。バックテストが有益な戦略を見つけ出すことに失敗した場合は、ゼロからリサーチを再始動してください。それらの結果を再利用する誘惑に抗ってください。)&lt;/p&gt;
+&lt;/li&gt;
 &lt;/ol&gt;
-&lt;p&gt;3と6は本日の論文と関係のある文脈だと思います。この分野は他にも研究の蓄積があるので、業務でバックテストを行うという人は運用手法の勉強もいいですが、そもそものお作法としてバックテストの正しい運用方法について学ぶことをお勧めします。&lt;br /&gt;
+&lt;p&gt;3と6は本日の論文と関係のある文脈だと思います。この分野は他にも研究の蓄積があるので、業務でバックテストを行うという人は運用手法の勉強もいいですが、そもそものお作法としてバックテストの正しい運用方法について学ぶことをお勧めします。&lt;br&gt;
 さて、いつもとは違う観点で、少しメタ的なトピックに取り組んでみました。自分自身仕事柄バックテスト結果などを見ることも多いですし、このブログでもしばしばhold-out法でのバックテストをしています。得られた結果の不確実性を理解して、評価できるよう今後もこのトピックの研究を追っていきたいと思います。&lt;/p&gt;
-&lt;/div&gt;
 </description>
     </item>
     
@@ -272,193 +221,161 @@ start from scratch. Resist the temptation of reusing those results.
       <link>/post/post2/</link>
       <pubDate>Sun, 17 Feb 2019 00:00:00 +0000</pubDate>
       <guid>/post/post2/</guid>
-      <description>
-&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
-&lt;link href=&#34;index_files/pagedtable/css/pagedtable.css&#34; rel=&#34;stylesheet&#34; /&gt;
-&lt;script src=&#34;index_files/pagedtable/js/pagedtable.js&#34;&gt;&lt;/script&gt;
-
-&lt;div id=&#34;TOC&#34;&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;#最小分散ポートフォリオ&#34;&gt;1. 最小分散ポートフォリオ&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#分散共分散行列をどのように求めるか&#34;&gt;2. 分散共分散行列をどのように求めるか&lt;/a&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;#a.-constant-conditional-correlation-ccc-model&#34;&gt;A. Constant conditional correlation (CCC) model&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#b.-dynamic-conditional-correlation-dcc-model&#34;&gt;B. Dynamic Conditional Correlation (DCC) model&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#c.-dynamic-equicorrelation-deco-model&#34;&gt;C. Dynamic Equicorrelation (DECO) model&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#テスト用データの収集&#34;&gt;3. テスト用データの収集&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/div&gt;
-
-&lt;p&gt;おはこんばんにちは。勤め先で、アセットアロケーションに関するワークショップに参加したので、この分野は完全なる専門外ですがシミュレーションをしてみたいと思います。今回は、最小分散ポートフォリオ(minimum variance portfolio)を基本ポートフォリオとしたうえで、その分散共分散行列（予測値）をどのように推計するのかという点について先行研究を参考にエクササイズしていきたいと思います。先行研究は以下の論文です（オペレーションリサーチのジャーナルでした）。&lt;/p&gt;
-&lt;p&gt;&lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2947643&#34;&gt;Asset Allocation with Correlation: A Composite Trade-Off&lt;/a&gt;&lt;/p&gt;
-&lt;div id=&#34;最小分散ポートフォリオ&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;1. 最小分散ポートフォリオ&lt;/h2&gt;
+      <description>&lt;p&gt;おはこんばんにちは。勤め先で、アセットアロケーションに関するワークショップに参加したので、この分野は完全なる専門外ですがシミュレーションをしてみたいと思います。今回は、最小分散ポートフォリオ(minimum variance portfolio)を基本ポートフォリオとしたうえで、その分散共分散行列（予測値）をどのように推計するのかという点について先行研究を参考にエクササイズしていきたいと思います。先行研究は以下の論文です（オペレーションリサーチのジャーナルでした）。&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2947643&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Asset Allocation with Correlation: A Composite Trade-Off&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;1-最小分散ポートフォリオ&#34;&gt;1. 最小分散ポートフォリオ&lt;/h2&gt;
 &lt;p&gt;最小分散ポートフォリオの詳しい説明はここでは割愛しますが、要は各資産（内株、外株、内債、外債、オルタナ）のリターンの平均と分散を計算し、それらを縦軸平均値、横軸分散の二次平面にプロットしたうえで、投資可能範囲を計算し、その集合の中で最も分散が小さくなるポートフォリオの事らしいです（下図参照）。&lt;/p&gt;
-&lt;div class=&#34;figure&#34;&gt;
-&lt;img src=&#34;https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/Minimum_variance_flontier_of_MPT.svg/1280px-Minimum_variance_flontier_of_MPT.svg.png&#34; alt=&#34;&#34; /&gt;
-&lt;p class=&#34;caption&#34;&gt;minimum variance portfolio&lt;/p&gt;
-&lt;/div&gt;
-&lt;p&gt;先行研究のCarroll et. al. (2017)では、&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/Minimum_variance_flontier_of_MPT.svg/1280px-Minimum_variance_flontier_of_MPT.svg.png&#34; alt=&#34;minimum variance portfolio&#34;&gt;&lt;/p&gt;
+&lt;p&gt;先行研究のCarroll et. al. (2017)では、&lt;/p&gt;
 &lt;blockquote&gt;
 &lt;p&gt;this paper focusses on minimum-variance portfolios requiring only estimates of asset covariance, hence bypassing the well-known problem of estimation error in forecasting expected asset returns.&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;p&gt;と記載されており、現状でも期待リターンの推計は難しく、それを必要としない最小分散ポートフォリオは有益で実践的な手法であるといえます。最小分散ポートフォリオの目的関数は、その名の通り「分散を最小化すること」です。今、各資産のリターンを集めたベクトルを[tex:r]、各資産の保有ウェイトを&lt;span class=&#34;math inline&#34;&gt;\(\theta\)&lt;/span&gt;、ポートフォリオリターンを&lt;span class=&#34;math inline&#34;&gt;\(R_{p}\)&lt;/span&gt;で表すことにすると、ポートフォリオ全体の分散&lt;span class=&#34;math inline&#34;&gt;\(var(R_{p})\)&lt;/span&gt;は以下のように記述できます。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+&lt;p&gt;と記載されており、現状でも期待リターンの推計は難しく、それを必要としない最小分散ポートフォリオは有益で実践的な手法であるといえます。最小分散ポートフォリオの目的関数は、その名の通り「分散を最小化すること」です。今、各資産のリターンを集めたベクトルを[tex:r]、各資産の保有ウェイトを$\theta$、ポートフォリオリターンを$R_{p}$で表すことにすると、ポートフォリオ全体の分散$var(R_{p})$は以下のように記述できます。&lt;/p&gt;
+&lt;p&gt;$$
 var(R_{p}) = var(r^{T}\theta) = E( (r^{T}\theta)(r^{T}\theta)^{T}) = \theta^{T}\Sigma\theta
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;ここで&lt;span class=&#34;math inline&#34;&gt;\(Sigma\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(r\)&lt;/span&gt;の分散共分散行列です。よって、最小化問題は以下になります。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\min_{\theta}(\theta^{T}\Sigma\theta) \\
+$$&lt;/p&gt;
+&lt;p&gt;ここで$Sigma$は$r$の分散共分散行列です。よって、最小化問題は以下になります。&lt;/p&gt;
+&lt;p&gt;$$
+\min_{\theta}(\theta^{T}\Sigma\theta) \&lt;br&gt;
 s.t 1^{T}\theta = 1
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;ここでは、フルインベストメントを制約条件に加えています。ラグランジュ未定乗数法を用いてこの問題を解いてみましょう。ラグランジュ関数&lt;span class=&#34;math inline&#34;&gt;\(L\)&lt;/span&gt;は以下のようになります。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+$$&lt;/p&gt;
+&lt;p&gt;ここでは、フルインベストメントを制約条件に加えています。ラグランジュ未定乗数法を用いてこの問題を解いてみましょう。ラグランジュ関数$L$は以下のようになります。&lt;/p&gt;
+&lt;p&gt;$$
 L = \theta^{T}\Sigma\theta + \lambda(1^{T}\theta - 1)
-\]&lt;/span&gt;&lt;/p&gt;
+$$&lt;/p&gt;
 &lt;p&gt;1階の条件は、&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\displaystyle\frac{\partial L}{\partial \theta} = 2\Sigma\theta + 1\lambda = 0 \\
+&lt;p&gt;$$
+\displaystyle\frac{\partial L}{\partial \theta} = 2\Sigma\theta + 1\lambda = 0 \&lt;br&gt;
 \displaystyle \frac{\partial L}{\partial \lambda} = 1^{T} \theta = 1
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;1本目の式を&lt;span class=&#34;math inline&#34;&gt;\(\theta\)&lt;/span&gt;について解くと、&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+$$&lt;/p&gt;
+&lt;p&gt;1本目の式を$\theta$について解くと、&lt;/p&gt;
+&lt;p&gt;$$
 \theta = \Sigma^{-1}1\lambda^{*}
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;となります。ここで、&lt;span class=&#34;math inline&#34;&gt;\(\lambda^{*}=-1/2\lambda\)&lt;/span&gt;です。これを2本目の式に代入し、&lt;span class=&#34;math inline&#34;&gt;\(\lambda^{*}\)&lt;/span&gt;について解きます。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-1^{T}\Sigma1\lambda^{*} = 1 \\
-\displaystyle \lambda^{*} = \frac{1}{1^{T}\Sigma^{-1}1}
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math inline&#34;&gt;\(\theta = \Sigma^{-1}1\lambda^{*}\)&lt;/span&gt;だったので、&lt;span class=&#34;math inline&#34;&gt;\(\lambda^{*}\)&lt;/span&gt;を消去すると、&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+$$&lt;/p&gt;
+&lt;p&gt;となります。ここで、$\lambda^{&lt;em&gt;}=-1/2\lambda$です。これを2本目の式に代入し、$\lambda^{&lt;/em&gt;}$について解きます。&lt;/p&gt;
+&lt;p&gt;$$
+1^{T}\Sigma1\lambda^{&lt;em&gt;} = 1 \&lt;br&gt;
+\displaystyle \lambda^{&lt;/em&gt;} = \frac{1}{1^{T}\Sigma^{-1}1}
+$$&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;\(\theta = \Sigma^{-1}1\lambda^{*}\)&lt;/code&gt;だったので、$\lambda^{*}$を消去すると、&lt;/p&gt;
+&lt;p&gt;$$
 \displaystyle \theta_{gmv} = \frac{\Sigma^{-1}1}{1^{T}\Sigma^{-1}1}
-\]&lt;/span&gt;&lt;/p&gt;
+$$&lt;/p&gt;
 &lt;p&gt;となり、最適なウェイトを求めることができました。とりあえず、これをRで実装しておきます。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;gmv &amp;lt;- function(r_dat,r_cov){
-  library(MASS)
-  i &amp;lt;- matrix(1,NCOL(r_dat),1)
-  r_weight &amp;lt;- (ginv(r_cov)%*%i)/as.numeric(t(i)%*%ginv(r_cov)%*%i)
-  wr_dat &amp;lt;- r_dat*as.numeric(r_weight)
-  portfolio &amp;lt;- apply(wr_dat,1,sum)
-  pr_dat &amp;lt;- data.frame(wr_dat,portfolio)
-  sd &amp;lt;- sd(portfolio)
-  result &amp;lt;- list(r_weight,pr_dat,sd)
-  names(result) &amp;lt;- c(&amp;quot;weight&amp;quot;,&amp;quot;return&amp;quot;,&amp;quot;portfolio risk&amp;quot;) 
-  return(result)
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;gmv &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(r_dat,r_cov){
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(MASS)
+  i &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;matrix&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,&lt;span style=&#34;color:#a6e22e&#34;&gt;NCOL&lt;/span&gt;(r_dat),&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)
+  r_weight &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;ginv&lt;/span&gt;(r_cov)&lt;span style=&#34;color:#f92672&#34;&gt;%*%&lt;/span&gt;i)&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;as.numeric&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;t&lt;/span&gt;(i)&lt;span style=&#34;color:#f92672&#34;&gt;%*%&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;ginv&lt;/span&gt;(r_cov)&lt;span style=&#34;color:#f92672&#34;&gt;%*%&lt;/span&gt;i)
+  wr_dat &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; r_dat&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;as.numeric&lt;/span&gt;(r_weight)
+  portfolio &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;apply&lt;/span&gt;(wr_dat,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,sum)
+  pr_dat &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;data.frame&lt;/span&gt;(wr_dat,portfolio)
+  sd &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;sd&lt;/span&gt;(portfolio)
+  result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;list&lt;/span&gt;(r_weight,pr_dat,sd)
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;names&lt;/span&gt;(result) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;weight&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;return&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;portfolio risk&amp;#34;&lt;/span&gt;) 
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;return&lt;/span&gt;(result)
 }
 
-nlgmv &amp;lt;- function(r_dat,r_cov){
-  qp.out &amp;lt;- solve.QP(Dmat=r_cov,dvec=rep(0,NCOL(r_dat)),Amat=cbind(rep(1,NCOL(r_dat)),diag(NCOL(r_dat))),
-           bvec=c(1,rep(0,NCOL(r_dat))),meq=1)
-  r_weight &amp;lt;- qp.out$solution
-  wr_dat &amp;lt;- r_dat*r_weight
-  portfolio &amp;lt;- apply(wr_dat,1,sum)
-  pr_dat &amp;lt;- data.frame(wr_dat,portfolio)
-  sd &amp;lt;- sd(portfolio)
-  result &amp;lt;- list(r_weight,pr_dat,sd)
-  names(result) &amp;lt;- c(&amp;quot;weight&amp;quot;,&amp;quot;return&amp;quot;,&amp;quot;portfolio risk&amp;quot;)
-  return(result)
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;入力は各資産のリターンと分散共分散行列になっています。出力はウェイト、リターン、リスクです。&lt;code&gt;nlgmv&lt;/code&gt;は最小分散ポートフォリオの空売り制約バージョンです。解析的な解は得られないので、数値的に買いを求めています。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;分散共分散行列をどのように求めるか&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;2. 分散共分散行列をどのように求めるか&lt;/h2&gt;
-&lt;p&gt;最小分散ポートフォリオの計算式は求めることができました。次は、その入力である分散共分散行列をどうやって求めるのかについて分析したいと思います。一番原始的な方法はその時点以前に利用可能なリターンデータを標本として分散共分散行列を求め、その値を固定して最小分散ポートフォリオを求めるというヒストリカルなアプローチかと思います（つまりウェイトも固定）。ただ、これはあくまで過去の平均値を将来の予想値に使用するため、いろいろ問題が出てくるかと思います。専門外の私が思いつくものとしては、前日ある資産Aのリターンが大きく下落したという場面で明日もこの資産の分散は大きくなることが予想されるにも関わらず、平均値を使用するため昨日の効果が薄められてしまうことでしょうか。それに、ウェイトを最初から変更しないというのも時間がたつにつれ、最適点から離れていく気がします。ただ、ではどう推計するのかついてはこの分野でも試行錯誤が行われているようです。Carroll et. al. (2017)でも、&lt;/p&gt;
+nlgmv &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(r_dat,r_cov){
+  qp.out &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;solve.QP&lt;/span&gt;(Dmat&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;r_cov,dvec&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;rep&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,&lt;span style=&#34;color:#a6e22e&#34;&gt;NCOL&lt;/span&gt;(r_dat)),Amat&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;cbind&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;rep&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,&lt;span style=&#34;color:#a6e22e&#34;&gt;NCOL&lt;/span&gt;(r_dat)),&lt;span style=&#34;color:#a6e22e&#34;&gt;diag&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;NCOL&lt;/span&gt;(r_dat))),
+           bvec&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,&lt;span style=&#34;color:#a6e22e&#34;&gt;rep&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,&lt;span style=&#34;color:#a6e22e&#34;&gt;NCOL&lt;/span&gt;(r_dat))),meq&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)
+  r_weight &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; qp.out&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;solution
+  wr_dat &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; r_dat&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;r_weight
+  portfolio &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;apply&lt;/span&gt;(wr_dat,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,sum)
+  pr_dat &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;data.frame&lt;/span&gt;(wr_dat,portfolio)
+  sd &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;sd&lt;/span&gt;(portfolio)
+  result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;list&lt;/span&gt;(r_weight,pr_dat,sd)
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;names&lt;/span&gt;(result) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;weight&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;return&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;portfolio risk&amp;#34;&lt;/span&gt;)
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;return&lt;/span&gt;(result)
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;入力は各資産のリターンと分散共分散行列になっています。出力はウェイト、リターン、リスクです。&lt;code&gt;nlgmv&lt;/code&gt;は最小分散ポートフォリオの空売り制約バージョンです。解析的な解は得られないので、数値的に買いを求めています。&lt;/p&gt;
+&lt;h2 id=&#34;2-分散共分散行列をどのように求めるか&#34;&gt;2. 分散共分散行列をどのように求めるか&lt;/h2&gt;
+&lt;p&gt;最小分散ポートフォリオの計算式は求めることができました。次は、その入力である分散共分散行列をどうやって求めるのかについて分析したいと思います。一番原始的な方法はその時点以前に利用可能なリターンデータを標本として分散共分散行列を求め、その値を固定して最小分散ポートフォリオを求めるというヒストリカルなアプローチかと思います（つまりウェイトも固定）。ただ、これはあくまで過去の平均値を将来の予想値に使用するため、いろいろ問題が出てくるかと思います。専門外の私が思いつくものとしては、前日ある資産Aのリターンが大きく下落したという場面で明日もこの資産の分散は大きくなることが予想されるにも関わらず、平均値を使用するため昨日の効果が薄められてしまうことでしょうか。それに、ウェイトを最初から変更しないというのも時間がたつにつれ、最適点から離れていく気がします。ただ、ではどう推計するのかついてはこの分野でも試行錯誤が行われているようです。Carroll et. al. (2017)でも、&lt;/p&gt;
 &lt;blockquote&gt;
 &lt;p&gt;The estimation of covariance matrices for portfolios with a large number of assets still remains a fundamental challenge in portfolio optimization.&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;と述べられていました。この論文では以下のようなモデルを用いて推計が行われています。いずれも、分散共分散行列を時変としているところに特徴があります。&lt;/p&gt;
-&lt;div id=&#34;a.-constant-conditional-correlation-ccc-model&#34; class=&#34;section level3&#34;&gt;
-&lt;h3&gt;A. Constant conditional correlation (CCC) model&lt;/h3&gt;
-&lt;p&gt;元論文は&lt;a href=&#34;https://www.jstor.org/stable/2109358?read-now=1&amp;amp;seq=3#page_scan_tab_contents&#34;&gt;こちら&lt;/a&gt;。&lt;/p&gt;
-&lt;p&gt;まず、分散共分散行列と相関行列の関係性から、&lt;span class=&#34;math inline&#34;&gt;\(\Sigma_{t} = D_{t}R_{t}D_{t}\)&lt;/span&gt;となります。ここで、&lt;span class=&#34;math inline&#34;&gt;\(R_{t}\)&lt;/span&gt;は相関行列、&lt;span class=&#34;math inline&#34;&gt;\(D_{t}\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(diag(\sigma_{1,t},...,\sigma_{N,t})\)&lt;/span&gt;で各資産&lt;span class=&#34;math inline&#34;&gt;\(tt\)&lt;/span&gt;期の標準偏差&lt;span class=&#34;math inline&#34;&gt;\(\sigma_{i,t}\)&lt;/span&gt;を対角成分に並べた行列です。ここから、&lt;span class=&#34;math inline&#34;&gt;\(D_{t}\)&lt;/span&gt;と&lt;span class=&#34;math inline&#34;&gt;\(R_{t}\)&lt;/span&gt;を分けて推計していきます。まず、&lt;span class=&#34;math inline&#34;&gt;\(D_{t}\)&lt;/span&gt;ですが、こちらは以下のような多変量GARCHモデル(1,1)で推計します。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-r_{t} = \mu + u_{t} \\
-u_{t} = \sigma_{t}\epsilon \\
-\sigma_{t}^{2} = \alpha_{0} + \alpha_{1}u_{t-1}^{2} + \alpha_{2}\sigma_{t-1}^{2} \\
-\epsilon_{t} = NID(0,1) \\
+&lt;h3 id=&#34;a-constant-conditional-correlation-ccc-model&#34;&gt;A. Constant conditional correlation (CCC) model&lt;/h3&gt;
+&lt;p&gt;元論文は&lt;a href=&#34;https://www.jstor.org/stable/2109358?read-now=1&amp;amp;seq=3#page_scan_tab_contents&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;こちら&lt;/a&gt;。&lt;/p&gt;
+&lt;p&gt;まず、分散共分散行列と相関行列の関係性から、$\Sigma_{t} = D_{t}R_{t}D_{t}$となります。ここで、$R_{t}$は相関行列、$D_{t}$は$diag(\sigma_{1,t},&amp;hellip;,\sigma_{N,t})$で各資産$tt$期の標準偏差$\sigma_{i,t}$を対角成分に並べた行列です。ここから、$D_{t}$と$R_{t}$を分けて推計していきます。まず、$D_{t}$ですが、こちらは以下のような多変量GARCHモデル(1,1)で推計します。&lt;/p&gt;
+&lt;p&gt;$$
+r_{t} = \mu + u_{t} \&lt;br&gt;
+u_{t} = \sigma_{t}\epsilon \&lt;br&gt;
+\sigma_{t}^{2} = \alpha_{0} + \alpha_{1}u_{t-1}^{2} + \alpha_{2}\sigma_{t-1}^{2} \&lt;br&gt;
+\epsilon_{t} = NID(0,1) \&lt;br&gt;
 E(u_{t}|u_{t-1}) = 0
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;ここで、&lt;span class=&#34;math inline&#34;&gt;\(\mu\)&lt;/span&gt;はリターンの標本平均です。&lt;span class=&#34;math inline&#34;&gt;\(\alpha_{i}\)&lt;/span&gt;は推定すべきパラメータ。&lt;span class=&#34;math inline&#34;&gt;\(D_{t}\)&lt;/span&gt;をGARCHで推計しているので、リターンの分布が正規分布より裾野の厚い分布に従い、またリターンの変化は一定ではなく前日の分散に依存する関係をモデル化しているといえるのではないでしょうか。とりあえずこれで&lt;span class=&#34;math inline&#34;&gt;\(D_{t}\)&lt;/span&gt;の推計はできたということにします。次に&lt;span class=&#34;math inline&#34;&gt;\(R_{t}\)&lt;/span&gt;の推計ですが、このモデルではリターンを標本として求めるヒストリカルなアプローチを取ります。つまり、&lt;span class=&#34;math inline&#34;&gt;\(R_{t}\)&lt;/span&gt;は定数です。よって、リターン変動の大きさは時間によって変化するが、各資産の相対的な関係性は不変であるという仮定を置いていることになります。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;b.-dynamic-conditional-correlation-dcc-model&#34; class=&#34;section level3&#34;&gt;
-&lt;h3&gt;B. Dynamic Conditional Correlation (DCC) model&lt;/h3&gt;
-&lt;p&gt;元論文は&lt;a href=&#34;http://www.cass.city.ac.uk/__data/assets/pdf_file/0003/78960/Week7Engle_2002.pdf&#34;&gt;こちら&lt;/a&gt;。&lt;/p&gt;
-&lt;p&gt;こちらのモデルでは、&lt;span class=&#34;math inline&#34;&gt;\(D_{t}\)&lt;/span&gt;を求めるところまでは①と同じですが、[&lt;span class=&#34;math inline&#34;&gt;\(R_{t}\)&lt;/span&gt;の求め方が異なっており、ARMA(1,1)を用いて推計します。相関行列はやはり定数ではないということで、&lt;span class=&#34;math inline&#34;&gt;\(tex:t\)&lt;/span&gt;期までに利用可能なリターンを用いて推計をかけようということになっています。このモデルの相関行列&lt;span class=&#34;math inline&#34;&gt;\(R_{t}\)&lt;/span&gt;は、&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+$$&lt;/p&gt;
+&lt;p&gt;ここで、$\mu$はリターンの標本平均です。$\alpha_{i}$は推定すべきパラメータ。$D_{t}$をGARCHで推計しているので、リターンの分布が正規分布より裾野の厚い分布に従い、またリターンの変化は一定ではなく前日の分散に依存する関係をモデル化しているといえるのではないでしょうか。とりあえずこれで$D_{t}$の推計はできたということにします。次に$R_{t}$の推計ですが、このモデルではリターンを標本として求めるヒストリカルなアプローチを取ります。つまり、$R_{t}$は定数です。よって、リターン変動の大きさは時間によって変化するが、各資産の相対的な関係性は不変であるという仮定を置いていることになります。&lt;/p&gt;
+&lt;h3 id=&#34;b-dynamic-conditional-correlation-dcc-model&#34;&gt;B. Dynamic Conditional Correlation (DCC) model&lt;/h3&gt;
+&lt;p&gt;元論文は&lt;a href=&#34;http://www.cass.city.ac.uk/__data/assets/pdf_file/0003/78960/Week7Engle_2002.pdf&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;こちら&lt;/a&gt;。&lt;/p&gt;
+&lt;p&gt;こちらのモデルでは、$D_{t}$を求めるところまでは①と同じですが、[$R_{t}$の求め方が異なっており、ARMA(1,1)を用いて推計します。相関行列はやはり定数ではないということで、$tex:t$期までに利用可能なリターンを用いて推計をかけようということになっています。このモデルの相関行列$R_{t}$は、&lt;/p&gt;
+&lt;p&gt;$$
 R_{t} = diag(Q_{t})^{-1/2}Q_{t}diag(Q_{t})^{-1/2}
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;です。ここで、&lt;span class=&#34;math inline&#34;&gt;\(Q_{t}\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(t\)&lt;/span&gt;期での条件付分散共分散行列で以下のように定式化されます。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+$$&lt;/p&gt;
+&lt;p&gt;です。ここで、$Q_{t}$は$t$期での条件付分散共分散行列で以下のように定式化されます。&lt;/p&gt;
+&lt;p&gt;$$
 Q_{t} = \bar{Q}(1-a-b) + adiag(Q_{t-1})^{1/2}\epsilon_{i,t-1}\epsilon_{i,t-1}diag(Q_{t-1})^{1/2} + bQ_{t-1}
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;ここで、&lt;span class=&#34;math inline&#34;&gt;\(\bar{Q}\)&lt;/span&gt;はヒストリカルな方法で計算した分散共分散行列であり、&lt;span class=&#34;math inline&#34;&gt;\(a,b\)&lt;/span&gt;はパラメータです。この方法では、先ほどとは異なり、リターン変動の大きさが時間によって変化するだけでなく、各資産の相対的な関係性も通時的に変化していくという仮定を置いていることになります。金融危機時には全資産のリターンが下落し、各資産の相関が正になる事象も観測されていることから、この定式化は魅力的であるということができるのではないでしょうか。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;c.-dynamic-equicorrelation-deco-model&#34; class=&#34;section level3&#34;&gt;
-&lt;h3&gt;C. Dynamic Equicorrelation (DECO) model&lt;/h3&gt;
-&lt;p&gt;元論文は&lt;a href=&#34;https://faculty.chicagobooth.edu/bryan.kelly/research/pdf/deco.pdf&#34;&gt;こちら&lt;/a&gt;。&lt;/p&gt;
-&lt;p&gt;この論文はまだきっちり読めていないのですが、相関行列&lt;span class=&#34;math inline&#34;&gt;\(R_{t}\)&lt;/span&gt;の定義から&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+$$&lt;/p&gt;
+&lt;p&gt;ここで、$\bar{Q}$はヒストリカルな方法で計算した分散共分散行列であり、$a,b$はパラメータです。この方法では、先ほどとは異なり、リターン変動の大きさが時間によって変化するだけでなく、各資産の相対的な関係性も通時的に変化していくという仮定を置いていることになります。金融危機時には全資産のリターンが下落し、各資産の相関が正になる事象も観測されていることから、この定式化は魅力的であるということができるのではないでしょうか。&lt;/p&gt;
+&lt;h3 id=&#34;c-dynamic-equicorrelation-deco-model&#34;&gt;C. Dynamic Equicorrelation (DECO) model&lt;/h3&gt;
+&lt;p&gt;元論文は&lt;a href=&#34;https://faculty.chicagobooth.edu/bryan.kelly/research/pdf/deco.pdf&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;こちら&lt;/a&gt;。&lt;/p&gt;
+&lt;p&gt;この論文はまだきっちり読めていないのですが、相関行列$R_{t}$の定義から&lt;/p&gt;
+&lt;p&gt;$$
 R_{t} = (1-\rho_{t})I_{N} + \rho_{t}1
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;となるようです。ここで、&lt;span class=&#34;math inline&#34;&gt;\(\rho_{t}\)&lt;/span&gt;はスカラーでequicorrelationの程度を表す係数です。equicorrelationとは平均的なペアワイズ相関の事であると理解しています。つまりは欠損値がなければ普通の相関と変わりないんじゃないかと。ただ、資産が増えればそのような問題にも対処する必要があるのでその点ではよい推定量のようです。&lt;span class=&#34;math inline&#34;&gt;\(\rho_{t}\)&lt;/span&gt;は以下のように求めることができます。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+$$&lt;/p&gt;
+&lt;p&gt;となるようです。ここで、$\rho_{t}$はスカラーでequicorrelationの程度を表す係数です。equicorrelationとは平均的なペアワイズ相関の事であると理解しています。つまりは欠損値がなければ普通の相関と変わりないんじゃないかと。ただ、資産が増えればそのような問題にも対処する必要があるのでその点ではよい推定量のようです。$\rho_{t}$は以下のように求めることができます。&lt;/p&gt;
+&lt;p&gt;$$
 \displaystyle \rho_{t} = \frac{1}{N(N-1)}(\iota^{T}R_{t}^{DCC}\iota - N) = \frac{2}{N(N-1)}\sum_{i&amp;gt;j}\frac{q_{ij,t}}{\sqrt{q_{ii,t} q_{jj,t}}}
-\]&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;ここで、&lt;span class=&#34;math inline&#34;&gt;\(\iota\)&lt;/span&gt;はN×1ベクトルで要素は全て1です。また、&lt;span class=&#34;math inline&#34;&gt;\(q_{ij,t}\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(Q_{t}\)&lt;/span&gt;のi,j要素です。&lt;/p&gt;
+$$&lt;/p&gt;
+&lt;p&gt;ここで、$\iota$はN×1ベクトルで要素は全て1です。また、$q_{ij,t}$は$Q_{t}$のi,j要素です。&lt;/p&gt;
 &lt;p&gt;さて、分散共分散行列のモデル化ができたところで、ここまでを&lt;code&gt;R&lt;/code&gt;で実装しておきます。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;carroll &amp;lt;- function(r_dat,FLG){
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;carroll &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(r_dat,FLG){
   
-  library(rmgarch)
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(rmgarch)
   
-  if(FLG == &amp;quot;benchmark&amp;quot;){
-    H &amp;lt;- cov(r_dat)
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;if&lt;/span&gt;(FLG &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;benchmark&amp;#34;&lt;/span&gt;){
+    H &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;cov&lt;/span&gt;(r_dat)
   }else{
-    #1. define variables
-    N &amp;lt;- NCOL(r_dat) # the number of assets
+    &lt;span style=&#34;color:#75715e&#34;&gt;#1. define variables&lt;/span&gt;
+    N &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;NCOL&lt;/span&gt;(r_dat) &lt;span style=&#34;color:#75715e&#34;&gt;# the number of assets&lt;/span&gt;
     
-    #2. estimate covariance matrix
-    basic_garch = ugarchspec(mean.model = list(armaOrder = c(0, 0),include.mean=TRUE), variance.model = list(garchOrder = c(1,1), model = &amp;#39;sGARCH&amp;#39;), distribution.model = &amp;#39;norm&amp;#39;)
-    multi_garch = multispec(replicate(N, basic_garch))
-    dcc_set = dccspec(uspec = multi_garch, dccOrder = c(1, 1), distribution = &amp;quot;mvnorm&amp;quot;,model = &amp;quot;DCC&amp;quot;)
-    fit_dcc_garch = dccfit(dcc_set, data = r_dat, fit.control = list(eval.se = TRUE))
-    forecast_dcc_garch &amp;lt;- dccforecast(fit_dcc_garch)
-    if (FLG == &amp;quot;CCC&amp;quot;){
-      #Constant conditional correlation (CCC) model
-      D &amp;lt;- sigma(forecast_dcc_garch)
-      R_ccc &amp;lt;- cor(r_dat)
-      H &amp;lt;- diag(D[,,1])%*%R_ccc%*%diag(D[,,1])
-      colnames(H) &amp;lt;- colnames(r_dat)
-      rownames(H) &amp;lt;- colnames(r_dat)
+    &lt;span style=&#34;color:#75715e&#34;&gt;#2. estimate covariance matrix&lt;/span&gt;
+    basic_garch &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ugarchspec&lt;/span&gt;(mean.model &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;list&lt;/span&gt;(armaOrder &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;),include.mean&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;TRUE&lt;/span&gt;), variance.model &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;list&lt;/span&gt;(garchOrder &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;), model &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;sGARCH&amp;#39;&lt;/span&gt;), distribution.model &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;norm&amp;#39;&lt;/span&gt;)
+    multi_garch &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;multispec&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;replicate&lt;/span&gt;(N, basic_garch))
+    dcc_set &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;dccspec&lt;/span&gt;(uspec &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; multi_garch, dccOrder &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;), distribution &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;mvnorm&amp;#34;&lt;/span&gt;,model &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;DCC&amp;#34;&lt;/span&gt;)
+    fit_dcc_garch &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;dccfit&lt;/span&gt;(dcc_set, data &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; r_dat, fit.control &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;list&lt;/span&gt;(eval.se &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TRUE&lt;/span&gt;))
+    forecast_dcc_garch &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;dccforecast&lt;/span&gt;(fit_dcc_garch)
+    &lt;span style=&#34;color:#a6e22e&#34;&gt;if &lt;/span&gt;(FLG &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;CCC&amp;#34;&lt;/span&gt;){
+      &lt;span style=&#34;color:#75715e&#34;&gt;#Constant conditional correlation (CCC) model&lt;/span&gt;
+      D &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;sigma&lt;/span&gt;(forecast_dcc_garch)
+      R_ccc &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;cor&lt;/span&gt;(r_dat)
+      H &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;diag&lt;/span&gt;(D[,,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;])&lt;span style=&#34;color:#f92672&#34;&gt;%*%&lt;/span&gt;R_ccc&lt;span style=&#34;color:#f92672&#34;&gt;%*%&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;diag&lt;/span&gt;(D[,,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;])
+      &lt;span style=&#34;color:#a6e22e&#34;&gt;colnames&lt;/span&gt;(H) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;colnames&lt;/span&gt;(r_dat)
+      &lt;span style=&#34;color:#a6e22e&#34;&gt;rownames&lt;/span&gt;(H) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;colnames&lt;/span&gt;(r_dat)
     }
     else{
-      #Dynamic Conditional Correlation (DCC) model
-      H &amp;lt;- as.matrix(rcov(forecast_dcc_garch)[[1]][,,1])
-      if (FLG == &amp;quot;DECO&amp;quot;){
-        #Dynamic Equicorrelation (DECO) model
-        one &amp;lt;- matrix(1,N,N)
-        iota &amp;lt;- rep(1,N)
-        Q_dcc &amp;lt;- rcor(forecast_dcc_garch,type=&amp;quot;Q&amp;quot;)[[1]][,,1]
-        rho &amp;lt;- as.vector((N*(N-1))^(-1)*(t(iota)%*%Q_dcc%*%iota-N))
-        D &amp;lt;- sigma(forecast_dcc_garch)
-        R_deco &amp;lt;- (1-rho)*diag(1,N,N) + rho*one
-        H &amp;lt;- diag(D[,,1])%*%R_deco%*%diag(D[,,1])
-        colnames(H) &amp;lt;- colnames(r_dat)
-        rownames(H) &amp;lt;- colnames(r_dat)
+      &lt;span style=&#34;color:#75715e&#34;&gt;#Dynamic Conditional Correlation (DCC) model&lt;/span&gt;
+      H &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;as.matrix&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;rcov&lt;/span&gt;(forecast_dcc_garch)[[1]][,,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;])
+      &lt;span style=&#34;color:#a6e22e&#34;&gt;if &lt;/span&gt;(FLG &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;DECO&amp;#34;&lt;/span&gt;){
+        &lt;span style=&#34;color:#75715e&#34;&gt;#Dynamic Equicorrelation (DECO) model&lt;/span&gt;
+        one &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;matrix&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,N,N)
+        iota &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;rep&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,N)
+        Q_dcc &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;rcor&lt;/span&gt;(forecast_dcc_garch,type&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Q&amp;#34;&lt;/span&gt;)[[1]][,,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;]
+        rho &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;as.vector&lt;/span&gt;((N&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;(N&lt;span style=&#34;color:#ae81ff&#34;&gt;-1&lt;/span&gt;))&lt;span style=&#34;color:#a6e22e&#34;&gt;^&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;-1&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;t&lt;/span&gt;(iota)&lt;span style=&#34;color:#f92672&#34;&gt;%*%&lt;/span&gt;Q_dcc&lt;span style=&#34;color:#f92672&#34;&gt;%*%&lt;/span&gt;iota&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;N))
+        D &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;sigma&lt;/span&gt;(forecast_dcc_garch)
+        R_deco &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;rho)&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;diag&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,N,N) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; rho&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;one
+        H &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;diag&lt;/span&gt;(D[,,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;])&lt;span style=&#34;color:#f92672&#34;&gt;%*%&lt;/span&gt;R_deco&lt;span style=&#34;color:#f92672&#34;&gt;%*%&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;diag&lt;/span&gt;(D[,,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;])
+        &lt;span style=&#34;color:#a6e22e&#34;&gt;colnames&lt;/span&gt;(H) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;colnames&lt;/span&gt;(r_dat)
+        &lt;span style=&#34;color:#a6e22e&#34;&gt;rownames&lt;/span&gt;(H) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;colnames&lt;/span&gt;(r_dat)
       }
     }
   }
-  return(H)
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;本来であれば、パッケージを使用するべきではないのですが、今日はエクササイズなので推計結果だけを追い求めたいと思います。GARCHについては再来週ぐらいに記事を書く予定です。
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;return&lt;/span&gt;(H)
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;本来であれば、パッケージを使用するべきではないのですが、今日はエクササイズなので推計結果だけを追い求めたいと思います。GARCHについては再来週ぐらいに記事を書く予定です。
 これで準備ができました。この関数にリターンデータを入れて、分散共分散行列を計算し、それを用いて最小分散ポートフォリオを計算することができるようになりました。&lt;/p&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;div id=&#34;テスト用データの収集&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;3. テスト用データの収集&lt;/h2&gt;
+&lt;h2 id=&#34;3-テスト用データの収集&#34;&gt;3. テスト用データの収集&lt;/h2&gt;
 &lt;p&gt;データは以下の記事を参考にしました。&lt;/p&gt;
-&lt;p&gt;(Introduction to Asset Allocation)[&lt;a href=&#34;https://www.r-bloggers.com/introduction-to-asset-allocation/&#34; class=&#34;uri&#34;&gt;https://www.r-bloggers.com/introduction-to-asset-allocation/&lt;/a&gt;]&lt;/p&gt;
+&lt;p&gt;(Introduction to Asset Allocation)[https://www.r-bloggers.com/introduction-to-asset-allocation/]&lt;/p&gt;
 &lt;p&gt;使用したのは、以下のインデックスに連動するETF(iShares)の基準価額データです。&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;S&amp;amp;P500&lt;/li&gt;
@@ -471,204 +388,203 @@ R_{t} = (1-\rho_{t})I_{N} + \rho_{t}1
 &lt;li&gt;gold bullion market&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;まず、データ集めです。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(quantmod)
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(quantmod)
 
-#**************************
-# ★8 ASSETS SIMULATION
-# SPY - S&amp;amp;P 500 
-# QQQ - Nasdaq 100
-# EEM - Emerging Markets
-# IWM - Russell 2000
-# EFA - EAFE
-# TLT - 20 Year Treasury
-# IYR - U.S. Real Estate
-# GLD - Gold
-#**************************
+&lt;span style=&#34;color:#75715e&#34;&gt;#**************************&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# ★8 ASSETS SIMULATION&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# SPY - S&amp;amp;P 500 &lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# QQQ - Nasdaq 100&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# EEM - Emerging Markets&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# IWM - Russell 2000&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# EFA - EAFE&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# TLT - 20 Year Treasury&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# IYR - U.S. Real Estate&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# GLD - Gold&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;#**************************&lt;/span&gt;
 
-# load historical prices from Yahoo Finance
-symbol.names = c(&amp;quot;S&amp;amp;P 500&amp;quot;,&amp;quot;Nasdaq 100&amp;quot;,&amp;quot;Emerging Markets&amp;quot;,&amp;quot;Russell 2000&amp;quot;,&amp;quot;EAFE&amp;quot;,&amp;quot;20 Year Treasury&amp;quot;,&amp;quot;U.S. Real Estate&amp;quot;,&amp;quot;Gold&amp;quot;)
-symbols = c(&amp;quot;SPY&amp;quot;,&amp;quot;QQQ&amp;quot;,&amp;quot;EEM&amp;quot;,&amp;quot;IWM&amp;quot;,&amp;quot;EFA&amp;quot;,&amp;quot;TLT&amp;quot;,&amp;quot;IYR&amp;quot;,&amp;quot;GLD&amp;quot;)
-getSymbols(symbols, from = &amp;#39;1980-01-01&amp;#39;, auto.assign = TRUE)
+&lt;span style=&#34;color:#75715e&#34;&gt;# load historical prices from Yahoo Finance&lt;/span&gt;
+symbol.names &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;S&amp;amp;P 500&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Nasdaq 100&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Emerging Markets&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Russell 2000&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;EAFE&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;20 Year Treasury&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;U.S. Real Estate&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Gold&amp;#34;&lt;/span&gt;)
+symbols &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;SPY&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;QQQ&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;EEM&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;IWM&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;EFA&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;TLT&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;IYR&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;GLD&amp;#34;&lt;/span&gt;)
+&lt;span style=&#34;color:#a6e22e&#34;&gt;getSymbols&lt;/span&gt;(symbols, from &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;1980-01-01&amp;#39;&lt;/span&gt;, auto.assign &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TRUE&lt;/span&gt;)
 
-#gn dates for all symbols &amp;amp; convert to monthly
-hist.prices = merge(SPY,QQQ,EEM,IWM,EFA,TLT,IYR,GLD)
-month.ends = endpoints(hist.prices, &amp;#39;day&amp;#39;)
-hist.prices = Cl(hist.prices)[month.ends, ]
-colnames(hist.prices) = symbols
+&lt;span style=&#34;color:#75715e&#34;&gt;#gn dates for all symbols &amp;amp; convert to monthly&lt;/span&gt;
+hist.prices &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;merge&lt;/span&gt;(SPY,QQQ,EEM,IWM,EFA,TLT,IYR,GLD)
+month.ends &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;endpoints&lt;/span&gt;(hist.prices, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;day&amp;#39;&lt;/span&gt;)
+hist.prices &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Cl&lt;/span&gt;(hist.prices)[month.ends, ]
+&lt;span style=&#34;color:#a6e22e&#34;&gt;colnames&lt;/span&gt;(hist.prices) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; symbols
 
-# remove any missing data
-hist.prices = na.omit(hist.prices[&amp;#39;1995::&amp;#39;])
+&lt;span style=&#34;color:#75715e&#34;&gt;# remove any missing data&lt;/span&gt;
+hist.prices &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;na.omit&lt;/span&gt;(hist.prices[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;1995::&amp;#39;&lt;/span&gt;])
 
-# compute simple returns
-hist.returns = na.omit( ROC(hist.prices, type = &amp;#39;discrete&amp;#39;) )
+&lt;span style=&#34;color:#75715e&#34;&gt;# compute simple returns&lt;/span&gt;
+hist.returns &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;na.omit&lt;/span&gt;( &lt;span style=&#34;color:#a6e22e&#34;&gt;ROC&lt;/span&gt;(hist.prices, type &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;discrete&amp;#39;&lt;/span&gt;) )
 
-# compute historical returns, risk, and correlation
-ia = list()
-ia$expected.return = apply(hist.returns, 2, mean, na.rm = T)
-ia$risk = apply(hist.returns, 2, sd, na.rm = T)
-ia$correlation = cor(hist.returns, use = &amp;#39;complete.obs&amp;#39;, method = &amp;#39;pearson&amp;#39;)
+&lt;span style=&#34;color:#75715e&#34;&gt;# compute historical returns, risk, and correlation&lt;/span&gt;
+ia &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;list&lt;/span&gt;()
+ia&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;expected.return &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;apply&lt;/span&gt;(hist.returns, &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;, mean, na.rm &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; T)
+ia&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;risk &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;apply&lt;/span&gt;(hist.returns, &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;, sd, na.rm &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; T)
+ia&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;correlation &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;cor&lt;/span&gt;(hist.returns, use &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;complete.obs&amp;#39;&lt;/span&gt;, method &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;pearson&amp;#39;&lt;/span&gt;)
 
-ia$symbols = symbols
-ia$symbol.names = symbol.names
-ia$n = length(symbols)
-ia$hist.returns = hist.returns
+ia&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;symbols &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; symbols
+ia&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;symbol.names &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; symbol.names
+ia&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;n &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;length&lt;/span&gt;(symbols)
+ia&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;hist.returns &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; hist.returns
 
-# convert to annual, year = 12 months
-annual.factor = 12
-ia$expected.return = annual.factor * ia$expected.return
-ia$risk = sqrt(annual.factor) * ia$risk
+&lt;span style=&#34;color:#75715e&#34;&gt;# convert to annual, year = 12 months&lt;/span&gt;
+annual.factor &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;12&lt;/span&gt;
+ia&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;expected.return &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; annual.factor &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; ia&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;expected.return
+ia&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;risk &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;sqrt&lt;/span&gt;(annual.factor) &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; ia&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;risk
 
-rm(SPY,QQQ,EEM,IWM,EFA,TLT,IYR,GLD)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;リターンをプロットするとこんな感じです。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;PerformanceAnalytics::charts.PerformanceSummary(hist.returns, main = &amp;quot;パフォーマンスサマリー&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-6-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;span style=&#34;color:#a6e22e&#34;&gt;rm&lt;/span&gt;(SPY,QQQ,EEM,IWM,EFA,TLT,IYR,GLD)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;リターンをプロットするとこんな感じです。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;PerformanceAnalytics&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;charts.PerformanceSummary&lt;/span&gt;(hist.returns, main &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;パフォーマンスサマリー&amp;#34;&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../post/post2/index_files/figure-html/unnamed-chunk-6-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
 &lt;p&gt;次に、バックテストのコーディングを行います。一気にコードを公開します。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# BACK TEST
-backtest &amp;lt;- function(r_dat,FLG,start_date,span,learning_term,port){
-  #-----------------------------------------
-  # BACKTEST
-  # r_dat - return data(xts object) 
-  # FLG - flag(CCC,DCC,DECO)
-  # start_date - start date for backtest
-  # span - rebalance frequency
-  # learning_term - learning term (days)
-  # port - method of portfolio optimization
-  #-----------------------------------------
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# BACK TEST&lt;/span&gt;
+backtest &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(r_dat,FLG,start_date,span,learning_term,port){
+  &lt;span style=&#34;color:#75715e&#34;&gt;#-----------------------------------------&lt;/span&gt;
+  &lt;span style=&#34;color:#75715e&#34;&gt;# BACKTEST&lt;/span&gt;
+  &lt;span style=&#34;color:#75715e&#34;&gt;# r_dat - return data(xts object) &lt;/span&gt;
+  &lt;span style=&#34;color:#75715e&#34;&gt;# FLG - flag(CCC,DCC,DECO)&lt;/span&gt;
+  &lt;span style=&#34;color:#75715e&#34;&gt;# start_date - start date for backtest&lt;/span&gt;
+  &lt;span style=&#34;color:#75715e&#34;&gt;# span - rebalance frequency&lt;/span&gt;
+  &lt;span style=&#34;color:#75715e&#34;&gt;# learning_term - learning term (days)&lt;/span&gt;
+  &lt;span style=&#34;color:#75715e&#34;&gt;# port - method of portfolio optimization&lt;/span&gt;
+  &lt;span style=&#34;color:#75715e&#34;&gt;#-----------------------------------------&lt;/span&gt;
   
-  library(stringi)
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(stringi)
 
-  initial_dat &amp;lt;- r_dat[stri_c(as.Date(start_date)-learning_term,&amp;quot;::&amp;quot;,as.Date(start_date))]
-  for (i in NROW(initial_dat):NROW(r_dat)) {
-    if (i == NROW(initial_dat)){
-      H &amp;lt;- carroll(initial_dat[1:(NROW(initial_dat)-1),],FLG)
-      if (port == &amp;quot;nlgmv&amp;quot;){
-        result &amp;lt;- nlgmv(initial_dat,H)
-      }else if (port == &amp;quot;risk parity&amp;quot;){
-        result &amp;lt;- risk_parity(initial_dat,H)
+  initial_dat &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; r_dat&lt;span style=&#34;color:#a6e22e&#34;&gt;[stri_c&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;as.Date&lt;/span&gt;(start_date)&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;learning_term,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;::&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#a6e22e&#34;&gt;as.Date&lt;/span&gt;(start_date))]
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;for &lt;/span&gt;(i in &lt;span style=&#34;color:#a6e22e&#34;&gt;NROW&lt;/span&gt;(initial_dat)&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;NROW&lt;/span&gt;(r_dat)) {
+    &lt;span style=&#34;color:#a6e22e&#34;&gt;if &lt;/span&gt;(i &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;NROW&lt;/span&gt;(initial_dat)){
+      H &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;carroll&lt;/span&gt;(initial_dat[1&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;NROW&lt;/span&gt;(initial_dat)&lt;span style=&#34;color:#ae81ff&#34;&gt;-1&lt;/span&gt;),],FLG)
+      &lt;span style=&#34;color:#a6e22e&#34;&gt;if &lt;/span&gt;(port &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;nlgmv&amp;#34;&lt;/span&gt;){
+        result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;nlgmv&lt;/span&gt;(initial_dat,H)
+      }else &lt;span style=&#34;color:#a6e22e&#34;&gt;if &lt;/span&gt;(port &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;risk parity&amp;#34;&lt;/span&gt;){
+        result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;risk_parity&lt;/span&gt;(initial_dat,H)
       }
-      weight &amp;lt;- t(result$weight)
-      colnames(weight) &amp;lt;- colnames(initial_dat)
-      p_return &amp;lt;- initial_dat[NROW(initial_dat),]*result$weight
+      weight &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;t&lt;/span&gt;(result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;weight)
+      &lt;span style=&#34;color:#a6e22e&#34;&gt;colnames&lt;/span&gt;(weight) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;colnames&lt;/span&gt;(initial_dat)
+      p_return &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; initial_dat&lt;span style=&#34;color:#a6e22e&#34;&gt;[NROW&lt;/span&gt;(initial_dat),]&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;weight
     } else {
-      if (i %in% endpoints(r_dat,span)){
-        H &amp;lt;- carroll(test_dat[1:(NROW(test_dat)-1),],FLG)
-        if (port == &amp;quot;nlgmv&amp;quot;){
-          result &amp;lt;- nlgmv(test_dat,H)
-        }else if (port == &amp;quot;risk parity&amp;quot;){
-          result &amp;lt;- risk_parity(test_dat,H)
+      &lt;span style=&#34;color:#a6e22e&#34;&gt;if &lt;/span&gt;(i &lt;span style=&#34;color:#f92672&#34;&gt;%in%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;endpoints&lt;/span&gt;(r_dat,span)){
+        H &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;carroll&lt;/span&gt;(test_dat[1&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;NROW&lt;/span&gt;(test_dat)&lt;span style=&#34;color:#ae81ff&#34;&gt;-1&lt;/span&gt;),],FLG)
+        &lt;span style=&#34;color:#a6e22e&#34;&gt;if &lt;/span&gt;(port &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;nlgmv&amp;#34;&lt;/span&gt;){
+          result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;nlgmv&lt;/span&gt;(test_dat,H)
+        }else &lt;span style=&#34;color:#a6e22e&#34;&gt;if &lt;/span&gt;(port &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;risk parity&amp;#34;&lt;/span&gt;){
+          result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;risk_parity&lt;/span&gt;(test_dat,H)
         }
         
       }
-      weight &amp;lt;- rbind(weight,t(result$weight))
-      p_return &amp;lt;- rbind(p_return,test_dat[NROW(test_dat),]*result$weight)
+      weight &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;rbind&lt;/span&gt;(weight,&lt;span style=&#34;color:#a6e22e&#34;&gt;t&lt;/span&gt;(result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;weight))
+      p_return &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;rbind&lt;/span&gt;(p_return,test_dat&lt;span style=&#34;color:#a6e22e&#34;&gt;[NROW&lt;/span&gt;(test_dat),]&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;weight)
     }
-    if (i != NROW(r_dat)){
-      term &amp;lt;- stri_c(index(r_dat[i+1,])-learning_term,&amp;quot;::&amp;quot;,index(r_dat[i+1,])) 
-      test_dat &amp;lt;- r_dat[term]
+    &lt;span style=&#34;color:#a6e22e&#34;&gt;if &lt;/span&gt;(i &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;NROW&lt;/span&gt;(r_dat)){
+      term &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;stri_c&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;index&lt;/span&gt;(r_dat[i&lt;span style=&#34;color:#ae81ff&#34;&gt;+1&lt;/span&gt;,])&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;learning_term,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;::&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#a6e22e&#34;&gt;index&lt;/span&gt;(r_dat[i&lt;span style=&#34;color:#ae81ff&#34;&gt;+1&lt;/span&gt;,])) 
+      test_dat &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; r_dat[term]
     }
   }
-  p_return$portfolio &amp;lt;- xts(apply(p_return,1,sum),order.by = index(p_return))
-  weight.xts &amp;lt;- xts(weight,order.by = index(p_return))
+  p_return&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;portfolio &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;xts&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;apply&lt;/span&gt;(p_return,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,sum),order.by &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;index&lt;/span&gt;(p_return))
+  weight.xts &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;xts&lt;/span&gt;(weight,order.by &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;index&lt;/span&gt;(p_return))
 
-  result &amp;lt;- list(p_return,weight.xts)
-  names(result) &amp;lt;- c(&amp;quot;return&amp;quot;,&amp;quot;weight&amp;quot;)
-  return(result)
+  result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;list&lt;/span&gt;(p_return,weight.xts)
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;names&lt;/span&gt;(result) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;return&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;weight&amp;#34;&lt;/span&gt;)
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;return&lt;/span&gt;(result)
 }
 
-CCC &amp;lt;- backtest(hist.returns,&amp;quot;CCC&amp;quot;,&amp;quot;2007-01-04&amp;quot;,&amp;quot;months&amp;quot;,365,&amp;quot;risk parity&amp;quot;)
-DCC &amp;lt;- backtest(hist.returns,&amp;quot;DCC&amp;quot;,&amp;quot;2007-01-04&amp;quot;,&amp;quot;months&amp;quot;,365,&amp;quot;risk parity&amp;quot;)
-DECO &amp;lt;- backtest(hist.returns,&amp;quot;DECO&amp;quot;,&amp;quot;2007-01-04&amp;quot;,&amp;quot;months&amp;quot;,365,&amp;quot;risk parity&amp;quot;)
-benchmark &amp;lt;- backtest(hist.returns,&amp;quot;benchmark&amp;quot;,&amp;quot;2007-01-04&amp;quot;,&amp;quot;months&amp;quot;,365,&amp;quot;risk parity&amp;quot;)
+CCC &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;backtest&lt;/span&gt;(hist.returns,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;CCC&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;2007-01-04&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;months&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;365&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;risk parity&amp;#34;&lt;/span&gt;)
+DCC &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;backtest&lt;/span&gt;(hist.returns,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;DCC&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;2007-01-04&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;months&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;365&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;risk parity&amp;#34;&lt;/span&gt;)
+DECO &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;backtest&lt;/span&gt;(hist.returns,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;DECO&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;2007-01-04&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;months&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;365&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;risk parity&amp;#34;&lt;/span&gt;)
+benchmark &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;backtest&lt;/span&gt;(hist.returns,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;benchmark&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;2007-01-04&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;months&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;365&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;risk parity&amp;#34;&lt;/span&gt;)
 
-result &amp;lt;- merge(CCC$return$portfolio,DCC$return$portfolio,DECO$return$portfolio,benchmark$return$portfolio)
-colnames(result) &amp;lt;- c(&amp;quot;CCC&amp;quot;,&amp;quot;DCC&amp;quot;,&amp;quot;DECO&amp;quot;,&amp;quot;benchmark&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;計算結果をグラフにしてみます。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;PerformanceAnalytics::charts.PerformanceSummary(result,main = &amp;quot;BACKTEST&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-9-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;merge&lt;/span&gt;(CCC&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;return&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;portfolio,DCC&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;return&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;portfolio,DECO&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;return&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;portfolio,benchmark&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;return&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;portfolio)
+&lt;span style=&#34;color:#a6e22e&#34;&gt;colnames&lt;/span&gt;(result) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;CCC&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;DCC&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;DECO&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;benchmark&amp;#34;&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;計算結果をグラフにしてみます。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;PerformanceAnalytics&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;charts.PerformanceSummary&lt;/span&gt;(result,main &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;BACKTEST&amp;#34;&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../post/post2/index_files/figure-html/unnamed-chunk-9-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
 &lt;p&gt;空売り制約を課したので、上で定義した最小分散ポートフォリオは使用していません。どうやらこれだけで解析的に解くのは難しいらしく、数値的に解くことにしています。リバランス期間を週次にしたので、自前のPCでは計算に時間がかかりましたが、結果が計算できました。&lt;/p&gt;
 &lt;p&gt;リーマン以降はどうやらベンチマークである等ウェイトポートフォリオよりをアウトパフォームしているようです。特に、DECOはいい感じです。そもそもDECOとDCCはほぼ変わらないパフォーマンスであると思っていたのですが、どうやら自分の理解が足らないらしく、論文の読み返す必要があるようです。Equicorrelationの意味をもう一度考えてみたいと思います。それぞれの組入比率の推移は以下のようになりました。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# plot allocation weighting
-d_allocation &amp;lt;- function(ggweight,title){
-  #install.packages(&amp;quot;tidyverse&amp;quot;)
-  library(tidyverse)
-  ggweight &amp;lt;- gather(ggweight,key=ASSET,value=weight,-Date,-method)
-  ggplot(ggweight, aes(x=Date, y=weight,fill=ASSET)) +
-    geom_area(colour=&amp;quot;black&amp;quot;,size=.1) +
-    scale_y_continuous(limits = c(0,1)) +
-    labs(title=title) + facet_grid(method~.)
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# plot allocation weighting&lt;/span&gt;
+d_allocation &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(ggweight,title){
+  &lt;span style=&#34;color:#75715e&#34;&gt;#install.packages(&amp;#34;tidyverse&amp;#34;)&lt;/span&gt;
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(tidyverse)
+  ggweight &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;gather&lt;/span&gt;(ggweight,key&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;ASSET,value&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;weight,&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;Date,&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;method)
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;ggplot&lt;/span&gt;(ggweight, &lt;span style=&#34;color:#a6e22e&#34;&gt;aes&lt;/span&gt;(x&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;Date, y&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;weight,fill&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;ASSET)) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+    &lt;span style=&#34;color:#a6e22e&#34;&gt;geom_area&lt;/span&gt;(colour&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;black&amp;#34;&lt;/span&gt;,size&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;.1&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+    &lt;span style=&#34;color:#a6e22e&#34;&gt;scale_y_continuous&lt;/span&gt;(limits &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+    &lt;span style=&#34;color:#a6e22e&#34;&gt;labs&lt;/span&gt;(title&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;title) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;facet_grid&lt;/span&gt;(method&lt;span style=&#34;color:#f92672&#34;&gt;~&lt;/span&gt;.)
 }
 
-gmv_weight &amp;lt;- rbind(data.frame(CCC$weight,method=&amp;quot;CCC&amp;quot;,Date=index(CCC$weight)),data.frame(DCC$weight,method=&amp;quot;DCC&amp;quot;,Date=index(DCC$weight)),data.frame(DECO$weight,method=&amp;quot;DECO&amp;quot;,Date=index(DECO$weight)))
+gmv_weight &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;rbind&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;data.frame&lt;/span&gt;(CCC&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;weight,method&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;CCC&amp;#34;&lt;/span&gt;,Date&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;index&lt;/span&gt;(CCC&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;weight)),&lt;span style=&#34;color:#a6e22e&#34;&gt;data.frame&lt;/span&gt;(DCC&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;weight,method&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;DCC&amp;#34;&lt;/span&gt;,Date&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;index&lt;/span&gt;(DCC&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;weight)),&lt;span style=&#34;color:#a6e22e&#34;&gt;data.frame&lt;/span&gt;(DECO&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;weight,method&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;DECO&amp;#34;&lt;/span&gt;,Date&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;index&lt;/span&gt;(DECO&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;weight)))
 
-# plot allocation weighting
-d_allocation(gmv_weight,&amp;quot;GMV Asset Allocation&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-11-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# plot allocation weighting&lt;/span&gt;
+&lt;span style=&#34;color:#a6e22e&#34;&gt;d_allocation&lt;/span&gt;(gmv_weight,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;GMV Asset Allocation&amp;#34;&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../post/post2/index_files/figure-html/unnamed-chunk-11-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
 &lt;p&gt;リーマンの際にTLT、つまり米国債への比率を増やしているようです。CCCとDCCはそれ以外の部分でも米国債への比率が高く、よく挙げられる最小分散ポートフォリオの問題点がここでも発生しているようです。一方、DECOがやはり個性的な組入比率の推移をしており、ここらを考えてももう一度論文を読み返してみる必要がありそうです。&lt;/p&gt;
 &lt;p&gt;追記（2019/3/3）
 これまでは、最小分散ポートフォリオで分析をしていましたが、リスクパリティの結果も見たいなと言うことで、そのコードも書いてみました。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;risk_parity &amp;lt;- function(r_dat,r_cov){
-  fn &amp;lt;- function(weight, r_cov) {
-    N &amp;lt;- NROW(r_cov)
-    risks &amp;lt;-  weight * (r_cov %*% weight)
-    g &amp;lt;- rep(risks, times = N) - rep(risks, each = N)
-  return(sum(g^2))
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;risk_parity &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(r_dat,r_cov){
+  fn &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(weight, r_cov) {
+    N &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;NROW&lt;/span&gt;(r_cov)
+    risks &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt;  weight &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; (r_cov &lt;span style=&#34;color:#f92672&#34;&gt;%*%&lt;/span&gt; weight)
+    g &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;rep&lt;/span&gt;(risks, times &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; N) &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;rep&lt;/span&gt;(risks, each &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; N)
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;return&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;sum&lt;/span&gt;(g^2))
   }
-  dfn &amp;lt;- function(weight,r_cov){
-    out &amp;lt;- weight
-    for (i in 0:length(weight)) {
-      up &amp;lt;- dn &amp;lt;- weight
-      up[i] &amp;lt;- up[i]+.0001
-      dn[i] &amp;lt;- dn[i]-.0001
-      out[i] = (fn(up,r_cov) - fn(dn,r_cov))/.0002
+  dfn &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(weight,r_cov){
+    out &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; weight
+    &lt;span style=&#34;color:#a6e22e&#34;&gt;for &lt;/span&gt;(i in &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;length&lt;/span&gt;(weight)) {
+      up &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; dn &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; weight
+      up[i] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; up[i]&lt;span style=&#34;color:#ae81ff&#34;&gt;+.0001&lt;/span&gt;
+      dn[i] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; dn[i]&lt;span style=&#34;color:#ae81ff&#34;&gt;-.0001&lt;/span&gt;
+      out[i] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;fn&lt;/span&gt;(up,r_cov) &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;fn&lt;/span&gt;(dn,r_cov))&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;.0002&lt;/span&gt;
     }
-    return(out)
+    &lt;span style=&#34;color:#a6e22e&#34;&gt;return&lt;/span&gt;(out)
   }
-  std &amp;lt;- sqrt(diag(r_cov)) 
-  x0 &amp;lt;- 1/std/sum(1/std)
-  res &amp;lt;- nloptr::nloptr(x0=x0,
-                 eval_f=fn,
-                 eval_grad_f=dfn,
-                 eval_g_eq=function(weight,r_cov) { sum(weight) - 1 },
-                 eval_jac_g_eq=function(weight,r_cov) { rep(1,length(std)) },
-                 lb=rep(0,length(std)),ub=rep(1,length(std)),
-                 opts = list(&amp;quot;algorithm&amp;quot;=&amp;quot;NLOPT_LD_SLSQP&amp;quot;,&amp;quot;print_level&amp;quot; = 0,&amp;quot;xtol_rel&amp;quot;=1.0e-8,&amp;quot;maxeval&amp;quot; = 1000),
-                 r_cov = r_cov)
-  r_weight &amp;lt;- res$solution
-  names(r_weight) &amp;lt;- colnames(r_cov)
-  wr_dat &amp;lt;- r_dat*r_weight
-  portfolio &amp;lt;- apply(wr_dat,1,sum)
-  pr_dat &amp;lt;- data.frame(wr_dat,portfolio)
-  sd &amp;lt;- sd(portfolio)
-  result &amp;lt;- list(r_weight,pr_dat,sd)
-  names(result) &amp;lt;- c(&amp;quot;weight&amp;quot;,&amp;quot;return&amp;quot;,&amp;quot;portfolio risk&amp;quot;)
-  return(result)
+  std &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;sqrt&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;diag&lt;/span&gt;(r_cov)) 
+  x0 &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;std&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;sum&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;std)
+  res &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; nloptr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;nloptr&lt;/span&gt;(x0&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;x0,
+                 eval_f&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;fn,
+                 eval_grad_f&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;dfn,
+                 eval_g_eq&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(weight,r_cov) { &lt;span style=&#34;color:#a6e22e&#34;&gt;sum&lt;/span&gt;(weight) &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; },
+                 eval_jac_g_eq&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(weight,r_cov) { &lt;span style=&#34;color:#a6e22e&#34;&gt;rep&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,&lt;span style=&#34;color:#a6e22e&#34;&gt;length&lt;/span&gt;(std)) },
+                 lb&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;rep&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,&lt;span style=&#34;color:#a6e22e&#34;&gt;length&lt;/span&gt;(std)),ub&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;rep&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,&lt;span style=&#34;color:#a6e22e&#34;&gt;length&lt;/span&gt;(std)),
+                 opts &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;list&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;algorithm&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;NLOPT_LD_SLSQP&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;print_level&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;xtol_rel&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1.0e-8&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;maxeval&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1000&lt;/span&gt;),
+                 r_cov &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; r_cov)
+  r_weight &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; res&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;solution
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;names&lt;/span&gt;(r_weight) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;colnames&lt;/span&gt;(r_cov)
+  wr_dat &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; r_dat&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;r_weight
+  portfolio &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;apply&lt;/span&gt;(wr_dat,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,sum)
+  pr_dat &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;data.frame&lt;/span&gt;(wr_dat,portfolio)
+  sd &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;sd&lt;/span&gt;(portfolio)
+  result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;list&lt;/span&gt;(r_weight,pr_dat,sd)
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;names&lt;/span&gt;(result) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;weight&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;return&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;portfolio risk&amp;#34;&lt;/span&gt;)
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;return&lt;/span&gt;(result)
   }
 
-CCC &amp;lt;- backtest(hist.returns,&amp;quot;CCC&amp;quot;,&amp;quot;2007-01-04&amp;quot;,&amp;quot;months&amp;quot;,365,&amp;quot;risk parity&amp;quot;)
-DCC &amp;lt;- backtest(hist.returns,&amp;quot;DCC&amp;quot;,&amp;quot;2007-01-04&amp;quot;,&amp;quot;months&amp;quot;,365,&amp;quot;risk parity&amp;quot;)
-DECO &amp;lt;- backtest(hist.returns,&amp;quot;DECO&amp;quot;,&amp;quot;2007-01-04&amp;quot;,&amp;quot;months&amp;quot;,365,&amp;quot;risk parity&amp;quot;)
-benchmark &amp;lt;- backtest(hist.returns,&amp;quot;benchmark&amp;quot;,&amp;quot;2007-01-04&amp;quot;,&amp;quot;months&amp;quot;,365,&amp;quot;risk parity&amp;quot;)
+CCC &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;backtest&lt;/span&gt;(hist.returns,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;CCC&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;2007-01-04&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;months&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;365&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;risk parity&amp;#34;&lt;/span&gt;)
+DCC &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;backtest&lt;/span&gt;(hist.returns,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;DCC&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;2007-01-04&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;months&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;365&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;risk parity&amp;#34;&lt;/span&gt;)
+DECO &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;backtest&lt;/span&gt;(hist.returns,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;DECO&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;2007-01-04&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;months&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;365&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;risk parity&amp;#34;&lt;/span&gt;)
+benchmark &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;backtest&lt;/span&gt;(hist.returns,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;benchmark&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;2007-01-04&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;months&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;365&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;risk parity&amp;#34;&lt;/span&gt;)
 
-result &amp;lt;- merge(CCC$return$portfolio,DCC$return$portfolio,DECO$return$portfolio,benchmark$return$portfolio)
-colnames(result) &amp;lt;- c(&amp;quot;CCC&amp;quot;,&amp;quot;DCC&amp;quot;,&amp;quot;DECO&amp;quot;,&amp;quot;benchmark&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;結果はこんな感じ。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;PerformanceAnalytics::charts.PerformanceSummary(result, main = &amp;quot;BACKTEST COMPARISON&amp;quot;)
+result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;merge&lt;/span&gt;(CCC&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;return&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;portfolio,DCC&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;return&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;portfolio,DECO&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;return&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;portfolio,benchmark&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;return&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;portfolio)
+&lt;span style=&#34;color:#a6e22e&#34;&gt;colnames&lt;/span&gt;(result) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;CCC&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;DCC&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;DECO&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;benchmark&amp;#34;&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;結果はこんな感じ。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;PerformanceAnalytics&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;charts.PerformanceSummary&lt;/span&gt;(result, main &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;BACKTEST COMPARISON&amp;#34;&lt;/span&gt;)
 
-library(plotly)
+&lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(plotly)
 
-# plot allocation weighting
-riskparity_weight &amp;lt;- rbind(data.frame(CCC$weight,method=&amp;quot;CCC&amp;quot;,Date=index(CCC$weight)),data.frame(DCC$weight,method=&amp;quot;DCC&amp;quot;,Date=index(DCC$weight)),data.frame(DECO$weight,method=&amp;quot;DECO&amp;quot;,Date=index(DECO$weight)),data.frame(benchmark$weight,method=&amp;quot;benchmark&amp;quot;,Date=index(benchmark$weight)))&lt;/code&gt;&lt;/pre&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;PerformanceAnalytics::charts.PerformanceSummary(result, main = &amp;quot;BACKTEST COMPARISON&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-15-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;riskparity_weight &amp;lt;- rbind(data.frame(CCC$weight,method=&amp;quot;CCC&amp;quot;,Date=index(CCC$weight)),data.frame(DCC$weight,method=&amp;quot;DCC&amp;quot;,Date=index(DCC$weight)),data.frame(DECO$weight,method=&amp;quot;DECO&amp;quot;,Date=index(DECO$weight)),data.frame(benchmark$weight,method=&amp;quot;benchmark&amp;quot;,Date=index(benchmark$weight)))
+&lt;span style=&#34;color:#75715e&#34;&gt;# plot allocation weighting&lt;/span&gt;
+riskparity_weight &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;rbind&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;data.frame&lt;/span&gt;(CCC&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;weight,method&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;CCC&amp;#34;&lt;/span&gt;,Date&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;index&lt;/span&gt;(CCC&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;weight)),&lt;span style=&#34;color:#a6e22e&#34;&gt;data.frame&lt;/span&gt;(DCC&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;weight,method&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;DCC&amp;#34;&lt;/span&gt;,Date&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;index&lt;/span&gt;(DCC&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;weight)),&lt;span style=&#34;color:#a6e22e&#34;&gt;data.frame&lt;/span&gt;(DECO&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;weight,method&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;DECO&amp;#34;&lt;/span&gt;,Date&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;index&lt;/span&gt;(DECO&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;weight)),&lt;span style=&#34;color:#a6e22e&#34;&gt;data.frame&lt;/span&gt;(benchmark&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;weight,method&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;benchmark&amp;#34;&lt;/span&gt;,Date&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;index&lt;/span&gt;(benchmark&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;weight)))
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;PerformanceAnalytics&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;charts.PerformanceSummary&lt;/span&gt;(result, main &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;BACKTEST COMPARISON&amp;#34;&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../post/post2/index_files/figure-html/unnamed-chunk-15-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;riskparity_weight &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;rbind&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;data.frame&lt;/span&gt;(CCC&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;weight,method&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;CCC&amp;#34;&lt;/span&gt;,Date&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;index&lt;/span&gt;(CCC&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;weight)),&lt;span style=&#34;color:#a6e22e&#34;&gt;data.frame&lt;/span&gt;(DCC&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;weight,method&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;DCC&amp;#34;&lt;/span&gt;,Date&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;index&lt;/span&gt;(DCC&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;weight)),&lt;span style=&#34;color:#a6e22e&#34;&gt;data.frame&lt;/span&gt;(DECO&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;weight,method&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;DECO&amp;#34;&lt;/span&gt;,Date&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;index&lt;/span&gt;(DECO&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;weight)),&lt;span style=&#34;color:#a6e22e&#34;&gt;data.frame&lt;/span&gt;(benchmark&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;weight,method&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;benchmark&amp;#34;&lt;/span&gt;,Date&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;index&lt;/span&gt;(benchmark&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;weight)))
 
-# plot allocation weighting
-d_allocation(riskparity_weight, &amp;quot;Risk Parity Asset Allocation&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-15-2.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# plot allocation weighting&lt;/span&gt;
+&lt;span style=&#34;color:#a6e22e&#34;&gt;d_allocation&lt;/span&gt;(riskparity_weight, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Risk Parity Asset Allocation&amp;#34;&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../post/post2/index_files/figure-html/unnamed-chunk-15-2.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
 &lt;p&gt;どの手法もbenchmarkをアウトパーフォームできているという好ましい結果になりました。
 やはり、分散共分散行列の推計がうまくいっているようです。また、DECOのパフォーマンスがよいのは、相関行列に各資産ペアの相関係数の平均値を用いているため、他の手法よりもリスク資産の組み入れが多くなったからだと思われます。ウェイトは以下の通りです。&lt;/p&gt;
 &lt;p&gt;とりあえず、今日はここまで。&lt;/p&gt;
-&lt;/div&gt;
 </description>
     </item>
     

@@ -88,8 +88,8 @@
     
       
       
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/xcode.min.css" crossorigin="anonymous" title="hl-light">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/xcode.min.css" crossorigin="anonymous" title="hl-dark" disabled>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/solarized-dark.min.css" crossorigin="anonymous" title="hl-light">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/solarized-dark.min.css" crossorigin="anonymous" title="hl-dark" disabled>
       
     
 
@@ -672,9 +672,30 @@
 
 
 
-  <article class="article">
+  <div class="container-fluid docs">
+  <div class="row flex-xl-nowrap">
 
-  
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <ul class="nav toc-top">
+        <li><a href="#" id="back_to_top" class="docs-toc-title">On this page</a></li>
+      </ul>
+      <nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#1-gprとは">1. <code>GPR</code>とは</a></li>
+        <li><a href="#2-gprの実装">2. <code>GPR</code>の実装</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+      
+    </div>
+
+    <main class="col-12 col-md-0 col-xl-10 py-md-3 pl-md-5 docs-content" role="main">
+      <article class="article">
+
+        
 
 
 
@@ -703,6 +724,22 @@
   <h1>ガウス回帰の実装をやってみた</h1>
 
   
+
+  
+
+
+<div id="code-folding-buttons" class="dropdown btn-group pull-right">
+  <a class="btn btn-light btn-sm dropdown-toggle" href="#" role="button" id="allCodeToggleButton"
+     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    Code
+  </a>
+  <div class="dropdown-menu" aria-labelledby="allCodeToggleButton">
+    <a id="rmd-show-all-code" class="dropdown-item small" href="#">Show all</a>
+    <a id="rmd-hide-all-code" class="dropdown-item small" href="#">Hide all</a>
+  </div>
+</div>
+
+
 
   
 
@@ -774,249 +811,237 @@
 
 
 
-  <div class="article-container">
+        <div class="article-container">
 
-    <div class="article-style">
-      
-<script src="index_files/header-attrs/header-attrs.js"></script>
-<link href="index_files/pagedtable/css/pagedtable.css" rel="stylesheet" />
-<script src="index_files/pagedtable/js/pagedtable.js"></script>
-
-<div id="TOC">
-<ul>
-<li><a href="#gprとは">1. <code>GPR</code>とは</a></li>
-<li><a href="#gprの実装">2. <code>GPR</code>の実装</a></li>
-</ul>
-</div>
-
-<p>　おはこんばんにちは。昨日、<code>Bayesian Vector Autoregression</code>の記事を書きました。<br />
-　その中でハイパーパラメータのチューニングの話が出てきて、なにか効率的にチューニングを行う方法はないかと探していた際に<code>Bayesian Optimization</code>を発見しました。日次GDPでも機械学習の手法を利用しようと思っているので、<code>Bayesian Optimization</code>はかなり使える手法ではないかと思い、昨日徹夜で理解しました。<br />
+          <div class="article-style">
+            <p>　おはこんばんにちは。昨日、<code>Bayesian Vector Autoregression</code>の記事を書きました。<br>
+　その中でハイパーパラメータのチューニングの話が出てきて、なにか効率的にチューニングを行う方法はないかと探していた際に<code>Bayesian Optimization</code>を発見しました。日次GDPでも機械学習の手法を利用しようと思っているので、<code>Bayesian Optimization</code>はかなり使える手法ではないかと思い、昨日徹夜で理解しました。<br>
 　その内容をここで実装しようとは思うのですが、<code>Bayesian Optimization</code>ではガウス回帰（<code>Gaussian Pocess Regression</code>,以下<code>GPR</code>）を使用しており、まずその実装を行おうと持ったのがこのエントリを書いた動機です。<code>Bayesian Optimization</code>の実装はこのエントリの後にでも書こうかなと思っています。</p>
-<div id="gprとは" class="section level2">
-<h2>1. <code>GPR</code>とは</h2>
-<p>　<code>GRP</code>とは簡単に言ってしまえば「<strong>ベイズ推定を用いた非線形回帰手法の１種</strong>」です。モデル自体は線形ですが、<strong>カーネルトリックを用いて入力変数を無限個非線形変換したもの</strong>を説明変数として推定できるところが特徴です（カーネルになにを選択するかによります）。<br />
-　<code>GPR</code>が想定しているのは、学習データとして入力データと教師データがそれぞれN個得られており、また入力データに関しては<span class="math inline">\(N+1\)</span>個目のデータも得られている状況です。この状況から、<span class="math inline">\(N+1\)</span>個目の教師データを予測します。<br />
+<h2 id="1-gprとは">1. <code>GPR</code>とは</h2>
+<p>　<code>GRP</code>とは簡単に言ってしまえば「<strong>ベイズ推定を用いた非線形回帰手法の１種</strong>」です。モデル自体は線形ですが、<strong>カーネルトリックを用いて入力変数を無限個非線形変換したもの</strong>を説明変数として推定できるところが特徴です（カーネルになにを選択するかによります）。<br>
+　<code>GPR</code>が想定しているのは、学習データとして入力データと教師データがそれぞれN個得られており、また入力データに関しては$N+1$個目のデータも得られている状況です。この状況から、$N+1$個目の教師データを予測します。<br>
 　教師データにはノイズが含まれており、以下のような確率モデルに従います。</p>
-<p><span class="math display">\[
+<p>$$
 t_{i} = y_{i} + \epsilon_{i}
-\]</span></p>
-<p>ここで、<span class="math inline">\(t_{i}\)</span>は<span class="math inline">\(i\)</span>番目の観測可能な教師データ（スカラー）、<span class="math inline">\(y_{i}\)</span>は観測できない出力データ（スカラー）、<span class="math inline">\(\epsilon_{i}\)</span>は測定誤差で正規分布<span class="math inline">\(N(0,\beta^{-1})\)</span>に従います。<span class="math inline">\(y_{i}\)</span>は以下のような確率モデルに従います。</p>
-<p><span class="math display">\[
+$$</p>
+<p>ここで、$t_{i}$は$i$番目の観測可能な教師データ（スカラー）、$y_{i}$は観測できない出力データ（スカラー）、$\epsilon_{i}$は測定誤差で正規分布$N(0,\beta^{-1})$に従います。$y_{i}$は以下のような確率モデルに従います。</p>
+<p>$$
 \displaystyle y_{i}  = \textbf{w}^{T}\phi(x_{i})
-\]</span></p>
-<p>ここで、<span class="math inline">\(x_{i}\)</span>はi番目の入力データベクトル、<span class="math inline">\(\phi(・)\)</span>は非線形関数、 <span class="math inline">\(\textbf{w}^{T}\)</span>は各入力データに対する重み係数（回帰係数）ベクトルです。非線形関数としては、<span class="math inline">\(\phi(x_{i}) = (x_{1,i}, x_{1,i}^{2},...,x_{1,i}x_{2,i},...)\)</span>を想定しています（<span class="math inline">\(x_{1,i}\)</span>は<span class="math inline">\(i\)</span>番目の入力データ<span class="math inline">\(x_{i}\)</span>の１番目の変数）。教師データの確率モデルから、<span class="math inline">\(i\)</span>番目の出力データ<span class="math inline">\(y_{i}\)</span>が得られたうえで<span class="math inline">\(t_{i}\)</span>が得られる条件付確率は、</p>
-<p><span class="math display">\[
- p(t_{i}|y_{i}) = N(t_{i}|y_{i},\beta^{-1})
-\]</span></p>
-<p>となります。<span class="math inline">\(\displaystyle \textbf{t} = (t_{1},...,t_{n})^{T}\)</span>、<span class="math inline">\(\displaystyle \textbf{y} = (y_{1},...,y_{n})^{T}\)</span>とすると、上式を拡張することで</p>
-<p><span class="math display">\[
+$$</p>
+<p>ここで、$x_{i}$はi番目の入力データベクトル、$\phi(・)$は非線形関数、 $\textbf{w}^{T}$は各入力データに対する重み係数（回帰係数）ベクトルです。非線形関数としては、$\phi(x_{i}) = (x_{1,i}, x_{1,i}^{2},&hellip;,x_{1,i}x_{2,i},&hellip;)$を想定しています（$x_{1,i}$は$i$番目の入力データ$x_{i}$の１番目の変数）。教師データの確率モデルから、$i$番目の出力データ$y_{i}$が得られたうえで$t_{i}$が得られる条件付確率は、</p>
+<p>$$
+p(t_{i}|y_{i}) = N(t_{i}|y_{i},\beta^{-1})
+$$</p>
+<p>となります。$\displaystyle \textbf{t} = (t_{1},&hellip;,t_{n})^{T}$、$\displaystyle \textbf{y} = (y_{1},&hellip;,y_{n})^{T}$とすると、上式を拡張することで</p>
+<p>$$
 \displaystyle p(\textbf{t}|\textbf{y}) = N(\textbf{t}|\textbf{y},\beta^{-1}\textbf{I}_{N})
-\]</span></p>
-<p>と書けます。また、事前分布として<span class="math inline">\(\textbf{w}\)</span>の期待値は0、分散は全て<span class="math inline">\(\alpha\)</span>と仮定します。<span class="math inline">\(\displaystyle \textbf{y}\)</span>はガウス過程に従うと仮定します。ガウス過程とは、<span class="math inline">\(\displaystyle \textbf{y}\)</span>の同時分布が多変量ガウス分布に従うもののことです。コードで書くと以下のようになります。</p>
-<pre class="r"><code># Define Kernel function
-Kernel_Mat &lt;- function(X,sigma,beta){
-  N &lt;- NROW(X)
-  K &lt;- matrix(0,N,N)
-  for (i in 1:N) {
-    for (k in 1:N) {
-      if(i==k) kdelta = 1 else kdelta = 0
-      K[i,k] &lt;- K[k,i] &lt;- exp(-t(X[i,]-X[k,])%*%(X[i,]-X[k,])/(2*sigma^2)) + beta^{-1}*kdelta
+$$</p>
+<p>と書けます。また、事前分布として$\textbf{w}$の期待値は0、分散は全て$\alpha$と仮定します。$\displaystyle \textbf{y}$はガウス過程に従うと仮定します。ガウス過程とは、$\displaystyle \textbf{y}$の同時分布が多変量ガウス分布に従うもののことです。コードで書くと以下のようになります。</p>
+<p>\normalsize</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># Define Kernel function</span>
+Kernel_Mat <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(X,sigma,beta){
+  N <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">NROW</span>(X)
+  K <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#ae81ff">0</span>,N,N)
+  <span style="color:#a6e22e">for </span>(i in <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>N) {
+    <span style="color:#a6e22e">for </span>(k in <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>N) {
+      <span style="color:#a6e22e">if</span>(i<span style="color:#f92672">==</span>k) kdelta <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span> else kdelta <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+      K[i,k] <span style="color:#f92672">&lt;-</span> K[k,i] <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">exp</span>(<span style="color:#f92672">-</span><span style="color:#a6e22e">t</span>(X[i,]<span style="color:#f92672">-</span>X[k,])<span style="color:#f92672">%*%</span>(X[i,]<span style="color:#f92672">-</span>X[k,])<span style="color:#f92672">/</span>(<span style="color:#ae81ff">2</span><span style="color:#f92672">*</span>sigma^2)) <span style="color:#f92672">+</span> beta^{<span style="color:#ae81ff">-1</span>}<span style="color:#f92672">*</span>kdelta
     }
   }
-  return(K)
+  <span style="color:#a6e22e">return</span>(K)
 }
 
-N &lt;- 10 # max value of X
-M &lt;- 1000 # sample size
-X &lt;- matrix(seq(1,N,length=M),M,1) # create X
-testK &lt;- Kernel_Mat(X,0.5,1e+18) # calc kernel matrix
+N <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">10</span> <span style="color:#75715e"># max value of X</span>
+M <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1000</span> <span style="color:#75715e"># sample size</span>
+X <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#a6e22e">seq</span>(<span style="color:#ae81ff">1</span>,N,length<span style="color:#f92672">=</span>M),M,<span style="color:#ae81ff">1</span>) <span style="color:#75715e"># create X</span>
+testK <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">Kernel_Mat</span>(X,<span style="color:#ae81ff">0.5</span>,<span style="color:#ae81ff">1e+18</span>) <span style="color:#75715e"># calc kernel matrix</span>
 
-library(MASS)
+<span style="color:#a6e22e">library</span>(MASS)
 
-P &lt;- 6 # num of sample path
-Y &lt;- matrix(0,M,P) # define Y
+P <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">6</span> <span style="color:#75715e"># num of sample path</span>
+Y <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#ae81ff">0</span>,M,P) <span style="color:#75715e"># define Y</span>
 
-for(i in 1:P){
-  Y[,i] &lt;- mvrnorm(n=1,rep(0,M),testK) # sample Y
+<span style="color:#a6e22e">for</span>(i in <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>P){
+  Y[,i] <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">mvrnorm</span>(n<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>,<span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">0</span>,M),testK) <span style="color:#75715e"># sample Y</span>
 }
 
-# Plot
-matplot(x=X,y=Y,type = &quot;l&quot;,lwd = 2)</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
-<p>　Kernel_Matについては後述しますが、<span class="math inline">\(\displaystyle \textbf{y}\)</span>の各要素<span class="math inline">\(\displaystyle y_{i} = \textbf{w}^{T}\phi(x_{i})\)</span>の間の共分散行列<span class="math inline">\(K\)</span>を入力<span class="math inline">\(x\)</span>からカーネル法を用いて計算しています。そして、この<span class="math inline">\(K\)</span>と平均0から、多変量正規乱数を6系列生成し、それをプロットしています。</p>
-<p>　これらの系列は共分散行列から計算されるので、<strong>各要素の共分散が正に大きくなればなるほど同じ値をとりやすくなる</strong>ようモデリングされていることになります。また、グラフを見ればわかるように非常になめらかなグラフが生成されており、かつ非常に柔軟な関数を表現できていることがわかります。コードでは計算コストの関係上、入力を0から10に限定して1000個の入力点をサンプルし、作図を行っていますが、原理的には<span class="math inline">\(x\)</span>は実数空間で定義されるものであるので、<span class="math inline">\(p(\textbf{y})\)</span>は無限次元の多変量正規分布に従います。
-以上のように、<span class="math inline">\(\displaystyle \textbf{y}\)</span>はガウス過程に従うと仮定するので同時確率<span class="math inline">\(p(\textbf{y})\)</span>は平均0、分散共分散行列が<span class="math inline">\(K\)</span>の多変量正規分布<span class="math inline">\(N(\textbf{y}|0,K)\)</span>に従います。ここで、<span class="math inline">\(K\)</span>の各要素<span class="math inline">\(K_{i,j}\)</span>は、</p>
-<p><span class="math display">\[
+<span style="color:#75715e"># Plot</span>
+<span style="color:#a6e22e">matplot</span>(x<span style="color:#f92672">=</span>X,y<span style="color:#f92672">=</span>Y,type <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;l&#34;</span>,lwd <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span>)
+</code></pre></div><p>\normalsize<img src="index_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
+<p>　Kernel_Matについては後述しますが、$\displaystyle \textbf{y}$の各要素$\displaystyle y_{i}  = \textbf{w}^{T}\phi(x_{i})$の間の共分散行列$K$を入力$x$からカーネル法を用いて計算しています。そして、この$K$と平均0から、多変量正規乱数を6系列生成し、それをプロットしています。</p>
+<p>　これらの系列は共分散行列から計算されるので、<strong>各要素の共分散が正に大きくなればなるほど同じ値をとりやすくなる</strong>ようモデリングされていることになります。また、グラフを見ればわかるように非常になめらかなグラフが生成されており、かつ非常に柔軟な関数を表現できていることがわかります。コードでは計算コストの関係上、入力を0から10に限定して1000個の入力点をサンプルし、作図を行っていますが、原理的には$x$は実数空間で定義されるものであるので、$p(\textbf{y})$は無限次元の多変量正規分布に従います。
+以上のように、$\displaystyle \textbf{y}$はガウス過程に従うと仮定するので同時確率$p(\textbf{y})$は平均0、分散共分散行列が$K$の多変量正規分布$N(\textbf{y}|0,K)$に従います。ここで、$K$の各要素$K_{i,j}$は、</p>
+<p>$$
 \begin{eqnarray}
-K_{i,j} &amp;=&amp; cov[y_{i},y_{j}] = cov[\textbf{w}\phi(x_{i}),\textbf{w}\phi(x_{j})] \\
+K_{i,j} &amp;=&amp; cov[y_{i},y_{j}] = cov[\textbf{w}\phi(x_{i}),\textbf{w}\phi(x_{j})] \<br>
 &amp;=&amp;\phi(x_{i})\phi(x_{j})cov[\textbf{w},\textbf{w}]=\phi(x_{i})\phi(x_{j})\alpha
 \end{eqnarray}
-\]</span></p>
-<p>です。ここで、<span class="math inline">\(\phi(x_{i})\phi(x_{j})\alpha\)</span>は<span class="math inline">\(\phi(x_{i})\)</span>の<strong>次元が大きくなればなるほど計算量が多く</strong>なります（つまり、非線形変換をかければかけるほど計算が終わらない）。しかし、カーネル関数<span class="math inline">\(k(x,x&#39;)\)</span>を用いると、計算量は高々入力データ<span class="math inline">\(x_{i},x_{j}\)</span>のサンプルサイズの次元になるので、計算がしやすくなります。カーネル関数を用いて<span class="math inline">\(K_{i,j} = k(x_{i},x_{j})\)</span>となります。カーネル関数としてはいくつか種類がありますが、以下のガウスカーネルがよく使用されます。</p>
-<p><span class="math display">\[
-k(x,x&#39;) = a \exp(-b(x-x&#39;)^{2})
-\]</span></p>
-<p><span class="math inline">\(\displaystyle \textbf{y}\)</span>の同時確率が定義できたので、<span class="math inline">\(\displaystyle \textbf{t}\)</span>の同時確率を求めることができます。</p>
-<p><span class="math display">\[
+$$</p>
+<p>です。ここで、$\phi(x_{i})\phi(x_{j})\alpha$は$\phi(x_{i})$の**次元が大きくなればなるほど計算量が多く**なります（つまり、非線形変換をかければかけるほど計算が終わらない）。しかし、カーネル関数$k(x,x')$を用いると、計算量は高々入力データ$x_{i},x_{j}$のサンプルサイズの次元になるので、計算がしやすくなります。カーネル関数を用いて$K_{i,j} = k(x_{i},x_{j})$となります。カーネル関数としてはいくつか種類がありますが、以下のガウスカーネルがよく使用されます。</p>
+<p>$$
+k(x,x') = a \exp(-b(x-x')^{2})
+$$</p>
+<p>$\displaystyle \textbf{y}$の同時確率が定義できたので、$\displaystyle \textbf{t}$の同時確率を求めることができます。</p>
+<p>$$
 \begin{eqnarray}
-\displaystyle p(\textbf{t}) &amp;=&amp; \int p(\textbf{t}|\textbf{y})p(\textbf{y}) d\textbf{y} \\
- \displaystyle &amp;=&amp; \int N(\textbf{t}|\textbf{y},\beta^{-1}\textbf{I}_{N})N(\textbf{y}|0,K)d\textbf{y} \\
- &amp;=&amp; N(\textbf{y}|0,\textbf{C}_{N})
+\displaystyle p(\textbf{t}) &amp;=&amp; \int p(\textbf{t}|\textbf{y})p(\textbf{y}) d\textbf{y} \<br>
+\displaystyle &amp;=&amp; \int N(\textbf{t}|\textbf{y},\beta^{-1}\textbf{I}<em>{N})N(\textbf{y}|0,K)d\textbf{y} \<br>
+&amp;=&amp; N(\textbf{y}|0,\textbf{C}</em>{N})
 \end{eqnarray}
-\]</span></p>
-<p>ここで、<span class="math inline">\(\textbf{C}_{N} = K + \beta^{-1}\textbf{I}_{N}\)</span>です。なお、最後の式展開は正規分布の再生性を利用しています（証明は正規分布の積率母関数から容易に導けます）。要は、両者は独立なので共分散は2つの分布の共分散の和となると言っているだけです。個人的には、<span class="math inline">\(p(\textbf{y})\)</span>が先ほど説明したガウス過程の事前分布であり、<span class="math inline">\(p(\textbf{t}|\textbf{y})\)</span>が尤度関数で、<span class="math inline">\(p(\textbf{t})\)</span>は事後分布をというようなイメージです。事前分布<span class="math inline">\(p(\textbf{y})\)</span>は制約の緩い分布でなめらかであることのみが唯一の制約です。
-<span class="math inline">\(N\)</span>個の観測可能な教師データ<span class="math inline">\(\textbf{t}\)</span>と<span class="math inline">\(t_{N+1}\)</span>の同時確率は、</p>
-<p><span class="math display">\[
- p(\textbf{t},t_{N+1}) = N(\textbf{t},t_{N+1}|0,\textbf{C}_{N+1})
-\]</span></p>
-<p>ここで、<span class="math inline">\(\textbf{C}_{N+1}\)</span>は、</p>
-<p><span class="math display">\[
- \textbf{C}_{N+1} = \left(
-    \begin{array}{cccc}
-      \textbf{C}_{N} &amp; \textbf{k} \\
-      \textbf{k}^{T} &amp; c \\
-    \end{array}
-  \right)
-\]</span></p>
-<p>です。ここで、<span class="math inline">\(\textbf{k} = (k(x_{1},x_{N+1}),...,k(x_{N},x_{N+1}))\)</span>、<span class="math inline">\(c = k(x_{N+1},x_{N+1})\)</span>です。<span class="math inline">\(\textbf{t}\)</span>と<span class="math inline">\(t_{N+1}\)</span>の同時分布から条件付分布<span class="math inline">\(p(t_{N+1}|\textbf{t})\)</span>を求めることができます。</p>
-<p><span class="math display">\[
+$$</p>
+<p>ここで、$\textbf{C}<em>{N} = K + \beta^{-1}\textbf{I}</em>{N}$です。なお、最後の式展開は正規分布の再生性を利用しています（証明は正規分布の積率母関数から容易に導けます）。要は、両者は独立なので共分散は2つの分布の共分散の和となると言っているだけです。個人的には、$p(\textbf{y})$が先ほど説明したガウス過程の事前分布であり、$p(\textbf{t}|\textbf{y})$が尤度関数で、$p(\textbf{t})$は事後分布をというようなイメージです。事前分布$p(\textbf{y})$は制約の緩い分布でなめらかであることのみが唯一の制約です。
+$N$個の観測可能な教師データ$\textbf{t}$と$t_{N+1}$の同時確率は、</p>
+<p>$$
+p(\textbf{t},t_{N+1}) = N(\textbf{t},t_{N+1}|0,\textbf{C}_{N+1})
+$$</p>
+<p>ここで、$\textbf{C}_{N+1}$は、</p>
+<p>$$
+\textbf{C}<em>{N+1} = \left(
+\begin{array}{cccc}
+\textbf{C}</em>{N} &amp; \textbf{k} \<br>
+\textbf{k}^{T} &amp; c \<br>
+\end{array}
+\right)
+$$</p>
+<p>です。ここで、$\textbf{k} = (k(x_{1},x_{N+1}),&hellip;,k(x_{N},x_{N+1}))$、$c = k(x_{N+1},x_{N+1})$です。$\textbf{t}$と$t_{N+1}$の同時分布から条件付分布$p(t_{N+1}|\textbf{t})$を求めることができます。</p>
+<p>$$
 p(t_{N+1}|\textbf{t}) = N(t_{N+1}|\textbf{k}^{T}\textbf{C}_{N+1}^{-1}\textbf{t},c-\textbf{k}^{T}\textbf{C}_{N+1}^{-1}\textbf{k})
-\]</span></p>
-<p>条件付分布の計算においては、<a href="https://qiita.com/kilometer/items/34249479dc2ac3af5706:title">条件付多変量正規分布の性質</a>を利用しています。上式を見ればわかるように、条件付分布<span class="math inline">\(p(t_{N+1}|\textbf{t})\)</span>は<span class="math inline">\(N+1\)</span>個の入力データ、<span class="math inline">\(N\)</span>個の教師データ、カーネル関数のパラメータ<span class="math inline">\(a,b\)</span>が既知であれば計算可能となっていますので、任意の点を入力データとして与えてやれば、元のData Generating Processを近似することが可能になります。<code>GPR</code>の良いところは上で定義した確率モデル<span class="math inline">\(\displaystyle y_{i} = \textbf{w}^{T}\phi(x_{i})\)</span>を直接推定しなくても予測値が得られるところです。確率モデルには<span class="math inline">\(\phi(x_{i})\)</span>があり、非線形変換により入力データを高次元ベクトルへ変換しています。よって、次元が高くなればなるほど<span class="math inline">\(\phi(x_{i})\phi(x_{j})\alpha\)</span>の計算量は大きくなっていきますが、<code>GPR</code>ではカーネルトリックを用いているので高々入力データベクトルのサンプルサイズの次元の計算量で事足りることになります。</p>
-</div>
-<div id="gprの実装" class="section level2">
-<h2>2. <code>GPR</code>の実装</h2>
+$$</p>
+<p>条件付分布の計算においては、<a href="https://qiita.com/kilometer/items/34249479dc2ac3af5706:title" target="_blank" rel="noopener">条件付多変量正規分布の性質</a>を利用しています。上式を見ればわかるように、条件付分布$p(t_{N+1}|\textbf{t})$は$N+1$個の入力データ、$N$個の教師データ、カーネル関数のパラメータ$a,b$が既知であれば計算可能となっていますので、任意の点を入力データとして与えてやれば、元のData Generating Processを近似することが可能になります。<code>GPR</code>の良いところは上で定義した確率モデル$\displaystyle y_{i}  = \textbf{w}^{T}\phi(x_{i})$を直接推定しなくても予測値が得られるところです。確率モデルには$\phi(x_{i})$があり、非線形変換により入力データを高次元ベクトルへ変換しています。よって、次元が高くなればなるほど$\phi(x_{i})\phi(x_{j})\alpha$の計算量は大きくなっていきますが、<code>GPR</code>ではカーネルトリックを用いているので高々入力データベクトルのサンプルサイズの次元の計算量で事足りることになります。</p>
+<h2 id="2-gprの実装">2. <code>GPR</code>の実装</h2>
 <p>　とりあえずここまでを<code>R</code>で実装してみましょう。PRMLのテストデータで実装しているものがあったので、それをベースにいじってみました。</p>
-<pre class="r"><code>library(ggplot2)
-library(grid)
+<p>\normalsize</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">library</span>(ggplot2)
+<span style="color:#a6e22e">library</span>(grid)
 
-# 1.Gaussian Process Regression
+<span style="color:#75715e"># 1.Gaussian Process Regression</span>
 
-# PRML&#39;s synthetic data set
-curve_fitting &lt;- data.frame(
-  x=c(0.000000,0.111111,0.222222,0.333333,0.444444,0.555556,0.666667,0.777778,0.888889,1.000000),
-  t=c(0.349486,0.830839,1.007332,0.971507,0.133066,0.166823,-0.848307,-0.445686,-0.563567,0.261502))
+<span style="color:#75715e"># PRML&#39;s synthetic data set</span>
+curve_fitting <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">data.frame</span>(
+  x<span style="color:#f92672">=</span><span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">0.000000</span>,<span style="color:#ae81ff">0.111111</span>,<span style="color:#ae81ff">0.222222</span>,<span style="color:#ae81ff">0.333333</span>,<span style="color:#ae81ff">0.444444</span>,<span style="color:#ae81ff">0.555556</span>,<span style="color:#ae81ff">0.666667</span>,<span style="color:#ae81ff">0.777778</span>,<span style="color:#ae81ff">0.888889</span>,<span style="color:#ae81ff">1.000000</span>),
+  t<span style="color:#f92672">=</span><span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">0.349486</span>,<span style="color:#ae81ff">0.830839</span>,<span style="color:#ae81ff">1.007332</span>,<span style="color:#ae81ff">0.971507</span>,<span style="color:#ae81ff">0.133066</span>,<span style="color:#ae81ff">0.166823</span>,<span style="color:#ae81ff">-0.848307</span>,<span style="color:#ae81ff">-0.445686</span>,<span style="color:#ae81ff">-0.563567</span>,<span style="color:#ae81ff">0.261502</span>))
 
-f &lt;- function(beta, sigma, xmin, xmax, input, train) {
-  kernel &lt;- function(x1, x2) exp(-(x1-x2)^2/(2*sigma^2)); # define Kernel function
-  K &lt;- outer(input, input, kernel); # calc gram matrix
-  C_N &lt;- K + diag(length(input))/beta
-  m &lt;- function(x) (outer(x, input, kernel) %*% solve(C_N) %*% train) # coditiona mean 
-  m_sig &lt;- function(x)(kernel(x,x) - diag(outer(x, input, kernel) %*% solve(C_N) %*% t(outer(x, input, kernel)))) #conditional variance
-  x &lt;- seq(xmin,xmax,length=100)
-  output &lt;- ggplot(data.frame(x1=x,m=m(x),sig1=m(x)+1.96*sqrt(m_sig(x)),sig2=m(x)-1.96*sqrt(m_sig(x)),
-                              tx=input,ty=train),
-                   aes(x=x1,y=m)) + 
-    geom_line() +
-    geom_ribbon(aes(ymin=sig1,ymax=sig2),alpha=0.2) +
-    geom_point(aes(x=tx,y=ty))
-  return(output)
+f <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(beta, sigma, xmin, xmax, input, train) {
+  kernel <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(x1, x2) <span style="color:#a6e22e">exp</span>(<span style="color:#f92672">-</span>(x1<span style="color:#f92672">-</span>x2)^2<span style="color:#f92672">/</span>(<span style="color:#ae81ff">2</span><span style="color:#f92672">*</span>sigma^2)); <span style="color:#75715e"># define Kernel function</span>
+  K <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">outer</span>(input, input, kernel); <span style="color:#75715e"># calc gram matrix</span>
+  C_N <span style="color:#f92672">&lt;-</span> K <span style="color:#f92672">+</span> <span style="color:#a6e22e">diag</span>(<span style="color:#a6e22e">length</span>(input))<span style="color:#f92672">/</span>beta
+  m <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(x) (<span style="color:#a6e22e">outer</span>(x, input, kernel) <span style="color:#f92672">%*%</span> <span style="color:#a6e22e">solve</span>(C_N) <span style="color:#f92672">%*%</span> train) <span style="color:#75715e"># coditiona mean </span>
+  m_sig <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(x)(<span style="color:#a6e22e">kernel</span>(x,x) <span style="color:#f92672">-</span> <span style="color:#a6e22e">diag</span>(<span style="color:#a6e22e">outer</span>(x, input, kernel) <span style="color:#f92672">%*%</span> <span style="color:#a6e22e">solve</span>(C_N) <span style="color:#f92672">%*%</span> <span style="color:#a6e22e">t</span>(<span style="color:#a6e22e">outer</span>(x, input, kernel)))) <span style="color:#75715e">#conditional variance</span>
+  x <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">seq</span>(xmin,xmax,length<span style="color:#f92672">=</span><span style="color:#ae81ff">100</span>)
+  output <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ggplot</span>(<span style="color:#a6e22e">data.frame</span>(x1<span style="color:#f92672">=</span>x,m<span style="color:#f92672">=</span><span style="color:#a6e22e">m</span>(x),sig1<span style="color:#f92672">=</span><span style="color:#a6e22e">m</span>(x)<span style="color:#ae81ff">+1.96</span><span style="color:#f92672">*</span><span style="color:#a6e22e">sqrt</span>(<span style="color:#a6e22e">m_sig</span>(x)),sig2<span style="color:#f92672">=</span><span style="color:#a6e22e">m</span>(x)<span style="color:#ae81ff">-1.96</span><span style="color:#f92672">*</span><span style="color:#a6e22e">sqrt</span>(<span style="color:#a6e22e">m_sig</span>(x)),
+                              tx<span style="color:#f92672">=</span>input,ty<span style="color:#f92672">=</span>train),
+                   <span style="color:#a6e22e">aes</span>(x<span style="color:#f92672">=</span>x1,y<span style="color:#f92672">=</span>m)) <span style="color:#f92672">+</span> 
+    <span style="color:#a6e22e">geom_line</span>() <span style="color:#f92672">+</span>
+    <span style="color:#a6e22e">geom_ribbon</span>(<span style="color:#a6e22e">aes</span>(ymin<span style="color:#f92672">=</span>sig1,ymax<span style="color:#f92672">=</span>sig2),alpha<span style="color:#f92672">=</span><span style="color:#ae81ff">0.2</span>) <span style="color:#f92672">+</span>
+    <span style="color:#a6e22e">geom_point</span>(<span style="color:#a6e22e">aes</span>(x<span style="color:#f92672">=</span>tx,y<span style="color:#f92672">=</span>ty))
+  <span style="color:#a6e22e">return</span>(output)
 }
 
-grid.newpage() # make a palet
-pushViewport(viewport(layout=grid.layout(2, 2))) # divide the palet into 2 by 2
-print(f(100,0.1,0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=1, layout.pos.col=1))
-print(f(4,0.10,0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=1, layout.pos.col=2))
-print(f(25,0.30,0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=2, layout.pos.col=1))
-print(f(25,0.030,0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=2, layout.pos.col=2)) </code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
-<p><span class="math inline">\(\beta^{-1}\)</span>は測定誤差を表しています。<strong><span class="math inline">\(\beta\)</span>が大きい（つまり、測定誤差が小さい）とすでに得られているデータとの誤差が少なくなるように予測値をはじき出すので、over fitting しやすくなります。</strong>上図の左上がそうなっています。左上は<span class="math inline">\(\beta=400\)</span>で、現時点で得られているデータに過度にfitしていることがわかります。逆に<span class="math inline">\(\beta\)</span>が小さいと教師データとの誤差を無視するように予測値をはじき出しますが、汎化性能は向上するかもしれません。右上の図がそれです。<span class="math inline">\(\beta=4\)</span>で、得られているデータ点を平均はほとんど通っていません。<span class="math inline">\(b\)</span>は現時点で得られているデータが周りに及ぼす影響の広さを表しています。<span class="math inline">\(b\)</span>が小さいと、隣接する点が互いに強く影響を及ぼし合うため、精度は下がるが汎化性能は上がるかもしれません。逆に、<span class="math inline">\(b\)</span>が大きいと、個々の点にのみフィットする不自然な結果になります。これは右下の図になります（<span class="math inline">\(b=\frac{1}{0.03},\beta=25\)</span>）。御覧の通り、<span class="math inline">\(\beta\)</span>が大きいのでoverfitting気味であり、なおかつ<span class="math inline">\(b\)</span>も大きいので個々の点のみにfitし、無茶苦茶なグラフになっています。左下のグラフが最もよさそうです。<span class="math inline">\(b=\frac{1}{0.3},\beta=2\)</span>となっています。試しに、このグラフのx区間を[0,2]へ伸ばしてみましょう。すると、以下のようなグラフがかけます。</p>
-<pre class="r"><code>grid.newpage() # make a palet
-pushViewport(viewport(layout=grid.layout(2, 2))) # divide the palet into 2 by 2
-print(f(100,0.1,0,2,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=1, layout.pos.col=1)) 
-print(f(4,0.10,0,2,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=1, layout.pos.col=2)) 
-print(f(25,0.30,0,2,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=2, layout.pos.col=1))
-print(f(25,0.030,0,2,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=2, layout.pos.col=2)) </code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<span style="color:#a6e22e">grid.newpage</span>() <span style="color:#75715e"># make a palet</span>
+<span style="color:#a6e22e">pushViewport</span>(<span style="color:#a6e22e">viewport</span>(layout<span style="color:#f92672">=</span><span style="color:#a6e22e">grid.layout</span>(<span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">2</span>))) <span style="color:#75715e"># divide the palet into 2 by 2</span>
+<span style="color:#a6e22e">print</span>(<span style="color:#a6e22e">f</span>(<span style="color:#ae81ff">100</span>,<span style="color:#ae81ff">0.1</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">1</span>,curve_fitting<span style="color:#f92672">$</span>x,curve_fitting<span style="color:#f92672">$</span>t), vp<span style="color:#f92672">=</span><span style="color:#a6e22e">viewport</span>(layout.pos.row<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>, layout.pos.col<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>))
+<span style="color:#a6e22e">print</span>(<span style="color:#a6e22e">f</span>(<span style="color:#ae81ff">4</span>,<span style="color:#ae81ff">0.10</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">1</span>,curve_fitting<span style="color:#f92672">$</span>x,curve_fitting<span style="color:#f92672">$</span>t), vp<span style="color:#f92672">=</span><span style="color:#a6e22e">viewport</span>(layout.pos.row<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>, layout.pos.col<span style="color:#f92672">=</span><span style="color:#ae81ff">2</span>))
+<span style="color:#a6e22e">print</span>(<span style="color:#a6e22e">f</span>(<span style="color:#ae81ff">25</span>,<span style="color:#ae81ff">0.30</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">1</span>,curve_fitting<span style="color:#f92672">$</span>x,curve_fitting<span style="color:#f92672">$</span>t), vp<span style="color:#f92672">=</span><span style="color:#a6e22e">viewport</span>(layout.pos.row<span style="color:#f92672">=</span><span style="color:#ae81ff">2</span>, layout.pos.col<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>))
+<span style="color:#a6e22e">print</span>(<span style="color:#a6e22e">f</span>(<span style="color:#ae81ff">25</span>,<span style="color:#ae81ff">0.030</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">1</span>,curve_fitting<span style="color:#f92672">$</span>x,curve_fitting<span style="color:#f92672">$</span>t), vp<span style="color:#f92672">=</span><span style="color:#a6e22e">viewport</span>(layout.pos.row<span style="color:#f92672">=</span><span style="color:#ae81ff">2</span>, layout.pos.col<span style="color:#f92672">=</span><span style="color:#ae81ff">2</span>)) 
+</code></pre></div><p>\normalsize<img src="index_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<p>$\beta^{-1}$は測定誤差を表しています。**$\beta$が大きい（つまり、測定誤差が小さい）とすでに得られているデータとの誤差が少なくなるように予測値をはじき出すので、over fitting しやすくなります。**上図の左上がそうなっています。左上は$\beta=400$で、現時点で得られているデータに過度にfitしていることがわかります。逆に$\beta$が小さいと教師データとの誤差を無視するように予測値をはじき出しますが、汎化性能は向上するかもしれません。右上の図がそれです。$\beta=4$で、得られているデータ点を平均はほとんど通っていません。$b$は現時点で得られているデータが周りに及ぼす影響の広さを表しています。$b$が小さいと、隣接する点が互いに強く影響を及ぼし合うため、精度は下がるが汎化性能は上がるかもしれません。逆に、$b$が大きいと、個々の点にのみフィットする不自然な結果になります。これは右下の図になります（$b=\frac{1}{0.03},\beta=25$）。御覧の通り、$\beta$が大きいのでoverfitting気味であり、なおかつ$b$も大きいので個々の点のみにfitし、無茶苦茶なグラフになっています。左下のグラフが最もよさそうです。$b=\frac{1}{0.3},\beta=2$となっています。試しに、このグラフのx区間を[0,2]へ伸ばしてみましょう。すると、以下のようなグラフがかけます。</p>
+<p>\normalsize</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">grid.newpage</span>() <span style="color:#75715e"># make a palet</span>
+<span style="color:#a6e22e">pushViewport</span>(<span style="color:#a6e22e">viewport</span>(layout<span style="color:#f92672">=</span><span style="color:#a6e22e">grid.layout</span>(<span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">2</span>))) <span style="color:#75715e"># divide the palet into 2 by 2</span>
+<span style="color:#a6e22e">print</span>(<span style="color:#a6e22e">f</span>(<span style="color:#ae81ff">100</span>,<span style="color:#ae81ff">0.1</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">2</span>,curve_fitting<span style="color:#f92672">$</span>x,curve_fitting<span style="color:#f92672">$</span>t), vp<span style="color:#f92672">=</span><span style="color:#a6e22e">viewport</span>(layout.pos.row<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>, layout.pos.col<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>)) 
+<span style="color:#a6e22e">print</span>(<span style="color:#a6e22e">f</span>(<span style="color:#ae81ff">4</span>,<span style="color:#ae81ff">0.10</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">2</span>,curve_fitting<span style="color:#f92672">$</span>x,curve_fitting<span style="color:#f92672">$</span>t), vp<span style="color:#f92672">=</span><span style="color:#a6e22e">viewport</span>(layout.pos.row<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>, layout.pos.col<span style="color:#f92672">=</span><span style="color:#ae81ff">2</span>)) 
+<span style="color:#a6e22e">print</span>(<span style="color:#a6e22e">f</span>(<span style="color:#ae81ff">25</span>,<span style="color:#ae81ff">0.30</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">2</span>,curve_fitting<span style="color:#f92672">$</span>x,curve_fitting<span style="color:#f92672">$</span>t), vp<span style="color:#f92672">=</span><span style="color:#a6e22e">viewport</span>(layout.pos.row<span style="color:#f92672">=</span><span style="color:#ae81ff">2</span>, layout.pos.col<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>))
+<span style="color:#a6e22e">print</span>(<span style="color:#a6e22e">f</span>(<span style="color:#ae81ff">25</span>,<span style="color:#ae81ff">0.030</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">2</span>,curve_fitting<span style="color:#f92672">$</span>x,curve_fitting<span style="color:#f92672">$</span>t), vp<span style="color:#f92672">=</span><span style="color:#a6e22e">viewport</span>(layout.pos.row<span style="color:#f92672">=</span><span style="color:#ae81ff">2</span>, layout.pos.col<span style="color:#f92672">=</span><span style="color:#ae81ff">2</span>)) 
+</code></pre></div><p>\normalsize<img src="index_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
 <p>これを見ればわかるように、左下以外のグラフはすぐに95%信頼区間のバンドが広がり、データ点がないところではまったく使い物にならないことがわかります。一方、左下のグラフは1.3~1.4ぐらいまではそこそこのバンドがかけており、我々が直感的に理解する関数とも整合的な点を平均値が通っているように思えます。また、観測可能なデータ点から離れすぎるとパラメータに何を与えようと平均０、分散１の正規分布になることもわかるがわかります。
-さて、このようにパラメータの値に応じて、アウトサンプルの予測精度が異なることを示したわけですが、ここで問題となるのはこれらハイパーパラメータをどのようにして推計するかです。これは対数尤度関数<span class="math inline">\(\ln p(\textbf{t}|a,b)\)</span>を最大にするハイパーパラメータを勾配法により求めます((<span class="math inline">\(\beta\)</span>は少しタイプが異なるようで、発展的な議論では他のチューニング方法をとる模様。まだ、そのレベルにはいけていないのでここではカリブレートすることにします。))。<span class="math inline">\(p(\textbf{t}) = N(\textbf{y}|0,\textbf{C}_{N})\)</span>なので、対数尤度関数は</p>
-<p><span class="math display">\[
-\displaystyle \ln p(\textbf{t}|a,b,\beta) = -\frac{1}{2}\ln|\textbf{C}_{N}| - \frac{N}{2}\ln(2\pi) - \frac{1}{2}\textbf{t}^{T}\textbf{C}_{N}^{-1}\textbf{k}
-\]</span></p>
+さて、このようにパラメータの値に応じて、アウトサンプルの予測精度が異なることを示したわけですが、ここで問題となるのはこれらハイパーパラメータをどのようにして推計するかです。これは対数尤度関数$\ln p(\textbf{t}|a,b)$を最大にするハイパーパラメータを勾配法により求めます(($\beta$は少しタイプが異なるようで、発展的な議論では他のチューニング方法をとる模様。まだ、そのレベルにはいけていないのでここではカリブレートすることにします。))。$p(\textbf{t}) = N(\textbf{y}|0,\textbf{C}_{N})$なので、対数尤度関数は</p>
+<p>$$
+\displaystyle \ln p(\textbf{t}|a,b,\beta) = -\frac{1}{2}\ln|\textbf{C}<em>{N}| - \frac{N}{2}\ln(2\pi) - \frac{1}{2}\textbf{t}^{T}\textbf{C}</em>{N}^{-1}\textbf{k}
+$$</p>
 <p>となります。あとは、これをパラメータで微分し、得られた連立方程式を解くことで最尤推定量が得られます。ではまず導関数を導出してみます。</p>
-<p><span class="math display">\[
+<p>$$
 \displaystyle \frac{\partial}{\partial \theta_{i}} \ln p(\textbf{t}|\theta) = -\frac{1}{2}Tr(\textbf{C}_{N}^{-1}\frac{\partial \textbf{C}_{N}}{\partial \theta_{i}}) + \frac{1}{2}\textbf{t}^{T}\textbf{C}_{N}^{-1}
 \frac{\partial\textbf{C}_{N}}{\partial\theta_{i}}\textbf{C}_{N}^{-1}\textbf{t}
-\]</span></p>
-<p>ここで、<span class="math inline">\(\theta\)</span>はパラメータセットで、<span class="math inline">\(\theta_{i}\)</span>は<span class="math inline">\(i\)</span>番目のパラメータを表しています。この導関数が理解できない方は<a href="http://users.isr.ist.utl.pt/~wurmd/Livros/school/Bishop%20-%20Pattern%20Recognition%20And%20Machine%20Learning%20-%20Springer%20%202006.pdf:title=PRML">こちら</a>の補論にある(C.21)式と(C.22)式をご覧になると良いと思います。今回はガウスカーネルを用いているため、</p>
-<p><span class="math display">\[
-\displaystyle \frac{\partial k(x,x&#39;)}{\partial a} = \exp(-b(x-x&#39;)^{2}) \\
-\displaystyle \frac{\partial k(x,x&#39;)}{\partial b} = -a(x-x&#39;)^{2}\exp(-b(x-x&#39;)^{2})
-\]</span></p>
+$$</p>
+<p>ここで、$\theta$はパラメータセットで、$\theta_{i}$は$i$番目のパラメータを表しています。この導関数が理解できない方は<a href="http://users.isr.ist.utl.pt/~wurmd/Livros/school/Bishop%20-%20Pattern%20Recognition%20And%20Machine%20Learning%20-%20Springer%20%202006.pdf:title=PRML" target="_blank" rel="noopener">こちら</a>の補論にある(C.21)式と(C.22)式をご覧になると良いと思います。今回はガウスカーネルを用いているため、</p>
+<p>$$
+\displaystyle \frac{\partial k(x,x')}{\partial a} = \exp(-b(x-x')^{2}) \<br>
+\displaystyle \frac{\partial k(x,x')}{\partial b} = -a(x-x')^{2}\exp(-b(x-x')^{2})
+$$</p>
 <p>を上式に代入すれば良いだけです。ただ、今回は勾配法により最適なパラメータを求めます。以下、実装のコードです（かなり迷走しています）。</p>
-<pre class="r"><code>g &lt;- function(xmin, xmax, input, train){
-  # initial value
-  beta = 100
-  b = 1
-  a = 1
-  learning_rate = 0.1
-  itermax &lt;- 1000
-  if (class(input) == &quot;numeric&quot;){
-    N &lt;- length(input)
+<p>\normalsize</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">g <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(xmin, xmax, input, train){
+  <span style="color:#75715e"># initial value</span>
+  beta <span style="color:#f92672">=</span> <span style="color:#ae81ff">100</span>
+  b <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>
+  a <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>
+  learning_rate <span style="color:#f92672">=</span> <span style="color:#ae81ff">0.1</span>
+  itermax <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1000</span>
+  <span style="color:#a6e22e">if </span>(<span style="color:#a6e22e">class</span>(input) <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;numeric&#34;</span>){
+    N <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">length</span>(input)
   } else
   {
-    N &lt;- NROW(input)
+    N <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">NROW</span>(input)
   }
-  kernel &lt;- function(x1, x2) a*exp(-0.5*b*(x1-x2)^2); # define kernel
-  derivative_a &lt;- function(x1,x2) exp(-0.5*b*(x1-x2)^2)
-  derivative_b &lt;- function(x1,x2) -0.5*a*(x1-x2)^2*exp(-0.5*b*(x1-x2)^2)
-  dloglik_a &lt;- function(C_N,y,x1,x2) {
-    -sum(diag(solve(C_N)%*%outer(input, input, derivative_a)))+t(y)%*%solve(C_N)%*%outer(input, input, derivative_a)%*%solve(C_N)%*%y 
+  kernel <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(x1, x2) a<span style="color:#f92672">*</span><span style="color:#a6e22e">exp</span>(<span style="color:#ae81ff">-0.5</span><span style="color:#f92672">*</span>b<span style="color:#f92672">*</span>(x1<span style="color:#f92672">-</span>x2)^2); <span style="color:#75715e"># define kernel</span>
+  derivative_a <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(x1,x2) <span style="color:#a6e22e">exp</span>(<span style="color:#ae81ff">-0.5</span><span style="color:#f92672">*</span>b<span style="color:#f92672">*</span>(x1<span style="color:#f92672">-</span>x2)^2)
+  derivative_b <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(x1,x2) <span style="color:#ae81ff">-0.5</span><span style="color:#f92672">*</span>a<span style="color:#f92672">*</span>(x1<span style="color:#f92672">-</span>x2)^2<span style="color:#f92672">*</span><span style="color:#a6e22e">exp</span>(<span style="color:#ae81ff">-0.5</span><span style="color:#f92672">*</span>b<span style="color:#f92672">*</span>(x1<span style="color:#f92672">-</span>x2)^2)
+  dloglik_a <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(C_N,y,x1,x2) {
+    <span style="color:#f92672">-</span><span style="color:#a6e22e">sum</span>(<span style="color:#a6e22e">diag</span>(<span style="color:#a6e22e">solve</span>(C_N)<span style="color:#f92672">%*%</span><span style="color:#a6e22e">outer</span>(input, input, derivative_a)))<span style="color:#f92672">+</span><span style="color:#a6e22e">t</span>(y)<span style="color:#f92672">%*%</span><span style="color:#a6e22e">solve</span>(C_N)<span style="color:#f92672">%*%</span><span style="color:#a6e22e">outer</span>(input, input, derivative_a)<span style="color:#f92672">%*%</span><span style="color:#a6e22e">solve</span>(C_N)<span style="color:#f92672">%*%</span>y 
   }
-  dloglik_b &lt;- function(C_N,y,x1,x2) {
-    -sum(diag(solve(C_N)%*%outer(input, input, derivative_b)))+t(y)%*%solve(C_N)%*%outer(input, input, derivative_b)%*%solve(C_N)%*%y 
+  dloglik_b <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(C_N,y,x1,x2) {
+    <span style="color:#f92672">-</span><span style="color:#a6e22e">sum</span>(<span style="color:#a6e22e">diag</span>(<span style="color:#a6e22e">solve</span>(C_N)<span style="color:#f92672">%*%</span><span style="color:#a6e22e">outer</span>(input, input, derivative_b)))<span style="color:#f92672">+</span><span style="color:#a6e22e">t</span>(y)<span style="color:#f92672">%*%</span><span style="color:#a6e22e">solve</span>(C_N)<span style="color:#f92672">%*%</span><span style="color:#a6e22e">outer</span>(input, input, derivative_b)<span style="color:#f92672">%*%</span><span style="color:#a6e22e">solve</span>(C_N)<span style="color:#f92672">%*%</span>y 
   }
-  # loglikelihood function
-  likelihood &lt;- function(b,a,x,y){
-    kernel &lt;- function(x1, x2) a*exp(-0.5*b*(x1-x2)^2)
-    K &lt;- outer(x, x, kernel)
-    C_N &lt;- K + diag(N)/beta
-    itermax &lt;- 1000
-    l &lt;- -1/2*log(det(C_N)) - N/2*(2*pi) - 1/2*t(y)%*%solve(C_N)%*%y
-    return(l)
+  <span style="color:#75715e"># loglikelihood function</span>
+  likelihood <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(b,a,x,y){
+    kernel <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(x1, x2) a<span style="color:#f92672">*</span><span style="color:#a6e22e">exp</span>(<span style="color:#ae81ff">-0.5</span><span style="color:#f92672">*</span>b<span style="color:#f92672">*</span>(x1<span style="color:#f92672">-</span>x2)^2)
+    K <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">outer</span>(x, x, kernel)
+    C_N <span style="color:#f92672">&lt;-</span> K <span style="color:#f92672">+</span> <span style="color:#a6e22e">diag</span>(N)<span style="color:#f92672">/</span>beta
+    itermax <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1000</span>
+    l <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">-1</span><span style="color:#f92672">/</span><span style="color:#ae81ff">2</span><span style="color:#f92672">*</span><span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">det</span>(C_N)) <span style="color:#f92672">-</span> N<span style="color:#f92672">/</span><span style="color:#ae81ff">2</span><span style="color:#f92672">*</span>(<span style="color:#ae81ff">2</span><span style="color:#f92672">*</span><span style="color:#66d9ef">pi</span>) <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">/</span><span style="color:#ae81ff">2</span><span style="color:#f92672">*</span><span style="color:#a6e22e">t</span>(y)<span style="color:#f92672">%*%</span><span style="color:#a6e22e">solve</span>(C_N)<span style="color:#f92672">%*%</span>y
+    <span style="color:#a6e22e">return</span>(l)
   }
-  K &lt;- outer(input, input, kernel) 
-  C_N &lt;- K + diag(N)/beta
-  for (i in 1:itermax){
-    kernel &lt;- function(x1, x2) a*exp(-b*(x1-x2)^2)
-    derivative_b &lt;- function(x1,x2) -0.5*a*(x1-x2)^2*exp(-0.5*b*(x1-x2)^2)
-    dloglik_b &lt;- function(C_N,y,x1,x2) {
-      -sum(diag(solve(C_N)%*%outer(input, input, derivative_b)))+t(y)%*%solve(C_N)%*%outer(input, input, derivative_b)%*%solve(C_N)%*%y 
+  K <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">outer</span>(input, input, kernel) 
+  C_N <span style="color:#f92672">&lt;-</span> K <span style="color:#f92672">+</span> <span style="color:#a6e22e">diag</span>(N)<span style="color:#f92672">/</span>beta
+  <span style="color:#a6e22e">for </span>(i in <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>itermax){
+    kernel <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(x1, x2) a<span style="color:#f92672">*</span><span style="color:#a6e22e">exp</span>(<span style="color:#f92672">-</span>b<span style="color:#f92672">*</span>(x1<span style="color:#f92672">-</span>x2)^2)
+    derivative_b <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(x1,x2) <span style="color:#ae81ff">-0.5</span><span style="color:#f92672">*</span>a<span style="color:#f92672">*</span>(x1<span style="color:#f92672">-</span>x2)^2<span style="color:#f92672">*</span><span style="color:#a6e22e">exp</span>(<span style="color:#ae81ff">-0.5</span><span style="color:#f92672">*</span>b<span style="color:#f92672">*</span>(x1<span style="color:#f92672">-</span>x2)^2)
+    dloglik_b <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(C_N,y,x1,x2) {
+      <span style="color:#f92672">-</span><span style="color:#a6e22e">sum</span>(<span style="color:#a6e22e">diag</span>(<span style="color:#a6e22e">solve</span>(C_N)<span style="color:#f92672">%*%</span><span style="color:#a6e22e">outer</span>(input, input, derivative_b)))<span style="color:#f92672">+</span><span style="color:#a6e22e">t</span>(y)<span style="color:#f92672">%*%</span><span style="color:#a6e22e">solve</span>(C_N)<span style="color:#f92672">%*%</span><span style="color:#a6e22e">outer</span>(input, input, derivative_b)<span style="color:#f92672">%*%</span><span style="color:#a6e22e">solve</span>(C_N)<span style="color:#f92672">%*%</span>y 
     }
-    K &lt;- outer(input, input, kernel) # calc gram matrix
-    C_N &lt;- K + diag(N)/beta
-    l &lt;- 0
-    if(abs(l-likelihood(b,a,input,train))&lt;0.0001&amp;i&gt;2){
+    K <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">outer</span>(input, input, kernel) <span style="color:#75715e"># calc gram matrix</span>
+    C_N <span style="color:#f92672">&lt;-</span> K <span style="color:#f92672">+</span> <span style="color:#a6e22e">diag</span>(N)<span style="color:#f92672">/</span>beta
+    l <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">0</span>
+    <span style="color:#a6e22e">if</span>(<span style="color:#a6e22e">abs</span>(l<span style="color:#f92672">-</span><span style="color:#a6e22e">likelihood</span>(b,a,input,train))<span style="color:#f92672">&lt;</span><span style="color:#ae81ff">0.0001</span><span style="color:#f92672">&amp;</span>i<span style="color:#f92672">&gt;</span><span style="color:#ae81ff">2</span>){
       break
     }else{
-      a &lt;- as.numeric(a + learning_rate*dloglik_a(C_N,train,input,input))
-      b &lt;- as.numeric(b + learning_rate*dloglik_b(C_N,train,input,input))
+      a <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.numeric</span>(a <span style="color:#f92672">+</span> learning_rate<span style="color:#f92672">*</span><span style="color:#a6e22e">dloglik_a</span>(C_N,train,input,input))
+      b <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.numeric</span>(b <span style="color:#f92672">+</span> learning_rate<span style="color:#f92672">*</span><span style="color:#a6e22e">dloglik_b</span>(C_N,train,input,input))
     }
-    l &lt;- likelihood(b,a,input,train)
+    l <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">likelihood</span>(b,a,input,train)
   }
-  K &lt;- outer(input, input, kernel)
-  C_N &lt;- K + diag(length(input))/beta
-  m &lt;- function(x) (outer(x, input, kernel) %*% solve(C_N) %*% train)  
-  m_sig &lt;- function(x)(kernel(x,x) - diag(outer(x, input, kernel) %*% solve(C_N) %*% t(outer(x, input, kernel))))
-  x &lt;- seq(xmin,xmax,length=100)
-  output &lt;- ggplot(data.frame(x1=x,m=m(x),sig1=m(x)+1.96*sqrt(m_sig(x)),sig2=m(x)-1.96*sqrt(m_sig(x)),
-                              tx=input,ty=train),
-                   aes(x=x1,y=m)) + 
-    geom_line() +
-    geom_ribbon(aes(ymin=sig1,ymax=sig2),alpha=0.2) +
-    geom_point(aes(x=tx,y=ty))
-  return(output)
+  K <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">outer</span>(input, input, kernel)
+  C_N <span style="color:#f92672">&lt;-</span> K <span style="color:#f92672">+</span> <span style="color:#a6e22e">diag</span>(<span style="color:#a6e22e">length</span>(input))<span style="color:#f92672">/</span>beta
+  m <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(x) (<span style="color:#a6e22e">outer</span>(x, input, kernel) <span style="color:#f92672">%*%</span> <span style="color:#a6e22e">solve</span>(C_N) <span style="color:#f92672">%*%</span> train)  
+  m_sig <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(x)(<span style="color:#a6e22e">kernel</span>(x,x) <span style="color:#f92672">-</span> <span style="color:#a6e22e">diag</span>(<span style="color:#a6e22e">outer</span>(x, input, kernel) <span style="color:#f92672">%*%</span> <span style="color:#a6e22e">solve</span>(C_N) <span style="color:#f92672">%*%</span> <span style="color:#a6e22e">t</span>(<span style="color:#a6e22e">outer</span>(x, input, kernel))))
+  x <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">seq</span>(xmin,xmax,length<span style="color:#f92672">=</span><span style="color:#ae81ff">100</span>)
+  output <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ggplot</span>(<span style="color:#a6e22e">data.frame</span>(x1<span style="color:#f92672">=</span>x,m<span style="color:#f92672">=</span><span style="color:#a6e22e">m</span>(x),sig1<span style="color:#f92672">=</span><span style="color:#a6e22e">m</span>(x)<span style="color:#ae81ff">+1.96</span><span style="color:#f92672">*</span><span style="color:#a6e22e">sqrt</span>(<span style="color:#a6e22e">m_sig</span>(x)),sig2<span style="color:#f92672">=</span><span style="color:#a6e22e">m</span>(x)<span style="color:#ae81ff">-1.96</span><span style="color:#f92672">*</span><span style="color:#a6e22e">sqrt</span>(<span style="color:#a6e22e">m_sig</span>(x)),
+                              tx<span style="color:#f92672">=</span>input,ty<span style="color:#f92672">=</span>train),
+                   <span style="color:#a6e22e">aes</span>(x<span style="color:#f92672">=</span>x1,y<span style="color:#f92672">=</span>m)) <span style="color:#f92672">+</span> 
+    <span style="color:#a6e22e">geom_line</span>() <span style="color:#f92672">+</span>
+    <span style="color:#a6e22e">geom_ribbon</span>(<span style="color:#a6e22e">aes</span>(ymin<span style="color:#f92672">=</span>sig1,ymax<span style="color:#f92672">=</span>sig2),alpha<span style="color:#f92672">=</span><span style="color:#ae81ff">0.2</span>) <span style="color:#f92672">+</span>
+    <span style="color:#a6e22e">geom_point</span>(<span style="color:#a6e22e">aes</span>(x<span style="color:#f92672">=</span>tx,y<span style="color:#f92672">=</span>ty))
+  <span style="color:#a6e22e">return</span>(output)
 }
 
-print(g(0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=1, layout.pos.col=1))</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<span style="color:#a6e22e">print</span>(<span style="color:#a6e22e">g</span>(<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">1</span>,curve_fitting<span style="color:#f92672">$</span>x,curve_fitting<span style="color:#f92672">$</span>t), vp<span style="color:#f92672">=</span><span style="color:#a6e22e">viewport</span>(layout.pos.row<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>, layout.pos.col<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>))
+</code></pre></div><p>\normalsize<img src="index_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
 <p>たしかに、良さそうな感じがします（笑）
 とりあえず、今日はここまで。</p>
-</div>
 
-    </div>
+          </div>
 
-    
+          
 
 
 
@@ -1287,8 +1312,12 @@ print(g(0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=1, layo
 
 
 
+        </div>
+      </article>
+    </main>
+
   </div>
-</article>
+</div>
 
       
 
@@ -1402,11 +1431,9 @@ print(g(0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=1, layo
       
     
     
-      
     
     
-    
-    <script src="../../js/wowchemy.min.2a3f95be2bc4762ba1847fb5d7a28317.js"></script>
+    <script src="../../js/wowchemy.min.4c2bca31150ce93c5a5e43b8a50f22fd.js"></script>
 
     
 
@@ -1416,6 +1443,16 @@ print(g(0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=1, layo
   <div class="container">
     <footer class="site-footer">
   
+
+  
+   
+  <script>
+  $(document).ready(function () {
+    window.initializeCodeFolding("show" === "show");
+  });
+  </script>
+  <script src="../../js/codefolding.js"></script>
+
 
   <p class="powered-by">
     

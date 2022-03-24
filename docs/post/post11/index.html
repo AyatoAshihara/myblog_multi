@@ -88,8 +88,8 @@
     
       
       
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/xcode.min.css" crossorigin="anonymous" title="hl-light">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/xcode.min.css" crossorigin="anonymous" title="hl-dark" disabled>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/solarized-dark.min.css" crossorigin="anonymous" title="hl-light">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/solarized-dark.min.css" crossorigin="anonymous" title="hl-dark" disabled>
       
     
 
@@ -672,9 +672,29 @@
 
 
 
-  <article class="article">
+  <div class="container-fluid docs">
+  <div class="row flex-xl-nowrap">
 
-  
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <ul class="nav toc-top">
+        <li><a href="#" id="back_to_top" class="docs-toc-title">On this page</a></li>
+      </ul>
+      <nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#1-スクリプトの中身">1. スクリプトの中身</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+      
+    </div>
+
+    <main class="col-12 col-md-0 col-xl-10 py-md-3 pl-md-5 docs-content" role="main">
+      <article class="article">
+
+        
 
 
 
@@ -707,6 +727,22 @@
   
 
 
+<div id="code-folding-buttons" class="dropdown btn-group pull-right">
+  <a class="btn btn-light btn-sm dropdown-toggle" href="#" role="button" id="allCodeToggleButton"
+     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    Code
+  </a>
+  <div class="dropdown-menu" aria-labelledby="allCodeToggleButton">
+    <a id="rmd-show-all-code" class="dropdown-item small" href="#">Show all</a>
+    <a id="rmd-hide-all-code" class="dropdown-item small" href="#">Hide all</a>
+  </div>
+</div>
+
+
+
+  
+
+
 <div class="article-metadata">
 
   
@@ -727,7 +763,7 @@
   
   <span class="middot-divider"></span>
   <span class="article-reading-time">
-    12 分で読める
+    11 分で読める
   </span>
   
 
@@ -774,12 +810,12 @@
 
 
 
-  <div class="article-container">
+        <div class="article-container">
 
-    <div class="article-style">
-      <p>2回目になりますが、またrvestで過去のレース結果を落としてみたいと思います。過去の記事を見てないという人は先にそちらをご覧になられることをお勧めします。</p>
+          <div class="article-style">
+            <p>2回目になりますが、またrvestで過去のレース結果を落としてみたいと思います。過去の記事を見てないという人は先にそちらをご覧になられることをお勧めします。</p>
 <p>今回データを取り直そうと思ったのは、競馬の分析をした際により多くの項目を説明変数に加えて、分析をしたいと思ったからです。なので、今回は前回のRスクリプトに追記を行う形でプログラムを作成しました。新たに追加したデータ項目は以下の14個です。</p>
-<ol style="list-style-type: decimal">
+<ol>
 <li>芝かダートか</li>
 <li>右回りか左回りか</li>
 <li>レースコンディション（良や稍重など）</li>
@@ -796,257 +832,256 @@
 <li>ジョッキーの体重の増減</li>
 </ol>
 <p>実はまだデータ収集は終わっていなくて、Rのプログラムがずっと実行中になっています（3日くらい回しています）。しかし、プログラム自体はきっちり回っているのでスクリプトの紹介をしていこうと思います。もしかしたら追記で結果を書くかもしれません。</p>
-<div id="スクリプトの中身" class="section level2">
-<h2>1. スクリプトの中身</h2>
+<h2 id="1-スクリプトの中身">1. スクリプトの中身</h2>
 <p>まずはパッケージの呼び出しです。</p>
-<pre class="r"><code># rvestによる競馬データのwebスクレイピング
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># rvestによる競馬データのwebスクレイピング</span>
 
-#install.packages(&quot;rvest&quot;)
-#if (!require(&quot;pacman&quot;)) install.packages(&quot;pacman&quot;)
-#install.packages(&quot;beepr&quot;)
-#install.packages(&quot;RSQLite&quot;)
-pacman::p_load(qdapRegex)
-library(rvest)
-library(stringr)
-library(dplyr)
-library(beepr)
-library(RSQLite)</code></pre>
-<p>かなりwarnningが出るのでそれを禁止し、SQLiteに接続しています</p>
-<pre class="r"><code># warnning禁止
-options(warn=-1)
+<span style="color:#75715e">#install.packages(&#34;rvest&#34;)</span>
+<span style="color:#75715e">#if (!require(&#34;pacman&#34;)) install.packages(&#34;pacman&#34;)</span>
+<span style="color:#75715e">#install.packages(&#34;beepr&#34;)</span>
+<span style="color:#75715e">#install.packages(&#34;RSQLite&#34;)</span>
+pacman<span style="color:#f92672">::</span><span style="color:#a6e22e">p_load</span>(qdapRegex)
+<span style="color:#a6e22e">library</span>(rvest)
+<span style="color:#a6e22e">library</span>(stringr)
+<span style="color:#a6e22e">library</span>(dplyr)
+<span style="color:#a6e22e">library</span>(beepr)
+<span style="color:#a6e22e">library</span>(RSQLite)
+</code></pre></div><p>かなりwarnningが出るのでそれを禁止し、SQLiteに接続しています</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># warnning禁止</span>
+<span style="color:#a6e22e">options</span>(warn<span style="color:#f92672">=</span><span style="color:#ae81ff">-1</span>)
 
-# SQLiteへの接続
-con = dbConnect(SQLite(), &quot;horse_data.db&quot;, synchronous=&quot;off&quot;)</code></pre>
-<p>1994年からしかオッズが取れないので、1994年から直近までのデータを取得します。yahoo競馬では月ごとにレースがまとめられているので、それを変数として使用しながらデータをとっていきます。基本的には、<a href="https://keiba.yahoo.co.jp/schedule/list/2018/?month=7">該当年、該当月のレース結果一覧</a>へアクセスし、そのページ上の各日の<a href="https://keiba.yahoo.co.jp/race/list/18020106/">個々の競馬場ごとのタイムテーブル</a>へのリンクを取得します。個々の競馬場でレースはだいたい12ほどあるので、そのリンクを取得し、各レースの<a href="https://keiba.yahoo.co.jp/race/result/1802010601/">レース結果ページ</a>にアクセスします。そして、レース結果を取得していきます。まず、各日の個々の競馬場ごとのタイムテーブルへのリンクの取得方法です。</p>
-<pre class="r"><code>for(year in 1994:2019){
-  start.time &lt;- Sys.time() # 計算時間を図る
-  # yahoo競馬のレース結果一覧ページの取得
-  for (k in 1:12){ # kは月を表す
+<span style="color:#75715e"># SQLiteへの接続</span>
+con <span style="color:#f92672">=</span> <span style="color:#a6e22e">dbConnect</span>(<span style="color:#a6e22e">SQLite</span>(), <span style="color:#e6db74">&#34;horse_data.db&#34;</span>, synchronous<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;off&#34;</span>)
+</code></pre></div><p>1994年からしかオッズが取れないので、1994年から直近までのデータを取得します。yahoo競馬では月ごとにレースがまとめられているので、それを変数として使用しながらデータをとっていきます。基本的には、<a href="https://keiba.yahoo.co.jp/schedule/list/2018/?month=7" target="_blank" rel="noopener">該当年、該当月のレース結果一覧</a>へアクセスし、そのページ上の各日の<a href="https://keiba.yahoo.co.jp/race/list/18020106/" target="_blank" rel="noopener">個々の競馬場ごとのタイムテーブル</a>へのリンクを取得します。個々の競馬場でレースはだいたい12ほどあるので、そのリンクを取得し、各レースの<a href="https://keiba.yahoo.co.jp/race/result/1802010601/" target="_blank" rel="noopener">レース結果ページ</a>にアクセスします。そして、レース結果を取得していきます。まず、各日の個々の競馬場ごとのタイムテーブルへのリンクの取得方法です。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">for</span>(year in <span style="color:#ae81ff">1994</span><span style="color:#f92672">:</span><span style="color:#ae81ff">2019</span>){
+  start.time <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">Sys.time</span>() <span style="color:#75715e"># 計算時間を図る</span>
+  <span style="color:#75715e"># yahoo競馬のレース結果一覧ページの取得</span>
+  <span style="color:#a6e22e">for </span>(k in <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#ae81ff">12</span>){ <span style="color:#75715e"># kは月を表す</span>
     
-    tryCatch(
+    <span style="color:#a6e22e">tryCatch</span>(
       {
-        keiba.yahoo &lt;- read_html(str_c(&quot;https://keiba.yahoo.co.jp/schedule/list/&quot;, year,&quot;/?month=&quot;,k)) # 該当年、該当月のレース結果一覧にアクセス
-        Sys.sleep(2)
-        race_lists &lt;- keiba.yahoo %&gt;%
-          html_nodes(&quot;a&quot;) %&gt;% 
-          html_attr(&quot;href&quot;) # 全urlを取得
+        keiba.yahoo <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">read_html</span>(<span style="color:#a6e22e">str_c</span>(<span style="color:#e6db74">&#34;https://keiba.yahoo.co.jp/schedule/list/&#34;</span>, year,<span style="color:#e6db74">&#34;/?month=&#34;</span>,k)) <span style="color:#75715e"># 該当年、該当月のレース結果一覧にアクセス</span>
+        <span style="color:#a6e22e">Sys.sleep</span>(<span style="color:#ae81ff">2</span>)
+        race_lists <span style="color:#f92672">&lt;-</span> keiba.yahoo <span style="color:#f92672">%&gt;%</span>
+          <span style="color:#a6e22e">html_nodes</span>(<span style="color:#e6db74">&#34;a&#34;</span>) <span style="color:#f92672">%&gt;%</span> 
+          <span style="color:#a6e22e">html_attr</span>(<span style="color:#e6db74">&#34;href&#34;</span>) <span style="color:#75715e"># 全urlを取得</span>
         
-        # 競馬場ごとの各日のレースリストを取得
-        race_lists &lt;- race_lists[str_detect(race_lists, pattern=&quot;race/list/\\d+/&quot;)==1] # 「result」が含まれるurlを抽出
+        <span style="color:#75715e"># 競馬場ごとの各日のレースリストを取得</span>
+        race_lists <span style="color:#f92672">&lt;-</span> race_lists<span style="color:#a6e22e">[str_detect</span>(race_lists, pattern<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;race/list/\\d+/&#34;</span>)<span style="color:#f92672">==</span><span style="color:#ae81ff">1</span>] <span style="color:#75715e"># 「result」が含まれるurlを抽出</span>
       }
-      , error = function(e){signal &lt;- 1}
-    )</code></pre>
-<p>ここでは、取得したリンクのurlにresultという文字が含まれているものだけを抽出しています。要はそれが各競馬場のレーステーブルへのリンクとなります。ここからは取得した競馬場のレーステーブルのリンクを用いて、そのページにアクセスし、全12レースそれぞれのレース結果が掲載されているページのリンクを取得していきます。</p>
-<pre class="r"><code>    for (j in 1:length(race_lists)){ # jは当該年月にあったレーステーブルへのリンクを表す
+      , error <span style="color:#f92672">=</span> <span style="color:#a6e22e">function</span>(e){signal <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1</span>}
+    )
+</code></pre></div><p>ここでは、取得したリンクのurlにresultという文字が含まれているものだけを抽出しています。要はそれが各競馬場のレーステーブルへのリンクとなります。ここからは取得した競馬場のレーステーブルのリンクを用いて、そのページにアクセスし、全12レースそれぞれのレース結果が掲載されているページのリンクを取得していきます。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">    <span style="color:#a6e22e">for </span>(j in <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#a6e22e">length</span>(race_lists)){ <span style="color:#75715e"># jは当該年月にあったレーステーブルへのリンクを表す</span>
       
-      tryCatch(
+      <span style="color:#a6e22e">tryCatch</span>(
         {
-          race_list &lt;- read_html(str_c(&quot;https://keiba.yahoo.co.jp&quot;,race_lists[j]))
-          race_url &lt;- race_list %&gt;% html_nodes(&quot;a&quot;) %&gt;% html_attr(&quot;href&quot;) # 全urlを取得
+          race_list <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">read_html</span>(<span style="color:#a6e22e">str_c</span>(<span style="color:#e6db74">&#34;https://keiba.yahoo.co.jp&#34;</span>,race_lists[j]))
+          race_url <span style="color:#f92672">&lt;-</span> race_list <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">html_nodes</span>(<span style="color:#e6db74">&#34;a&#34;</span>) <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">html_attr</span>(<span style="color:#e6db74">&#34;href&#34;</span>) <span style="color:#75715e"># 全urlを取得</span>
           
-          # レース結果のurlを取得
-          race_url &lt;- race_url[str_detect(race_url, pattern=&quot;result&quot;)==1] # 「result」が含まれるurlを抽出
+          <span style="color:#75715e"># レース結果のurlを取得</span>
+          race_url <span style="color:#f92672">&lt;-</span> race_url<span style="color:#a6e22e">[str_detect</span>(race_url, pattern<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;result&#34;</span>)<span style="color:#f92672">==</span><span style="color:#ae81ff">1</span>] <span style="color:#75715e"># 「result」が含まれるurlを抽出</span>
         }
-        , error = function(e){signal &lt;- 1}
-      )</code></pre>
-<p>各レース結果へのリンクが取得できたので、ここからはいよいよレース結果の取得とその整形パートに入ります。かなり長ったらしく複雑なコードになってしまいました。レース結果は以下のようなテーブル属性に格納されているので、まずそれを単純に引っ張ってきます。</p>
-<pre class="r"><code>      for (i in 1:length(race_url)){ # iは当該年月当該競馬場で開催されたレースを表す
+        , error <span style="color:#f92672">=</span> <span style="color:#a6e22e">function</span>(e){signal <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1</span>}
+      )
+</code></pre></div><p>各レース結果へのリンクが取得できたので、ここからはいよいよレース結果の取得とその整形パートに入ります。かなり長ったらしく複雑なコードになってしまいました。レース結果は以下のようなテーブル属性に格納されているので、まずそれを単純に引っ張ってきます。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">      <span style="color:#a6e22e">for </span>(i in <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#a6e22e">length</span>(race_url)){ <span style="color:#75715e"># iは当該年月当該競馬場で開催されたレースを表す</span>
         
-        print(str_c(&quot;現在、&quot;, year, &quot;年&quot;, k, &quot;月&quot;,j, &quot;グループ、&quot;, i,&quot;番目のレースの保存中です&quot;))
+        <span style="color:#a6e22e">print</span>(<span style="color:#a6e22e">str_c</span>(<span style="color:#e6db74">&#34;現在、&#34;</span>, year, <span style="color:#e6db74">&#34;年&#34;</span>, k, <span style="color:#e6db74">&#34;月&#34;</span>,j, <span style="color:#e6db74">&#34;グループ、&#34;</span>, i,<span style="color:#e6db74">&#34;番目のレースの保存中です&#34;</span>))
         
-        tryCatch(
+        <span style="color:#a6e22e">tryCatch</span>(
           {
-            race1 &lt;-  read_html(str_c(&quot;https://keiba.yahoo.co.jp&quot;,race_url[i])) # レース結果のurlを取得
-            signal &lt;- 0
-            Sys.sleep(2)
+            race1 <span style="color:#f92672">&lt;-</span>  <span style="color:#a6e22e">read_html</span>(<span style="color:#a6e22e">str_c</span>(<span style="color:#e6db74">&#34;https://keiba.yahoo.co.jp&#34;</span>,race_url[i])) <span style="color:#75715e"># レース結果のurlを取得</span>
+            signal <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">0</span>
+            <span style="color:#a6e22e">Sys.sleep</span>(<span style="color:#ae81ff">2</span>)
           }
-          , error = function(e){signal &lt;- 1}
+          , error <span style="color:#f92672">=</span> <span style="color:#a6e22e">function</span>(e){signal <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1</span>}
         )
         
-        # レースが中止orこれまでの過程でエラーでなければ処理を実行
-        if (identical(race1 %&gt;%
-                      html_nodes(xpath = &quot;//div[@class = &#39;resultAtt mgnBL fntSS&#39;]&quot;) %&gt;%
-                      html_text(),character(0)) == TRUE &amp;&amp; signal == 0){
+        <span style="color:#75715e"># レースが中止orこれまでの過程でエラーでなければ処理を実行</span>
+        <span style="color:#a6e22e">if </span>(<span style="color:#a6e22e">identical</span>(race1 <span style="color:#f92672">%&gt;%</span>
+                      <span style="color:#a6e22e">html_nodes</span>(xpath <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;//div[@class = &#39;resultAtt mgnBL fntSS&#39;]&#34;</span>) <span style="color:#f92672">%&gt;%</span>
+                      <span style="color:#a6e22e">html_text</span>(),<span style="color:#a6e22e">character</span>(<span style="color:#ae81ff">0</span>)) <span style="color:#f92672">==</span> <span style="color:#66d9ef">TRUE</span> <span style="color:#f92672">&amp;&amp;</span> signal <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>){
           
-          # レース結果をスクレイピング
-          race_result &lt;- race1 %&gt;% html_nodes(xpath = &quot;//table[@id = &#39;raceScore&#39;]&quot;) %&gt;%
-            html_table()
-          race_result &lt;- do.call(&quot;data.frame&quot;,race_result) # リストをデータフレームに変更
+          <span style="color:#75715e"># レース結果をスクレイピング</span>
+          race_result <span style="color:#f92672">&lt;-</span> race1 <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">html_nodes</span>(xpath <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;//table[@id = &#39;raceScore&#39;]&#34;</span>) <span style="color:#f92672">%&gt;%</span>
+            <span style="color:#a6e22e">html_table</span>()
+          race_result <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">do.call</span>(<span style="color:#e6db74">&#34;data.frame&#34;</span>,race_result) <span style="color:#75715e"># リストをデータフレームに変更</span>
           
-          colnames(race_result) &lt;- c(&quot;order&quot;,&quot;frame_number&quot;,&quot;horse_number&quot;,&quot;horse_name/age&quot;,&quot;time/margin&quot;,&quot;passing_rank/last_3F&quot;,&quot;jockey/weight&quot;,&quot;popularity/odds&quot;,&quot;trainer&quot;) #　列名変更</code></pre>
-<p>tableをただ取得しただけでは以下のように、一つのセルに複数の情報が入っていたりと分析には使えないデータとなっています。なので、これを成型する必要が出てきます。</p>
-<pre class="r"><code>          # 通過順位と上り3Fのタイム
-          race_result &lt;- dplyr::mutate(race_result,passing_rank=as.character(str_extract_all(race_result$`passing_rank/last_3F`,&quot;(\\d{2}-\\d{2}-\\d{2}-\\d{2})|(\\d{2}-\\d{2}-\\d{2})|(\\d{2}-\\d{2})&quot;)))
-          race_result &lt;- dplyr::mutate(race_result,last_3F=as.character(str_extract_all(race_result$`passing_rank/last_3F`,&quot;\\d{2}\\.\\d&quot;)))
-          race_result &lt;- race_result[-6]
+          <span style="color:#a6e22e">colnames</span>(race_result) <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;order&#34;</span>,<span style="color:#e6db74">&#34;frame_number&#34;</span>,<span style="color:#e6db74">&#34;horse_number&#34;</span>,<span style="color:#e6db74">&#34;horse_name/age&#34;</span>,<span style="color:#e6db74">&#34;time/margin&#34;</span>,<span style="color:#e6db74">&#34;passing_rank/last_3F&#34;</span>,<span style="color:#e6db74">&#34;jockey/weight&#34;</span>,<span style="color:#e6db74">&#34;popularity/odds&#34;</span>,<span style="color:#e6db74">&#34;trainer&#34;</span>) <span style="color:#75715e">#　列名変更</span>
+</code></pre></div><p>tableをただ取得しただけでは以下のように\nが入っていたり、一つのセルに複数の情報が入っていたりと分析には使えないデータとなっています。なので、これを成型する必要が出てきます。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">          <span style="color:#75715e"># 通過順位と上り3Fのタイム</span>
+          race_result <span style="color:#f92672">&lt;-</span> dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">mutate</span>(race_result,passing_rank<span style="color:#f92672">=</span><span style="color:#a6e22e">as.character</span>(<span style="color:#a6e22e">str_extract_all</span>(race_result<span style="color:#f92672">$</span>`passing_rank/last_3F`,<span style="color:#e6db74">&#34;(\\d{2}-\\d{2}-\\d{2}-\\d{2})|(\\d{2}-\\d{2}-\\d{2})|(\\d{2}-\\d{2})&#34;</span>)))
+          race_result <span style="color:#f92672">&lt;-</span> dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">mutate</span>(race_result,last_3F<span style="color:#f92672">=</span><span style="color:#a6e22e">as.character</span>(<span style="color:#a6e22e">str_extract_all</span>(race_result<span style="color:#f92672">$</span>`passing_rank/last_3F`,<span style="color:#e6db74">&#34;\\d{2}\\.\\d&#34;</span>)))
+          race_result <span style="color:#f92672">&lt;-</span> race_result[<span style="color:#ae81ff">-6</span>]
           
-          # タイムと着差
-          race_result &lt;- dplyr::mutate(race_result,time=as.character(str_extract_all(race_result$`time/margin`,&quot;\\d\\.\\d{2}\\.\\d|\\d{2}\\.\\d&quot;)))
-          race_result &lt;- dplyr::mutate(race_result,margin=as.character(str_extract_all(race_result$`time/margin`,&quot;./.馬身|.馬身|.[:space:]./.馬身|[ア-ン-]+&quot;)))
-          race_result$margin[race_result$order==1] &lt;- &quot;トップ&quot;
-          race_result$margin[race_result$margin==&quot;character(0)&quot;] &lt;- &quot;大差&quot;
-          race_result$margin[race_result$order==0] &lt;- NA
-          race_result &lt;- race_result[-5]
+          <span style="color:#75715e"># タイムと着差</span>
+          race_result <span style="color:#f92672">&lt;-</span> dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">mutate</span>(race_result,time<span style="color:#f92672">=</span><span style="color:#a6e22e">as.character</span>(<span style="color:#a6e22e">str_extract_all</span>(race_result<span style="color:#f92672">$</span>`time/margin`,<span style="color:#e6db74">&#34;\\d\\.\\d{2}\\.\\d|\\d{2}\\.\\d&#34;</span>)))
+          race_result <span style="color:#f92672">&lt;-</span> dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">mutate</span>(race_result,margin<span style="color:#f92672">=</span><span style="color:#a6e22e">as.character</span>(<span style="color:#a6e22e">str_extract_all</span>(race_result<span style="color:#f92672">$</span>`time/margin`,<span style="color:#e6db74">&#34;./.馬身|.馬身|.[:space:]./.馬身|[ア-ン-]+&#34;</span>)))
+          race_result<span style="color:#f92672">$</span>margin[race_result<span style="color:#f92672">$</span>order<span style="color:#f92672">==</span><span style="color:#ae81ff">1</span>] <span style="color:#f92672">&lt;-</span> <span style="color:#e6db74">&#34;トップ&#34;</span>
+          race_result<span style="color:#f92672">$</span>margin[race_result<span style="color:#f92672">$</span>margin<span style="color:#f92672">==</span><span style="color:#e6db74">&#34;character(0)&#34;</span>] <span style="color:#f92672">&lt;-</span> <span style="color:#e6db74">&#34;大差&#34;</span>
+          race_result<span style="color:#f92672">$</span>margin[race_result<span style="color:#f92672">$</span>order<span style="color:#f92672">==</span><span style="color:#ae81ff">0</span>] <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">NA</span>
+          race_result <span style="color:#f92672">&lt;-</span> race_result[<span style="color:#ae81ff">-5</span>]
           
-          # 馬名、馬齢、馬体重
-          race_result &lt;- dplyr::mutate(race_result,horse_name=as.character(str_extract_all(race_result$`horse_name/age`,&quot;[ァ-ヴー・]+&quot;)))
-          race_result &lt;- dplyr::mutate(race_result,horse_age=as.character(str_extract_all(race_result$`horse_name/age`,&quot;牡\\d+|牝\\d+|せん\\d+&quot;)))
-          race_result$horse_sex &lt;- str_extract(race_result$horse_age, pattern = &quot;牡|牝|せん&quot;)
-          race_result$horse_age &lt;- str_extract(race_result$horse_age, pattern = &quot;\\d&quot;)
-          race_result &lt;- dplyr::mutate(race_result,horse_weight=as.character(str_extract_all(race_result$`horse_name/age`,&quot;\\d{3}&quot;)))
-          race_result &lt;- dplyr::mutate(race_result,horse_weight_change=as.character(str_extract_all(race_result$`horse_name/age`,&quot;\\([\\+|\\-]\\d+\\)|\\([\\d+]\\)&quot;)))
-          race_result$horse_weight_change &lt;- sapply(rm_round(race_result$horse_weight_change, extract=TRUE), paste, collapse=&quot;&quot;)
-          race_result &lt;- dplyr::mutate(race_result,brinker=as.character(str_extract_all(race_result$`horse_name/age`,&quot;B&quot;)))
-          race_result$brinker[race_result$brinker!=&quot;B&quot;] &lt;- &quot;N&quot;
-          race_result &lt;- race_result[-4]
+          <span style="color:#75715e"># 馬名、馬齢、馬体重</span>
+          race_result <span style="color:#f92672">&lt;-</span> dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">mutate</span>(race_result,horse_name<span style="color:#f92672">=</span><span style="color:#a6e22e">as.character</span>(<span style="color:#a6e22e">str_extract_all</span>(race_result<span style="color:#f92672">$</span>`horse_name/age`,<span style="color:#e6db74">&#34;[ァ-ヴー・]+&#34;</span>)))
+          race_result <span style="color:#f92672">&lt;-</span> dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">mutate</span>(race_result,horse_age<span style="color:#f92672">=</span><span style="color:#a6e22e">as.character</span>(<span style="color:#a6e22e">str_extract_all</span>(race_result<span style="color:#f92672">$</span>`horse_name/age`,<span style="color:#e6db74">&#34;牡\\d+|牝\\d+|せん\\d+&#34;</span>)))
+          race_result<span style="color:#f92672">$</span>horse_sex <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">str_extract</span>(race_result<span style="color:#f92672">$</span>horse_age, pattern <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;牡|牝|せん&#34;</span>)
+          race_result<span style="color:#f92672">$</span>horse_age <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">str_extract</span>(race_result<span style="color:#f92672">$</span>horse_age, pattern <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;\\d&#34;</span>)
+          race_result <span style="color:#f92672">&lt;-</span> dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">mutate</span>(race_result,horse_weight<span style="color:#f92672">=</span><span style="color:#a6e22e">as.character</span>(<span style="color:#a6e22e">str_extract_all</span>(race_result<span style="color:#f92672">$</span>`horse_name/age`,<span style="color:#e6db74">&#34;\\d{3}&#34;</span>)))
+          race_result <span style="color:#f92672">&lt;-</span> dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">mutate</span>(race_result,horse_weight_change<span style="color:#f92672">=</span><span style="color:#a6e22e">as.character</span>(<span style="color:#a6e22e">str_extract_all</span>(race_result<span style="color:#f92672">$</span>`horse_name/age`,<span style="color:#e6db74">&#34;\\([\\+|\\-]\\d+\\)|\\([\\d+]\\)&#34;</span>)))
+          race_result<span style="color:#f92672">$</span>horse_weight_change <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">sapply</span>(<span style="color:#a6e22e">rm_round</span>(race_result<span style="color:#f92672">$</span>horse_weight_change, extract<span style="color:#f92672">=</span><span style="color:#66d9ef">TRUE</span>), paste, collapse<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>)
+          race_result <span style="color:#f92672">&lt;-</span> dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">mutate</span>(race_result,brinker<span style="color:#f92672">=</span><span style="color:#a6e22e">as.character</span>(<span style="color:#a6e22e">str_extract_all</span>(race_result<span style="color:#f92672">$</span>`horse_name/age`,<span style="color:#e6db74">&#34;B&#34;</span>)))
+          race_result<span style="color:#f92672">$</span>brinker[race_result<span style="color:#f92672">$</span>brinker<span style="color:#f92672">!=</span><span style="color:#e6db74">&#34;B&#34;</span>] <span style="color:#f92672">&lt;-</span> <span style="color:#e6db74">&#34;N&#34;</span>
+          race_result <span style="color:#f92672">&lt;-</span> race_result[<span style="color:#ae81ff">-4</span>]
           
-          # ジョッキー
-          race_result &lt;- dplyr::mutate(race_result,jockey=as.character(str_extract_all(race_result$`jockey/weight`,&quot;[ぁ-ん一-龠]+\\s[ぁ-ん一-龠]+|[:upper:].[ァ-ヶー]+&quot;)))
-          race_result &lt;- dplyr::mutate(race_result,jockey_weight=as.character(str_extract_all(race_result$`jockey/weight`,&quot;\\d{2}&quot;)))
-          race_result$jockey_weight_change &lt;- 0
-          race_result$jockey_weight_change[str_detect(race_result$`jockey/weight`,&quot;☆&quot;)==1] &lt;- 1
-          race_result$jockey_weight_change[str_detect(race_result$`jockey/weight`,&quot;△&quot;)==1] &lt;- 2
-          race_result$jockey_weight_change[str_detect(race_result$`jockey/weight`,&quot;△&quot;)==1] &lt;- 3
-          race_result &lt;- race_result[-4]
+          <span style="color:#75715e"># ジョッキー</span>
+          race_result <span style="color:#f92672">&lt;-</span> dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">mutate</span>(race_result,jockey<span style="color:#f92672">=</span><span style="color:#a6e22e">as.character</span>(<span style="color:#a6e22e">str_extract_all</span>(race_result<span style="color:#f92672">$</span>`jockey/weight`,<span style="color:#e6db74">&#34;[ぁ-ん一-龠]+\\s[ぁ-ん一-龠]+|[:upper:].[ァ-ヶー]+&#34;</span>)))
+          race_result <span style="color:#f92672">&lt;-</span> dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">mutate</span>(race_result,jockey_weight<span style="color:#f92672">=</span><span style="color:#a6e22e">as.character</span>(<span style="color:#a6e22e">str_extract_all</span>(race_result<span style="color:#f92672">$</span>`jockey/weight`,<span style="color:#e6db74">&#34;\\d{2}&#34;</span>)))
+          race_result<span style="color:#f92672">$</span>jockey_weight_change <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">0</span>
+          race_result<span style="color:#f92672">$</span>jockey_weight_change<span style="color:#a6e22e">[str_detect</span>(race_result<span style="color:#f92672">$</span>`jockey/weight`,<span style="color:#e6db74">&#34;☆&#34;</span>)<span style="color:#f92672">==</span><span style="color:#ae81ff">1</span>] <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1</span>
+          race_result<span style="color:#f92672">$</span>jockey_weight_change<span style="color:#a6e22e">[str_detect</span>(race_result<span style="color:#f92672">$</span>`jockey/weight`,<span style="color:#e6db74">&#34;△&#34;</span>)<span style="color:#f92672">==</span><span style="color:#ae81ff">1</span>] <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">2</span>
+          race_result<span style="color:#f92672">$</span>jockey_weight_change<span style="color:#a6e22e">[str_detect</span>(race_result<span style="color:#f92672">$</span>`jockey/weight`,<span style="color:#e6db74">&#34;△&#34;</span>)<span style="color:#f92672">==</span><span style="color:#ae81ff">1</span>] <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">3</span>
+          race_result <span style="color:#f92672">&lt;-</span> race_result[<span style="color:#ae81ff">-4</span>]
           
-          # オッズと人気
-          race_result &lt;- dplyr::mutate(race_result,odds=as.character(str_extract_all(race_result$`popularity/odds`,&quot;\\(.+\\)&quot;)))
-          race_result &lt;- dplyr::mutate(race_result,popularity=as.character(str_extract_all(race_result$`popularity/odds`,&quot;\\d+[^(\\d+.\\d)]&quot;)))
-          race_result$odds &lt;- sapply(rm_round(race_result$odds, extract=TRUE), paste, collapse=&quot;&quot;)
-          race_result &lt;- race_result[-4]</code></pre>
-<p>次に、今取得したtable以外の情報も取り込むことにします。具体的には、レース名や天候、馬場状態、日付、競馬場などです。これらの情報はレース結果ページの上部に掲載されています。</p>
-<pre class="r"><code>          # レース情報
-          race_date &lt;- race1 %&gt;% html_nodes(xpath = &quot;//div[@id = &#39;raceTitName&#39;]/p[@id = &#39;raceTitDay&#39;]&quot;) %&gt;%
-            html_text()
-          race_name &lt;- race1 %&gt;% html_nodes(xpath = &quot;//div[@id = &#39;raceTitName&#39;]/h1[@class = &#39;fntB&#39;]&quot;) %&gt;%
-            html_text()
-          race_distance &lt;- race1 %&gt;% html_nodes(xpath = &quot;//p[@id = &#39;raceTitMeta&#39;]&quot;) %&gt;%
-            html_text()
+          <span style="color:#75715e"># オッズと人気</span>
+          race_result <span style="color:#f92672">&lt;-</span> dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">mutate</span>(race_result,odds<span style="color:#f92672">=</span><span style="color:#a6e22e">as.character</span>(<span style="color:#a6e22e">str_extract_all</span>(race_result<span style="color:#f92672">$</span>`popularity/odds`,<span style="color:#e6db74">&#34;\\(.+\\)&#34;</span>)))
+          race_result <span style="color:#f92672">&lt;-</span> dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">mutate</span>(race_result,popularity<span style="color:#f92672">=</span><span style="color:#a6e22e">as.character</span>(<span style="color:#a6e22e">str_extract_all</span>(race_result<span style="color:#f92672">$</span>`popularity/odds`,<span style="color:#e6db74">&#34;\\d+[^(\\d+.\\d)]&#34;</span>)))
+          race_result<span style="color:#f92672">$</span>odds <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">sapply</span>(<span style="color:#a6e22e">rm_round</span>(race_result<span style="color:#f92672">$</span>odds, extract<span style="color:#f92672">=</span><span style="color:#66d9ef">TRUE</span>), paste, collapse<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>)
+          race_result <span style="color:#f92672">&lt;-</span> race_result[<span style="color:#ae81ff">-4</span>]
+</code></pre></div><p>次に、今取得したtable以外の情報も取り込むことにします。具体的には、レース名や天候、馬場状態、日付、競馬場などです。これらの情報はレース結果ページの上部に掲載されています。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">          <span style="color:#75715e"># レース情報</span>
+          race_date <span style="color:#f92672">&lt;-</span> race1 <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">html_nodes</span>(xpath <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;//div[@id = &#39;raceTitName&#39;]/p[@id = &#39;raceTitDay&#39;]&#34;</span>) <span style="color:#f92672">%&gt;%</span>
+            <span style="color:#a6e22e">html_text</span>()
+          race_name <span style="color:#f92672">&lt;-</span> race1 <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">html_nodes</span>(xpath <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;//div[@id = &#39;raceTitName&#39;]/h1[@class = &#39;fntB&#39;]&#34;</span>) <span style="color:#f92672">%&gt;%</span>
+            <span style="color:#a6e22e">html_text</span>()
+          race_distance <span style="color:#f92672">&lt;-</span> race1 <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">html_nodes</span>(xpath <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;//p[@id = &#39;raceTitMeta&#39;]&#34;</span>) <span style="color:#f92672">%&gt;%</span>
+            <span style="color:#a6e22e">html_text</span>()
         
-          race_result &lt;- dplyr::mutate(race_result,race_date=as.character(str_extract_all(race_date,&quot;\\d+年\\d+月\\d+日&quot;)))
-          race_result$race_date &lt;- str_replace_all(race_result$race_date,&quot;年&quot;,&quot;/&quot;)
-          race_result$race_date &lt;- str_replace_all(race_result$race_date,&quot;月&quot;,&quot;/&quot;)
-          race_result$race_date &lt;- as.Date(race_result$race_date)
-          race_course &lt;- as.character(str_extract_all(race_date,pattern = &quot;札幌|函館|福島|新潟|東京|中山|中京|京都|阪神|小倉&quot;))
-          race_result$race_course &lt;- race_course
-          race_result &lt;- dplyr::mutate(race_result,race_name=as.character(str_replace_all(race_name,&quot;\\s&quot;,&quot;&quot;)))
-          race_result &lt;- dplyr::mutate(race_result,race_distance=as.character(str_extract_all(race_distance,&quot;\\d+m&quot;)))
-          race_type=as.character(str_extract_all(race_distance,pattern = &quot;芝|ダート&quot;))
-          race_result$type &lt;- race_type
-          race_turn &lt;- as.character(str_extract_all(race_distance,pattern = &quot;右|左&quot;))
-          race_result$race_turn &lt;- race_turn
+          race_result <span style="color:#f92672">&lt;-</span> dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">mutate</span>(race_result,race_date<span style="color:#f92672">=</span><span style="color:#a6e22e">as.character</span>(<span style="color:#a6e22e">str_extract_all</span>(race_date,<span style="color:#e6db74">&#34;\\d+年\\d+月\\d+日&#34;</span>)))
+          race_result<span style="color:#f92672">$</span>race_date <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">str_replace_all</span>(race_result<span style="color:#f92672">$</span>race_date,<span style="color:#e6db74">&#34;年&#34;</span>,<span style="color:#e6db74">&#34;/&#34;</span>)
+          race_result<span style="color:#f92672">$</span>race_date <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">str_replace_all</span>(race_result<span style="color:#f92672">$</span>race_date,<span style="color:#e6db74">&#34;月&#34;</span>,<span style="color:#e6db74">&#34;/&#34;</span>)
+          race_result<span style="color:#f92672">$</span>race_date <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.Date</span>(race_result<span style="color:#f92672">$</span>race_date)
+          race_course <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.character</span>(<span style="color:#a6e22e">str_extract_all</span>(race_date,pattern <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;札幌|函館|福島|新潟|東京|中山|中京|京都|阪神|小倉&#34;</span>))
+          race_result<span style="color:#f92672">$</span>race_course <span style="color:#f92672">&lt;-</span> race_course
+          race_result <span style="color:#f92672">&lt;-</span> dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">mutate</span>(race_result,race_name<span style="color:#f92672">=</span><span style="color:#a6e22e">as.character</span>(<span style="color:#a6e22e">str_replace_all</span>(race_name,<span style="color:#e6db74">&#34;\\s&#34;</span>,<span style="color:#e6db74">&#34;&#34;</span>)))
+          race_result <span style="color:#f92672">&lt;-</span> dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">mutate</span>(race_result,race_distance<span style="color:#f92672">=</span><span style="color:#a6e22e">as.character</span>(<span style="color:#a6e22e">str_extract_all</span>(race_distance,<span style="color:#e6db74">&#34;\\d+m&#34;</span>)))
+          race_type<span style="color:#f92672">=</span><span style="color:#a6e22e">as.character</span>(<span style="color:#a6e22e">str_extract_all</span>(race_distance,pattern <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;芝|ダート&#34;</span>))
+          race_result<span style="color:#f92672">$</span>type <span style="color:#f92672">&lt;-</span> race_type
+          race_turn <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.character</span>(<span style="color:#a6e22e">str_extract_all</span>(race_distance,pattern <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;右|左&#34;</span>))
+          race_result<span style="color:#f92672">$</span>race_turn <span style="color:#f92672">&lt;-</span> race_turn
           
-          if(length(race1 %&gt;% html_nodes(xpath = &quot;//img[@class = &#39;spBg ryou&#39;]&quot;)) == 1){
-            race_result$race_condition &lt;- &quot;良&quot;
-          } else if (length(race1 %&gt;% 
-                            html_nodes(xpath = &quot;//img[@class = &#39;spBg yayaomo&#39;]&quot;)) == 1){
-            race_result$race_condition &lt;- &quot;稍重&quot;
-          } else if (length(race1 %&gt;%
-                            html_nodes(xpath = &quot;//img[@class = &#39;spBg omo&#39;]&quot;)) == 1){
-            race_result$race_condition &lt;- &quot;重&quot;
-          } else if (length(race1 %&gt;% 
-                            html_nodes(xpath = &quot;//img[@class = &#39;spBg furyou&#39;]&quot;)) == 1){
-            race_result$race_condition &lt;- &quot;不良&quot;
-          } else race_result$race_condition &lt;- &quot;NA&quot;
+          <span style="color:#a6e22e">if</span>(<span style="color:#a6e22e">length</span>(race1 <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">html_nodes</span>(xpath <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;//img[@class = &#39;spBg ryou&#39;]&#34;</span>)) <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span>){
+            race_result<span style="color:#f92672">$</span>race_condition <span style="color:#f92672">&lt;-</span> <span style="color:#e6db74">&#34;良&#34;</span>
+          } else <span style="color:#a6e22e">if </span>(<span style="color:#a6e22e">length</span>(race1 <span style="color:#f92672">%&gt;%</span> 
+                            <span style="color:#a6e22e">html_nodes</span>(xpath <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;//img[@class = &#39;spBg yayaomo&#39;]&#34;</span>)) <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span>){
+            race_result<span style="color:#f92672">$</span>race_condition <span style="color:#f92672">&lt;-</span> <span style="color:#e6db74">&#34;稍重&#34;</span>
+          } else <span style="color:#a6e22e">if </span>(<span style="color:#a6e22e">length</span>(race1 <span style="color:#f92672">%&gt;%</span>
+                            <span style="color:#a6e22e">html_nodes</span>(xpath <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;//img[@class = &#39;spBg omo&#39;]&#34;</span>)) <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span>){
+            race_result<span style="color:#f92672">$</span>race_condition <span style="color:#f92672">&lt;-</span> <span style="color:#e6db74">&#34;重&#34;</span>
+          } else <span style="color:#a6e22e">if </span>(<span style="color:#a6e22e">length</span>(race1 <span style="color:#f92672">%&gt;%</span> 
+                            <span style="color:#a6e22e">html_nodes</span>(xpath <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;//img[@class = &#39;spBg furyou&#39;]&#34;</span>)) <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span>){
+            race_result<span style="color:#f92672">$</span>race_condition <span style="color:#f92672">&lt;-</span> <span style="color:#e6db74">&#34;不良&#34;</span>
+          } else race_result<span style="color:#f92672">$</span>race_condition <span style="color:#f92672">&lt;-</span> <span style="color:#e6db74">&#34;NA&#34;</span>
           
-          if (length(race1 %&gt;% html_nodes(xpath = &quot;//img[@class = &#39;spBg hare&#39;]&quot;)) == 1){
-            race_result$race_weather &lt;- &quot;晴れ&quot;
-          } else if (length(race1 %&gt;% html_nodes(xpath = &quot;//img[@class = &#39;spBg ame&#39;]&quot;)) == 1){
-            race_result$race_weather &lt;- &quot;曇り&quot;
-          } else if (length(race1 %&gt;% html_nodes(xpath = &quot;//img[@class = &#39;spBg kumori&#39;]&quot;)) == 1){
-            race_result$race_weather &lt;- &quot;雨&quot;
-          } else race_result$race_weather &lt;- &quot;その他&quot;</code></pre>
-<p>次は各馬の情報です。 実はさきほど取得したtableの馬名はリンクになっており、そのリンクをたどると<a href="https://keiba.yahoo.co.jp/directory/horse/2015105508/">各馬の情報</a>が取得できます（毛色や生年月日など）。</p>
-<pre class="r"><code>          horse_url &lt;- race1 %&gt;% html_nodes(&quot;a&quot;) %&gt;% html_attr(&quot;href&quot;) 
-          horse_url &lt;- horse_url[str_detect(horse_url, pattern=&quot;directory/horse&quot;)==1] # 馬情報のリンクだけ抽出する
+          <span style="color:#a6e22e">if </span>(<span style="color:#a6e22e">length</span>(race1 <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">html_nodes</span>(xpath <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;//img[@class = &#39;spBg hare&#39;]&#34;</span>)) <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span>){
+            race_result<span style="color:#f92672">$</span>race_weather <span style="color:#f92672">&lt;-</span> <span style="color:#e6db74">&#34;晴れ&#34;</span>
+          } else <span style="color:#a6e22e">if </span>(<span style="color:#a6e22e">length</span>(race1 <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">html_nodes</span>(xpath <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;//img[@class = &#39;spBg ame&#39;]&#34;</span>)) <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span>){
+            race_result<span style="color:#f92672">$</span>race_weather <span style="color:#f92672">&lt;-</span> <span style="color:#e6db74">&#34;曇り&#34;</span>
+          } else <span style="color:#a6e22e">if </span>(<span style="color:#a6e22e">length</span>(race1 <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">html_nodes</span>(xpath <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;//img[@class = &#39;spBg kumori&#39;]&#34;</span>)) <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span>){
+            race_result<span style="color:#f92672">$</span>race_weather <span style="color:#f92672">&lt;-</span> <span style="color:#e6db74">&#34;雨&#34;</span>
+          } else race_result<span style="color:#f92672">$</span>race_weather <span style="color:#f92672">&lt;-</span> <span style="color:#e6db74">&#34;その他&#34;</span>
+</code></pre></div><p>次は各馬の情報です。 実はさきほど取得したtableの馬名はリンクになっており、そのリンクをたどると<a href="https://keiba.yahoo.co.jp/directory/horse/2015105508/" target="_blank" rel="noopener">各馬の情報</a>が取得できます（毛色や生年月日など）。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">          horse_url <span style="color:#f92672">&lt;-</span> race1 <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">html_nodes</span>(<span style="color:#e6db74">&#34;a&#34;</span>) <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">html_attr</span>(<span style="color:#e6db74">&#34;href&#34;</span>) 
+          horse_url <span style="color:#f92672">&lt;-</span> horse_url<span style="color:#a6e22e">[str_detect</span>(horse_url, pattern<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;directory/horse&#34;</span>)<span style="color:#f92672">==</span><span style="color:#ae81ff">1</span>] <span style="color:#75715e"># 馬情報のリンクだけ抽出する</span>
           
-          for (l in 1:length(horse_url)){
-            tryCatch(
+          <span style="color:#a6e22e">for </span>(l in <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#a6e22e">length</span>(horse_url)){
+            <span style="color:#a6e22e">tryCatch</span>(
               {
-                horse1 &lt;-  read_html(str_c(&quot;https://keiba.yahoo.co.jp&quot;,horse_url[l]))
-                Sys.sleep(0.5)
-                horse_name &lt;- horse1 %&gt;% html_nodes(xpath = &quot;//div[@id = &#39;dirTitName&#39;]/h1[@class = &#39;fntB&#39;]&quot;) %&gt;% 
-                  html_text()
-                horse &lt;- horse1 %&gt;% html_nodes(xpath = &quot;//div[@id = &#39;dirTitName&#39;]/ul&quot;) %&gt;% 
-                  html_text()
-                race_result$colour[race_result$horse_name==horse_name] &lt;- as.character(str_extract_all(horse,&quot;毛色：.+&quot;)) 
-                race_result$owner[race_result$horse_name==horse_name] &lt;- as.character(str_extract_all(horse,&quot;馬主：.+&quot;))
-                race_result$farm[race_result$horse_name==horse_name] &lt;- as.character(str_extract_all(horse,&quot;生産者：.+&quot;))
-                race_result$locality[race_result$horse_name==horse_name] &lt;- as.character(str_extract_all(horse,&quot;産地：.+&quot;))
-                race_result$horse_birthday[race_result$horse_name==horse_name] &lt;- as.character(str_extract_all(horse,&quot;\\d+年\\d+月\\d+日&quot;))
-                race_result$father[race_result$horse_name==horse_name] &lt;- horse1 %&gt;% html_nodes(xpath = &quot;//td[@class = &#39;bloodM&#39;][@rowspan = &#39;4&#39;]&quot;) %&gt;% html_text()
-                race_result$mother[race_result$horse_name==horse_name] &lt;- horse1 %&gt;% html_nodes(xpath = &quot;//td[@class = &#39;bloodF&#39;][@rowspan = &#39;4&#39;]&quot;) %&gt;% html_text()
+                horse1 <span style="color:#f92672">&lt;-</span>  <span style="color:#a6e22e">read_html</span>(<span style="color:#a6e22e">str_c</span>(<span style="color:#e6db74">&#34;https://keiba.yahoo.co.jp&#34;</span>,horse_url[l]))
+                <span style="color:#a6e22e">Sys.sleep</span>(<span style="color:#ae81ff">0.5</span>)
+                horse_name <span style="color:#f92672">&lt;-</span> horse1 <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">html_nodes</span>(xpath <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;//div[@id = &#39;dirTitName&#39;]/h1[@class = &#39;fntB&#39;]&#34;</span>) <span style="color:#f92672">%&gt;%</span> 
+                  <span style="color:#a6e22e">html_text</span>()
+                horse <span style="color:#f92672">&lt;-</span> horse1 <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">html_nodes</span>(xpath <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;//div[@id = &#39;dirTitName&#39;]/ul&#34;</span>) <span style="color:#f92672">%&gt;%</span> 
+                  <span style="color:#a6e22e">html_text</span>()
+                race_result<span style="color:#f92672">$</span>colour[race_result<span style="color:#f92672">$</span>horse_name<span style="color:#f92672">==</span>horse_name] <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.character</span>(<span style="color:#a6e22e">str_extract_all</span>(horse,<span style="color:#e6db74">&#34;毛色：.+&#34;</span>)) 
+                race_result<span style="color:#f92672">$</span>owner[race_result<span style="color:#f92672">$</span>horse_name<span style="color:#f92672">==</span>horse_name] <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.character</span>(<span style="color:#a6e22e">str_extract_all</span>(horse,<span style="color:#e6db74">&#34;馬主：.+&#34;</span>))
+                race_result<span style="color:#f92672">$</span>farm[race_result<span style="color:#f92672">$</span>horse_name<span style="color:#f92672">==</span>horse_name] <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.character</span>(<span style="color:#a6e22e">str_extract_all</span>(horse,<span style="color:#e6db74">&#34;生産者：.+&#34;</span>))
+                race_result<span style="color:#f92672">$</span>locality[race_result<span style="color:#f92672">$</span>horse_name<span style="color:#f92672">==</span>horse_name] <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.character</span>(<span style="color:#a6e22e">str_extract_all</span>(horse,<span style="color:#e6db74">&#34;産地：.+&#34;</span>))
+                race_result<span style="color:#f92672">$</span>horse_birthday[race_result<span style="color:#f92672">$</span>horse_name<span style="color:#f92672">==</span>horse_name] <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.character</span>(<span style="color:#a6e22e">str_extract_all</span>(horse,<span style="color:#e6db74">&#34;\\d+年\\d+月\\d+日&#34;</span>))
+                race_result<span style="color:#f92672">$</span>father[race_result<span style="color:#f92672">$</span>horse_name<span style="color:#f92672">==</span>horse_name] <span style="color:#f92672">&lt;-</span> horse1 <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">html_nodes</span>(xpath <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;//td[@class = &#39;bloodM&#39;][@rowspan = &#39;4&#39;]&#34;</span>) <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">html_text</span>()
+                race_result<span style="color:#f92672">$</span>mother[race_result<span style="color:#f92672">$</span>horse_name<span style="color:#f92672">==</span>horse_name] <span style="color:#f92672">&lt;-</span> horse1 <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">html_nodes</span>(xpath <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;//td[@class = &#39;bloodF&#39;][@rowspan = &#39;4&#39;]&#34;</span>) <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">html_text</span>()
               }
-              , error = function(e){
-                race_result$colour[race_result$horse_name==horse_name] &lt;- NA 
-                race_result$owner[race_result$horse_name==horse_name] &lt;- NA
-                race_result$farm[race_result$horse_name==horse_name] &lt;- NA
-                race_result$locality[race_result$horse_name==horse_name] &lt;- NA
-                race_result$horse_birthday[race_result$horse_name==horse_name] &lt;- NA
-                race_result$father[race_result$horse_name==horse_name] &lt;- NA
-                race_result$mother[race_result$horse_name==horse_name] &lt;- NA
+              , error <span style="color:#f92672">=</span> <span style="color:#a6e22e">function</span>(e){
+                race_result<span style="color:#f92672">$</span>colour[race_result<span style="color:#f92672">$</span>horse_name<span style="color:#f92672">==</span>horse_name] <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">NA</span> 
+                race_result<span style="color:#f92672">$</span>owner[race_result<span style="color:#f92672">$</span>horse_name<span style="color:#f92672">==</span>horse_name] <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">NA</span>
+                race_result<span style="color:#f92672">$</span>farm[race_result<span style="color:#f92672">$</span>horse_name<span style="color:#f92672">==</span>horse_name] <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">NA</span>
+                race_result<span style="color:#f92672">$</span>locality[race_result<span style="color:#f92672">$</span>horse_name<span style="color:#f92672">==</span>horse_name] <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">NA</span>
+                race_result<span style="color:#f92672">$</span>horse_birthday[race_result<span style="color:#f92672">$</span>horse_name<span style="color:#f92672">==</span>horse_name] <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">NA</span>
+                race_result<span style="color:#f92672">$</span>father[race_result<span style="color:#f92672">$</span>horse_name<span style="color:#f92672">==</span>horse_name] <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">NA</span>
+                race_result<span style="color:#f92672">$</span>mother[race_result<span style="color:#f92672">$</span>horse_name<span style="color:#f92672">==</span>horse_name] <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">NA</span>
                 }
             )
           }
           
-          race_result$colour &lt;- str_replace_all(race_result$colour,&quot;毛色：&quot;,&quot;&quot;)
-          race_result$owner &lt;- str_replace_all(race_result$owner,&quot;馬主：&quot;,&quot;&quot;)
-          race_result$farm &lt;- str_replace_all(race_result$farm,&quot;生産者：&quot;,&quot;&quot;)
-          race_result$locality &lt;- str_replace_all(race_result$locality,&quot;産地：&quot;,&quot;&quot;)
-          #race_result$horse_birthday &lt;- str_replace_all(race_result$horse_birthday,&quot;年&quot;,&quot;/&quot;)
-          #race_result$horse_birthday &lt;- str_replace_all(race_result$horse_birthday,&quot;月&quot;,&quot;/&quot;)
-          #race_result$horse_birthday &lt;- as.Date(race_result$horse_birthday)
+          race_result<span style="color:#f92672">$</span>colour <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">str_replace_all</span>(race_result<span style="color:#f92672">$</span>colour,<span style="color:#e6db74">&#34;毛色：&#34;</span>,<span style="color:#e6db74">&#34;&#34;</span>)
+          race_result<span style="color:#f92672">$</span>owner <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">str_replace_all</span>(race_result<span style="color:#f92672">$</span>owner,<span style="color:#e6db74">&#34;馬主：&#34;</span>,<span style="color:#e6db74">&#34;&#34;</span>)
+          race_result<span style="color:#f92672">$</span>farm <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">str_replace_all</span>(race_result<span style="color:#f92672">$</span>farm,<span style="color:#e6db74">&#34;生産者：&#34;</span>,<span style="color:#e6db74">&#34;&#34;</span>)
+          race_result<span style="color:#f92672">$</span>locality <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">str_replace_all</span>(race_result<span style="color:#f92672">$</span>locality,<span style="color:#e6db74">&#34;産地：&#34;</span>,<span style="color:#e6db74">&#34;&#34;</span>)
+          <span style="color:#75715e">#race_result$horse_birthday &lt;- str_replace_all(race_result$horse_birthday,&#34;年&#34;,&#34;/&#34;)</span>
+          <span style="color:#75715e">#race_result$horse_birthday &lt;- str_replace_all(race_result$horse_birthday,&#34;月&#34;,&#34;/&#34;)</span>
+          <span style="color:#75715e">#race_result$horse_birthday &lt;- as.Date(race_result$horse_birthday)</span>
           
-          race_result &lt;- dplyr::arrange(race_result,horse_number) # 馬番順に並べる</code></pre>
-<p>次にそのレースまでに獲得した賞金額を落としに行きます。これはレース結果のページの<a href="https://keiba.yahoo.co.jp/race/denma/1802010601/">出馬表</a>と書かれたリンクをたどるとアクセスできます。ここに賞金があるのでそれを取得します。</p>
-<pre class="r"><code>          yosou_url &lt;- race1 %&gt;% html_nodes(&quot;a&quot;) %&gt;% html_attr(&quot;href&quot;) 
-          yosou_url &lt;- yosou_url[str_detect(yosou_url, pattern=&quot;denma&quot;)==1]
+          race_result <span style="color:#f92672">&lt;-</span> dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">arrange</span>(race_result,horse_number) <span style="color:#75715e"># 馬番順に並べる</span>
+</code></pre></div><p>次にそのレースまでに獲得した賞金額を落としに行きます。これはレース結果のページの<a href="https://keiba.yahoo.co.jp/race/denma/1802010601/" target="_blank" rel="noopener">出馬表</a>と書かれたリンクをたどるとアクセスできます。ここに賞金があるのでそれを取得します。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">          yosou_url <span style="color:#f92672">&lt;-</span> race1 <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">html_nodes</span>(<span style="color:#e6db74">&#34;a&#34;</span>) <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">html_attr</span>(<span style="color:#e6db74">&#34;href&#34;</span>) 
+          yosou_url <span style="color:#f92672">&lt;-</span> yosou_url<span style="color:#a6e22e">[str_detect</span>(yosou_url, pattern<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;denma&#34;</span>)<span style="color:#f92672">==</span><span style="color:#ae81ff">1</span>]
           
-          if (length(yosou_url)==1){
-          yosou1 &lt;-  read_html(str_c(&quot;https://keiba.yahoo.co.jp&quot;,yosou_url)) 
-          Sys.sleep(2)
-          yosou &lt;- yosou1 %&gt;% html_nodes(xpath = &quot;//td[@class = &#39;txC&#39;]&quot;) %&gt;% as.character()
-          prize &lt;- yosou[grepl(&quot;万&quot;,yosou)==TRUE] %&gt;% str_extract_all(&quot;\\d+万&quot;)
-          prize &lt;- t(do.call(&quot;data.frame&quot;,prize)) %&gt;% as.character()
-          race_result$prize &lt;- prize
-          race_result$prize &lt;- str_replace_all(race_result$prize,&quot;万&quot;,&quot;&quot;) %&gt;% as.numeric()
-          } else race_result$prize &lt;- NA</code></pre>
-<p>取得した各レース結果を格納するdatasetというデータフレームを作成し、データを格納していきます。1年ごとにそれをSQLite
+          <span style="color:#a6e22e">if </span>(<span style="color:#a6e22e">length</span>(yosou_url)<span style="color:#f92672">==</span><span style="color:#ae81ff">1</span>){
+          yosou1 <span style="color:#f92672">&lt;-</span>  <span style="color:#a6e22e">read_html</span>(<span style="color:#a6e22e">str_c</span>(<span style="color:#e6db74">&#34;https://keiba.yahoo.co.jp&#34;</span>,yosou_url)) 
+          <span style="color:#a6e22e">Sys.sleep</span>(<span style="color:#ae81ff">2</span>)
+          yosou <span style="color:#f92672">&lt;-</span> yosou1 <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">html_nodes</span>(xpath <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;//td[@class = &#39;txC&#39;]&#34;</span>) <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">as.character</span>()
+          prize <span style="color:#f92672">&lt;-</span> yosou<span style="color:#a6e22e">[grepl</span>(<span style="color:#e6db74">&#34;万&#34;</span>,yosou)<span style="color:#f92672">==</span><span style="color:#66d9ef">TRUE</span>] <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">str_extract_all</span>(<span style="color:#e6db74">&#34;\\d+万&#34;</span>)
+          prize <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">t</span>(<span style="color:#a6e22e">do.call</span>(<span style="color:#e6db74">&#34;data.frame&#34;</span>,prize)) <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">as.character</span>()
+          race_result<span style="color:#f92672">$</span>prize <span style="color:#f92672">&lt;-</span> prize
+          race_result<span style="color:#f92672">$</span>prize <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">str_replace_all</span>(race_result<span style="color:#f92672">$</span>prize,<span style="color:#e6db74">&#34;万&#34;</span>,<span style="color:#e6db74">&#34;&#34;</span>) <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">as.numeric</span>()
+          } else race_result<span style="color:#f92672">$</span>prize <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">NA</span>
+</code></pre></div><p>取得した各レース結果を格納するdatasetというデータフレームを作成し、データを格納していきます。1年ごとにそれをSQLite
 へ保存していきます。</p>
-<pre class="r"><code>          ## ファイル貯めるのかく
-          if (k == 1 &amp;&amp; i == 1 &amp;&amp; j == 1){
-            dataset &lt;- race_result
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">          <span style="color:#75715e">## ファイル貯めるのかく</span>
+          <span style="color:#a6e22e">if </span>(k <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">&amp;&amp;</span> i <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">&amp;&amp;</span> j <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span>){
+            dataset <span style="color:#f92672">&lt;-</span> race_result
           } else {
-            dataset &lt;- rbind(dataset,race_result)
-          } # if文2の終わり
+            dataset <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rbind</span>(dataset,race_result)
+          } <span style="color:#75715e"># if文2の終わり</span>
         }else
         {
-          print(&quot;保存できませんでした&quot;) 
-        }# if文1の終わり
-      } # iループの終わり
-    } # jループ終わり
-  } # kループの終わり
-  beep(3)
-  write.csv(dataset,&quot;race_result2.csv&quot;, row.names = FALSE)
+          <span style="color:#a6e22e">print</span>(<span style="color:#e6db74">&#34;保存できませんでした&#34;</span>) 
+        }<span style="color:#75715e"># if文1の終わり</span>
+      } <span style="color:#75715e"># iループの終わり</span>
+    } <span style="color:#75715e"># jループ終わり</span>
+  } <span style="color:#75715e"># kループの終わり</span>
+  <span style="color:#a6e22e">beep</span>(<span style="color:#ae81ff">3</span>)
+  <span style="color:#a6e22e">write.csv</span>(dataset,<span style="color:#e6db74">&#34;race_result2.csv&#34;</span>, row.names <span style="color:#f92672">=</span> <span style="color:#66d9ef">FALSE</span>)
   
-  if (year == 1994){
-    dbWriteTable(con, &quot;race_result&quot;, dataset)
+  <span style="color:#a6e22e">if </span>(year <span style="color:#f92672">==</span> <span style="color:#ae81ff">1994</span>){
+    <span style="color:#a6e22e">dbWriteTable</span>(con, <span style="color:#e6db74">&#34;race_result&#34;</span>, dataset)
   } else {
-    dbWriteTable(con, &quot;temp&quot;, dataset)
-    dbSendQuery(con, &quot;INSERT INTO race_result select * from temp&quot;)
-    dbSendQuery(con, &quot;DROP TABLE temp&quot;)
-  } # ifの終わり
-} # yearループの終わり
-end.time &lt;- Sys.time()
-print(str_c(&quot;処理時間は&quot;,end.time-start.time,&quot;です。&quot;))
-beep(5)
+    <span style="color:#a6e22e">dbWriteTable</span>(con, <span style="color:#e6db74">&#34;temp&#34;</span>, dataset)
+    <span style="color:#a6e22e">dbSendQuery</span>(con, <span style="color:#e6db74">&#34;INSERT INTO race_result select * from temp&#34;</span>)
+    <span style="color:#a6e22e">dbSendQuery</span>(con, <span style="color:#e6db74">&#34;DROP TABLE temp&#34;</span>)
+  } <span style="color:#75715e"># ifの終わり</span>
+} <span style="color:#75715e"># yearループの終わり</span>
+end.time <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">Sys.time</span>()
+<span style="color:#a6e22e">print</span>(<span style="color:#a6e22e">str_c</span>(<span style="color:#e6db74">&#34;処理時間は&#34;</span>,end.time<span style="color:#f92672">-</span>start.time,<span style="color:#e6db74">&#34;です。&#34;</span>))
+<span style="color:#a6e22e">beep</span>(<span style="color:#ae81ff">5</span>)
 
-options(warn = 1)
+<span style="color:#a6e22e">options</span>(warn <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>)
 
-dbDisconnect(con)</code></pre>
-<p>以上です。取れたデータは以下のようになりました。</p>
-<pre class="r"><code>head(race_result)</code></pre>
-<pre><code>##   order frame_number horse_number   trainer passing_rank last_3F   time
+<span style="color:#a6e22e">dbDisconnect</span>(con)
+</code></pre></div><p>以上です。取れたデータは以下のようになりました。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">head</span>(race_result)
+</code></pre></div><pre><code>##   order frame_number horse_number   trainer passing_rank last_3F   time
 ## 1    10            1            1   田中 剛        09-09    39.0 1.14.3
 ## 2    16            1            2 天間 昭一        11-11    40.3 1.15.7
 ## 3    15            2            3 田中 清隆        14-14    39.4 1.15.1
@@ -1094,12 +1129,11 @@ dbDisconnect(con)</code></pre>
 ## 3     デライトシーン     0
 ## 4     ドリームシップ     0
 ## 5   フリーダムガール   180
-## 6     ステイアライヴ   455</code></pre>
-</div>
+## 6     ステイアライヴ   455
+</code></pre>
+          </div>
 
-    </div>
-
-    
+          
 
 
 
@@ -1376,8 +1410,12 @@ dbDisconnect(con)</code></pre>
 
 
 
+        </div>
+      </article>
+    </main>
+
   </div>
-</article>
+</div>
 
       
 
@@ -1491,11 +1529,9 @@ dbDisconnect(con)</code></pre>
       
     
     
-      
     
     
-    
-    <script src="../../js/wowchemy.min.2a3f95be2bc4762ba1847fb5d7a28317.js"></script>
+    <script src="../../js/wowchemy.min.4c2bca31150ce93c5a5e43b8a50f22fd.js"></script>
 
     
 
@@ -1505,6 +1541,16 @@ dbDisconnect(con)</code></pre>
   <div class="container">
     <footer class="site-footer">
   
+
+  
+   
+  <script>
+  $(document).ready(function () {
+    window.initializeCodeFolding("show" === "show");
+  });
+  </script>
+  <script src="../../js/codefolding.js"></script>
+
 
   <p class="powered-by">
     

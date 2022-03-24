@@ -17,124 +17,95 @@
       <link>/post/post12/</link>
       <pubDate>Tue, 16 Jul 2019 00:00:00 +0000</pubDate>
       <guid>/post/post12/</guid>
-      <description>
-&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
-
-&lt;div id=&#34;TOC&#34;&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;#earth-engineを使うための事前準備&#34;&gt;1. Earth Engineを使うための事前準備&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#python-apiを用いた衛星画像データの取得&#34;&gt;2. Python APIを用いた衛星画像データの取得&lt;/a&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;#image&#34;&gt;Image…&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#imagecollection&#34;&gt;ImageCollection…&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#featurecollection&#34;&gt;FeatureCollection…&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/div&gt;
-
-&lt;p&gt;皆さんおはこんばんにちわ。前回、GPLVMモデルを用いたGDP予測モデルを構築しました。ただ、ナウキャスティングというからにはオルタナティブデータを用いた解析を行いたいところではあります。ふと、以下の記事を見つけました。&lt;/p&gt;
-&lt;p&gt;&lt;a href=&#34;https://jp.reuters.com/article/gdp-u-tokyo-idJPKBN15M0NH&#34;&gt;焦点：ナウキャストのＧＤＰ推計、世界初の衛星画像利用　利用拡大も&lt;/a&gt;&lt;/p&gt;
+      <description>&lt;p&gt;皆さんおはこんばんにちわ。前回、GPLVMモデルを用いたGDP予測モデルを構築しました。ただ、ナウキャスティングというからにはオルタナティブデータを用いた解析を行いたいところではあります。ふと、以下の記事を見つけました。&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://jp.reuters.com/article/gdp-u-tokyo-idJPKBN15M0NH&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;焦点：ナウキャストのＧＤＰ推計、世界初の衛星画像利用　利用拡大も&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;こちらは東京大学の渡辺努先生が人工衛星画像を用いてGDP予測モデルを開発したというものです。記事には&lt;/p&gt;
 &lt;blockquote&gt;
 &lt;p&gt;米国の海洋大気庁が運営する気象衛星「スオミＮＰＰ」が日本上空を通過する毎日午前１時３０分時点の画像を購入し、縦、横７２０メートル四方のマス目ごとの明るさを計測する。同じ明るさでも、農地、商業用地、工業用地など土地の用途によって経済活動の大きさが異なるため、国土地理院の土地利用調査を参照。土地の用途と、明るさが示す経済活動の相関を弾き出し、この結果を考慮した上で、明るさから経済活動の大きさを試算する。
 （中略）衛星画像のように誰もが入手可能な公表データであれば、政府、民間の区別なく分析が可能であるため、渡辺氏はこれを「統計の民主化」と呼び、世界的な潮流になると予想している。&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;と書かれており、衛星写真を用いた分析に興味を惹かれました。 衛星写真って誰でも利用可能か？というところですが、Googleが&lt;code&gt;Earth Engine&lt;/code&gt;というサービスを提供していることがわかりました。&lt;/p&gt;
-&lt;p&gt;&lt;img src=&#34;earthengine3.jpg&#34; /&gt;&lt;/p&gt;
-&lt;p&gt;&lt;a href=&#34;https://earthengine.google.com/&#34; class=&#34;uri&#34;&gt;https://earthengine.google.com/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;earthengine3.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://earthengine.google.com/&#34;&gt;https://earthengine.google.com/&lt;/a&gt;&lt;/p&gt;
 &lt;blockquote&gt;
 &lt;p&gt;（拙訳）Google Earth Engineは、数ペタバイトの衛星画像群と地理空間データセットを惑星規模の解析機能と組み合わせ、科学者、研究者、開発者が変化を検出し、傾向を射影し、地球の変容を定量化することを可能にします。&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;研究・教育・非営利目的ならば、なんと&lt;strong&gt;無料&lt;/strong&gt;で衛星写真データを解析することができます。具体的に何ができるのかは以下の動画を見てください。&lt;/p&gt;
-&lt;iframe src=&#34;//www.youtube.com/embed/gKGOeTFHnKY&#34; width=&#34;100%&#34; height=&#34;500&#34; seamless frameborder=&#34;0&#34; allowfullscreen&gt;
-&lt;/iframe&gt;
+&lt;iframe src=&#34;//www.youtube.com/embed/gKGOeTFHnKY&#34; width=&#34;100%&#34; height=&#34;500&#34; seamless frameborder=&#34;0&#34; allowfullscreen&gt;&lt;/iframe&gt;
 &lt;p&gt;今回はそんなEath Engineのpython APIを用いて衛星画像データを取得し、解析していきたいと思います。&lt;/p&gt;
-&lt;div id=&#34;earth-engineを使うための事前準備&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;1. Earth Engineを使うための事前準備&lt;/h2&gt;
+&lt;h2 id=&#34;1-earth-engineを使うための事前準備&#34;&gt;1. Earth Engineを使うための事前準備&lt;/h2&gt;
 &lt;p&gt;Earth Engineを使用するためには、Google Accountを使って申請を行う必要があります。先ほどの画像の右上の「Sign Up」からできます。申請を行って、Gmailに以下のようなメールが来るととりあえずEarth Engineは使用できるようになります。&lt;/p&gt;
-&lt;p&gt;&lt;img src=&#34;earthengine4.jpg&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;earthengine4.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
 &lt;p&gt;とりあえずというのはWEB上の&lt;code&gt;Earth Engine&lt;/code&gt; コードエディタは使用できるということです。コードエディタというのは以下のようなもので、ブラウザ上でデータを取得したり、解析をしたり、解析結果をMAPに投影したりすることができる便利ツールです。&lt;code&gt;Earth Engine&lt;/code&gt;の本体はむしろこいつで、APIは副次的なものと考えています。&lt;/p&gt;
-&lt;p&gt;&lt;img src=&#34;earthengine5.jpg&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;earthengine5.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
 &lt;p&gt;真ん中のコードエディタにコードを打っていきますが、言語はjavascriptです(APIは&lt;code&gt;python&lt;/code&gt;と&lt;code&gt;javascript&lt;/code&gt;両方あるんですけどね)。解析結果をMAPに投影したり、reference（左）を参照したり、Consoleに吐き出したデータを確認することができるのでかなり便利です。が、データを落とした後で高度な解析を行いたい場合はpythonを使ったほうが慣れているので今回はAPIを使用しています。
 話が脱線しました。さて、&lt;code&gt;Earth Engine&lt;/code&gt;の承認を得たら、&lt;code&gt;pip&lt;/code&gt;で&lt;code&gt;earthengine-api&lt;/code&gt;をインストールしておきます。そして、コマンドプロンプト上で、&lt;code&gt;earthengine authenticate&lt;/code&gt;と打ちます。そうすると、勝手にブラウザが立ち上がり、以下のように&lt;code&gt;python api&lt;/code&gt;のauthenticationを行う画面がでますので「次へ」を押下します。&lt;/p&gt;
-&lt;p&gt;&lt;img src=&#34;earthengine1.jpg&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;earthengine1.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
 &lt;p&gt;次に以下のような画面にいきますので、そのまま承認します。これでauthenticationの完成です。&lt;code&gt;python&lt;/code&gt;からAPIが使えます。&lt;/p&gt;
-&lt;p&gt;&lt;img src=&#34;earthengine2.jpg&#34; /&gt;&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;python-apiを用いた衛星画像データの取得&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;2. Python APIを用いた衛星画像データの取得&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;earthengine2.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-python-apiを用いた衛星画像データの取得&#34;&gt;2. Python APIを用いた衛星画像データの取得&lt;/h2&gt;
 &lt;p&gt;&lt;code&gt;Python&lt;/code&gt; APIを使用する準備ができました。ここからは衛星画像データを取得していきます。以下にあるように&lt;code&gt;Earth Engine&lt;/code&gt;にはたくさんのデータセットが存在します。&lt;/p&gt;
-&lt;p&gt;&lt;a href=&#34;https://developers.google.com/earth-engine/datasets/&#34; class=&#34;uri&#34;&gt;https://developers.google.com/earth-engine/datasets/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://developers.google.com/earth-engine/datasets/&#34;&gt;https://developers.google.com/earth-engine/datasets/&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;今回は&lt;code&gt;VIIRS Stray Light Corrected Nighttime Day/Night Band Composites Version 1&lt;/code&gt;というデータセットを使用します。このデータセットは世界中の夜間光の光量を月次単位で平均し、提供するものです。サンプル期間は2014-01~現在です。&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;Earth Engine&lt;/code&gt;にはいくつかの固有なデータ型が存在します。覚えておくべきものは以下の3つです。&lt;/p&gt;
-&lt;div id=&#34;image&#34; class=&#34;section level3&#34;&gt;
-&lt;h3&gt;Image…&lt;/h3&gt;
+&lt;h3 id=&#34;image&#34;&gt;Image…&lt;/h3&gt;
 &lt;p&gt;ある１時点における&lt;code&gt;raste&lt;/code&gt;rデータです。&lt;code&gt;image&lt;/code&gt;オブジェクトはいくつかの&lt;code&gt;band&lt;/code&gt;で構成されています。この&lt;code&gt;band&lt;/code&gt;はデータによって異なりますが、おおよそのデータは&lt;code&gt;band&lt;/code&gt;それぞれがRGB値を表していたりします。&lt;code&gt;Earth Engine&lt;/code&gt;を使用する上で最も基本的なデータです。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;imagecollection&#34; class=&#34;section level3&#34;&gt;
-&lt;h3&gt;ImageCollection…&lt;/h3&gt;
+&lt;h3 id=&#34;imagecollection&#34;&gt;ImageCollection…&lt;/h3&gt;
 &lt;p&gt;&lt;code&gt;Image&lt;/code&gt;オブジェクトを時系列に並べたオブジェクトです。今回は時系列解析をするのでこのデータを使用します。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;featurecollection&#34; class=&#34;section level3&#34;&gt;
-&lt;h3&gt;FeatureCollection…&lt;/h3&gt;
+&lt;h3 id=&#34;featurecollection&#34;&gt;FeatureCollection…&lt;/h3&gt;
 &lt;p&gt;&lt;code&gt;GeoJSON Feature&lt;/code&gt;です。地理情報を表す&lt;code&gt;Geometry&lt;/code&gt;オブジェクトやそのデータのプロパティ（国名等）が格納されています。今回は日本の位置情報を取得する際に使用しています。&lt;/p&gt;
 &lt;p&gt;ではコーディングしていきます。まず、日本の地理情報の&lt;code&gt;FeatureCollection&lt;/code&gt;オブジェクトを取得します。地理情報は&lt;code&gt;Fusion Tables&lt;/code&gt;に格納されていますので、IDで引っ張りCountryがJapanのものを抽出します。&lt;code&gt;ee.FeatureCollection()&lt;/code&gt;の引数にIDを入力すれば簡単に取得できます。&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import ee
-from dateutil.parser import parse
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; ee
+&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; dateutil.parser &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; parse
 
-ee.Initialize()
+ee&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Initialize()
 
-# get Japan geometory as FeatureCollection from fusion table
-japan = ee.FeatureCollection(&amp;#39;ft:1tdSwUL7MVpOauSgRzqVTOwdfy17KDbw-1d9omPw&amp;#39;).filter(ee.Filter.eq(&amp;#39;Country&amp;#39;, &amp;#39;Japan&amp;#39;))&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;次に夜間光の衛星画像を取得してみます。こちらも&lt;code&gt;ee.ImageCollection()&lt;/code&gt;にデータセットのIDを渡すと取得できます。なお、ここでは&lt;code&gt;band&lt;/code&gt;を月次の平均光量である&lt;code&gt;avg_rad&lt;/code&gt;に抽出しています。&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;# get night-light data from earth engine from 2014-01-01 to 2019-01-01
-dataset = ee.ImageCollection(&amp;#39;NOAA/VIIRS/DNB/MONTHLY_V1/VCMSLCFG&amp;#39;).filter(ee.Filter.date(&amp;#39;2014-01-01&amp;#39;,&amp;#39;2019-01-01&amp;#39;)).select(&amp;#39;avg_rad&amp;#39;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;取得した衛星画像を日本周辺に切り出し、画像ファイルとして出力してみましょう。画像ファイルの出力は&lt;code&gt;image&lt;/code&gt;オブジェクトで可能です（そうでないと画像がたくさん出てきてしまいますからね。。。）。今取得したのは&lt;code&gt;ImageCollection&lt;/code&gt;オブジェクトですから&lt;code&gt;Image&lt;/code&gt;オブジェクトへ圧縮してやる必要があります（上が&lt;code&gt;ImageCollection&lt;/code&gt;オブジェクト、下が圧縮された&lt;code&gt;Image&lt;/code&gt;オブジェクト）。&lt;/p&gt;
-&lt;p&gt;&lt;img src=&#34;https://developers.google.com/earth-engine/images/Reduce_ImageCollection.png&#34; /&gt;&lt;/p&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# get Japan geometory as FeatureCollection from fusion table&lt;/span&gt;
+japan &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ee&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;FeatureCollection(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;ft:1tdSwUL7MVpOauSgRzqVTOwdfy17KDbw-1d9omPw&amp;#39;&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;filter(ee&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Filter&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;eq(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Country&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Japan&amp;#39;&lt;/span&gt;))
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;次に夜間光の衛星画像を取得してみます。こちらも&lt;code&gt;ee.ImageCollection()&lt;/code&gt;にデータセットのIDを渡すと取得できます。なお、ここでは&lt;code&gt;band&lt;/code&gt;を月次の平均光量である&lt;code&gt;avg_rad&lt;/code&gt;に抽出しています。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# get night-light data from earth engine from 2014-01-01 to 2019-01-01&lt;/span&gt;
+dataset &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ee&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;ImageCollection(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;NOAA/VIIRS/DNB/MONTHLY_V1/VCMSLCFG&amp;#39;&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;filter(ee&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Filter&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;date(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;2014-01-01&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;2019-01-01&amp;#39;&lt;/span&gt;))&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;select(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;avg_rad&amp;#39;&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;取得した衛星画像を日本周辺に切り出し、画像ファイルとして出力してみましょう。画像ファイルの出力は&lt;code&gt;image&lt;/code&gt;オブジェクトで可能です（そうでないと画像がたくさん出てきてしまいますからね。。。）。今取得したのは&lt;code&gt;ImageCollection&lt;/code&gt;オブジェクトですから&lt;code&gt;Image&lt;/code&gt;オブジェクトへ圧縮してやる必要があります（上が&lt;code&gt;ImageCollection&lt;/code&gt;オブジェクト、下が圧縮された&lt;code&gt;Image&lt;/code&gt;オブジェクト）。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://developers.google.com/earth-engine/images/Reduce_ImageCollection.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
 &lt;p&gt;ここでは、&lt;code&gt;ImageCollection&lt;/code&gt;オブジェクトの中にあるの&lt;code&gt;Image&lt;/code&gt;オブジェクトの平均値をとってサンプル期間の平均的な画像を出力してみたいと思います。&lt;code&gt;ImageCollection.mean()&lt;/code&gt;でできます。また、&lt;code&gt;.visualize({min:0.5})&lt;/code&gt;でピクセル値が0.5以上でフィルターをかけています。こうしないと雲と思われるものやゴミ？みたいなものがついてしまいます。次に、ここまで加工した画像データをダウンロードするurlを&lt;code&gt;.getDownloadURL&lt;/code&gt;メソッドで取得しています。その際、&lt;code&gt;region&lt;/code&gt;で切り出す範囲をポリゴン値で指定し、&lt;code&gt;scale&lt;/code&gt;でデータの解像度を指定しています（&lt;code&gt;scale&lt;/code&gt;が小さすぎると処理が重すぎるらしくエラーが出て処理できません）。&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;dataset.mean().visualize(min=0.5).getDownloadURL(dict(name=&amp;#39;thumbnail&amp;#39;,region=[[[120.3345348936478, 46.853488838010854],[119.8071911436478, 24.598157870729043],[148.6353161436478, 24.75788466523463],[149.3384411436478, 46.61252884462868]]],scale=5000))&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;取得した画像が以下です。&lt;/p&gt;
-&lt;p&gt;&lt;img src=&#34;earthengine6.jpg&#34; /&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;dataset&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;mean()&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;visualize(min&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0.5&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;getDownloadURL(dict(name&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;thumbnail&amp;#39;&lt;/span&gt;,region&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;[[[&lt;span style=&#34;color:#ae81ff&#34;&gt;120.3345348936478&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;46.853488838010854&lt;/span&gt;],[&lt;span style=&#34;color:#ae81ff&#34;&gt;119.8071911436478&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;24.598157870729043&lt;/span&gt;],[&lt;span style=&#34;color:#ae81ff&#34;&gt;148.6353161436478&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;24.75788466523463&lt;/span&gt;],[&lt;span style=&#34;color:#ae81ff&#34;&gt;149.3384411436478&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;46.61252884462868&lt;/span&gt;]]],scale&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;5000&lt;/span&gt;))
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;取得した画像が以下です。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;earthengine6.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
 &lt;p&gt;やはり、東京を中心とした関東圏、大阪を中心とした関西圏、愛知、福岡、北海道（札幌周辺）の光量が多く、経済活動が活発であることがわかります。また、陸内よりも沿岸部で光量が多い地域があることがわかります。これは経済活動とは直接関係しない現象のような気もします。今回は分析対象外ですが、北緯38度を境に北側が真っ暗になるのが印象的です。これは言うまでもなく北朝鮮と韓国の境界線ですから、両国の経済活動水準の差が視覚的にコントラストされているのでしょう。今回使用したデータセットは2014年からのものですが、他のデータセットでは1990年代からのデータが取得できるものもあります（その代わり最近のデータは取れませんが）。それらを用いて朝鮮半島や中国の経済発展を観察するのも面白いかもしれません。&lt;/p&gt;
 &lt;p&gt;さて、画像は取得できましたがこのままでは解析ができません。ここからは夜間光をピクセル値にマッピングしたデータを取得し、数値的な解析を試みます。ただ、先ほどとはデータ取得の手続きが少し変わります。というのも、今度は日本各地で各ピクセル単位ごとにさまざまな値をとる夜間光を&lt;strong&gt;集約&lt;/strong&gt;し、1つの代用値にしなければならないからです。ピクセルごとの数値を手に入れたところで解析するには手に余ってしまいますからね。イメージは以下のような感じです（Earth Engineサイトから引用）。&lt;/p&gt;
-&lt;p&gt;&lt;img src=&#34;https://developers.google.com/earth-engine/images/Reduce_region_diagram.png&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://developers.google.com/earth-engine/images/Reduce_region_diagram.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
 &lt;p&gt;先ほど取得した夜間光の&lt;code&gt;ImageCollection&lt;/code&gt;のある1時点の衛星画像が左です。その中に日本という&lt;code&gt;Region&lt;/code&gt;が存在し、それを&lt;code&gt;ee.Reducer&lt;/code&gt;によって定量的に集約（aggregate）します。Earth Engine APIには&lt;code&gt;.reduceRegions()&lt;/code&gt;メソッドが用意されていますのでそれを用いればいいです。引数は、&lt;code&gt;reducer&lt;/code&gt;=集約方法（ここでは合計値）、&lt;code&gt;collection&lt;/code&gt;=集約をかける&lt;code&gt;region&lt;/code&gt;（&lt;code&gt;FeatureCollection&lt;/code&gt;オブジェクト）、&lt;code&gt;scale&lt;/code&gt;=解像度、です。以下では、&lt;code&gt;ImageCollection&lt;/code&gt;（dataset）の中にある1番目の&lt;code&gt;Image&lt;/code&gt;オブジェクトに&lt;code&gt;.reduceRegions()&lt;/code&gt;メソッドをかけています。&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;# initialize output box
-time0 = dataset.first().get(&amp;#39;system:time_start&amp;#39;);
-first = dataset.first().reduceRegions(reducer=ee.Reducer.sum(),collection=japan,scale=1000).set(&amp;#39;time_start&amp;#39;, time0)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;我々は時系列データが欲しいわけですから、&lt;code&gt;ImageCollection&lt;/code&gt;内にある&lt;code&gt;Image&lt;/code&gt;それぞれに対して同じ処理を行う必要があります。Earth Engineには&lt;code&gt;iterate&lt;/code&gt;という便利な関数があり、引数に処理したい関数を渡せばfor文いらずでこの処理を行ってくれます。ここでは&lt;code&gt;Image&lt;/code&gt;オブジェクトに&lt;code&gt;reduceRegions&lt;/code&gt;メソッドを処理した&lt;code&gt;Computed Object&lt;/code&gt;を以前に処理したものとmergeする&lt;code&gt;myfunc&lt;/code&gt;という関数を定義し、それを&lt;code&gt;iterate&lt;/code&gt;に渡しています。最後に、先ほどと同じく生成したデータを&lt;code&gt;getDownloadURL&lt;/code&gt;メソッドを用いてurlを取得しています（ファイル形式はcsv）。&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;# define reduceRegions function for iteration
-def myfunc(image,first):
-  added = image.reduceRegions(reducer=ee.Reducer.sum(),collection=japan,scale=1000).set(&amp;#39;time_start&amp;#39;, image.get(&amp;#39;system:time_start&amp;#39;))
-  return ee.FeatureCollection(first).merge(added)
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# initialize output box&lt;/span&gt;
+time0 &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; dataset&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;first()&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;get(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;system:time_start&amp;#39;&lt;/span&gt;);
+first &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; dataset&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;first()&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;reduceRegions(reducer&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;ee&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Reducer&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;sum(),collection&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;japan,scale&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1000&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;set(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;time_start&amp;#39;&lt;/span&gt;, time0)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;我々は時系列データが欲しいわけですから、&lt;code&gt;ImageCollection&lt;/code&gt;内にある&lt;code&gt;Image&lt;/code&gt;それぞれに対して同じ処理を行う必要があります。Earth Engineには&lt;code&gt;iterate&lt;/code&gt;という便利な関数があり、引数に処理したい関数を渡せばfor文いらずでこの処理を行ってくれます。ここでは&lt;code&gt;Image&lt;/code&gt;オブジェクトに&lt;code&gt;reduceRegions&lt;/code&gt;メソッドを処理した&lt;code&gt;Computed Object&lt;/code&gt;を以前に処理したものとmergeする&lt;code&gt;myfunc&lt;/code&gt;という関数を定義し、それを&lt;code&gt;iterate&lt;/code&gt;に渡しています。最後に、先ほどと同じく生成したデータを&lt;code&gt;getDownloadURL&lt;/code&gt;メソッドを用いてurlを取得しています（ファイル形式はcsv）。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# define reduceRegions function for iteration&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;myfunc&lt;/span&gt;(image,first):
+  added &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; image&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;reduceRegions(reducer&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;ee&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Reducer&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;sum(),collection&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;japan,scale&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1000&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;set(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;time_start&amp;#39;&lt;/span&gt;, image&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;get(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;system:time_start&amp;#39;&lt;/span&gt;))
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; ee&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;FeatureCollection(first)&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;merge(added)
 
-# implement iteration
-nightjp = dataset.filter(ee.Filter.date(&amp;#39;2014-02-01&amp;#39;,&amp;#39;2019-01-01&amp;#39;)).iterate(myfunc,first)
+&lt;span style=&#34;color:#75715e&#34;&gt;# implement iteration&lt;/span&gt;
+nightjp &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; dataset&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;filter(ee&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Filter&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;date(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;2014-02-01&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;2019-01-01&amp;#39;&lt;/span&gt;))&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;iterate(myfunc,first)
 
-# get url to download
-ee.FeatureCollection(nightjp).getDownloadURL(filetype=&amp;#39;csv&amp;#39;,selectors=ee.FeatureCollection(nightjp).first().propertyNames().getInfo())&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;CSVファイルのurlが取得できました。この時系列をプロットして今日は終わりにしたいと思います。
+&lt;span style=&#34;color:#75715e&#34;&gt;# get url to download&lt;/span&gt;
+ee&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;FeatureCollection(nightjp)&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;getDownloadURL(filetype&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;csv&amp;#39;&lt;/span&gt;,selectors&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;ee&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;FeatureCollection(nightjp)&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;first()&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;propertyNames()&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;getInfo())
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;CSVファイルのurlが取得できました。この時系列をプロットして今日は終わりにしたいと思います。
 データを読み込むとこんな感じです。&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import pandas as pd
-import matplotlib.pyplot as plt
-import os
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; pandas &lt;span style=&#34;color:#f92672&#34;&gt;as&lt;/span&gt; pd
+&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; matplotlib.pyplot &lt;span style=&#34;color:#f92672&#34;&gt;as&lt;/span&gt; plt
 
-os.environ[&amp;#39;QT_QPA_PLATFORM_PLUGIN_PATH&amp;#39;] = &amp;#39;C:/Users/aashi/Anaconda3/Library/plugins/platforms&amp;#39;
+plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;style&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;use(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;ggplot&amp;#39;&lt;/span&gt;)
 
-plt.style.use(&amp;#39;ggplot&amp;#39;)
-
-nightjp_csv.head()&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;##   system:index          sum Country  Unnamed: 3  Unnamed: 4
+nightjp_csv&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;head()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;##   system:index          sum Country  Unnamed: 3  Unnamed: 4
 ## 0     2014/1/1  881512.4572   Japan         NaN         NaN
 ## 1     2014/2/1  827345.3551   Japan         NaN         NaN
 ## 2     2014/3/1  729110.4619   Japan         NaN         NaN
 ## 3     2014/4/1  612665.8866   Japan         NaN         NaN
-## 4     2014/5/1  661434.5027   Japan         NaN         NaN&lt;/code&gt;&lt;/pre&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.plot(pd.to_datetime(nightjp_csv[&amp;#39;system:index&amp;#39;]),nightjp_csv[&amp;#39;sum&amp;#39;])&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-8-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+## 4     2014/5/1  661434.5027   Japan         NaN         NaN
+&lt;/code&gt;&lt;/pre&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;plot(pd&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;to_datetime(nightjp_csv[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;system:index&amp;#39;&lt;/span&gt;]),nightjp_csv[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;sum&amp;#39;&lt;/span&gt;])
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../post/post12/index_files/figure-html/unnamed-chunk-8-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
 &lt;p&gt;かなり季節性がありますね。冬場は日照時間が少ないこともあって光量が増えているみたいです。それにしても急激な増え方ですが。次回はこのデータと景況感の代理変数となる経済統計を元に統計解析を行いたいと思います。おたのしみに。&lt;/p&gt;
-&lt;/div&gt;
-&lt;/div&gt;
 </description>
     </item>
     

@@ -17,165 +17,139 @@
       <link>/en/post/post20/</link>
       <pubDate>Wed, 12 Aug 2020 00:00:00 +0000</pubDate>
       <guid>/en/post/post20/</guid>
-      <description>
-&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+      <description>&lt;p&gt;Hi. In the last post, I built a model to predict the order of a racehorse using CNN based on its body image. The results were not so good, and we needed to refine our analysis, especially when we analyzed the factors using &lt;code&gt;shap&lt;/code&gt; values, we found that the horses responded more to the stables in the background than to their bodies. This time, I would like to use Pytorch&amp;rsquo;s Pre-trained model to cut out the background from the horse photo and re-analyze the photo with only the horse body.&lt;/p&gt;
+&lt;h2 id=&#34;1-downloading-the-pre-trained-model&#34;&gt;1. Downloading the pre-trained model&lt;/h2&gt;
+&lt;p&gt;The code is adapted from &lt;a href=&#34;https://pytorch.org/hub/pytorch_vision_deeplabv3_resnet101/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;here&lt;/a&gt;. First, install the packages.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; numpy &lt;span style=&#34;color:#f92672&#34;&gt;as&lt;/span&gt; np
+&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; cv2
+&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; matplotlib.pyplot &lt;span style=&#34;color:#f92672&#34;&gt;as&lt;/span&gt; plt
+&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; torch
+&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; torchvision
+&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; torchvision &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; transforms
+&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; glob
+&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; PIL &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; Image
+&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; PIL
+&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; os
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Next, install the pre-trained model.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#Install a pre-trained model&lt;/span&gt;
+device &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; torch&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;device(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;cuda:0&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; torch&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;cuda&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;is_available() &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;cpu&amp;#34;&lt;/span&gt;)
+model &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; torchvision&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;models&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;segmentation&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;deeplabv3_resnet101(pretrained&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;True)
+model &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; model&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;to(device)
+model&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;eval()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Apparently, all pre-trained models assume a mini-batch of 3-channel RGB images of shape &lt;code&gt;\((N, 3, H, W)\)&lt;/code&gt; normalized in the same way. Here, &lt;code&gt;\(N\)&lt;/code&gt; is assumed to be the number of images and &lt;code&gt;\(H\)&lt;/code&gt; and &lt;code&gt;\(W\)&lt;/code&gt; are assumed to be at least 224 pixels. The images need to be scaled to a range of [0, 1] and then normalized using the mean value = [0.485, 0.456, 0.406] and the standard value = [0.229, 0.224, 0.225]. So, we define a function that does the preprocessing.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#preprocessing&lt;/span&gt;
+preprocess &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; transforms&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Compose([
+    transforms&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;ToTensor(),
+    transforms&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Normalize(mean&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;0.485&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;0.456&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;0.406&lt;/span&gt;], std&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;0.229&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;0.224&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;0.225&lt;/span&gt;]),
+])
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;2-executing-the-background-deletion-process&#34;&gt;2. Executing the Background Deletion Process&lt;/h2&gt;
+&lt;p&gt;Now, let&amp;rsquo;s load the images collected by the &lt;code&gt;selenium&lt;/code&gt; code in the previous post and remove the background one by one.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#Specify a folder&lt;/span&gt;
+folders &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; os&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;listdir(&lt;span style=&#34;color:#e6db74&#34;&gt;r&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;C:\Users\aashi\umanalytics\photo\image&amp;#34;&lt;/span&gt;)
 
-&lt;div id=&#34;TOC&#34;&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;#downloading-the-pre-trained-model&#34;&gt;1. Downloading the pre-trained model&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#executing-the-background-deletion-process&#34;&gt;2. Executing the Background Deletion Process&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#analysis-using-cnn&#34;&gt;3. Analysis using CNN&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#interpretation-of-results-using-shap-values&#34;&gt;4. Interpretation of results using Shap values&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#summary&#34;&gt;5.Summary&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/div&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;#Reads an image from each folder and converts it to a numpy array of RGB values using the Image function&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; i, folder &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; enumerate(folders):
+  files &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; glob&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;glob(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;C:/Users/aashi/umanalytics/photo/image/&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; folder &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/*.jpg&amp;#34;&lt;/span&gt;)
+  index &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; i
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; k, file &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; enumerate(files):
+    img_array &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; np&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;fromfile(file, dtype&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;np&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;uint8)
+    img &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; cv2&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;imdecode(img_array, cv2&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;IMREAD_COLOR)
+    h,w,_ &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; img&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;shape
+    input_tensor &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; preprocess(img)
+    input_batch &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; input_tensor&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;unsqueeze(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;to(device)
 
-&lt;p&gt;Hi. In the last post, I built a model to predict the order of a racehorse using CNN based on its body image. The results were not so good, and we needed to refine our analysis, especially when we analyzed the factors using &lt;code&gt;shap&lt;/code&gt; values, we found that the horses responded more to the stables in the background than to their bodies. This time, I would like to re-analyze the background from the horse’s body photo using &lt;code&gt;Pytorch&lt;/code&gt; pre-trained model, and analyze the photo with only the horse’s body.&lt;/p&gt;
-&lt;div id=&#34;downloading-the-pre-trained-model&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;1. Downloading the pre-trained model&lt;/h2&gt;
-&lt;p&gt;The code is adapted from &lt;a href=&#34;https://pytorch.org/hub/pytorch_vision_deeplabv3_resnet101/&#34;&gt;here&lt;/a&gt;. First, install the packages.&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import numpy as np
-import cv2
-import matplotlib.pyplot as plt
-import torch
-import torchvision
-from torchvision import transforms
-import glob
-from PIL import Image
-import PIL
-import os&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Next, install the pre-trained model.&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;#Install a pre-trained model
-device = torch.device(&amp;quot;cuda:0&amp;quot; if torch.cuda.is_available() else &amp;quot;cpu&amp;quot;)
-model = torchvision.models.segmentation.deeplabv3_resnet101(pretrained=True)
-model = model.to(device)
-model.eval()&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Apparently, all pre-trained models assume a mini-batch of 3-channel RGB images of shape &lt;span class=&#34;math inline&#34;&gt;\((N, 3, H, W)\)&lt;/span&gt; normalized in the same way. Here, &lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt; is assumed to be the number of images and &lt;span class=&#34;math inline&#34;&gt;\(H\)&lt;/span&gt; and &lt;span class=&#34;math inline&#34;&gt;\(W\)&lt;/span&gt; are assumed to be at least 224 pixels. The images need to be scaled to a range of [0, 1] and then normalized using the mean value = [0.485, 0.456, 0.406] and the standard value = [0.229, 0.224, 0.225]. So, we define a function that does the preprocessing.&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;#preprocessing
-preprocess = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-])&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-&lt;div id=&#34;executing-the-background-deletion-process&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;2. Executing the Background Deletion Process&lt;/h2&gt;
-&lt;p&gt;Now, let’s load the images collected by the &lt;code&gt;selenium&lt;/code&gt; code in the previous post and remove the background one by one.&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;#Specify a folder
-folders = os.listdir(r&amp;quot;C:\Users\aashi\umanalytics\photo\image&amp;quot;)
-
-#Reads an image from each folder and converts it to a numpy array of RGB values using the Image function
-for i, folder in enumerate(folders):
-  files = glob.glob(&amp;quot;C:/Users/aashi/umanalytics/photo/image/&amp;quot; + folder + &amp;quot;/*.jpg&amp;quot;)
-  index = i
-  for k, file in enumerate(files):
-    img_array = np.fromfile(file, dtype=np.uint8)
-    img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
-    h,w,_ = img.shape
-    input_tensor = preprocess(img)
-    input_batch = input_tensor.unsqueeze(0).to(device)
-
-    with torch.no_grad():
-      output = model(input_batch)[&amp;#39;out&amp;#39;][0]
-    output_predictions = output.argmax(0)
-    mask_array = output_predictions.byte().cpu().numpy()
-    Image.fromarray(mask_array*255).save(r&amp;#39;C:\Users\aashi\umanalytics\photo\image\mask.jpg&amp;#39;)
-    mask = cv2.imread(r&amp;#39;C:\Users\aashi\umanalytics\photo\image\mask.jpg&amp;#39;)
-    bg = np.full_like(img,255)
-    img = cv2.multiply(img.astype(float), mask.astype(float)/255)
-    bg = cv2.multiply(bg.astype(float), 1.0 - mask.astype(float)/255)
-    outImage = cv2.add(img, bg)
-    Image.fromarray(outImage.astype(np.uint8)).convert(&amp;#39;L&amp;#39;).save(file)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;The following &lt;code&gt;mask&lt;/code&gt; image is output using the pre-trained model, and the &lt;code&gt;numpy&lt;/code&gt; array and the &lt;code&gt;mask&lt;/code&gt; image are merged to create a background delete image. The output looks like the following.&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.gray()
-plt.figure(figsize=(20,20))
-plt.subplot(1,3,1)
-plt.imshow(img)
-plt.subplot(1,3,2)
-plt.imshow(mask)
-plt.subplot(1,3,3)
-plt.imshow(outImage)
-plt.show()&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-8-1.png&#34; width=&#34;1920&#34; /&gt;&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.close()&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Here’s what the folders look like. Some of them are handled well and some of them show the trainer. I know there is a way to identify the objects and &lt;code&gt;mask&lt;/code&gt; only the horses, but this model doesn’t allow for object labeling, so we’ll continue with that.&lt;/p&gt;
-&lt;div class=&#34;figure&#34;&gt;
-&lt;img src=&#34;maskhorse.PNG&#34; alt=&#34;&#34; /&gt;
-&lt;p class=&#34;caption&#34;&gt;folder&lt;/p&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;div id=&#34;analysis-using-cnn&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;3. Analysis using CNN&lt;/h2&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;with&lt;/span&gt; torch&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;no_grad():
+      output &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; model(input_batch)[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;out&amp;#39;&lt;/span&gt;][&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;]
+    output_predictions &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; output&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;argmax(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;)
+    mask_array &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; output_predictions&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;byte()&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;cpu()&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;numpy()
+    Image&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;fromarray(mask_array&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;255&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;save(&lt;span style=&#34;color:#e6db74&#34;&gt;r&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;C:\Users\aashi\umanalytics\photo\image\mask.jpg&amp;#39;&lt;/span&gt;)
+    mask &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; cv2&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;imread(&lt;span style=&#34;color:#e6db74&#34;&gt;r&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;C:\Users\aashi\umanalytics\photo\image\mask.jpg&amp;#39;&lt;/span&gt;)
+    bg &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; np&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;full_like(img,&lt;span style=&#34;color:#ae81ff&#34;&gt;255&lt;/span&gt;)
+    img &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; cv2&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;multiply(img&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;astype(float), mask&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;astype(float)&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;255&lt;/span&gt;)
+    bg &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; cv2&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;multiply(bg&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;astype(float), &lt;span style=&#34;color:#ae81ff&#34;&gt;1.0&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; mask&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;astype(float)&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;255&lt;/span&gt;)
+    outImage &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; cv2&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;add(img, bg)
+    Image&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;fromarray(outImage&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;astype(np&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;uint8))&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;convert(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;L&amp;#39;&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;save(file)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The following &lt;code&gt;mask&lt;/code&gt; image is output using the pre-trained model, and the &lt;code&gt;numpy&lt;/code&gt; array and the &lt;code&gt;mask&lt;/code&gt; image are merged to create a background delete image. The output looks like the following.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;gray()
+plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;figure(figsize&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;))
+plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;subplot(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)
+plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;imshow(img)
+plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;subplot(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;)
+plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;imshow(mask)
+plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;subplot(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;)
+plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;imshow(outImage)
+plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;show()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../../en/post/post20/index_files/figure-html/unnamed-chunk-8-1.png&#34; width=&#34;1920&#34; /&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;close()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Here&amp;rsquo;s what the folders look like. Some of them are handled well and some of them show the trainer. I know there is a way to identify the objects and &lt;code&gt;mask&lt;/code&gt; only the horses, but this model doesn&amp;rsquo;t allow for object labeling, so we&amp;rsquo;ll continue with that.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;maskhorse.PNG&#34; alt=&#34;folder&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;3-analysis-using-cnn&#34;&gt;3. Analysis using CNN&lt;/h2&gt;
 &lt;p&gt;Here is the same content as in the previous article. I will only post the results.&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;## Test accuracy: 0.0&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## &amp;lt;sklearn.metrics._plot.confusion_matrix.ConfusionMatrixDisplay object at 0x0000000030DEAD08&amp;gt;&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-10-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;## Test accuracy: 0.0
+&lt;/code&gt;&lt;/pre&gt;&lt;pre&gt;&lt;code&gt;## &amp;lt;sklearn.metrics._plot.confusion_matrix.ConfusionMatrixDisplay object at 0x000000002F791188&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;img src=&#34;../../../en/post/post20/index_files/figure-html/unnamed-chunk-10-3.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
 &lt;p&gt;The results have been disastrous.
-I have not been able to identify it at all. Aren’t there any characteristics in the horse photos that would predict the rankings? Or is it that there is no variation in the photos of the horses in G1 races and it is impossible to identify them? Either way, it seems a bit harsh.&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;interpretation-of-results-using-shap-values&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;4. Interpretation of results using Shap values&lt;/h2&gt;
-&lt;p&gt;As before, let’s see how it fails using the &lt;code&gt;shap&lt;/code&gt; value. We will use this image as an example.&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.imshow(X_test[4])
-plt.show()&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-11-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.close()&lt;/code&gt;&lt;/pre&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import shap
-background = X_resampled[np.random.choice(X_resampled.shape[0],100,replace=False)]
+I have not been able to identify it at all. Aren&amp;rsquo;t there any characteristics in the horse photos that would predict the rankings? Or is it that there is no variation in the photos of the horses in G1 races and it is impossible to identify them? Either way, it seems a bit harsh.&lt;/p&gt;
+&lt;h2 id=&#34;4-interpretation-of-results-using-shap-values&#34;&gt;4. Interpretation of results using Shap values&lt;/h2&gt;
+&lt;p&gt;As before, let&amp;rsquo;s see how it fails using the &lt;code&gt;shap&lt;/code&gt; value. We will use this image as an example.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;imshow(X_test[&lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;])
+plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;show()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../../en/post/post20/index_files/figure-html/unnamed-chunk-11-5.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;close()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; shap
+background &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; X_resampled[np&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;random&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;choice(X_resampled&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;shape[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;],&lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt;,replace&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;False)]
 
-e = shap.GradientExplainer(model,background)
+e &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shap&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;GradientExplainer(model,background)
 
-shap_values = e.shap_values(X_test[[4]])
-shap.image_plot(shap_values[1],X_test[[4]])&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-12-1.png&#34; width=&#34;576&#34; /&gt;&lt;/p&gt;
+shap_values &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; e&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;shap_values(X_test[[&lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;]])
+shap&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;image_plot(shap_values[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;],X_test[[&lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;]])
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../../en/post/post20/index_files/figure-html/unnamed-chunk-12-7.png&#34; width=&#34;576&#34; /&gt;&lt;/p&gt;
 &lt;p&gt;They seem to be evaluating from the paws to the face. Surprisingly, they do not seem to be evaluating the buttocks.
 I would like to try to visualize which aspect of the image is captured in each layer.&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;from keras import models
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; keras &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; models
 
-layer_outputs = [layer.output for layer in model.layers[:8]]
-layer_names = []
-for layer in model.layers[:8]:
-    layer_names.append(layer.name)
-images_per_row = 16
+layer_outputs &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; [layer&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;output &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; layer &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; model&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;layers[:&lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt;]]
+layer_names &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; []
+&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; layer &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; model&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;layers[:&lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt;]:
+    layer_names&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;append(layer&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;name)
+images_per_row &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;16&lt;/span&gt;
 
-activation_model = models.Model(inputs=model.input, outputs=layer_outputs)
-activations = activation_model.predict(X_train[[0]])
+activation_model &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; models&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Model(inputs&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;model&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;input, outputs&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;layer_outputs)
+activations &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; activation_model&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;predict(X_train[[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;]])
 
-for layer_name, layer_activation in zip(layer_names, activations):
-    n_features = layer_activation.shape[-1]
+&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; layer_name, layer_activation &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; zip(layer_names, activations):
+    n_features &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; layer_activation&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;shape[&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;]
 
-    size = layer_activation.shape[1]
+    size &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; layer_activation&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;shape[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;]
 
-    n_cols = n_features // images_per_row
-    display_grid = np.zeros((size * n_cols, images_per_row * size))
+    n_cols &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; n_features &lt;span style=&#34;color:#f92672&#34;&gt;//&lt;/span&gt; images_per_row
+    display_grid &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; np&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;zeros((size &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; n_cols, images_per_row &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; size))
 
-    for col in range(n_cols):
-        for row in range(images_per_row):
-            channel_image = layer_activation[0,
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; col &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; range(n_cols):
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; row &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; range(images_per_row):
+            channel_image &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; layer_activation[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,
                                              :, :,
-                                             col * images_per_row + row]
-            channel_image -= channel_image.mean()
-            channel_image /= channel_image.std()
-            channel_image *= 64
-            channel_image += 128
-            channel_image = np.clip(channel_image, 0, 255).astype(&amp;#39;uint8&amp;#39;)
-            display_grid[col * size : (col + 1) * size,
-                         row * size : (row + 1) * size] = channel_image
+                                             col &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; images_per_row &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; row]
+            channel_image &lt;span style=&#34;color:#f92672&#34;&gt;-=&lt;/span&gt; channel_image&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;mean()
+            channel_image &lt;span style=&#34;color:#f92672&#34;&gt;/=&lt;/span&gt; channel_image&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;std()
+            channel_image &lt;span style=&#34;color:#f92672&#34;&gt;*=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;64&lt;/span&gt;
+            channel_image &lt;span style=&#34;color:#f92672&#34;&gt;+=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;128&lt;/span&gt;
+            channel_image &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; np&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;clip(channel_image, &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;255&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;astype(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;uint8&amp;#39;&lt;/span&gt;)
+            display_grid[col &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; size : (col &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; size,
+                         row &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; size : (row &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; size] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; channel_image
 
-    scale = 1. / size
-    plt.figure(figsize=(scale * display_grid.shape[1],
-                        scale * display_grid.shape[0]))
-    plt.title(layer_name)
-    plt.grid(False)
-    plt.imshow(display_grid, cmap=&amp;#39;viridis&amp;#39;)
-    plt.show()
-    plt.close()&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-13-1.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-13-2.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-13-3.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-13-4.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-13-5.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-13-6.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-13-7.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-13-8.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-13-9.png&#34; width=&#34;576&#34; /&gt;&lt;/p&gt;
-&lt;p&gt;I still can’t understand this one.&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;summary&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;5.Summary&lt;/h2&gt;
-&lt;p&gt;I removed the stable background and rerun it, but the results were the same - it was a good experience using PyTorch and removing the background, but not with any results, so I’ll stop with the horse photos for now.&lt;/p&gt;
-&lt;/div&gt;
+    scale &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1.&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt; size
+    plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;figure(figsize&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;(scale &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; display_grid&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;shape[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;],
+                        scale &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; display_grid&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;shape[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;]))
+    plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;title(layer_name)
+    plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;grid(False)
+    plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;imshow(display_grid, cmap&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;viridis&amp;#39;&lt;/span&gt;)
+    plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;show()
+    plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;close()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../../en/post/post20/index_files/figure-html/unnamed-chunk-13-9.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;../../../en/post/post20/index_files/figure-html/unnamed-chunk-13-10.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;../../../en/post/post20/index_files/figure-html/unnamed-chunk-13-11.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;../../../en/post/post20/index_files/figure-html/unnamed-chunk-13-12.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;../../../en/post/post20/index_files/figure-html/unnamed-chunk-13-13.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;../../../en/post/post20/index_files/figure-html/unnamed-chunk-13-14.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;../../../en/post/post20/index_files/figure-html/unnamed-chunk-13-15.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;../../../en/post/post20/index_files/figure-html/unnamed-chunk-13-16.png&#34; width=&#34;1536&#34; /&gt;&lt;img src=&#34;../../../en/post/post20/index_files/figure-html/unnamed-chunk-13-17.png&#34; width=&#34;576&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;I still can&amp;rsquo;t understand this one.&lt;/p&gt;
+&lt;h2 id=&#34;5summary&#34;&gt;5.Summary&lt;/h2&gt;
+&lt;p&gt;I removed the stable background and rerun it, but the results were the same - it was a good experience using PyTorch and removing the background, but not with any results, so I&amp;rsquo;ll stop with the horse photos for now.&lt;/p&gt;
 </description>
     </item>
     

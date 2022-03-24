@@ -17,284 +17,274 @@
       <link>/en/post/post11/</link>
       <pubDate>Sat, 13 Jul 2019 00:00:00 +0000</pubDate>
       <guid>/en/post/post11/</guid>
-      <description>
-&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
-
-&lt;div id=&#34;TOC&#34;&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;#script&#34;&gt;1. Script&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/div&gt;
-
-&lt;p&gt;For the second time, I’d like to drop past race results in rvest again. If you haven’t seen the past articles, I suggest you look at that one first.&lt;/p&gt;
+      <description>&lt;p&gt;For the second time, I&amp;rsquo;d like to drop past race results in rvest again. If you haven&amp;rsquo;t seen the past articles, I suggest you look at that one first.&lt;/p&gt;
 &lt;p&gt;The reason I decided to take back the data this time is because I wanted to add more items to the explanatory variables when analyzing horse racing. So this time I created the program as an addition to the previous R script. The 14 new data items I added are as follows&lt;/p&gt;
-&lt;ol style=&#34;list-style-type: decimal&#34;&gt;
+&lt;ol&gt;
 &lt;li&gt;grass or dirt.&lt;/li&gt;
 &lt;li&gt;right-handed or left-handed.&lt;/li&gt;
 &lt;li&gt;race conditions (good or slight)&lt;/li&gt;
 &lt;li&gt;weather&lt;/li&gt;
-&lt;li&gt;the color of the horse’s coat (chestnut, deer hair, etc.)&lt;/li&gt;
+&lt;li&gt;the color of the horse&amp;rsquo;s coat (chestnut, deer hair, etc.)&lt;/li&gt;
 &lt;li&gt;horse owner&lt;/li&gt;
 &lt;li&gt;producers&lt;/li&gt;
 &lt;li&gt;place of origin&lt;/li&gt;
 &lt;li&gt;date of birth&lt;/li&gt;
-&lt;li&gt;the father’s horse&lt;/li&gt;
-&lt;li&gt;the mother’s horse&lt;/li&gt;
+&lt;li&gt;the father&amp;rsquo;s horse&lt;/li&gt;
+&lt;li&gt;the mother&amp;rsquo;s horse&lt;/li&gt;
 &lt;li&gt;winnings up to that race (available from 2003)&lt;/li&gt;
-&lt;li&gt;jockey’s weight.&lt;/li&gt;
+&lt;li&gt;jockey&amp;rsquo;s weight.&lt;/li&gt;
 &lt;li&gt;increase or decrease in the weight of the jockey.&lt;/li&gt;
 &lt;/ol&gt;
-&lt;p&gt;Actually, I haven’t finished collecting data yet, and the R program has been running for a long time (I’ve been running it for about 3 days). However, the program itself is running tightly and I’ll try to introduce the script. Maybe I’ll write the results in a postscript.&lt;/p&gt;
-&lt;div id=&#34;script&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;1. Script&lt;/h2&gt;
+&lt;p&gt;Actually, I haven&amp;rsquo;t finished collecting data yet, and the R program has been running for a long time (I&amp;rsquo;ve been running it for about 3 days). However, the program itself is running tightly and I&amp;rsquo;ll try to introduce the script. Maybe I&amp;rsquo;ll write the results in a postscript.&lt;/p&gt;
+&lt;h2 id=&#34;1-script&#34;&gt;1. Script&lt;/h2&gt;
 &lt;p&gt;The first step is to call the package.&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Web scraping of horse racing data by rvest
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Web scraping of horse racing data by rvest&lt;/span&gt;
 
-#install.packages(&amp;quot;rvest&amp;quot;)
-#if (!require(&amp;quot;pacman&amp;quot;)) install.packages(&amp;quot;pacman&amp;quot;)
-#install.packages(&amp;quot;beepr&amp;quot;)
-#install.packages(&amp;quot;RSQLite&amp;quot;)
-pacman::p_load(qdapRegex)
-library(rvest)
-library(stringr)
-library(dplyr)
-library(beepr)
-library(RSQLite)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;I’m pretty much warnning out, so I’m banning it and connecting to SQLite&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# warning prohibition
-options(warn=-1)
+&lt;span style=&#34;color:#75715e&#34;&gt;#install.packages(&amp;#34;rvest&amp;#34;)&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;#if (!require(&amp;#34;pacman&amp;#34;)) install.packages(&amp;#34;pacman&amp;#34;)&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;#install.packages(&amp;#34;beepr&amp;#34;)&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;#install.packages(&amp;#34;RSQLite&amp;#34;)&lt;/span&gt;
+pacman&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;p_load&lt;/span&gt;(qdapRegex)
+&lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(rvest)
+&lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(stringr)
+&lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(dplyr)
+&lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(beepr)
+&lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(RSQLite)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;I&amp;rsquo;m pretty much warnning out, so I&amp;rsquo;m banning it and connecting to SQLite&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# warning prohibition&lt;/span&gt;
+&lt;span style=&#34;color:#a6e22e&#34;&gt;options&lt;/span&gt;(warn&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;-1&lt;/span&gt;)
 
-# Connecting to SQLite
-con = dbConnect(SQLite(), &amp;quot;horse_data.db&amp;quot;, synchronous=&amp;quot;off&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Since the odds are only available since 1994, the data is taken from 1994 up to the most recent date. yahoo horse racing has races organized by month, so the data is taken using that as a variable. Basically, you go to &lt;a href=&#34;https://keiba.yahoo.co.jp/schedule/list/2018/?month=7&#34;&gt;List of race results for the relevant year and month&lt;/a&gt; and then go to &lt;a href=&#34;https://keiba.yahoo.co.jp/race/list/18020106/&#34;&gt;Timetable for each day of the race&lt;/a&gt; for each day on that page. Since there are roughly a dozen or so races at each individual track, get the link and go to the &lt;a href=&#34;https://keiba.yahoo.co.jp/race/result/1802010601/&#34;&gt;race results page&lt;/a&gt; for each race. Then you will get the race results. The first step is to get a link to the timetable for each individual racecourse for each day.&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;for(year in 1994:2019){
-  start.time &amp;lt;- Sys.time() # calculate time
-  # Retrieve the race results page on Yahoo!
-  for (k in 1:12){ # K is for the month.
+&lt;span style=&#34;color:#75715e&#34;&gt;# Connecting to SQLite&lt;/span&gt;
+con &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;dbConnect&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;SQLite&lt;/span&gt;(), &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;horse_data.db&amp;#34;&lt;/span&gt;, synchronous&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;off&amp;#34;&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Since the odds are only available since 1994, the data is taken from 1994 up to the most recent date. yahoo horse racing has races organized by month, so the data is taken using that as a variable. Basically, you go to &lt;a href=&#34;https://keiba.yahoo.co.jp/schedule/list/2018/?month=7&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;List of race results for the relevant year and month&lt;/a&gt; and then go to &lt;a href=&#34;https://keiba.yahoo.co.jp/race/list/18020106/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Timetable for each day of the race&lt;/a&gt; for each day on that page. Since there are roughly a dozen or so races at each individual track, get the link and go to the &lt;a href=&#34;https://keiba.yahoo.co.jp/race/result/1802010601/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;race results page&lt;/a&gt; for each race. Then you will get the race results. The first step is to get a link to the timetable for each individual racecourse for each day.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;for&lt;/span&gt;(year in &lt;span style=&#34;color:#ae81ff&#34;&gt;1994&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;2019&lt;/span&gt;){
+  start.time &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Sys.time&lt;/span&gt;() &lt;span style=&#34;color:#75715e&#34;&gt;# calculate time&lt;/span&gt;
+  &lt;span style=&#34;color:#75715e&#34;&gt;# Retrieve the race results page on Yahoo!&lt;/span&gt;
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;for &lt;/span&gt;(k in &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;12&lt;/span&gt;){ &lt;span style=&#34;color:#75715e&#34;&gt;# K is for the month.&lt;/span&gt;
     
-    tryCatch(
+    &lt;span style=&#34;color:#a6e22e&#34;&gt;tryCatch&lt;/span&gt;(
       {
-        keiba.yahoo &amp;lt;- read_html(str_c(&amp;quot;https://keiba.yahoo.co.jp/schedule/list/&amp;quot;, year,&amp;quot;/?month=&amp;quot;,k)) # Access to the list of race results for a given year and month
-        Sys.sleep(2)
-        race_lists &amp;lt;- keiba.yahoo %&amp;gt;%
-          html_nodes(&amp;quot;a&amp;quot;) %&amp;gt;% 
-          html_attr(&amp;quot;href&amp;quot;) # Retrieve all URLs
+        keiba.yahoo &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;read_html&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;https://keiba.yahoo.co.jp/schedule/list/&amp;#34;&lt;/span&gt;, year,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/?month=&amp;#34;&lt;/span&gt;,k)) &lt;span style=&#34;color:#75715e&#34;&gt;# Access to the list of race results for a given year and month&lt;/span&gt;
+        &lt;span style=&#34;color:#a6e22e&#34;&gt;Sys.sleep&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;)
+        race_lists &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; keiba.yahoo &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt;
+          &lt;span style=&#34;color:#a6e22e&#34;&gt;html_nodes&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;a&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+          &lt;span style=&#34;color:#a6e22e&#34;&gt;html_attr&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;href&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#75715e&#34;&gt;# Retrieve all URLs&lt;/span&gt;
         
-        # Get the list of races for each day by track
-        race_lists &amp;lt;- race_lists[str_detect(race_lists, pattern=&amp;quot;race/list/\\d+/&amp;quot;)==1] # Extracts URLs containing &amp;quot;results&amp;quot;.
+        &lt;span style=&#34;color:#75715e&#34;&gt;# Get the list of races for each day by track&lt;/span&gt;
+        race_lists &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; race_lists&lt;span style=&#34;color:#a6e22e&#34;&gt;[str_detect&lt;/span&gt;(race_lists, pattern&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;race/list/\\d+/&amp;#34;&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] &lt;span style=&#34;color:#75715e&#34;&gt;# Extracts URLs containing &amp;#34;results&amp;#34;.&lt;/span&gt;
       }
-      , error = function(e){signal &amp;lt;- 1}
-    )&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Here, we only extract the links we get that contain the word result in the url. In essence, it is a link to the race tables of each racecourse. From here, we use the links to the race tables of the tracks to access that page and get the links to the pages that contain the results of all 12 races.&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;    for (j in 1:length(race_lists)){ # where j is the link to the race table for the year in question.
+      , error &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(e){signal &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;}
+    )
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Here, we only extract the links we get that contain the word result in the url. In essence, it is a link to the race tables of each racecourse. From here, we use the links to the race tables of the tracks to access that page and get the links to the pages that contain the results of all 12 races.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;for &lt;/span&gt;(j in &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;length&lt;/span&gt;(race_lists)){ &lt;span style=&#34;color:#75715e&#34;&gt;# where j is the link to the race table for the year in question.&lt;/span&gt;
       
-      tryCatch(
+      &lt;span style=&#34;color:#a6e22e&#34;&gt;tryCatch&lt;/span&gt;(
         {
-          race_list &amp;lt;- read_html(str_c(&amp;quot;https://keiba.yahoo.co.jp&amp;quot;,race_lists[j]))
-          race_url &amp;lt;- race_list %&amp;gt;% html_nodes(&amp;quot;a&amp;quot;) %&amp;gt;% html_attr(&amp;quot;href&amp;quot;) # 全urlを取得
+          race_list &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;read_html&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;https://keiba.yahoo.co.jp&amp;#34;&lt;/span&gt;,race_lists[j]))
+          race_url &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; race_list &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;html_nodes&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;a&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;html_attr&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;href&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#75715e&#34;&gt;# 全urlを取得&lt;/span&gt;
           
-          # Get the URL of the race results
-          race_url &amp;lt;- race_url[str_detect(race_url, pattern=&amp;quot;result&amp;quot;)==1] # Extracts URLs containing &amp;quot;results&amp;quot;.
+          &lt;span style=&#34;color:#75715e&#34;&gt;# Get the URL of the race results&lt;/span&gt;
+          race_url &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; race_url&lt;span style=&#34;color:#a6e22e&#34;&gt;[str_detect&lt;/span&gt;(race_url, pattern&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;result&amp;#34;&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] &lt;span style=&#34;color:#75715e&#34;&gt;# Extracts URLs containing &amp;#34;results&amp;#34;.&lt;/span&gt;
         }
-        , error = function(e){signal &amp;lt;- 1}
-      )&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Now that we have the links to the results of each race, it’s time to get the race results and the formatting part of the code. It’s quite a long and complicated code. The race results are stored in the following table attributes, so we’ll simply pull them first.&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;      for (i in 1:length(race_url)){ # where i is the race that was held at the racecourse in question
+        , error &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(e){signal &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;}
+      )
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Now that we have the links to the results of each race, it&amp;rsquo;s time to get the race results and the formatting part of the code. It&amp;rsquo;s quite a long and complicated code. The race results are stored in the following table attributes, so we&amp;rsquo;ll simply pull them first.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;      &lt;span style=&#34;color:#a6e22e&#34;&gt;for &lt;/span&gt;(i in &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;length&lt;/span&gt;(race_url)){ &lt;span style=&#34;color:#75715e&#34;&gt;# where i is the race that was held at the racecourse in question&lt;/span&gt;
         
-        print(str_c(year, &amp;quot;/&amp;quot;, k, &amp;quot;/&amp;quot;,j, &amp;quot; group &amp;quot;, i,&amp;quot; order&amp;quot;))
+        &lt;span style=&#34;color:#a6e22e&#34;&gt;print&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_c&lt;/span&gt;(year, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/&amp;#34;&lt;/span&gt;, k, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/&amp;#34;&lt;/span&gt;,j, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34; group &amp;#34;&lt;/span&gt;, i,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34; order&amp;#34;&lt;/span&gt;))
         
-        tryCatch(
+        &lt;span style=&#34;color:#a6e22e&#34;&gt;tryCatch&lt;/span&gt;(
           {
-            race1 &amp;lt;-  read_html(str_c(&amp;quot;https://keiba.yahoo.co.jp&amp;quot;,race_url[i])) # Get the URL of the race results
-            signal &amp;lt;- 0
-            Sys.sleep(2)
+            race1 &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;read_html&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;https://keiba.yahoo.co.jp&amp;#34;&lt;/span&gt;,race_url[i])) &lt;span style=&#34;color:#75715e&#34;&gt;# Get the URL of the race results&lt;/span&gt;
+            signal &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
+            &lt;span style=&#34;color:#a6e22e&#34;&gt;Sys.sleep&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;)
           }
-          , error = function(e){signal &amp;lt;- 1}
+          , error &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(e){signal &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;}
         )
         
-        # If the race is aborted or there are no errors in the process so far, run the process
-        if (identical(race1 %&amp;gt;%
-                      html_nodes(xpath = &amp;quot;//div[@class = &amp;#39;resultAtt mgnBL fntSS&amp;#39;]&amp;quot;) %&amp;gt;%
-                      html_text(),character(0)) == TRUE &amp;amp;&amp;amp; signal == 0){
+        &lt;span style=&#34;color:#75715e&#34;&gt;# If the race is aborted or there are no errors in the process so far, run the process&lt;/span&gt;
+        &lt;span style=&#34;color:#a6e22e&#34;&gt;if &lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;identical&lt;/span&gt;(race1 &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt;
+                      &lt;span style=&#34;color:#a6e22e&#34;&gt;html_nodes&lt;/span&gt;(xpath &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;//div[@class = &amp;#39;resultAtt mgnBL fntSS&amp;#39;]&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt;
+                      &lt;span style=&#34;color:#a6e22e&#34;&gt;html_text&lt;/span&gt;(),&lt;span style=&#34;color:#a6e22e&#34;&gt;character&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;)) &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TRUE&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; signal &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;){
           
-          # Scraping the race results
-          race_result &amp;lt;- race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//table[@id = &amp;#39;raceScore&amp;#39;]&amp;quot;) %&amp;gt;%
-            html_table()
-          race_result &amp;lt;- do.call(&amp;quot;data.frame&amp;quot;,race_result) # Change the list to a data frame.
+          &lt;span style=&#34;color:#75715e&#34;&gt;# Scraping the race results&lt;/span&gt;
+          race_result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; race1 &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;html_nodes&lt;/span&gt;(xpath &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;//table[@id = &amp;#39;raceScore&amp;#39;]&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt;
+            &lt;span style=&#34;color:#a6e22e&#34;&gt;html_table&lt;/span&gt;()
+          race_result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;do.call&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;data.frame&amp;#34;&lt;/span&gt;,race_result) &lt;span style=&#34;color:#75715e&#34;&gt;# Change the list to a data frame.&lt;/span&gt;
           
-          colnames(race_result) &amp;lt;- c(&amp;quot;order&amp;quot;,&amp;quot;frame_number&amp;quot;,&amp;quot;horse_number&amp;quot;,&amp;quot;horse_name/age&amp;quot;,&amp;quot;time/margin&amp;quot;,&amp;quot;passing_rank/last_3F&amp;quot;,&amp;quot;jockey/weight&amp;quot;,&amp;quot;popularity/odds&amp;quot;,&amp;quot;trainer&amp;quot;) #　column renaming&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;If you just get a table, it will not be useful for analysis because of the following or multiple information in one cell. So, we need to mold the data into a form.&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;          # Passing order and time for 3 furlongs uphill
-          race_result &amp;lt;- dplyr::mutate(race_result,passing_rank=as.character(str_extract_all(race_result$`passing_rank/last_3F`,&amp;quot;(\\d{2}-\\d{2}-\\d{2}-\\d{2})|(\\d{2}-\\d{2}-\\d{2})|(\\d{2}-\\d{2})&amp;quot;)))
-          race_result &amp;lt;- dplyr::mutate(race_result,last_3F=as.character(str_extract_all(race_result$`passing_rank/last_3F`,&amp;quot;\\d{2}\\.\\d&amp;quot;)))
-          race_result &amp;lt;- race_result[-6]
+          &lt;span style=&#34;color:#a6e22e&#34;&gt;colnames&lt;/span&gt;(race_result) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;order&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;frame_number&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;horse_number&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;horse_name/age&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;time/margin&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;passing_rank/last_3F&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;jockey/weight&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;popularity/odds&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;trainer&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#75715e&#34;&gt;#　column renaming&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;If you just get a table, it will not be useful for analysis because of the following \n or multiple information in one cell. So, we need to mold the data into a form.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;          &lt;span style=&#34;color:#75715e&#34;&gt;# Passing order and time for 3 furlongs uphill&lt;/span&gt;
+          race_result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; dplyr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;mutate&lt;/span&gt;(race_result,passing_rank&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;as.character&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_extract_all&lt;/span&gt;(race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;`passing_rank/last_3F`,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;(\\d{2}-\\d{2}-\\d{2}-\\d{2})|(\\d{2}-\\d{2}-\\d{2})|(\\d{2}-\\d{2})&amp;#34;&lt;/span&gt;)))
+          race_result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; dplyr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;mutate&lt;/span&gt;(race_result,last_3F&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;as.character&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_extract_all&lt;/span&gt;(race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;`passing_rank/last_3F`,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\\d{2}\\.\\d&amp;#34;&lt;/span&gt;)))
+          race_result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; race_result[&lt;span style=&#34;color:#ae81ff&#34;&gt;-6&lt;/span&gt;]
           
-          # Time and Difference
-          race_result &amp;lt;- dplyr::mutate(race_result,time=as.character(str_extract_all(race_result$`time/margin`,&amp;quot;\\d\\.\\d{2}\\.\\d|\\d{2}\\.\\d&amp;quot;)))
-          race_result &amp;lt;- dplyr::mutate(race_result,margin=as.character(str_extract_all(race_result$`time/margin`,&amp;quot;./.馬身|.馬身|.[:space:]./.馬身|[ア-ン-]+&amp;quot;)))
-          race_result$margin[race_result$order==1] &amp;lt;- &amp;quot;トップ&amp;quot;
-          race_result$margin[race_result$margin==&amp;quot;character(0)&amp;quot;] &amp;lt;- &amp;quot;大差&amp;quot;
-          race_result$margin[race_result$order==0] &amp;lt;- NA
-          race_result &amp;lt;- race_result[-5]
+          &lt;span style=&#34;color:#75715e&#34;&gt;# Time and Difference&lt;/span&gt;
+          race_result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; dplyr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;mutate&lt;/span&gt;(race_result,time&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;as.character&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_extract_all&lt;/span&gt;(race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;`time/margin`,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\\d\\.\\d{2}\\.\\d|\\d{2}\\.\\d&amp;#34;&lt;/span&gt;)))
+          race_result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; dplyr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;mutate&lt;/span&gt;(race_result,margin&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;as.character&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_extract_all&lt;/span&gt;(race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;`time/margin`,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;./.馬身|.馬身|.[:space:]./.馬身|[ア-ン-]+&amp;#34;&lt;/span&gt;)))
+          race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;margin[race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;order&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;トップ&amp;#34;&lt;/span&gt;
+          race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;margin[race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;margin&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;character(0)&amp;#34;&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;大差&amp;#34;&lt;/span&gt;
+          race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;margin[race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;order&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NA&lt;/span&gt;
+          race_result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; race_result[&lt;span style=&#34;color:#ae81ff&#34;&gt;-5&lt;/span&gt;]
           
-          # Horse&amp;#39;s name, age and weight
-          race_result &amp;lt;- dplyr::mutate(race_result,horse_name=as.character(str_extract_all(race_result$`horse_name/age`,&amp;quot;[ァ-ヴー・]+&amp;quot;)))
-          race_result &amp;lt;- dplyr::mutate(race_result,horse_age=as.character(str_extract_all(race_result$`horse_name/age`,&amp;quot;牡\\d+|牝\\d+|せん\\d+&amp;quot;)))
-          race_result$horse_sex &amp;lt;- str_extract(race_result$horse_age, pattern = &amp;quot;牡|牝|せん&amp;quot;)
-          race_result$horse_age &amp;lt;- str_extract(race_result$horse_age, pattern = &amp;quot;\\d&amp;quot;)
-          race_result &amp;lt;- dplyr::mutate(race_result,horse_weight=as.character(str_extract_all(race_result$`horse_name/age`,&amp;quot;\\d{3}&amp;quot;)))
-          race_result &amp;lt;- dplyr::mutate(race_result,horse_weight_change=as.character(str_extract_all(race_result$`horse_name/age`,&amp;quot;\\([\\+|\\-]\\d+\\)|\\([\\d+]\\)&amp;quot;)))
-          race_result$horse_weight_change &amp;lt;- sapply(rm_round(race_result$horse_weight_change, extract=TRUE), paste, collapse=&amp;quot;&amp;quot;)
-          race_result &amp;lt;- dplyr::mutate(race_result,brinker=as.character(str_extract_all(race_result$`horse_name/age`,&amp;quot;B&amp;quot;)))
-          race_result$brinker[race_result$brinker!=&amp;quot;B&amp;quot;] &amp;lt;- &amp;quot;N&amp;quot;
-          race_result &amp;lt;- race_result[-4]
+          &lt;span style=&#34;color:#75715e&#34;&gt;# Horse&amp;#39;s name, age and weight&lt;/span&gt;
+          race_result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; dplyr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;mutate&lt;/span&gt;(race_result,horse_name&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;as.character&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_extract_all&lt;/span&gt;(race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;`horse_name/age`,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;[ァ-ヴー・]+&amp;#34;&lt;/span&gt;)))
+          race_result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; dplyr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;mutate&lt;/span&gt;(race_result,horse_age&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;as.character&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_extract_all&lt;/span&gt;(race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;`horse_name/age`,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;牡\\d+|牝\\d+|せん\\d+&amp;#34;&lt;/span&gt;)))
+          race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;horse_sex &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;str_extract&lt;/span&gt;(race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;horse_age, pattern &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;牡|牝|せん&amp;#34;&lt;/span&gt;)
+          race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;horse_age &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;str_extract&lt;/span&gt;(race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;horse_age, pattern &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\\d&amp;#34;&lt;/span&gt;)
+          race_result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; dplyr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;mutate&lt;/span&gt;(race_result,horse_weight&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;as.character&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_extract_all&lt;/span&gt;(race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;`horse_name/age`,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\\d{3}&amp;#34;&lt;/span&gt;)))
+          race_result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; dplyr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;mutate&lt;/span&gt;(race_result,horse_weight_change&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;as.character&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_extract_all&lt;/span&gt;(race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;`horse_name/age`,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\\([\\+|\\-]\\d+\\)|\\([\\d+]\\)&amp;#34;&lt;/span&gt;)))
+          race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;horse_weight_change &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;sapply&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;rm_round&lt;/span&gt;(race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;horse_weight_change, extract&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;TRUE&lt;/span&gt;), paste, collapse&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt;)
+          race_result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; dplyr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;mutate&lt;/span&gt;(race_result,brinker&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;as.character&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_extract_all&lt;/span&gt;(race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;`horse_name/age`,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;B&amp;#34;&lt;/span&gt;)))
+          race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;brinker[race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;brinker&lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;B&amp;#34;&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;N&amp;#34;&lt;/span&gt;
+          race_result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; race_result[&lt;span style=&#34;color:#ae81ff&#34;&gt;-4&lt;/span&gt;]
           
-          # jockey
-          race_result &amp;lt;- dplyr::mutate(race_result,jockey=as.character(str_extract_all(race_result$`jockey/weight`,&amp;quot;[ぁ-ん一-龠]+\\s[ぁ-ん一-龠]+|[:upper:].[ァ-ヶー]+&amp;quot;)))
-          race_result &amp;lt;- dplyr::mutate(race_result,jockey_weight=as.character(str_extract_all(race_result$`jockey/weight`,&amp;quot;\\d{2}&amp;quot;)))
-          race_result$jockey_weight_change &amp;lt;- 0
-          race_result$jockey_weight_change[str_detect(race_result$`jockey/weight`,&amp;quot;☆&amp;quot;)==1] &amp;lt;- 1
-          race_result$jockey_weight_change[str_detect(race_result$`jockey/weight`,&amp;quot;△&amp;quot;)==1] &amp;lt;- 2
-          race_result$jockey_weight_change[str_detect(race_result$`jockey/weight`,&amp;quot;△&amp;quot;)==1] &amp;lt;- 3
-          race_result &amp;lt;- race_result[-4]
+          &lt;span style=&#34;color:#75715e&#34;&gt;# jockey&lt;/span&gt;
+          race_result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; dplyr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;mutate&lt;/span&gt;(race_result,jockey&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;as.character&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_extract_all&lt;/span&gt;(race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;`jockey/weight`,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;[ぁ-ん一-龠]+\\s[ぁ-ん一-龠]+|[:upper:].[ァ-ヶー]+&amp;#34;&lt;/span&gt;)))
+          race_result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; dplyr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;mutate&lt;/span&gt;(race_result,jockey_weight&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;as.character&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_extract_all&lt;/span&gt;(race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;`jockey/weight`,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\\d{2}&amp;#34;&lt;/span&gt;)))
+          race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;jockey_weight_change &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
+          race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;jockey_weight_change&lt;span style=&#34;color:#a6e22e&#34;&gt;[str_detect&lt;/span&gt;(race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;`jockey/weight`,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;☆&amp;#34;&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
+          race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;jockey_weight_change&lt;span style=&#34;color:#a6e22e&#34;&gt;[str_detect&lt;/span&gt;(race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;`jockey/weight`,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;△&amp;#34;&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;
+          race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;jockey_weight_change&lt;span style=&#34;color:#a6e22e&#34;&gt;[str_detect&lt;/span&gt;(race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;`jockey/weight`,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;△&amp;#34;&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;
+          race_result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; race_result[&lt;span style=&#34;color:#ae81ff&#34;&gt;-4&lt;/span&gt;]
           
-          # Odds and popularity
-          race_result &amp;lt;- dplyr::mutate(race_result,odds=as.character(str_extract_all(race_result$`popularity/odds`,&amp;quot;\\(.+\\)&amp;quot;)))
-          race_result &amp;lt;- dplyr::mutate(race_result,popularity=as.character(str_extract_all(race_result$`popularity/odds`,&amp;quot;\\d+[^(\\d+.\\d)]&amp;quot;)))
-          race_result$odds &amp;lt;- sapply(rm_round(race_result$odds, extract=TRUE), paste, collapse=&amp;quot;&amp;quot;)
-          race_result &amp;lt;- race_result[-4]&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Next, we’ll import information other than the table we just retrieved. Specifically, race names, weather conditions, track conditions, dates, racecourses, etc. These information are listed at the top of the race results page.&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;          # Race Information
-          race_date &amp;lt;- race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//div[@id = &amp;#39;raceTitName&amp;#39;]/p[@id = &amp;#39;raceTitDay&amp;#39;]&amp;quot;) %&amp;gt;%
-            html_text()
-          race_name &amp;lt;- race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//div[@id = &amp;#39;raceTitName&amp;#39;]/h1[@class = &amp;#39;fntB&amp;#39;]&amp;quot;) %&amp;gt;%
-            html_text()
-          race_distance &amp;lt;- race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//p[@id = &amp;#39;raceTitMeta&amp;#39;]&amp;quot;) %&amp;gt;%
-            html_text()
+          &lt;span style=&#34;color:#75715e&#34;&gt;# Odds and popularity&lt;/span&gt;
+          race_result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; dplyr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;mutate&lt;/span&gt;(race_result,odds&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;as.character&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_extract_all&lt;/span&gt;(race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;`popularity/odds`,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\\(.+\\)&amp;#34;&lt;/span&gt;)))
+          race_result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; dplyr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;mutate&lt;/span&gt;(race_result,popularity&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;as.character&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_extract_all&lt;/span&gt;(race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;`popularity/odds`,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\\d+[^(\\d+.\\d)]&amp;#34;&lt;/span&gt;)))
+          race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;odds &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;sapply&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;rm_round&lt;/span&gt;(race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;odds, extract&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;TRUE&lt;/span&gt;), paste, collapse&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt;)
+          race_result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; race_result[&lt;span style=&#34;color:#ae81ff&#34;&gt;-4&lt;/span&gt;]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Next, we&amp;rsquo;ll import information other than the table we just retrieved. Specifically, race names, weather conditions, track conditions, dates, racecourses, etc. These information are listed at the top of the race results page.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;          &lt;span style=&#34;color:#75715e&#34;&gt;# Race Information&lt;/span&gt;
+          race_date &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; race1 &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;html_nodes&lt;/span&gt;(xpath &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;//div[@id = &amp;#39;raceTitName&amp;#39;]/p[@id = &amp;#39;raceTitDay&amp;#39;]&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt;
+            &lt;span style=&#34;color:#a6e22e&#34;&gt;html_text&lt;/span&gt;()
+          race_name &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; race1 &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;html_nodes&lt;/span&gt;(xpath &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;//div[@id = &amp;#39;raceTitName&amp;#39;]/h1[@class = &amp;#39;fntB&amp;#39;]&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt;
+            &lt;span style=&#34;color:#a6e22e&#34;&gt;html_text&lt;/span&gt;()
+          race_distance &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; race1 &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;html_nodes&lt;/span&gt;(xpath &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;//p[@id = &amp;#39;raceTitMeta&amp;#39;]&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt;
+            &lt;span style=&#34;color:#a6e22e&#34;&gt;html_text&lt;/span&gt;()
         
-          race_result &amp;lt;- dplyr::mutate(race_result,race_date=as.character(str_extract_all(race_date,&amp;quot;\\d+年\\d+月\\d+日&amp;quot;)))
-          race_result$race_date &amp;lt;- str_replace_all(race_result$race_date,&amp;quot;年&amp;quot;,&amp;quot;/&amp;quot;)
-          race_result$race_date &amp;lt;- str_replace_all(race_result$race_date,&amp;quot;月&amp;quot;,&amp;quot;/&amp;quot;)
-          race_result$race_date &amp;lt;- as.Date(race_result$race_date)
-          race_course &amp;lt;- as.character(str_extract_all(race_date,pattern = &amp;quot;札幌|函館|福島|新潟|東京|中山|中京|京都|阪神|小倉&amp;quot;))
-          race_result$race_course &amp;lt;- race_course
-          race_result &amp;lt;- dplyr::mutate(race_result,race_name=as.character(str_replace_all(race_name,&amp;quot;\\s&amp;quot;,&amp;quot;&amp;quot;)))
-          race_result &amp;lt;- dplyr::mutate(race_result,race_distance=as.character(str_extract_all(race_distance,&amp;quot;\\d+m&amp;quot;)))
-          race_type=as.character(str_extract_all(race_distance,pattern = &amp;quot;芝|ダート&amp;quot;))
-          race_result$type &amp;lt;- race_type
-          race_turn &amp;lt;- as.character(str_extract_all(race_distance,pattern = &amp;quot;右|左&amp;quot;))
-          race_result$race_turn &amp;lt;- race_turn
+          race_result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; dplyr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;mutate&lt;/span&gt;(race_result,race_date&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;as.character&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_extract_all&lt;/span&gt;(race_date,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\\d+年\\d+月\\d+日&amp;#34;&lt;/span&gt;)))
+          race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;race_date &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;str_replace_all&lt;/span&gt;(race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;race_date,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;年&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/&amp;#34;&lt;/span&gt;)
+          race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;race_date &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;str_replace_all&lt;/span&gt;(race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;race_date,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;月&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/&amp;#34;&lt;/span&gt;)
+          race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;race_date &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;as.Date&lt;/span&gt;(race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;race_date)
+          race_course &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;as.character&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_extract_all&lt;/span&gt;(race_date,pattern &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;札幌|函館|福島|新潟|東京|中山|中京|京都|阪神|小倉&amp;#34;&lt;/span&gt;))
+          race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;race_course &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; race_course
+          race_result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; dplyr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;mutate&lt;/span&gt;(race_result,race_name&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;as.character&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_replace_all&lt;/span&gt;(race_name,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\\s&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt;)))
+          race_result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; dplyr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;mutate&lt;/span&gt;(race_result,race_distance&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;as.character&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_extract_all&lt;/span&gt;(race_distance,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\\d+m&amp;#34;&lt;/span&gt;)))
+          race_type&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;as.character&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_extract_all&lt;/span&gt;(race_distance,pattern &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;芝|ダート&amp;#34;&lt;/span&gt;))
+          race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;type &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; race_type
+          race_turn &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;as.character&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_extract_all&lt;/span&gt;(race_distance,pattern &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;右|左&amp;#34;&lt;/span&gt;))
+          race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;race_turn &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; race_turn
           
-          if(length(race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//img[@class = &amp;#39;spBg ryou&amp;#39;]&amp;quot;)) == 1){
-            race_result$race_condition &amp;lt;- &amp;quot;良&amp;quot;
-          } else if (length(race1 %&amp;gt;% 
-                            html_nodes(xpath = &amp;quot;//img[@class = &amp;#39;spBg yayaomo&amp;#39;]&amp;quot;)) == 1){
-            race_result$race_condition &amp;lt;- &amp;quot;稍重&amp;quot;
-          } else if (length(race1 %&amp;gt;%
-                            html_nodes(xpath = &amp;quot;//img[@class = &amp;#39;spBg omo&amp;#39;]&amp;quot;)) == 1){
-            race_result$race_condition &amp;lt;- &amp;quot;重&amp;quot;
-          } else if (length(race1 %&amp;gt;% 
-                            html_nodes(xpath = &amp;quot;//img[@class = &amp;#39;spBg furyou&amp;#39;]&amp;quot;)) == 1){
-            race_result$race_condition &amp;lt;- &amp;quot;不良&amp;quot;
-          } else race_result$race_condition &amp;lt;- &amp;quot;NA&amp;quot;
+          &lt;span style=&#34;color:#a6e22e&#34;&gt;if&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;length&lt;/span&gt;(race1 &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;html_nodes&lt;/span&gt;(xpath &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;//img[@class = &amp;#39;spBg ryou&amp;#39;]&amp;#34;&lt;/span&gt;)) &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;){
+            race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;race_condition &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;良&amp;#34;&lt;/span&gt;
+          } else &lt;span style=&#34;color:#a6e22e&#34;&gt;if &lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;length&lt;/span&gt;(race1 &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+                            &lt;span style=&#34;color:#a6e22e&#34;&gt;html_nodes&lt;/span&gt;(xpath &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;//img[@class = &amp;#39;spBg yayaomo&amp;#39;]&amp;#34;&lt;/span&gt;)) &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;){
+            race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;race_condition &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;稍重&amp;#34;&lt;/span&gt;
+          } else &lt;span style=&#34;color:#a6e22e&#34;&gt;if &lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;length&lt;/span&gt;(race1 &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt;
+                            &lt;span style=&#34;color:#a6e22e&#34;&gt;html_nodes&lt;/span&gt;(xpath &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;//img[@class = &amp;#39;spBg omo&amp;#39;]&amp;#34;&lt;/span&gt;)) &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;){
+            race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;race_condition &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;重&amp;#34;&lt;/span&gt;
+          } else &lt;span style=&#34;color:#a6e22e&#34;&gt;if &lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;length&lt;/span&gt;(race1 &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+                            &lt;span style=&#34;color:#a6e22e&#34;&gt;html_nodes&lt;/span&gt;(xpath &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;//img[@class = &amp;#39;spBg furyou&amp;#39;]&amp;#34;&lt;/span&gt;)) &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;){
+            race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;race_condition &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;不良&amp;#34;&lt;/span&gt;
+          } else race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;race_condition &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;NA&amp;#34;&lt;/span&gt;
           
-          if (length(race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//img[@class = &amp;#39;spBg hare&amp;#39;]&amp;quot;)) == 1){
-            race_result$race_weather &amp;lt;- &amp;quot;晴れ&amp;quot;
-          } else if (length(race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//img[@class = &amp;#39;spBg ame&amp;#39;]&amp;quot;)) == 1){
-            race_result$race_weather &amp;lt;- &amp;quot;曇り&amp;quot;
-          } else if (length(race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//img[@class = &amp;#39;spBg kumori&amp;#39;]&amp;quot;)) == 1){
-            race_result$race_weather &amp;lt;- &amp;quot;雨&amp;quot;
-          } else race_result$race_weather &amp;lt;- &amp;quot;その他&amp;quot;&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;The next step is to get information about each horse. In fact, the horse’s name in the table we got earlier is a link, and if you follow the link, you can get [information about each horse] (&lt;a href=&#34;https://keiba.yahoo.co.jp/directory/horse/2015105508/&#34; class=&#34;uri&#34;&gt;https://keiba.yahoo.co.jp/directory/horse/2015105508/&lt;/a&gt;) (such as coat color and date of birth).&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;          horse_url &amp;lt;- race1 %&amp;gt;% html_nodes(&amp;quot;a&amp;quot;) %&amp;gt;% html_attr(&amp;quot;href&amp;quot;) 
-          horse_url &amp;lt;- horse_url[str_detect(horse_url, pattern=&amp;quot;directory/horse&amp;quot;)==1] # Extract only links to horse information.
+          &lt;span style=&#34;color:#a6e22e&#34;&gt;if &lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;length&lt;/span&gt;(race1 &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;html_nodes&lt;/span&gt;(xpath &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;//img[@class = &amp;#39;spBg hare&amp;#39;]&amp;#34;&lt;/span&gt;)) &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;){
+            race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;race_weather &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;晴れ&amp;#34;&lt;/span&gt;
+          } else &lt;span style=&#34;color:#a6e22e&#34;&gt;if &lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;length&lt;/span&gt;(race1 &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;html_nodes&lt;/span&gt;(xpath &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;//img[@class = &amp;#39;spBg ame&amp;#39;]&amp;#34;&lt;/span&gt;)) &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;){
+            race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;race_weather &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;曇り&amp;#34;&lt;/span&gt;
+          } else &lt;span style=&#34;color:#a6e22e&#34;&gt;if &lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;length&lt;/span&gt;(race1 &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;html_nodes&lt;/span&gt;(xpath &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;//img[@class = &amp;#39;spBg kumori&amp;#39;]&amp;#34;&lt;/span&gt;)) &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;){
+            race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;race_weather &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;雨&amp;#34;&lt;/span&gt;
+          } else race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;race_weather &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;その他&amp;#34;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The next step is to get information about each horse. In fact, the horse&amp;rsquo;s name in the table we got earlier is a link, and if you follow the link, you can get [information about each horse] (&lt;a href=&#34;https://keiba.yahoo.co.jp/directory/horse/2015105508/&#34;&gt;https://keiba.yahoo.co.jp/directory/horse/2015105508/&lt;/a&gt;) (such as coat color and date of birth).&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;          horse_url &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; race1 &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;html_nodes&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;a&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;html_attr&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;href&amp;#34;&lt;/span&gt;) 
+          horse_url &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; horse_url&lt;span style=&#34;color:#a6e22e&#34;&gt;[str_detect&lt;/span&gt;(horse_url, pattern&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;directory/horse&amp;#34;&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] &lt;span style=&#34;color:#75715e&#34;&gt;# Extract only links to horse information.&lt;/span&gt;
           
-          for (l in 1:length(horse_url)){
-            tryCatch(
+          &lt;span style=&#34;color:#a6e22e&#34;&gt;for &lt;/span&gt;(l in &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;length&lt;/span&gt;(horse_url)){
+            &lt;span style=&#34;color:#a6e22e&#34;&gt;tryCatch&lt;/span&gt;(
               {
-                horse1 &amp;lt;-  read_html(str_c(&amp;quot;https://keiba.yahoo.co.jp&amp;quot;,horse_url[l]))
-                Sys.sleep(0.5)
-                horse_name &amp;lt;- horse1 %&amp;gt;% html_nodes(xpath = &amp;quot;//div[@id = &amp;#39;dirTitName&amp;#39;]/h1[@class = &amp;#39;fntB&amp;#39;]&amp;quot;) %&amp;gt;% 
-                  html_text()
-                horse &amp;lt;- horse1 %&amp;gt;% html_nodes(xpath = &amp;quot;//div[@id = &amp;#39;dirTitName&amp;#39;]/ul&amp;quot;) %&amp;gt;% 
-                  html_text()
-                race_result$colour[race_result$horse_name==horse_name] &amp;lt;- as.character(str_extract_all(horse,&amp;quot;毛色：.+&amp;quot;)) 
-                race_result$owner[race_result$horse_name==horse_name] &amp;lt;- as.character(str_extract_all(horse,&amp;quot;馬主：.+&amp;quot;))
-                race_result$farm[race_result$horse_name==horse_name] &amp;lt;- as.character(str_extract_all(horse,&amp;quot;生産者：.+&amp;quot;))
-                race_result$locality[race_result$horse_name==horse_name] &amp;lt;- as.character(str_extract_all(horse,&amp;quot;産地：.+&amp;quot;))
-                race_result$horse_birthday[race_result$horse_name==horse_name] &amp;lt;- as.character(str_extract_all(horse,&amp;quot;\\d+年\\d+月\\d+日&amp;quot;))
-                race_result$father[race_result$horse_name==horse_name] &amp;lt;- horse1 %&amp;gt;% html_nodes(xpath = &amp;quot;//td[@class = &amp;#39;bloodM&amp;#39;][@rowspan = &amp;#39;4&amp;#39;]&amp;quot;) %&amp;gt;% html_text()
-                race_result$mother[race_result$horse_name==horse_name] &amp;lt;- horse1 %&amp;gt;% html_nodes(xpath = &amp;quot;//td[@class = &amp;#39;bloodF&amp;#39;][@rowspan = &amp;#39;4&amp;#39;]&amp;quot;) %&amp;gt;% html_text()
+                horse1 &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;read_html&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;https://keiba.yahoo.co.jp&amp;#34;&lt;/span&gt;,horse_url[l]))
+                &lt;span style=&#34;color:#a6e22e&#34;&gt;Sys.sleep&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;0.5&lt;/span&gt;)
+                horse_name &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; horse1 &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;html_nodes&lt;/span&gt;(xpath &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;//div[@id = &amp;#39;dirTitName&amp;#39;]/h1[@class = &amp;#39;fntB&amp;#39;]&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+                  &lt;span style=&#34;color:#a6e22e&#34;&gt;html_text&lt;/span&gt;()
+                horse &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; horse1 &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;html_nodes&lt;/span&gt;(xpath &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;//div[@id = &amp;#39;dirTitName&amp;#39;]/ul&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+                  &lt;span style=&#34;color:#a6e22e&#34;&gt;html_text&lt;/span&gt;()
+                race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;colour[race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;horse_name&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;horse_name] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;as.character&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_extract_all&lt;/span&gt;(horse,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;毛色：.+&amp;#34;&lt;/span&gt;)) 
+                race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;owner[race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;horse_name&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;horse_name] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;as.character&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_extract_all&lt;/span&gt;(horse,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;馬主：.+&amp;#34;&lt;/span&gt;))
+                race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;farm[race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;horse_name&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;horse_name] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;as.character&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_extract_all&lt;/span&gt;(horse,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;生産者：.+&amp;#34;&lt;/span&gt;))
+                race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;locality[race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;horse_name&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;horse_name] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;as.character&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_extract_all&lt;/span&gt;(horse,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;産地：.+&amp;#34;&lt;/span&gt;))
+                race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;horse_birthday[race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;horse_name&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;horse_name] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;as.character&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_extract_all&lt;/span&gt;(horse,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\\d+年\\d+月\\d+日&amp;#34;&lt;/span&gt;))
+                race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;father[race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;horse_name&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;horse_name] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; horse1 &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;html_nodes&lt;/span&gt;(xpath &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;//td[@class = &amp;#39;bloodM&amp;#39;][@rowspan = &amp;#39;4&amp;#39;]&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;html_text&lt;/span&gt;()
+                race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;mother[race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;horse_name&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;horse_name] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; horse1 &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;html_nodes&lt;/span&gt;(xpath &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;//td[@class = &amp;#39;bloodF&amp;#39;][@rowspan = &amp;#39;4&amp;#39;]&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;html_text&lt;/span&gt;()
               }
-              , error = function(e){
-                race_result$colour[race_result$horse_name==horse_name] &amp;lt;- NA 
-                race_result$owner[race_result$horse_name==horse_name] &amp;lt;- NA
-                race_result$farm[race_result$horse_name==horse_name] &amp;lt;- NA
-                race_result$locality[race_result$horse_name==horse_name] &amp;lt;- NA
-                race_result$horse_birthday[race_result$horse_name==horse_name] &amp;lt;- NA
-                race_result$father[race_result$horse_name==horse_name] &amp;lt;- NA
-                race_result$mother[race_result$horse_name==horse_name] &amp;lt;- NA
+              , error &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(e){
+                race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;colour[race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;horse_name&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;horse_name] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NA&lt;/span&gt; 
+                race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;owner[race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;horse_name&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;horse_name] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NA&lt;/span&gt;
+                race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;farm[race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;horse_name&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;horse_name] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NA&lt;/span&gt;
+                race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;locality[race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;horse_name&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;horse_name] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NA&lt;/span&gt;
+                race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;horse_birthday[race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;horse_name&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;horse_name] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NA&lt;/span&gt;
+                race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;father[race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;horse_name&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;horse_name] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NA&lt;/span&gt;
+                race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;mother[race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;horse_name&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;horse_name] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NA&lt;/span&gt;
                 }
             )
           }
           
-          race_result$colour &amp;lt;- str_replace_all(race_result$colour,&amp;quot;毛色：&amp;quot;,&amp;quot;&amp;quot;)
-          race_result$owner &amp;lt;- str_replace_all(race_result$owner,&amp;quot;馬主：&amp;quot;,&amp;quot;&amp;quot;)
-          race_result$farm &amp;lt;- str_replace_all(race_result$farm,&amp;quot;生産者：&amp;quot;,&amp;quot;&amp;quot;)
-          race_result$locality &amp;lt;- str_replace_all(race_result$locality,&amp;quot;産地：&amp;quot;,&amp;quot;&amp;quot;)
-          #race_result$horse_birthday &amp;lt;- str_replace_all(race_result$horse_birthday,&amp;quot;年&amp;quot;,&amp;quot;/&amp;quot;)
-          #race_result$horse_birthday &amp;lt;- str_replace_all(race_result$horse_birthday,&amp;quot;月&amp;quot;,&amp;quot;/&amp;quot;)
-          #race_result$horse_birthday &amp;lt;- as.Date(race_result$horse_birthday)
+          race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;colour &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;str_replace_all&lt;/span&gt;(race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;colour,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;毛色：&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt;)
+          race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;owner &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;str_replace_all&lt;/span&gt;(race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;owner,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;馬主：&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt;)
+          race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;farm &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;str_replace_all&lt;/span&gt;(race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;farm,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;生産者：&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt;)
+          race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;locality &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;str_replace_all&lt;/span&gt;(race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;locality,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;産地：&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt;)
+          &lt;span style=&#34;color:#75715e&#34;&gt;#race_result$horse_birthday &amp;lt;- str_replace_all(race_result$horse_birthday,&amp;#34;年&amp;#34;,&amp;#34;/&amp;#34;)&lt;/span&gt;
+          &lt;span style=&#34;color:#75715e&#34;&gt;#race_result$horse_birthday &amp;lt;- str_replace_all(race_result$horse_birthday,&amp;#34;月&amp;#34;,&amp;#34;/&amp;#34;)&lt;/span&gt;
+          &lt;span style=&#34;color:#75715e&#34;&gt;#race_result$horse_birthday &amp;lt;- as.Date(race_result$horse_birthday)&lt;/span&gt;
           
-          race_result &amp;lt;- dplyr::arrange(race_result,horse_number) # arrange in order of precedence&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;The next step is to go and drop the amount of money you have won up to that race. You can access this by following the link marked [Runoffs] (&lt;a href=&#34;https://keiba.yahoo.co.jp/race/denma/1802010601/&#34; class=&#34;uri&#34;&gt;https://keiba.yahoo.co.jp/race/denma/1802010601/&lt;/a&gt;) on the race results page. This is where you will find the prize money and you will get it.&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;          yosou_url &amp;lt;- race1 %&amp;gt;% html_nodes(&amp;quot;a&amp;quot;) %&amp;gt;% html_attr(&amp;quot;href&amp;quot;) 
-          yosou_url &amp;lt;- yosou_url[str_detect(yosou_url, pattern=&amp;quot;denma&amp;quot;)==1]
+          race_result &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; dplyr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;arrange&lt;/span&gt;(race_result,horse_number) &lt;span style=&#34;color:#75715e&#34;&gt;# arrange in order of precedence&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The next step is to go and drop the amount of money you have won up to that race. You can access this by following the link marked [Runoffs] (&lt;a href=&#34;https://keiba.yahoo.co.jp/race/denma/1802010601/&#34;&gt;https://keiba.yahoo.co.jp/race/denma/1802010601/&lt;/a&gt;) on the race results page. This is where you will find the prize money and you will get it.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;          yosou_url &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; race1 &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;html_nodes&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;a&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;html_attr&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;href&amp;#34;&lt;/span&gt;) 
+          yosou_url &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; yosou_url&lt;span style=&#34;color:#a6e22e&#34;&gt;[str_detect&lt;/span&gt;(yosou_url, pattern&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;denma&amp;#34;&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;]
           
-          if (length(yosou_url)==1){
-          yosou1 &amp;lt;-  read_html(str_c(&amp;quot;https://keiba.yahoo.co.jp&amp;quot;,yosou_url)) 
-          Sys.sleep(2)
-          yosou &amp;lt;- yosou1 %&amp;gt;% html_nodes(xpath = &amp;quot;//td[@class = &amp;#39;txC&amp;#39;]&amp;quot;) %&amp;gt;% as.character()
-          prize &amp;lt;- yosou[grepl(&amp;quot;万&amp;quot;,yosou)==TRUE] %&amp;gt;% str_extract_all(&amp;quot;\\d+万&amp;quot;)
-          prize &amp;lt;- t(do.call(&amp;quot;data.frame&amp;quot;,prize)) %&amp;gt;% as.character()
-          race_result$prize &amp;lt;- prize
-          race_result$prize &amp;lt;- str_replace_all(race_result$prize,&amp;quot;万&amp;quot;,&amp;quot;&amp;quot;) %&amp;gt;% as.numeric()
-          } else race_result$prize &amp;lt;- NA&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;We create a data frame called dataset to store the results of each race and store the data.&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;          ## file storage
-          if (k == 1 &amp;amp;&amp;amp; i == 1 &amp;amp;&amp;amp; j == 1){
-            dataset &amp;lt;- race_result
+          &lt;span style=&#34;color:#a6e22e&#34;&gt;if &lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;length&lt;/span&gt;(yosou_url)&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;){
+          yosou1 &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;read_html&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;https://keiba.yahoo.co.jp&amp;#34;&lt;/span&gt;,yosou_url)) 
+          &lt;span style=&#34;color:#a6e22e&#34;&gt;Sys.sleep&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;)
+          yosou &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; yosou1 &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;html_nodes&lt;/span&gt;(xpath &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;//td[@class = &amp;#39;txC&amp;#39;]&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;as.character&lt;/span&gt;()
+          prize &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; yosou&lt;span style=&#34;color:#a6e22e&#34;&gt;[grepl&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;万&amp;#34;&lt;/span&gt;,yosou)&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;TRUE&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;str_extract_all&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\\d+万&amp;#34;&lt;/span&gt;)
+          prize &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;t&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;do.call&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;data.frame&amp;#34;&lt;/span&gt;,prize)) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;as.character&lt;/span&gt;()
+          race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;prize &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; prize
+          race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;prize &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;str_replace_all&lt;/span&gt;(race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;prize,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;万&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;as.numeric&lt;/span&gt;()
+          } else race_result&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;prize &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NA&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;We create a data frame called dataset to store the results of each race and store the data.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;          &lt;span style=&#34;color:#75715e&#34;&gt;## file storage&lt;/span&gt;
+          &lt;span style=&#34;color:#a6e22e&#34;&gt;if &lt;/span&gt;(k &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; i &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; j &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;){
+            dataset &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; race_result
           } else {
-            dataset &amp;lt;- rbind(dataset,race_result)
+            dataset &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;rbind&lt;/span&gt;(dataset,race_result)
           }
         }else
         {
-          print(&amp;quot;We couldn&amp;#39;t save it.&amp;quot;) 
+          &lt;span style=&#34;color:#a6e22e&#34;&gt;print&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;We couldn&amp;#39;t save it.&amp;#34;&lt;/span&gt;) 
         }
       }
     }
   }
-  beep(3)
-  write.csv(dataset,&amp;quot;race_result2.csv&amp;quot;, row.names = FALSE)
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;beep&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;)
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;write.csv&lt;/span&gt;(dataset,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;race_result2.csv&amp;#34;&lt;/span&gt;, row.names &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;FALSE&lt;/span&gt;)
   
-  if (year == 1994){
-    dbWriteTable(con, &amp;quot;race_result&amp;quot;, dataset)
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;if &lt;/span&gt;(year &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1994&lt;/span&gt;){
+    &lt;span style=&#34;color:#a6e22e&#34;&gt;dbWriteTable&lt;/span&gt;(con, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;race_result&amp;#34;&lt;/span&gt;, dataset)
   } else {
-    dbWriteTable(con, &amp;quot;temp&amp;quot;, dataset)
-    dbSendQuery(con, &amp;quot;INSERT INTO race_result select * from temp&amp;quot;)
-    dbSendQuery(con, &amp;quot;DROP TABLE temp&amp;quot;)
+    &lt;span style=&#34;color:#a6e22e&#34;&gt;dbWriteTable&lt;/span&gt;(con, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;temp&amp;#34;&lt;/span&gt;, dataset)
+    &lt;span style=&#34;color:#a6e22e&#34;&gt;dbSendQuery&lt;/span&gt;(con, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;INSERT INTO race_result select * from temp&amp;#34;&lt;/span&gt;)
+    &lt;span style=&#34;color:#a6e22e&#34;&gt;dbSendQuery&lt;/span&gt;(con, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;DROP TABLE temp&amp;#34;&lt;/span&gt;)
   }
 }
-end.time &amp;lt;- Sys.time()
-print(str_c(&amp;quot;処理時間は&amp;quot;,end.time-start.time,&amp;quot;です。&amp;quot;))
-beep(5)
+end.time &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Sys.time&lt;/span&gt;()
+&lt;span style=&#34;color:#a6e22e&#34;&gt;print&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;str_c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;処理時間は&amp;#34;&lt;/span&gt;,end.time&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;start.time,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;です。&amp;#34;&lt;/span&gt;))
+&lt;span style=&#34;color:#a6e22e&#34;&gt;beep&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;)
 
-options(warn = 1)
+&lt;span style=&#34;color:#a6e22e&#34;&gt;options&lt;/span&gt;(warn &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)
 
-dbDisconnect(con)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;That’s all. The data taken is as follows&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;head(race_result)&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;##   order frame_number horse_number   trainer passing_rank last_3F   time
+&lt;span style=&#34;color:#a6e22e&#34;&gt;dbDisconnect&lt;/span&gt;(con)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;That&amp;rsquo;s all. The data taken is as follows&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;head&lt;/span&gt;(race_result)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;##   order frame_number horse_number   trainer passing_rank last_3F   time
 ## 1    10            1            1   田中 剛        09-09    39.0 1.14.3
 ## 2    16            1            2 天間 昭一        11-11    40.3 1.15.7
 ## 3    15            2            3 田中 清隆        14-14    39.4 1.15.1
@@ -342,9 +332,8 @@ dbDisconnect(con)&lt;/code&gt;&lt;/pre&gt;
 ## 3     デライトシーン     0
 ## 4     ドリームシップ     0
 ## 5   フリーダムガール   180
-## 6     ステイアライヴ   455&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-</description>
+## 6     ステイアライヴ   455
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
   </channel>

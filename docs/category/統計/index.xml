@@ -17,365 +17,355 @@
       <link>/post/post21/</link>
       <pubDate>Thu, 10 Sep 2020 00:00:00 +0000</pubDate>
       <guid>/post/post21/</guid>
-      <description>
-&lt;script src=&#34;../../post/post21/index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
-
-
-&lt;div id=&#34;やりたいこと&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;0. やりたいこと&lt;/h2&gt;
-&lt;p&gt;今回お見せするのは前述の通り、為替のTickデータを使った前処理(と解析)になります。主眼を&lt;code&gt;Rcpp&lt;/code&gt;を用いた効率化に置いていますので詳しくは踏み入りませんが、やりたいことをざっくりと先に示しておきます。&lt;br /&gt;
+      <description>&lt;h2 id=&#34;0-やりたいこと&#34;&gt;0. やりたいこと&lt;/h2&gt;
+&lt;p&gt;今回お見せするのは前述の通り、為替のTickデータを使った前処理(と解析)になります。主眼を&lt;code&gt;Rcpp&lt;/code&gt;を用いた効率化に置いていますので詳しくは踏み入りませんが、やりたいことをざっくりと先に示しておきます。&lt;br&gt;
 やりたいのは、JPY/USDレートの5分刻みリターンから&lt;em&gt;Jump&lt;/em&gt;を検知することです。ここでのJumpとはそれまでと比べて為替レートがガクッと上昇(下落)した点です。日中為替レートは小刻みに動きますが、なにかイベントがあると大きく上昇(下落)します。どんなイベントがJumpを引き起こすのかは非常に興味深い点です。これを検証するにはまずJumpを検知する必要があるのです。 参考とするのは以下の論文です。&lt;/p&gt;
-&lt;p&gt;&lt;a href=&#34;https://academic.oup.com/rfs/article-abstract/21/6/2535/1574138?redirectedFrom=fulltext&#34;&gt;Suzanne S. Lee &amp;amp; Per A. Mykland, 2008. “Jumps in Financial Markets: A New Nonparametric Test and Jump Dynamics,” Review of Financial Studies, Society for Financial Studies, vol. 21(6), pages 2535-2563, November.&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;Citationが204もある非常に評価されている論文です。推定方法を掻い摘んで説明します。まず、連続複利リターンを&lt;span class=&#34;math inline&#34;&gt;\(d\log S(t)\)&lt;/span&gt; for &lt;span class=&#34;math inline&#34;&gt;\(t&amp;gt;0\)&lt;/span&gt;とします。ここで、&lt;span class=&#34;math inline&#34;&gt;\(S(t)\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(t\)&lt;/span&gt;時点での資産価格です。市場にJumpがない場合、&lt;span class=&#34;math inline&#34;&gt;\(S(t)\)&lt;/span&gt;は以下の確率過程に従うと仮定します。
-&lt;span class=&#34;math display&#34;&gt;\[
+&lt;p&gt;&lt;a href=&#34;https://academic.oup.com/rfs/article-abstract/21/6/2535/1574138?redirectedFrom=fulltext&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Suzanne S. Lee &amp;amp; Per A. Mykland, 2008. &amp;ldquo;Jumps in Financial Markets: A New Nonparametric Test and Jump Dynamics,&amp;rdquo; Review of Financial Studies, Society for Financial Studies, vol. 21(6), pages 2535-2563, November.&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Citationが204もある非常に評価されている論文です。推定方法を掻い摘んで説明します。まず、連続複利リターンを$d\log S(t)$ for $t&amp;gt;0$とします。ここで、$S(t)$は$t$時点での資産価格です。市場にJumpがない場合、$S(t)$は以下の確率過程に従うと仮定します。 
+$$
 d\log S(t) = \mu(t)dt + \sigma(t)dW(t) \tag{1}
-\]&lt;/span&gt;
-ここで、&lt;span class=&#34;math inline&#34;&gt;\(W(t)\)&lt;/span&gt;は標準ブラウン運動、&lt;span class=&#34;math inline&#34;&gt;\(\mu(t)\)&lt;/span&gt;はドリフト項、&lt;span class=&#34;math inline&#34;&gt;\(\sigma(t)\)&lt;/span&gt;はスポットボラティリティです。また、Jumpがあるとき、&lt;span class=&#34;math inline&#34;&gt;\(S(t)\)&lt;/span&gt;は
-&lt;span class=&#34;math display&#34;&gt;\[
+$$ 
+ここで、$W(t)$は標準ブラウン運動、$\mu(t)$はドリフト項、$\sigma(t)$はスポットボラティリティです。また、Jumpがあるとき、$S(t)$は 
+$$
 d\log S(t) = \mu(t)dt + \sigma(t)dW(t) + Y(t)dJ(t) \tag{2}
-\]&lt;/span&gt;
-に従うと仮定します。ここで、&lt;span class=&#34;math inline&#34;&gt;\(J(t)\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(W(t)\)&lt;/span&gt;とは独立したカウント過程です。&lt;a href=&#34;#fn1&#34; class=&#34;footnote-ref&#34; id=&#34;fnref1&#34;&gt;&lt;sup&gt;1&lt;/sup&gt;&lt;/a&gt;&lt;span class=&#34;math inline&#34;&gt;\(Y(t)\)&lt;/span&gt;はジャンプのサイズを表現しており、予測可能な過程であるとします。&lt;/p&gt;
-&lt;p&gt;次に、&lt;span class=&#34;math inline&#34;&gt;\(S(t)\)&lt;/span&gt;の対数リターンを考えます。それはつまり&lt;span class=&#34;math inline&#34;&gt;\(\log S(t_i)/S(t_{i-1})\)&lt;/span&gt;ですが、これは正規分布&lt;span class=&#34;math inline&#34;&gt;\(N(0,\sigma(t_i))\)&lt;/span&gt;に従います。&lt;a href=&#34;#fn2&#34; class=&#34;footnote-ref&#34; id=&#34;fnref2&#34;&gt;&lt;sup&gt;2&lt;/sup&gt;&lt;/a&gt;ここで、&lt;span class=&#34;math inline&#34;&gt;\(t_{i-1}\)&lt;/span&gt;から&lt;span class=&#34;math inline&#34;&gt;\(t_{i}\)&lt;/span&gt;にJumpがあった際の&lt;span class=&#34;math inline&#34;&gt;\(t_i\)&lt;/span&gt;時点の統計量&lt;span class=&#34;math inline&#34;&gt;\(\mathcal{L(i)}\)&lt;/span&gt;を以下で定義します。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-    \mathcal{L(i)} \equiv \frac{|\log S(t_i)/S(t_{i-1})|}{\hat{\sigma}_{t_i}} \tag{3}
-\]&lt;/span&gt;
-上記は対数リターンの絶対値を単純に標準化したものですが、標準偏差の推定量には以下で定義される”Realized Bipower Variation”を使用しています。
-&lt;span class=&#34;math display&#34;&gt;\[
-    \hat{\sigma}_{t_i} = \frac{1}{K-2}\sum_{j=i-K+2}^{i-2}|\log S(t_j)/\log S(t_{j-1})||\log S(t_{j-1})/\log S(t_{j-2})| \tag{4}
-\]&lt;/span&gt;
-&lt;span class=&#34;math inline&#34;&gt;\(K\)&lt;/span&gt;はWindowに含まれるサンプルサイズの数です。仮に5min刻みリターンを用い、2020/9/10 10:00にJumpが発生した場合、&lt;span class=&#34;math inline&#34;&gt;\(K=270\)&lt;/span&gt;としている場合は前日2020/9/9 11:30から2020/9/11 09:55までのサンプルを用いて計算することになります。やっていることは、リターンの絶対値をかけたものを足し合わせるということですが、これでJumpが生じた次の瞬間(つまり&lt;span class=&#34;math inline&#34;&gt;\(t_{i+1}\)&lt;/span&gt;とか）の推定値がJumpに影響されにくいようです。ちなみに&lt;span class=&#34;math inline&#34;&gt;\(K=270\)&lt;/span&gt;は5min刻みリターンの場合の推奨値と別の文献で紹介されています。&lt;/p&gt;
-&lt;p&gt;こうして計算されたJump統計量&lt;span class=&#34;math inline&#34;&gt;\(\mathcal{L(i)}\)&lt;/span&gt;をどのように統計的検定に用いてJumpを検出するかに話を移しましょう。これは確率変数である&lt;span class=&#34;math inline&#34;&gt;\(\mathcal{L(i)}\)&lt;/span&gt;の最大値(こちらも確率変数)を考え、その分布から大きく逸脱した値を取った場合(95%点とか)、そのリターンをJumpとします。
-期間&lt;span class=&#34;math inline&#34;&gt;\([t_{i-1},t_{i}]\)&lt;/span&gt;にJumpがないとした場合、この期間の長さ&lt;span class=&#34;math inline&#34;&gt;\(\Delta=t_{i}-t_{i-1}\)&lt;/span&gt;を&lt;span class=&#34;math inline&#34;&gt;\(0\)&lt;/span&gt;に近づけると、つまり&lt;span class=&#34;math inline&#34;&gt;\(\Delta\rightarrow0\)&lt;/span&gt;とすると、標準正規変数の絶対値の最大値は、ガンベル分布に収束します。皆さん大好き極値統計ですね。よって、Jumpは以下の条件が満たされた際に帰無仮説が棄却され、検出することができます。
-&lt;span class=&#34;math display&#34;&gt;\[
+$$ 
+に従うと仮定します。ここで、$J(t)$は$W(t)$とは独立したカウント過程です。&lt;sup id=&#34;fnref:1&#34;&gt;&lt;a href=&#34;#fn:1&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;1&lt;/a&gt;&lt;/sup&gt;$Y(t)$はジャンプのサイズを表現しており、予測可能な過程であるとします。&lt;/p&gt;
+&lt;p&gt;次に、$S(t)$の対数リターンを考えます。それはつまり$\log S(t_i)/S(t_{i-1})$ですが、これは正規分布$N(0,\sigma(t_i))$に従います。&lt;sup id=&#34;fnref:2&#34;&gt;&lt;a href=&#34;#fn:2&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;2&lt;/a&gt;&lt;/sup&gt;ここで、$t_{i-1}$から$t_{i}$にJumpがあった際の$t_i$時点の統計量$\mathcal{L(i)}$を以下で定義します。&lt;/p&gt;
+&lt;p&gt;$$
+\mathcal{L(i)} \equiv \frac{|\log S(t_i)/S(t_{i-1})|}{\hat{\sigma}_{t_i}} \tag{3}
+$$ 
+上記は対数リターンの絶対値を単純に標準化したものですが、標準偏差の推定量には以下で定義される&amp;quot;Realized Bipower Variation&amp;quot;を使用しています。
+$$
+\hat{\sigma}_{t_i} = \frac{1}{K-2}\sum_{j=i-K+2}^{i-2}|\log S(t_j)/\log S(t_{j-1})||\log S(t_{j-1})/\log S(t_{j-2})| \tag{4}
+$$ 
+$K$はWindowに含まれるサンプルサイズの数です。仮に5min刻みリターンを用い、2020/9/10 10:00にJumpが発生した場合、$K=270$としている場合は前日2020/9/9 11:30から2020/9/11 09:55までのサンプルを用いて計算することになります。やっていることは、リターンの絶対値をかけたものを足し合わせるということですが、これでJumpが生じた次の瞬間(つまり$t_{i+1}$とか）の推定値がJumpに影響されにくいようです。ちなみに$K=270$は5min刻みリターンの場合の推奨値と別の文献で紹介されています。&lt;/p&gt;
+&lt;p&gt;こうして計算されたJump統計量$\mathcal{L(i)}$をどのように統計的検定に用いてJumpを検出するかに話を移しましょう。これは確率変数である$\mathcal{L(i)}$の最大値(こちらも確率変数)を考え、その分布から大きく逸脱した値を取った場合(95%点とか)、そのリターンをJumpとします。
+期間$[t_{i-1},t_{i}]$にJumpがないとした場合、この期間の長さ$\Delta=t_{i}-t_{i-1}$を$0$に近づけると、つまり$\Delta\rightarrow0$とすると、標準正規変数の絶対値の最大値は、ガンベル分布に収束します。皆さん大好き極値統計ですね。よって、Jumpは以下の条件が満たされた際に帰無仮説が棄却され、検出することができます。 
+$$
 \mathcal{L(i)} &amp;gt; G^{-1}(1-\alpha)S_{n} + C_{n} \tag{5}
-\]&lt;/span&gt;
-ここで、&lt;span class=&#34;math inline&#34;&gt;\(G^{-1}(1-\alpha)\)&lt;/span&gt;は標準ガンベル分布の&lt;span class=&#34;math inline&#34;&gt;\((1-\alpha)\)&lt;/span&gt;分位関数です。&lt;span class=&#34;math inline&#34;&gt;\(\alpha=10%\)&lt;/span&gt;だと2.25になります。また、
-&lt;span class=&#34;math display&#34;&gt;\[
-S_{n} = \frac{1}{c(2\log n)^{0.5}},~ \\
+$$ 
+ここで、$G^{-1}(1-\alpha)$は標準ガンベル分布の$(1-\alpha)$分位関数です。$\alpha=10%$だと2.25になります。また、 
+$$
+S_{n} = \frac{1}{c(2\log n)^{0.5}},~ \&lt;br&gt;
 C_{n} = \frac{(2\log n)^{0.5}}{c}-\frac{\log \pi+\log(\log n)}{2c(2\log n)^{0.5}}
-\]&lt;/span&gt;
-です(導出はしませんが、1式と2式を使って証明できます)。ここで、&lt;span class=&#34;math inline&#34;&gt;\(c=(2/\pi)^{0.5}\)&lt;/span&gt;で、&lt;span class=&#34;math inline&#34;&gt;\(n\)&lt;/span&gt;は推定に使用する総サンプルサイズです。 最終的に、&lt;span class=&#34;math inline&#34;&gt;\(Jump_{t_i}\)&lt;/span&gt;は
-&lt;span class=&#34;math display&#34;&gt;\[
+$$ 
+です(導出はしませんが、1式と2式を使って証明できます)。ここで、$c=(2/\pi)^{0.5}$で、$n$は推定に使用する総サンプルサイズです。 最終的に、$Jump_{t_i}$は
+$$
 Jump_{t_i} = \log\frac{S(t_i)}{S(t_{i-1})}×I(\mathcal{L(i)} - G^{-1}(1-\alpha)S_{n} + C_{n})\tag{6}
-\]&lt;/span&gt;
-で求められることになります。ここで、&lt;span class=&#34;math inline&#34;&gt;\(I(・)\)&lt;/span&gt;は中身が0より大きいと1、それ以外は0を返すIndicator関数です。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;データの読み込み&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;1. データの読み込み&lt;/h2&gt;
+$$ 
+で求められることになります。ここで、$I(・)$は中身が0より大きいと1、それ以外は0を返すIndicator関数です。&lt;/p&gt;
+&lt;h2 id=&#34;1-データの読み込み&#34;&gt;1. データの読み込み&lt;/h2&gt;
 &lt;p&gt;では、推定方法がわかったのでまずTickデータの読み込みをしましょう。データは&lt;code&gt;QuantDataManager&lt;/code&gt;からcsvを取得し、それを作業ディレクトリに保存しています。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(magrittr)
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(magrittr)
 
-# Tick dataの読み込み
-strPath &amp;lt;- r&amp;quot;(C:\Users\hogehoge\JPYUSD_Tick_2011.csv)&amp;quot;
-JPYUSD &amp;lt;- readr::read_csv(strPath)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;関係ないんですが、最近Rを4.0.2へ上げました。4.0以上では&lt;code&gt;Python&lt;/code&gt;でできた文字列のEscapeができるとうことで今までのストレスが解消されてかなりうれしいです。
+&lt;span style=&#34;color:#75715e&#34;&gt;# Tick dataの読み込み&lt;/span&gt;
+strPath &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; r&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;(C:\Users\hogehoge\JPYUSD_Tick_2011.csv)&amp;#34;&lt;/span&gt;
+JPYUSD &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; readr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;read_csv&lt;/span&gt;(strPath)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;関係ないんですが、最近Rを4.0.2へ上げました。4.0以上では&lt;code&gt;Python&lt;/code&gt;でできた文字列のEscapeができるとうことで今までのストレスが解消されてかなりうれしいです。
 データは以下のような感じで、日付の他にBid値、Ask値と取引量が格納されています。なお、ここでは2011年のTickを使用しています。東日本大震災の時のドル円を対象とするためです。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;summary(JPYUSD)&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;##     DateTime                        Bid             Ask            Volume     
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;summary&lt;/span&gt;(JPYUSD)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;##     DateTime                        Bid             Ask            Volume     
 ##  Min.   :2011-01-03 07:00:00   Min.   :75.57   Min.   :75.58   Min.   : 1.00  
 ##  1st Qu.:2011-03-30 15:09:23   1st Qu.:77.43   1st Qu.:77.44   1st Qu.: 2.00  
 ##  Median :2011-06-15 14:00:09   Median :80.40   Median :80.42   Median : 2.00  
 ##  Mean   :2011-06-22 05:43:11   Mean   :79.91   Mean   :79.92   Mean   : 2.55  
 ##  3rd Qu.:2011-09-09 13:54:51   3rd Qu.:81.93   3rd Qu.:81.94   3rd Qu.: 3.00  
-##  Max.   :2011-12-30 06:59:59   Max.   :85.52   Max.   :85.54   Max.   :90.00&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;ちなみに、&lt;code&gt;DateTime&lt;/code&gt;はUTC基準で日本時間だと2011/1/3 07:00:00から2011-12-30 06:59::59(米国時間2011-12-30 16:59:59)までを含んでいます。サンプルサイズは約1200万件です。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;NROW(JPYUSD)&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## [1] 11946621&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-&lt;div id=&#34;前処理&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;2. 前処理&lt;/h2&gt;
+##  Max.   :2011-12-30 06:59:59   Max.   :85.52   Max.   :85.54   Max.   :90.00
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;ちなみに、&lt;code&gt;DateTime&lt;/code&gt;はUTC基準で日本時間だと2011/1/3 07:00:00から2011-12-30 06:59::59(米国時間2011-12-30 16:59:59)までを含んでいます。サンプルサイズは約1200万件です。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;NROW&lt;/span&gt;(JPYUSD)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## [1] 11946621
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;2-前処理&#34;&gt;2. 前処理&lt;/h2&gt;
 &lt;p&gt;では次にBidとAskから仲値を計算し、後でリターンを算出するために対数を取っておきます。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# AskとBidの仲値を計算し、対数化(対数リターン算出用)
-JPYUSD &amp;lt;- JPYUSD %&amp;gt;% dplyr::mutate(Mid = (Ask+Bid)/2) %&amp;gt;% 
-                     dplyr::mutate(logMid = log(Mid))&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;現状不規則に並んでいる取引データを5min刻みのリターンに整形します。やり方は、
-1. 1年間を5min毎に刻んだ&lt;code&gt;POSIXct&lt;/code&gt;ベクトルを作る。
-2. 1.を引数として渡すと、その5minのWindowのうち、最初と最後のサンプルから対数リターンを順々に計算する関数を作成する。
-3. 実行。
-という計画です。まず、1.のベクトルを作成します。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# 5min刻みでのリターンを算出するためのPOSIXベクトルを作成(288×日数)
-start &amp;lt;- as.POSIXct(&amp;quot;2011-01-02 22:00:00&amp;quot;,tz=&amp;quot;UTC&amp;quot;)
-end &amp;lt;- as.POSIXct(&amp;quot;2011-12-31 21:55:00&amp;quot;,tz=&amp;quot;UTC&amp;quot;)
-from &amp;lt;- seq(from=start,to=end,by=5*60)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;では、2.に移ろうということなんですが、データが1200万件もあると&lt;code&gt;R&lt;/code&gt;で&lt;code&gt;purrr::map&lt;/code&gt;とか&lt;code&gt;apply&lt;/code&gt;属を使用したとしても、関数呼び出しに時間がかかって結構非効率だったりします。。。&lt;code&gt;sapply&lt;/code&gt;でやってみましたがなかなか処理が完了せず、強制終了しました。こういうときには、&lt;code&gt;Rccp&lt;/code&gt;が便利です。&lt;code&gt;R&lt;/code&gt;はグラフや統計処理のための非常に便利な関数が多数ありますが、ユーザーで定義した関数の呼び出しを含む、大量の繰り返し処理を苦手とします(スクリプト言語なのでコンパイル言語よりはという意味です)。なので、繰り返し処理の部分だけ、&lt;code&gt;C++&lt;/code&gt;で書いてしまって、それを&lt;code&gt;Rcpp&lt;/code&gt;をつかって&lt;code&gt;R&lt;/code&gt;の関数としてコンパイルし、実行。結果の集計や可視化、執筆は&lt;code&gt;R&lt;/code&gt;で行うというフローが非常に効率的です。
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# AskとBidの仲値を計算し、対数化(対数リターン算出用)&lt;/span&gt;
+JPYUSD &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; JPYUSD &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; dplyr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;mutate&lt;/span&gt;(Mid &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (Ask&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;Bid)&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+                     dplyr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;mutate&lt;/span&gt;(logMid &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(Mid))
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;現状不規則に並んでいる取引データを5min刻みのリターンに整形します。やり方は、&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;1年間を5min毎に刻んだ&lt;code&gt;POSIXct&lt;/code&gt;ベクトルを作る。&lt;/li&gt;
+&lt;li&gt;1.を引数として渡すと、その5minのWindowのうち、最初と最後のサンプルから対数リターンを順々に計算する関数を作成する。&lt;/li&gt;
+&lt;li&gt;実行。
+という計画です。まず、1.のベクトルを作成します。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 5min刻みでのリターンを算出するためのPOSIXベクトルを作成(288×日数)&lt;/span&gt;
+start &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;as.POSIXct&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;2011-01-02 22:00:00&amp;#34;&lt;/span&gt;,tz&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;UTC&amp;#34;&lt;/span&gt;)
+end &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;as.POSIXct&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;2011-12-31 21:55:00&amp;#34;&lt;/span&gt;,tz&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;UTC&amp;#34;&lt;/span&gt;)
+from &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;seq&lt;/span&gt;(from&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;start,to&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;end,by&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;60&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;では、2.に移ろうということなんですが、データが1200万件もあると&lt;code&gt;R&lt;/code&gt;で&lt;code&gt;purrr::map&lt;/code&gt;とか&lt;code&gt;apply&lt;/code&gt;属を使用したとしても、関数呼び出しに時間がかかって結構非効率だったりします。。。&lt;code&gt;sapply&lt;/code&gt;でやってみましたがなかなか処理が完了せず、強制終了しました。こういうときには、&lt;code&gt;Rccp&lt;/code&gt;が便利です。&lt;code&gt;R&lt;/code&gt;はグラフや統計処理のための非常に便利な関数が多数ありますが、ユーザーで定義した関数の呼び出しを含む、大量の繰り返し処理を苦手とします(スクリプト言語なのでコンパイル言語よりはという意味です)。なので、繰り返し処理の部分だけ、&lt;code&gt;C++&lt;/code&gt;で書いてしまって、それを&lt;code&gt;Rcpp&lt;/code&gt;をつかって&lt;code&gt;R&lt;/code&gt;の関数としてコンパイルし、実行。結果の集計や可視化、執筆は&lt;code&gt;R&lt;/code&gt;で行うというフローが非常に効率的です。
 また、&lt;code&gt;Rccp&lt;/code&gt;は&lt;code&gt;R&lt;/code&gt;に似た違和感の少ない記述方法で&lt;code&gt;C++&lt;/code&gt;を記述するのを助けてくれます。詳しいことは以下を見れば問題ないと思います。かなりまとまっていて控えめに言って神です。&lt;/p&gt;
-&lt;p&gt;&lt;a href=&#34;https://teuder.github.io/rcpp4everyone_ja/&#34;&gt;みんなのRcpp&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://teuder.github.io/rcpp4everyone_ja/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;みんなのRcpp&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;では、2.にあたるコードを書いていきます。コーディングに当たってはネット上の記事を参考にしました。&lt;code&gt;C++&lt;/code&gt;は&lt;code&gt;R&lt;/code&gt;よりも歴史があるし、使用者も多いので知りたい情報はすぐ見つけられます。&lt;/p&gt;
-&lt;pre class=&#34;cpp&#34;&gt;&lt;code&gt;#include &amp;lt;Rcpp.h&amp;gt;
-#include &amp;lt;algorithm&amp;gt;
-
-using namespace Rcpp;
-//[[Rcpp::plugins(cpp11)]]
-
-// [[Rcpp::export]]
-DataFrame Rolling_r_cpp(
-    DataFrame input,               //（計測時刻time, 計測値data）のデータフレーム
-    newDatetimeVector from,        //計算するタイミングの始点ベクトル
-    double time_window = 5*60)  //計算するwindow幅（秒）
-{ 
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;Rcpp.h&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;algorithm&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;using&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;namespace&lt;/span&gt; Rcpp;
+&lt;span style=&#34;color:#75715e&#34;&gt;//[[Rcpp::plugins(cpp11)]]
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;// [[Rcpp::export]]
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;DataFrame &lt;span style=&#34;color:#a6e22e&#34;&gt;Rolling_r_cpp&lt;/span&gt;(
+    DataFrame input,               &lt;span style=&#34;color:#75715e&#34;&gt;//（計測時刻time, 計測値data）のデータフレーム
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    newDatetimeVector from,        &lt;span style=&#34;color:#75715e&#34;&gt;//計算するタイミングの始点ベクトル
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;double&lt;/span&gt; time_window &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;60&lt;/span&gt;)  &lt;span style=&#34;color:#75715e&#34;&gt;//計算するwindow幅（秒）
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;{ 
   
-  // 計測時刻と計測値をベクトルとして取り出す
-  newDatetimeVector time = input[&amp;quot;DateTime&amp;quot;]; // 今回は time は昇順にソートされているのが前提です。
-  NumericVector     data = input[&amp;quot;logMid&amp;quot;];
+  &lt;span style=&#34;color:#75715e&#34;&gt;// 計測時刻と計測値をベクトルとして取り出す
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  newDatetimeVector time &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; input[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;DateTime&amp;#34;&lt;/span&gt;]; &lt;span style=&#34;color:#75715e&#34;&gt;// 今回は time は昇順にソートされているのが前提です。
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  NumericVector     data &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; input[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;logMid&amp;#34;&lt;/span&gt;];
   
-  // 計算するタイミングの終点ベクトル
-  newDatetimeVector to = from + time_window;
+  &lt;span style=&#34;color:#75715e&#34;&gt;// 計算するタイミングの終点ベクトル
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  newDatetimeVector to &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; from &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; time_window;
   
-  // 計算する数
-  R_xlen_t N = from.length();
+  &lt;span style=&#34;color:#75715e&#34;&gt;// 計算する数
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  R_xlen_t N &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; from.length();
   
-  // 格納するベクトル
-  NumericVector value(N);
+  &lt;span style=&#34;color:#75715e&#34;&gt;// 格納するベクトル
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  NumericVector value(N);
   
-  // ベクトル要素の位置をあらわすオブジェクト
-  newDatetimeVector::iterator begin = time.begin();
-  newDatetimeVector::iterator end   = time.end();
-  newDatetimeVector::iterator p1    = begin;
-  newDatetimeVector::iterator p2    = begin;
+  &lt;span style=&#34;color:#75715e&#34;&gt;// ベクトル要素の位置をあらわすオブジェクト
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  newDatetimeVector&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;iterator begin &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; time.begin();
+  newDatetimeVector&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;iterator end   &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; time.end();
+  newDatetimeVector&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;iterator p1    &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; begin;
+  newDatetimeVector&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;iterator p2    &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; begin;
   
-  // window i についてループ
-  for(R_xlen_t i = 0; i &amp;lt; N; ++i){
-    // Rcout &amp;lt;&amp;lt; &amp;quot;i=&amp;quot; &amp;lt;&amp;lt; i &amp;lt;&amp;lt; &amp;quot;\n&amp;quot;;
+  &lt;span style=&#34;color:#75715e&#34;&gt;// window i についてループ
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt;(R_xlen_t i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;; i &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; N; &lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;i){
+    &lt;span style=&#34;color:#75715e&#34;&gt;// Rcout &amp;lt;&amp;lt; &amp;#34;i=&amp;#34; &amp;lt;&amp;lt; i &amp;lt;&amp;lt; &amp;#34;\n&amp;#34;;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;double&lt;/span&gt; f &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; from[i];         &lt;span style=&#34;color:#75715e&#34;&gt;//windowの始点の時刻
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;double&lt;/span&gt; t &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; f &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; time_window; &lt;span style=&#34;color:#75715e&#34;&gt;//windowの終点の時刻
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    
+    &lt;span style=&#34;color:#75715e&#34;&gt;// windowの終点が最初の計測時刻以前の時はNA、または
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// windowの始点が最後の計測時刻のより後の時はNA
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;(t &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;begin &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; f &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;(end&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)){ 
+      value[i]  &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; NA_REAL;
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;continue&lt;/span&gt;;&lt;span style=&#34;color:#75715e&#34;&gt;//次のループへ
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    }
     
-    double f = from[i];         //windowの始点の時刻
-    double t = f + time_window; //windowの終点の時刻
+    &lt;span style=&#34;color:#75715e&#34;&gt;// ベクトル time の位置 p1 以降の要素xから
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 時刻がwindowの始点f「以降」である「最初の要素」の位置を p1 とする
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    p1 &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;find_if(p1, end, [&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;f](&lt;span style=&#34;color:#66d9ef&#34;&gt;double&lt;/span&gt; x){&lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; f&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;=&lt;/span&gt;x;});
+    &lt;span style=&#34;color:#75715e&#34;&gt;// p1 = std::lower_bound(p1, end, f); //上と同義
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    
+    &lt;span style=&#34;color:#75715e&#34;&gt;// ベクトル time の位置 p1 以降の要素xから
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 時刻がwindowの終点t「より前」である「最後の要素」の位置を p2 とする
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// （下では、時刻がwindowの終点t「以降」である「最初の要素」の１つ前の位置、にすることで実現している’）
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    p2 &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;find_if(p1, end, [&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;t](&lt;span style=&#34;color:#66d9ef&#34;&gt;double&lt;/span&gt; x){&lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; t&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;=&lt;/span&gt;x;}) &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; ;
+    &lt;span style=&#34;color:#75715e&#34;&gt;// p2 = std::lower_bound(p1, end, t) - 1 ;//上と同義
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    
+    &lt;span style=&#34;color:#75715e&#34;&gt;// 要素の位置p1,p2を、要素番号i1, i2に変換する
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    R_xlen_t i1 &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; p1 &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; begin;
+    R_xlen_t i2 &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; p2 &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; begin; 
     
-    // windowの終点が最初の計測時刻以前の時はNA、または
-    // windowの始点が最後の計測時刻のより後の時はNA
-    if(t &amp;lt;= *begin || f &amp;gt; *(end-1)){ 
-      value[i]  = NA_REAL;
-      continue;//次のループへ
+    
+    &lt;span style=&#34;color:#75715e&#34;&gt;// 要素番号の確認
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// C++は要素番号が0から始まるのでRに合わせるために1を足している
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// Rcout &amp;lt;&amp;lt; &amp;#34;i1 = &amp;#34; &amp;lt;&amp;lt; i1+1 &amp;lt;&amp;lt; &amp;#34; i2 = &amp;#34; &amp;lt;&amp;lt; i2+1 &amp;lt;&amp;lt; &amp;#34;\n&amp;#34;;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    
+    
+    &lt;span style=&#34;color:#75715e&#34;&gt;// 該当する範囲のデータについて計算する
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;(i1&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;i2) {
+      value[i] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; NA_REAL; &lt;span style=&#34;color:#75715e&#34;&gt;// window内にデータがない場合
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    } &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; { 
+      value[i] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; data[i2] &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; data[i1];
     }
-    
-    // ベクトル time の位置 p1 以降の要素xから
-    // 時刻がwindowの始点f「以降」である「最初の要素」の位置を p1 とする
-    p1 = std::find_if(p1, end, [&amp;amp;f](double x){return f&amp;lt;=x;});
-    // p1 = std::lower_bound(p1, end, f); //上と同義
-    
-    // ベクトル time の位置 p1 以降の要素xから
-    // 時刻がwindowの終点t「より前」である「最後の要素」の位置を p2 とする
-    // （下では、時刻がwindowの終点t「以降」である「最初の要素」の１つ前の位置、にすることで実現している’）
-    p2 = std::find_if(p1, end, [&amp;amp;t](double x){return t&amp;lt;=x;}) - 1 ;
-    // p2 = std::lower_bound(p1, end, t) - 1 ;//上と同義
-    
-    // 要素の位置p1,p2を、要素番号i1, i2に変換する
-    R_xlen_t i1 = p1 - begin;
-    R_xlen_t i2 = p2 - begin; 
-    
-    
-    // 要素番号の確認
-    // C++は要素番号が0から始まるのでRに合わせるために1を足している
-    // Rcout &amp;lt;&amp;lt; &amp;quot;i1 = &amp;quot; &amp;lt;&amp;lt; i1+1 &amp;lt;&amp;lt; &amp;quot; i2 = &amp;quot; &amp;lt;&amp;lt; i2+1 &amp;lt;&amp;lt; &amp;quot;\n&amp;quot;;
-    
-    
-    // 該当する範囲のデータについて計算する
-    if(i1&amp;gt;i2) {
-      value[i] = NA_REAL; // window内にデータがない場合
-    } else { 
-      value[i] = data[i2] - data[i1];
-    }
-    // ↑を変更することで様々なwindow関数を作成できる
-    
+    &lt;span style=&#34;color:#75715e&#34;&gt;// ↑を変更することで様々なwindow関数を作成できる
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    
   }
   
-  // 計算した時間と、値をデータフレームとして出力する
-  DataFrame out =
-    DataFrame::create(
-      Named(&amp;quot;from&amp;quot;, from),
-      Named(&amp;quot;r&amp;quot;, value*100));
+  &lt;span style=&#34;color:#75715e&#34;&gt;// 計算した時間と、値をデータフレームとして出力する
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  DataFrame out &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;
+    DataFrame&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;create(
+      Named(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;from&amp;#34;&lt;/span&gt;, from),
+      Named(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;r&amp;#34;&lt;/span&gt;, value&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt;));
   
-  return out;
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;code&gt;Rcpp::sourceCpp&lt;/code&gt;でコンパイルしたら、以下のように&lt;code&gt;R&lt;/code&gt;の関数として実行します。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;system.time(results &amp;lt;- Rolling_r_cpp(JPYUSD,from))&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;##    ユーザ   システム       経過  
-##       0.06       0.00       0.07&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;はい。1200万件のデータの処理に1秒かかりません。便利ー。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;summary(results)&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;##       from                           r         
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; out;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;Rcpp::sourceCpp&lt;/code&gt;でコンパイルしたら、以下のように&lt;code&gt;R&lt;/code&gt;の関数として実行します。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;system.time&lt;/span&gt;(results &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Rolling_r_cpp&lt;/span&gt;(JPYUSD,from))
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;##    ユーザ   システム       経過  
+##       0.06       0.00       0.07
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;はい。1200万件のデータの処理に1秒かかりません。便利ー。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;summary&lt;/span&gt;(results)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;##       from                           r         
 ##  Min.   :2011-01-02 22:00:00   Min.   :-1.823  
 ##  1st Qu.:2011-04-03 15:58:45   1st Qu.:-0.014  
 ##  Median :2011-07-03 09:57:30   Median : 0.000  
 ##  Mean   :2011-07-03 09:57:30   Mean   : 0.000  
 ##  3rd Qu.:2011-10-02 03:56:15   3rd Qu.: 0.015  
 ##  Max.   :2011-12-31 21:55:00   Max.   : 2.880  
-##                                NA&amp;#39;s   :29977&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;問題なく、リターンが計算されています。では、&lt;code&gt;Realized Bipower Variation&lt;/code&gt;の計算に移りましょう。5min刻みの場合はWindowの長さは270が推奨でしたが、そこも引数として柔軟を持たせた作りにします。また、&lt;code&gt;NA&lt;/code&gt;の処理についても丁寧に行います。&lt;/p&gt;
-&lt;pre class=&#34;cpp&#34;&gt;&lt;code&gt;#include &amp;lt;Rcpp.h&amp;gt;
-#include &amp;lt;cmath&amp;gt;
-
-using namespace Rcpp;
-//[[Rcpp::plugins(cpp11)]]
-
-// [[Rcpp::export]]
-float rbv_cpp(
-    NumericVector x, // rbvを計算するリターンベクトル
-    bool na_rm = true) // xにNAが含まれている場合、取り除いて計算するか
-{
+##                                NA&#39;s   :29977
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;問題なく、リターンが計算されています。では、&lt;code&gt;Realized Bipower Variation&lt;/code&gt;の計算に移りましょう。5min刻みの場合はWindowの長さは270が推奨でしたが、そこも引数として柔軟を持たせた作りにします。また、&lt;code&gt;NA&lt;/code&gt;の処理についても丁寧に行います。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;Rcpp.h&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;cmath&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;using&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;namespace&lt;/span&gt; Rcpp;
+&lt;span style=&#34;color:#75715e&#34;&gt;//[[Rcpp::plugins(cpp11)]]
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;// [[Rcpp::export]]
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;float&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;rbv_cpp&lt;/span&gt;(
+    NumericVector x, &lt;span style=&#34;color:#75715e&#34;&gt;// rbvを計算するリターンベクトル
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;bool&lt;/span&gt; na_rm &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; true) &lt;span style=&#34;color:#75715e&#34;&gt;// xにNAが含まれている場合、取り除いて計算するか
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;{
   
-  // 計算回数を取得
-  R_xlen_t N = x.length();
+  &lt;span style=&#34;color:#75715e&#34;&gt;// 計算回数を取得
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  R_xlen_t N &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; x.length();
   
-  // 計算結果を入れる変数を定義
-  float out = 0;
+  &lt;span style=&#34;color:#75715e&#34;&gt;// 計算結果を入れる変数を定義
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;float&lt;/span&gt; out &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
 
-  // xの欠損有無を確認
-  LogicalVector lg_NA = is_na(x);
+  &lt;span style=&#34;color:#75715e&#34;&gt;// xの欠損有無を確認
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  LogicalVector lg_NA &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; is_na(x);
   
-  // xにNAが存在した場合、そのNAを除いて計算するかどうか
-  if(any(lg_NA).is_true() and na_rm==FALSE){
-    out = NA_REAL; // NAを計算結果として出力
-  } else {
+  &lt;span style=&#34;color:#75715e&#34;&gt;// xにNAが存在した場合、そのNAを除いて計算するかどうか
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;(any(lg_NA).is_true() and na_rm&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;FALSE){
+    out &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; NA_REAL; &lt;span style=&#34;color:#75715e&#34;&gt;// NAを計算結果として出力
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  } &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; {
     
-    // NAを除く場合
-    if (any(lg_NA).is_true() and na_rm==TRUE){
-      x[is_na(x)==TRUE] = 0.00; // NAに0を埋め、実質的に計算から除外する
+    &lt;span style=&#34;color:#75715e&#34;&gt;// NAを除く場合
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (any(lg_NA).is_true() and na_rm&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;TRUE){
+      x[is_na(x)&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;TRUE] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0.00&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;// NAに0を埋め、実質的に計算から除外する
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    }
+    
+    &lt;span style=&#34;color:#75715e&#34;&gt;// rbvの分子(総和)を計算
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt;(R_xlen_t i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;; i &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; N; &lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;i){
+      out &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; out &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;abs(x[i])&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;abs(x[i&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;]);
     }
     
-    // rbvの分子(総和)を計算
-    for(R_xlen_t i = 1; i &amp;lt; N; ++i){
-      out = out + std::abs(x[i])*std::abs(x[i-1]);
+    &lt;span style=&#34;color:#75715e&#34;&gt;// 平均値を計算し、ルートをとる
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;long&lt;/span&gt; denomi; &lt;span style=&#34;color:#75715e&#34;&gt;//分母
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;(N&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;sum(lg_NA)&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;){
+      denomi &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; N&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;sum(lg_NA)&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;;
+    } &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; {
+      denomi &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
     }
-    
-    // 平均値を計算し、ルートをとる
-    long denomi; //分母
-    if(N-sum(lg_NA)-2&amp;gt;0){
-      denomi = N-sum(lg_NA)-2;
-    } else {
-      denomi = 1;
-    }
-    out = out/denomi;
-    out = std::sqrt(out);
+    out &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; out&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;denomi;
+    out &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;sqrt(out);
   }
   
-  return out;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; out;
 }
 
-// [[Rcpp::export]]
-DataFrame Rolling_rbv_cpp(
-    DataFrame input, //（計測時刻time, 計測値data）のデータフレーム
-    int K = 270, // 計算するRolling Window幅
-    bool na_pad = false, // Window幅が足りないときにNAを返すか
-    bool na_remove = false // Window幅の中にNAが存在した場合、除いて計算を行うか
-){
-  // リターンベクトルとサンプル数を取り出す
-  NumericVector data = input[&amp;quot;r&amp;quot;];
-  R_xlen_t T = data.length();
+&lt;span style=&#34;color:#75715e&#34;&gt;// [[Rcpp::export]]
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;DataFrame &lt;span style=&#34;color:#a6e22e&#34;&gt;Rolling_rbv_cpp&lt;/span&gt;(
+    DataFrame input, &lt;span style=&#34;color:#75715e&#34;&gt;//（計測時刻time, 計測値data）のデータフレーム
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; K &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;270&lt;/span&gt;, &lt;span style=&#34;color:#75715e&#34;&gt;// 計算するRolling Window幅
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;bool&lt;/span&gt; na_pad &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; false, &lt;span style=&#34;color:#75715e&#34;&gt;// Window幅が足りないときにNAを返すか
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;bool&lt;/span&gt; na_remove &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; false &lt;span style=&#34;color:#75715e&#34;&gt;// Window幅の中にNAが存在した場合、除いて計算を行うか
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;){
+  &lt;span style=&#34;color:#75715e&#34;&gt;// リターンベクトルとサンプル数を取り出す
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  NumericVector data &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; input[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;r&amp;#34;&lt;/span&gt;];
+  R_xlen_t T &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; data.length();
   
-  // 計算結果を格納するベクトルを準備
-  NumericVector value(T);
+  &lt;span style=&#34;color:#75715e&#34;&gt;// 計算結果を格納するベクトルを準備
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  NumericVector value(T);
   
-  // Windows幅毎にRBVを計算し、格納する
-  if(na_pad==TRUE){
-    value[0] = NA_REAL; // NAを返す
-    value[1] = NA_REAL; // NAを返す
-    value[2] = NA_REAL; // NAを返す
-  } else {
-    value[0] = 0; // 0を返す
-    value[1] = 0; // 0を返す
-    value[2] = 0; // NAを返す
+  &lt;span style=&#34;color:#75715e&#34;&gt;// Windows幅毎にRBVを計算し、格納する
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;(na_pad&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;TRUE){
+    value[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; NA_REAL; &lt;span style=&#34;color:#75715e&#34;&gt;// NAを返す
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    value[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; NA_REAL; &lt;span style=&#34;color:#75715e&#34;&gt;// NAを返す
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    value[&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; NA_REAL; &lt;span style=&#34;color:#75715e&#34;&gt;// NAを返す
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  } &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; {
+    value[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;// 0を返す
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    value[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;// 0を返す
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    value[&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;// NAを返す
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  }
+  
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt;(R_xlen_t t &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;; t &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; T; &lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;t){
+    &lt;span style=&#34;color:#75715e&#34;&gt;// Windows幅が足りるかどうかで処理を分岐
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (t&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;K&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;){
+      value[t] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; rbv_cpp(data[seq(t&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;K,t&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)],na_remove); &lt;span style=&#34;color:#75715e&#34;&gt;// 通常計算を実行
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    } &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;(na_pad&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;FALSE) {
+      value[t] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; rbv_cpp(data[seq(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,t&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)],na_remove); &lt;span style=&#34;color:#75715e&#34;&gt;// Kに満たない不完全なWidnows幅で計算を実行
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    } &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; {
+      value[t] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; NA_REAL; &lt;span style=&#34;color:#75715e&#34;&gt;// NAを返す
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    }
   }
   
-  for(R_xlen_t t = 3; t &amp;lt; T; ++t){
-    // Windows幅が足りるかどうかで処理を分岐
-    if (t-K&amp;gt;=0){
-      value[t] = rbv_cpp(data[seq(t-K,t-1)],na_remove); // 通常計算を実行
-    } else if(na_pad==FALSE) {
-      value[t] = rbv_cpp(data[seq(0,t-1)],na_remove); // Kに満たない不完全なWidnows幅で計算を実行
-    } else {
-      value[t] = NA_REAL; // NAを返す
-    }
-  }
+  &lt;span style=&#34;color:#75715e&#34;&gt;// 計算した時間と値をデータフレームとして出力する
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  DataFrame out &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;
+    DataFrame&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;create(
+      Named(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;from&amp;#34;&lt;/span&gt;, input[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;from&amp;#34;&lt;/span&gt;]),
+      Named(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;r&amp;#34;&lt;/span&gt;, data),
+      Named(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;rbv&amp;#34;&lt;/span&gt;,value));
   
-  // 計算した時間と値をデータフレームとして出力する
-  DataFrame out =
-    DataFrame::create(
-      Named(&amp;quot;from&amp;quot;, input[&amp;quot;from&amp;quot;]),
-      Named(&amp;quot;r&amp;quot;, data),
-      Named(&amp;quot;rbv&amp;quot;,value));
-  
-  return out;
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;では、これもコンパイルし、&lt;code&gt;R&lt;/code&gt;で実行します。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;system.time(results &amp;lt;- results %&amp;gt;% Rolling_rbv_cpp(na_remove = FALSE))&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;##    ユーザ   システム       経過  
-##       1.00       0.38       1.45&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;こちらも一瞬ですね。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;jump統計量の計算&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;3. Jump統計量の計算&lt;/h2&gt;
-&lt;p&gt;では、次に今計算したリターンと標準偏差から統計量&lt;span class=&#34;math inline&#34;&gt;\(\mathcal{L}_{t_i}\)&lt;/span&gt;を計算しましょう。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# 対数リターンの絶対値を標準化=Jump統計量
-results &amp;lt;- results %&amp;gt;% dplyr::mutate(J=ifelse(rbv&amp;gt;0,abs(r)/rbv,NA))&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;今こんな感じです。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;summary(results)&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;##       from                           r               rbv              J        
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; out;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;では、これもコンパイルし、&lt;code&gt;R&lt;/code&gt;で実行します。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;system.time&lt;/span&gt;(results &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; results &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Rolling_rbv_cpp&lt;/span&gt;(na_remove &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;FALSE&lt;/span&gt;))
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;##    ユーザ   システム       経過  
+##       1.00       0.38       1.45
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;こちらも一瞬ですね。&lt;/p&gt;
+&lt;h2 id=&#34;3-jump統計量の計算&#34;&gt;3. Jump統計量の計算&lt;/h2&gt;
+&lt;p&gt;では、次に今計算したリターンと標準偏差から統計量$\mathcal{L}_{t_i}$を計算しましょう。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 対数リターンの絶対値を標準化=Jump統計量&lt;/span&gt;
+results &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; results &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; dplyr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;mutate&lt;/span&gt;(J&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;ifelse&lt;/span&gt;(rbv&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,&lt;span style=&#34;color:#a6e22e&#34;&gt;abs&lt;/span&gt;(r)&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;rbv,&lt;span style=&#34;color:#66d9ef&#34;&gt;NA&lt;/span&gt;))
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;今こんな感じです。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;summary&lt;/span&gt;(results)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;##       from                           r               rbv              J        
 ##  Min.   :2011-01-02 22:00:00   Min.   :-1.823   Min.   :0.00    Min.   : 0.00  
 ##  1st Qu.:2011-04-03 15:58:45   1st Qu.:-0.014   1st Qu.:0.02    1st Qu.: 0.28  
 ##  Median :2011-07-03 09:57:30   Median : 0.000   Median :0.02    Median : 0.64  
 ##  Mean   :2011-07-03 09:57:30   Mean   : 0.000   Mean   :0.03    Mean   : 0.93  
 ##  3rd Qu.:2011-10-02 03:56:15   3rd Qu.: 0.015   3rd Qu.:0.03    3rd Qu.: 1.23  
 ##  Max.   :2011-12-31 21:55:00   Max.   : 2.880   Max.   :0.16    Max.   :58.60  
-##                                NA&amp;#39;s   :29977    NA&amp;#39;s   :44367   NA&amp;#39;s   :44423&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;では、Jump検定に移りましょう。まず、必要な関数を定義しておきます。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Jump検定を計算するための定数&amp;amp;関数を準備
-c &amp;lt;- (2/pi)^0.5
-Cn &amp;lt;- function(n){
-  return((2*log(n))^0.5/c - (log(pi)+log(log(n)))/(2*c*(2*log(n))^0.5))
+##                                NA&#39;s   :29977    NA&#39;s   :44367   NA&#39;s   :44423
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;では、Jump検定に移りましょう。まず、必要な関数を定義しておきます。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Jump検定を計算するための定数&amp;amp;関数を準備&lt;/span&gt;
+c &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;pi&lt;/span&gt;)^0.5
+Cn &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(n){
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;return&lt;/span&gt;((&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(n))^0.5&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;c &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;pi&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(n)))&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;c&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(n))^0.5))
 }
-Sn &amp;lt;- function(n){
-  1/(c*(2*log(n))^0.5)
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;では検定を行います。棄却されたサンプルは1、それ以外は0を返します。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Jump検定(10%)を実行(返り値はlogical)
-N &amp;lt;- NROW(results$J)
-results &amp;lt;- results %&amp;gt;% dplyr::mutate(Jump = J &amp;gt; 2.25*Sn(N) + Cn(N))
-summary(results)&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;##       from                           r               rbv              J        
+Sn &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(n){
+  &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;(c&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(n))^0.5)
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;では検定を行います。棄却されたサンプルは1、それ以外は0を返します。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Jump検定(10%)を実行(返り値はlogical)&lt;/span&gt;
+N &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;NROW&lt;/span&gt;(results&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;J)
+results &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; results &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; dplyr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;mutate&lt;/span&gt;(Jump &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; J &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2.25&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;Sn&lt;/span&gt;(N) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Cn&lt;/span&gt;(N))
+&lt;span style=&#34;color:#a6e22e&#34;&gt;summary&lt;/span&gt;(results)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;##       from                           r               rbv              J        
 ##  Min.   :2011-01-02 22:00:00   Min.   :-1.823   Min.   :0.00    Min.   : 0.00  
 ##  1st Qu.:2011-04-03 15:58:45   1st Qu.:-0.014   1st Qu.:0.02    1st Qu.: 0.28  
 ##  Median :2011-07-03 09:57:30   Median : 0.000   Median :0.02    Median : 0.64  
 ##  Mean   :2011-07-03 09:57:30   Mean   : 0.000   Mean   :0.03    Mean   : 0.93  
 ##  3rd Qu.:2011-10-02 03:56:15   3rd Qu.: 0.015   3rd Qu.:0.03    3rd Qu.: 1.23  
 ##  Max.   :2011-12-31 21:55:00   Max.   : 2.880   Max.   :0.16    Max.   :58.60  
-##                                NA&amp;#39;s   :29977    NA&amp;#39;s   :44367   NA&amp;#39;s   :44423  
+##                                NA&#39;s   :29977    NA&#39;s   :44367   NA&#39;s   :44423  
 ##     Jump        
 ##  Mode :logical  
 ##  FALSE:59864    
 ##  TRUE :257      
-##  NA&amp;#39;s :44423    
+##  NA&#39;s :44423    
 ##                 
 ##                 
-## &lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-&lt;div id=&#34;ggplot2を用いた可視化&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;4. ggplot2を用いた可視化&lt;/h2&gt;
+## 
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;4-ggplot2を用いた可視化&#34;&gt;4. ggplot2を用いた可視化&lt;/h2&gt;
 &lt;p&gt;数値が計算できましたので可視化しましょう。2011/03/11の日中のJPY/USDの5min刻み対数リターンの推移とJumpを重ねてPlotします。ちなみに横軸は日本時間に修正しています。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# 2011/03/11の東日本大震災発生時のJumpについてPlot
-results %&amp;gt;% 
-  dplyr::filter(from &amp;gt;= as.POSIXct(&amp;quot;2011-03-11 00:00:00&amp;quot;,tz=&amp;quot;UTC&amp;quot;),from &amp;lt; as.POSIXct(&amp;quot;2011-03-12 00:00:00&amp;quot;,tz=&amp;quot;UTC&amp;quot;)) %&amp;gt;% 
-  ggplot2::ggplot(ggplot2::aes(x=from,y=r)) +
-  ggplot2::geom_path(linetype=3) +
-  ggplot2::geom_path(ggplot2::aes(x=from,y=r*Jump,colour=&amp;quot;red&amp;quot;)) +
-  ggplot2::scale_x_datetime(date_breaks = &amp;quot;2 hours&amp;quot;, labels = scales::date_format(format=&amp;quot;%H:%M&amp;quot;,tz=&amp;quot;Asia/Tokyo&amp;quot;)) +
-  ggplot2::ggtitle(&amp;quot;JPY/USD Jumps within Tohoku earthquake on 2011-3-11&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## Warning: Removed 36 row(s) containing missing values (geom_path).
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 2011/03/11の東日本大震災発生時のJumpについてPlot&lt;/span&gt;
+results &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+  dplyr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;filter&lt;/span&gt;(from &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;as.POSIXct&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;2011-03-11 00:00:00&amp;#34;&lt;/span&gt;,tz&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;UTC&amp;#34;&lt;/span&gt;),from &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;as.POSIXct&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;2011-03-12 00:00:00&amp;#34;&lt;/span&gt;,tz&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;UTC&amp;#34;&lt;/span&gt;)) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+  ggplot2&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;ggplot&lt;/span&gt;(ggplot2&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;aes&lt;/span&gt;(x&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;from,y&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;r)) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+  ggplot2&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;geom_path&lt;/span&gt;(linetype&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+  ggplot2&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;geom_path&lt;/span&gt;(ggplot2&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;aes&lt;/span&gt;(x&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;from,y&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;r&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;Jump,colour&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;red&amp;#34;&lt;/span&gt;)) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+  ggplot2&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;scale_x_datetime&lt;/span&gt;(date_breaks &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;2 hours&amp;#34;&lt;/span&gt;, labels &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; scales&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;date_format&lt;/span&gt;(format&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%H:%M&amp;#34;&lt;/span&gt;,tz&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Asia/Tokyo&amp;#34;&lt;/span&gt;)) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+  ggplot2&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;ggtitle&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;JPY/USD Jumps within Tohoku earthquake on 2011-3-11&amp;#34;&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## Warning: Removed 36 row(s) containing missing values (geom_path).
 
-## Warning: Removed 36 row(s) containing missing values (geom_path).&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;../../post/post21/index_files/figure-html/unnamed-chunk-16-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+## Warning: Removed 36 row(s) containing missing values (geom_path).
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-16-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
 &lt;p&gt;ここまで執筆するのに結構時間使っていて、今23:37なんで深い考察は控えますが、震災が発生したのが14:46:18ですから市場は震災直後即座に円安に反応したことが分かります。その後なぜか円高方向へ進み19:00にはピークになっています。安全資産の円とか言われますが、この時ばかりは不確実性の高まりからして安全じゃないだろと思いますが。。。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;まとめ&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;5. まとめ&lt;/h2&gt;
+&lt;h2 id=&#34;5-まとめ&#34;&gt;5. まとめ&lt;/h2&gt;
 &lt;p&gt;&lt;code&gt;Rcpp&lt;/code&gt;を使った&lt;code&gt;R&lt;/code&gt;分析の効率化について紹介しました。&lt;code&gt;C++&lt;/code&gt;は愚直にコードを書いてもRより格段に処理が早いのでコーディングミスしにくい印象です。学術的な実装をやるときは内容が複雑になるのでこれはありがたいです。また、コンパイルエラーが起こってもRStudioを使っていればどこでコンパイルエラーが起こっているか手がかりをくれますのでその点でもストレスはないのでお勧めです。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div class=&#34;footnotes&#34;&gt;
-&lt;hr /&gt;
+&lt;section class=&#34;footnotes&#34; role=&#34;doc-endnotes&#34;&gt;
+&lt;hr&gt;
 &lt;ol&gt;
-&lt;li id=&#34;fn1&#34;&gt;&lt;p&gt;非負、整数、非減少の値を持つ確率過程のこと。&lt;a href=&#34;#fnref1&#34; class=&#34;footnote-back&#34;&gt;↩︎&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
-&lt;li id=&#34;fn2&#34;&gt;&lt;p&gt;平均はドリフト項の形状により必ずしも0にはなりませんが、今ドリフト項は十分小さい値を想定しているのでこの書き方にさせてください。論文ではより厳密に定義しています。&lt;a href=&#34;#fnref2&#34; class=&#34;footnote-back&#34;&gt;↩︎&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;li id=&#34;fn:1&#34; role=&#34;doc-endnote&#34;&gt;
+&lt;p&gt;非負、整数、非減少の値を持つ確率過程のこと。 &lt;a href=&#34;#fnref:1&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li id=&#34;fn:2&#34; role=&#34;doc-endnote&#34;&gt;
+&lt;p&gt;平均はドリフト項の形状により必ずしも0にはなりませんが、今ドリフト項は十分小さい値を想定しているのでこの書き方にさせてください。論文ではより厳密に定義しています。 &lt;a href=&#34;#fnref:2&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
 &lt;/ol&gt;
-&lt;/div&gt;
+&lt;/section&gt;
 </description>
     </item>
     
@@ -384,253 +374,202 @@ results %&amp;gt;%
       <link>/post/post19/</link>
       <pubDate>Wed, 08 Jul 2020 00:00:00 +0000</pubDate>
       <guid>/post/post19/</guid>
-      <description>
-&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
-
-&lt;div id=&#34;TOC&#34;&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;#今回のテーマバックテストとは&#34;&gt;1. 今回のテーマ「バックテスト」とは？&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#バックテストはオーバーフィットする&#34;&gt;2. バックテストはオーバーフィットする&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#シャープレシオが従う分布とは&#34;&gt;3. シャープレシオが従う分布とは&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#the-minimum-backtest-lengthを導出してみる&#34;&gt;4. &lt;code&gt;the minimum backtest length&lt;/code&gt;を導出してみる&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#終わりに&#34;&gt;4. 終わりに&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/div&gt;
-
-&lt;div id=&#34;今回のテーマバックテストとは&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;1. 今回のテーマ「バックテスト」とは？&lt;/h2&gt;
+      <description>&lt;h2 id=&#34;1-今回のテーマバックテストとは&#34;&gt;1. 今回のテーマ「バックテスト」とは？&lt;/h2&gt;
 &lt;p&gt;バックテストは、アルゴリズムによる投資戦略のヒストリカルシミュレーションです。バックテストは、立案した投資戦略がある期間にわたって実行されていた場合に発生したであろう利益と損失をアルゴリズムを用いて計算します。その際、シャープレシオやインフォメーションレシオなどの投資戦略のパフォーマンスを評価する一般的な統計量が使用されています。投資家は通常、これらのバックテストの統計量を調査し、最高のパフォーマンスを発揮する投資(運用)戦略に資産配分を決定するため、資産運用会社は良好なパフォーマンスを血のにじむような回数のバックテストを試行錯誤し、資料を作ってプレゼンしたりするわけです。&lt;/p&gt;
-&lt;div class=&#34;figure&#34;&gt;
-&lt;img src=&#34;https://stat.ameba.jp/user_images/20190212/22/nash210/51/5f/j/o0705061514355131242.jpg&#34; alt=&#34;&#34; /&gt;
-&lt;p class=&#34;caption&#34;&gt;3倍3分法のバックテスト&lt;/p&gt;
-&lt;/div&gt;
+&lt;p&gt;&lt;img src=&#34;https://stat.ameba.jp/user_images/20190212/22/nash210/51/5f/j/o0705061514355131242.jpg&#34; alt=&#34;3倍3分法のバックテスト&#34;&gt;&lt;/p&gt;
 &lt;p&gt;投資家の立場に立つなら、バックテストされた投資戦略のパフォーマンスについては、インサンプル(IS)とアウトオブサンプル(OOS)を区別することが重要です。ISのパフォーマンスは、投資戦略の設計に使用したサンプル（機械学習の文献では「学習期間」や「訓練セット」と呼ばれる物です）でシミュレートしたものです。一方、OOSパフォーマンスは、投資戦略の設計に使用されなかったサンプル（別名「テストセット」）でシミュレーションされたものです。バックテストは、そのパフォーマンスを持ってその投資戦略の有効性を占う物ですので、ISのパフォーマンスがOOSのパフォーマンスと一致している場合に再現性が担保され、現実的であるということができます。ただ、アウトサンプルの結果はこれからの結果であるので、バックテストを受け取った時点でそのバックテストが信頼に足るものか判断することは難しいです。hold-out法などで、以下のように学習データとテストデータを分け、OOSでのテストを行っているものもありますが、OOSの結果をフィードバックして戦略の改善ができる以上、純粋なアウトサンプルとは呼べません。&lt;/p&gt;
-&lt;p&gt;&lt;img src=&#34;http://www.triton.biz/blog1/wp-content/uploads/2018/04/pic001.png&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://www.triton.biz/blog1/wp-content/uploads/2018/04/pic001.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
 &lt;p&gt;ですので、ファンドマネージャーから良い結果のバックテストを受け取った場合、そのシミュレーションがどれだけ現実的であるかをなんとかして評価することが非常に重要となります。また、ファンドマネージャーも自身のバックテスト結果が持つ不確実性を理解しておくことが重要です。今回はバックテストのシミュレーションの現実性をどのようにして評価するのか、再現性のあるバックテストを行うためには何に注意すれば良いのかを調べてみたいと思います。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;バックテストはオーバーフィットする&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;2. バックテストはオーバーフィットする&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2308659&#34;&gt;Bailey, Borwein, López de Prado and Zhu(2015)&lt;/a&gt;は、どのような金融時系列でも、バックテストのシミュレーションをオーバーフィット(過学習)させることが(比較的)簡単にできると主張しています。ここで、オーバーフィットとは、機械学習の概念であり，モデルが一般的な構造よりも特定の観察データ(ISデータ)にフォーカスしてしまう状況を表します。&lt;/p&gt;
+&lt;h2 id=&#34;2-バックテストはオーバーフィットする&#34;&gt;2. バックテストはオーバーフィットする&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2308659&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Bailey, Borwein, López de Prado and Zhu(2015)&lt;/a&gt;は、どのような金融時系列でも、バックテストのシミュレーションをオーバーフィット(過学習)させることが(比較的)簡単にできると主張しています。ここで、オーバーフィットとは、機械学習の概念であり，モデルが一般的な構造よりも特定の観察データ(ISデータ)にフォーカスしてしまう状況を表します。&lt;/p&gt;
 &lt;p&gt;Bailey et. al.(2015)では、この主張の一例として株式戦略のバックテスト結果が芳しくない状況が挙げられています。バックテストではその名の通り過去データを使用しているので、具体的に損失が発生している銘柄を特定することが可能で、その銘柄の推奨を削除するためにいくつかのパラメータを追加し、取引システムを設計することで、パフォーマンスを向上させることができるというわけです（「データ・スヌーピング」として知られているテクニック）。数回シミュレーションを繰り返えせば、特定のサンプルに存在するが、母集団の中では稀であるかもしれない特徴から利益を得る「最適なパラメータ」を導くことができます。&lt;/p&gt;
 &lt;p&gt;機械学習の文献では、オーバーフィッティングの問題を対処するための膨大な研究の蓄積があります。ですが、Bailey et. al.(2015)は、機械学習の文脈で提案されている手法は一般的に複数の投資問題には適用できないと主張します。その理由は以下4点のようです。&lt;/p&gt;
-&lt;ol style=&#34;list-style-type: decimal&#34;&gt;
-&lt;li&gt;&lt;p&gt;機械学習でオーバーフィッティングを防ぐ手法は、予測の説明力や質を評価するために、その事象が定義される領域において明示的な点推定と信頼区間を必要としますが、このような明確な予測を行う投資戦略はほとんどないため。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;機械学習でオーバーフィッティングを防ぐ手法は、予測の説明力や質を評価するために、その事象が定義される領域において明示的な点推定と信頼区間を必要としますが、このような明確な予測を行う投資戦略はほとんどないため。&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;例えば、「E-mini S&amp;amp;P500は、金曜日の終値で1標準偏差5ポイントで1,600前後になると予測されています」とはあまり言われず、むしろ「買い」または「強い買い」といった定性的な推奨が提供されることが一般的です。しかも、この予想は予測の有効期限も明示されず、なにか予期せぬ事象が発生した際に変更がなされます。一方、定量予測では金曜日の終値と明記されています。&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;仮に特定の投資戦略が予測式に依存していたとしても、投資戦略の他の構成要素がオーバーフィットされている可能性がある。&lt;/p&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;仮に特定の投資戦略が予測式に依存していたとしても、投資戦略の他の構成要素がオーバーフィットされている可能性がある。&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;言い換えれば、単に予測式を調整する以外にも、投資戦略をオーバーフィットさせる方法はたくさんあるということです。&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;回帰のオーバーフィットの方法はパラメトリックであり、金融の場合観察不可能なデータに関する多くの仮定を含むため。&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;いくつかの手法は試行回数をコントロールしていないため。&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;回帰のオーバーフィットの方法はパラメトリックであり、金融の場合観察不可能なデータに関する多くの仮定を含むため。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;いくつかの手法は試行回数をコントロールしていないため。&lt;/p&gt;
+&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;Bailey et. al.(2015)では、バックテストのパフォーマンスが比較的低い投資戦略を特定するためには、&lt;strong&gt;比較的少ない試行回数&lt;/strong&gt;が必要であることを示しています。ここでの試行回数とは試行錯誤の回数だと思ってください。また、試行回数に応じて必要とされるバックテストの期間である&lt;code&gt;the minimum backtest length&lt;/code&gt;（MinBTL）を計算しています。この論文では、パフォーマンスを評価するために常にシャープレシオが使用されていますが、他のパフォーマンス指標にも応用できるそうです。その内容を見てみましょう。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;シャープレシオが従う分布とは&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;3. シャープレシオが従う分布とは&lt;/h2&gt;
+&lt;h2 id=&#34;3-シャープレシオが従う分布とは&#34;&gt;3. シャープレシオが従う分布とは&lt;/h2&gt;
 &lt;p&gt;MinBTLを導出するために、まずシャープレシオの(漸近)分布を導出します。そもそも、投資戦略の設計は、通常、特定のパターンが金融変数の将来値を予測するのに役立つかもしれないという事前知識または信念から始まります。例えば、さまざまな満期の債券の間にリードラグ効果を認識している場合は、イールドカーブが上昇した場合に均衡値への回帰に賭ける戦略を設計することができます。このモデルは、cointegration equation、ベクトル誤差補正モデル、確率微分方程式のシステムなどの形をとることが考えられます。&lt;/p&gt;
 &lt;p&gt;このようなモデル構成（または試行）の数は膨大であり、ファンドマネージャーは当然、戦略のパフォーマンスを最大化するものを選択したいと考え、そのためにヒストリカルシミュレーション（バックテスト）を行います(前述)。バックテストでは、最適なサンプルサイズ、シグナルの更新頻度、リスクサイジング、ストップロス、最大保有期間などなどを他の変数との兼ね合いの中で評価します。&lt;/p&gt;
-&lt;p&gt;この論文中でパフォーマンス評価の尺度として使用されるシャープレシオは、過去のリターンのサンプルに基づいて、戦略のパフォーマンスを評価する統計量で、BMに対する平均超過リターン/標準偏差(リスク)として定義されます。通常には、「リスク1標準偏差に対するリターン」と解釈され、資産クラスにもよりますが1を上回っていると非常に良い戦略であると見なせます。以下では、ある戦略の超過リターン&lt;span class=&#34;math inline&#34;&gt;\(r_t\)&lt;/span&gt;がi.i.d.の確率変数であり、正規分布に従うと仮定します。つまり、&lt;span class=&#34;math inline&#34;&gt;\(r_t\)&lt;/span&gt;の分布は&lt;span class=&#34;math inline&#34;&gt;\(r_s(t\neq s)\)&lt;/span&gt;と独立であることを仮定しています。あまり現実的な仮定ではありませんが。。。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+&lt;p&gt;この論文中でパフォーマンス評価の尺度として使用されるシャープレシオは、過去のリターンのサンプルに基づいて、戦略のパフォーマンスを評価する統計量で、BMに対する平均超過リターン/標準偏差(リスク)として定義されます。通常には、「リスク1標準偏差に対するリターン」と解釈され、資産クラスにもよりますが1を上回っていると非常に良い戦略であると見なせます。以下では、ある戦略の超過リターン$r_t$がi.i.d.の確率変数であり、正規分布に従うと仮定します。つまり、$r_t$の分布は$r_s(t\neq s)$と独立であることを仮定しています。あまり現実的な仮定ではありませんが。。。&lt;/p&gt;
+&lt;p&gt;$$
 r_t \sim \mathcal{N}(\mu,\sigma^2)
-\]&lt;/span&gt;
-ここで、&lt;span class=&#34;math inline&#34;&gt;\(\mathcal{N}\)&lt;/span&gt;は平均&lt;span class=&#34;math inline&#34;&gt;\(\mu\)&lt;/span&gt;、分散&lt;span class=&#34;math inline&#34;&gt;\(\sigma^2\)&lt;/span&gt;の正規分布を表しています。今、時点t~t-q+1の超過リターン&lt;span class=&#34;math inline&#34;&gt;\(r_{t}(q)\)&lt;/span&gt;を&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-r_{t}(q) \equiv r_{t} + r_{t-1} + ... + r_{t-q+1}
-\]&lt;/span&gt;
+$$
+ここで、$\mathcal{N}$は平均$\mu$、分散$\sigma^2$の正規分布を表しています。今、時点t~t-q+1の超過リターン$r_{t}(q)$を&lt;/p&gt;
+&lt;p&gt;$$
+r_{t}(q) \equiv r_{t} + r_{t-1} + &amp;hellip; + r_{t-q+1}
+$$
 と定義すると(複利部分を無視してます)、年率化されたシャープレシオは&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\begin{eqnarray}
-SR(q) &amp;amp;=&amp;amp; \frac{E[r_{t}(q)]}{\sqrt{Var(r_{t}(q))}}\\
-&amp;amp;=&amp;amp; \frac{q\mu}{\sqrt{q}\sigma}\\
-&amp;amp;=&amp;amp; \frac{\mu}{\sigma}\sqrt{q}
-\end{eqnarray}
-\]&lt;/span&gt;
-と表すことができます。ここで、&lt;span class=&#34;math inline&#34;&gt;\(q\)&lt;/span&gt;は年毎のリターンの数(頻度)です。例えば、日次リターンの場合&lt;span class=&#34;math inline&#34;&gt;\(q=365\)&lt;/span&gt;となります(閏年を除く)。
-&lt;span class=&#34;math inline&#34;&gt;\(\mu\)&lt;/span&gt;と&lt;span class=&#34;math inline&#34;&gt;\(\sigma\)&lt;/span&gt;は一般に未知ですので、&lt;span class=&#34;math inline&#34;&gt;\(SR\)&lt;/span&gt;の真値を知ることはできません。なので、&lt;span class=&#34;math inline&#34;&gt;\(R_t\)&lt;/span&gt;を標本リターン、リスクフリーレート&lt;span class=&#34;math inline&#34;&gt;\(R^f\)&lt;/span&gt;(定数)とすると、標本平均&lt;span class=&#34;math inline&#34;&gt;\(\hat{\mu}=1/T\sum_{t=1}^T R_{t}-R^f\)&lt;/span&gt;と標本標準偏差&lt;span class=&#34;math inline&#34;&gt;\(\hat{\sigma}=\sqrt{1/T\sum_{t=1}^{T}(R_{t}-\hat{\mu})}\)&lt;/span&gt;を用いてシャープレシオの推定値を計算することになります(&lt;span class=&#34;math inline&#34;&gt;\(T\)&lt;/span&gt;はバックテストを行うサンプルサイズ)。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+&lt;p&gt;$$
+&lt;code&gt;\begin{eqnarray} SR(q) &amp;amp;=&amp;amp; \frac{E[r_{t}(q)]}{\sqrt{Var(r_{t}(q))}}\\ &amp;amp;=&amp;amp; \frac{q\mu}{\sqrt{q}\sigma}\\ &amp;amp;=&amp;amp; \frac{\mu}{\sigma}\sqrt{q} \end{eqnarray}&lt;/code&gt;
+$$
+と表すことができます。ここで、$q$は年毎のリターンの数(頻度)です。例えば、日次リターンの場合$q=365$となります(閏年を除く)。
+&lt;code&gt;\(\mu\)&lt;/code&gt;と$\sigma$は一般に未知ですので、$SR$の真値を知ることはできません。なので、$R_t$を標本リターン、リスクフリーレート$R^f$(定数)とすると、標本平均$\hat{\mu}=1/T\sum_{t=1}^T R_{t}-R^f$と標本標準偏差$\hat{\sigma}=\sqrt{1/T\sum_{t=1}^{T}(R_{t}-\hat{\mu})}$を用いてシャープレシオの推定値を計算することになります($T$はバックテストを行うサンプルサイズ)。&lt;/p&gt;
+&lt;p&gt;$$
 \hat{SR}(q) = \frac{\hat{\mu}}{\hat{\sigma}}\sqrt{q}
-\]&lt;/span&gt;
-必然的な結果として、&lt;span class=&#34;math inline&#34;&gt;\(SR\)&lt;/span&gt;の計算はかなりの推定誤差が伴う可能性が高くなります。では、本節の本題、&lt;span class=&#34;math inline&#34;&gt;\(\hat{SR}\)&lt;/span&gt;の漸近分布を導出してみましょう。まず、&lt;span class=&#34;math inline&#34;&gt;\(\hat{\mu}\)&lt;/span&gt;と&lt;span class=&#34;math inline&#34;&gt;\(\hat{\sigma}^2\)&lt;/span&gt;の漸近分布はi.i.d.と&lt;span class=&#34;math inline&#34;&gt;\(\mu, \sigma\)&lt;/span&gt;が有限な値をとることから中心極限定理を適用することにより、&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\sqrt{T}\hat{\mu}\sim^{a}\mathcal{N}(\mu,\sigma^2), \\
+$$
+必然的な結果として、$SR$の計算はかなりの推定誤差が伴う可能性が高くなります。では、本節の本題、$\hat{SR}$の漸近分布を導出してみましょう。まず、$\hat{\mu}$と$\hat{\sigma}^2$の漸近分布はi.i.d.と$\mu, \sigma$が有限な値をとることから中心極限定理を適用することにより、&lt;/p&gt;
+&lt;p&gt;$$
+\sqrt{T}\hat{\mu}\sim^{a}\mathcal{N}(\mu,\sigma^2), \&lt;br&gt;
 \sqrt{T}\hat{\sigma}^2\sim^a\mathcal{N}(\sigma^2,2\sigma^4)
-\]&lt;/span&gt;
-となります。シャープレシオはこの&lt;span class=&#34;math inline&#34;&gt;\(\hat{\mu}\)&lt;/span&gt;と&lt;span class=&#34;math inline&#34;&gt;\(\hat{\sigma}^2\)&lt;/span&gt;から計算される確率変数であるので、この関数を&lt;span class=&#34;math inline&#34;&gt;\(g(\hat{{\boldsymbol \theta}})\)&lt;/span&gt;と表しましょう。ここで、&lt;span class=&#34;math inline&#34;&gt;\(\hat{{\boldsymbol \theta}}=(\hat{\mu},\hat{\sigma}^2)&amp;#39;\)&lt;/span&gt;です。今、i.i.d.であるので&lt;span class=&#34;math inline&#34;&gt;\(\hat{{\boldsymbol \theta}}\)&lt;/span&gt;は互いに独立となり、上記の議論から漸近同時分布は&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+$$
+となります。シャープレシオはこの$\hat{\mu}$と$\hat{\sigma}^2$から計算される確率変数であるので、この関数を$g(\hat{{\boldsymbol \theta}})$と表しましょう。ここで、$\hat{{\boldsymbol \theta}}=(\hat{\mu},\hat{\sigma}^2)&#39;$です。今、i.i.d.であるので$\hat{{\boldsymbol \theta}}$は互いに独立となり、上記の議論から漸近同時分布は&lt;/p&gt;
+&lt;p&gt;$$
 \sqrt{T}\hat{{\boldsymbol \theta}} \sim^a \mathcal{N}({\boldsymbol \theta},{\boldsymbol V_{\boldsymbol \theta}})
-\]&lt;/span&gt;
-と書けます。ここで、&lt;span class=&#34;math inline&#34;&gt;\({\boldsymbol V_{\boldsymbol \theta}}\)&lt;/span&gt;は&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+$$
+と書けます。ここで、${\boldsymbol V_{\boldsymbol \theta}}$は&lt;/p&gt;
+&lt;p&gt;$$
 {\boldsymbol V_{\boldsymbol \theta}} = \left( 
-    \begin{array}{cccc}
-      \sigma^2 &amp;amp; 0\\
-      0 &amp;amp; 2\sigma^4\\
-    \end{array}
-  \right)
-\]&lt;/span&gt;
-です。シャープレシオの推定値は今&lt;span class=&#34;math inline&#34;&gt;\(g(\hat{{\boldsymbol \theta}})\)&lt;/span&gt;と&lt;span class=&#34;math inline&#34;&gt;\(\hat{{\boldsymbol \theta}}\)&lt;/span&gt;だけの関数になっていますのでデルタ法より、&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\begin{array}{cccc}
+\sigma^2 &amp;amp; 0\&lt;br&gt;
+0 &amp;amp; 2\sigma^4\&lt;br&gt;
+\end{array}
+\right)
+$$
+です。シャープレシオの推定値は今$g(\hat{{\boldsymbol \theta}})$と$\hat{{\boldsymbol \theta}}$だけの関数になっていますのでデルタ法より、&lt;/p&gt;
+&lt;p&gt;$$
 \hat{SR} = g(\hat{{\boldsymbol \theta}}) \sim^a \mathcal{N}(g({\boldsymbol \theta}),\boldsymbol V_g)
-\]&lt;/span&gt;
-と漸近的に正規分布に従います。ここで、&lt;span class=&#34;math inline&#34;&gt;\(\boldsymbol V_g\)&lt;/span&gt;は&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\boldsymbol V_g=\frac{\partial g}{\partial{\boldsymbol \theta}}{\boldsymbol V_{\boldsymbol \theta}}\frac{\partial g}{\partial{\boldsymbol \theta}&amp;#39;}
-\]&lt;/span&gt;
-です。&lt;span class=&#34;math inline&#34;&gt;\(g({\boldsymbol \theta})=\mu/\sigma\)&lt;/span&gt;なので、&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\frac{\partial g}{\partial{\boldsymbol \theta}&amp;#39;} = \left[ 
-    \begin{array}{cccc}
-      \frac{\partial g}{\partial \mu}\\
-      \frac{\partial g}{\partial \sigma^2}\\
-    \end{array}
-  \right]
-  = \left[ 
-    \begin{array}{cccc}
-      \frac{1}{\sigma}\\
-      -\frac{\mu}{2\sigma^3}\\
-    \end{array}
-  \right]
-\]&lt;/span&gt;
+$$
+と漸近的に正規分布に従います。ここで、$\boldsymbol V_g$は&lt;/p&gt;
+&lt;p&gt;$$
+\boldsymbol V_g=\frac{\partial g}{\partial{\boldsymbol \theta}}{\boldsymbol V_{\boldsymbol \theta}}\frac{\partial g}{\partial{\boldsymbol \theta}&#39;}
+$$
+です。$g({\boldsymbol \theta})=\mu/\sigma$なので、&lt;/p&gt;
+&lt;p&gt;$$
+\frac{\partial g}{\partial{\boldsymbol \theta}&#39;} = \left[ 
+\begin{array}{cccc}
+\frac{\partial g}{\partial \mu}\&lt;br&gt;
+\frac{\partial g}{\partial \sigma^2}\&lt;br&gt;
+\end{array}
+\right]
+= \left[ 
+\begin{array}{cccc}
+\frac{1}{\sigma}\&lt;br&gt;
+-\frac{\mu}{2\sigma^3}\&lt;br&gt;
+\end{array}
+\right]
+$$
 よって、&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\begin{eqnarray}
-\boldsymbol V_g &amp;amp;=&amp;amp; \left(
-    \begin{array}{cccc}
-      \frac{\partial g}{\partial \mu}, \frac{\partial g}{\partial \sigma}\\
-    \end{array}
-  \right)
-  \left( 
-    \begin{array}{cccc}
-      \sigma^2 &amp;amp; 0\\
-      0 &amp;amp; 2\sigma^4\\
-    \end{array}
-  \right)
-  \left(
-    \begin{array}{cccc}
-      \frac{\partial g}{\partial \mu}\\
-      \frac{\partial g}{\partial \sigma}\\
-    \end{array}
-  \right) \\
-  &amp;amp;=&amp;amp; \left(
-    \begin{array}{cccc}
-      \frac{\partial g}{\partial \mu}\sigma^2, \frac{\partial g}{\partial \sigma}2\sigma^4\\
-    \end{array}
-  \right)
-    \left(
-    \begin{array}{cccc}
-      \frac{\partial g}{\partial \mu}\\
-      \frac{\partial g}{\partial \sigma}\\
-    \end{array}
-  \right) \\
-  &amp;amp;=&amp;amp; (\frac{\partial g}{\partial \mu})^2\sigma^2 + (\frac{\partial g}{\partial \sigma})^2\sigma^4 \\
-  &amp;amp;=&amp;amp; 1 + \frac{\mu^2}{2\sigma^2} \\
-  &amp;amp;=&amp;amp; 1 + \frac{1}{2}SR^2
-\end{eqnarray}
-\]&lt;/span&gt;
-と導出することができます。シャープレシオの絶対値が大きくなるほど指数的に分散が大きくなる傾向があるので良いパフォーマンスを見た時には注意が必要かもしれません。年率化されたシャープレシオの推定値&lt;span class=&#34;math inline&#34;&gt;\(\hat{SR}(q)\)&lt;/span&gt;が従う分布はここから&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\hat{SR}(q)\sim^a \mathcal{N}(\sqrt{q}SR,\frac{V(q)}{T}) \\
+&lt;p&gt;$$
+&lt;code&gt;\begin{eqnarray} \boldsymbol V_g &amp;amp;=&amp;amp; \left( \begin{array}{cccc} \frac{\partial g}{\partial \mu}, \frac{\partial g}{\partial \sigma}\\ \end{array} \right) \left(  \begin{array}{cccc} \sigma^2 &amp;amp; 0\\ 0 &amp;amp; 2\sigma^4\\ \end{array} \right) \left( \begin{array}{cccc} \frac{\partial g}{\partial \mu}\\ \frac{\partial g}{\partial \sigma}\\ \end{array} \right) \\ &amp;amp;=&amp;amp; \left( \begin{array}{cccc} \frac{\partial g}{\partial \mu}\sigma^2, \frac{\partial g}{\partial \sigma}2\sigma^4\\ \end{array} \right) \left( \begin{array}{cccc} \frac{\partial g}{\partial \mu}\\ \frac{\partial g}{\partial \sigma}\\ \end{array} \right) \\ &amp;amp;=&amp;amp; (\frac{\partial g}{\partial \mu})^2\sigma^2 + (\frac{\partial g}{\partial \sigma})^2\sigma^4 \\ &amp;amp;=&amp;amp; 1 + \frac{\mu^2}{2\sigma^2} \\ &amp;amp;=&amp;amp; 1 + \frac{1}{2}SR^2 \end{eqnarray}&lt;/code&gt;
+$$
+と導出することができます。シャープレシオの絶対値が大きくなるほど指数的に分散が大きくなる傾向があるので良いパフォーマンスを見た時には注意が必要かもしれません。年率化されたシャープレシオの推定値$\hat{SR}(q)$が従う分布はここから&lt;/p&gt;
+&lt;p&gt;$$
+\hat{SR}(q)\sim^a \mathcal{N}(\sqrt{q}SR,\frac{V(q)}{T}) \&lt;br&gt;
 V(q) = q{\boldsymbol V}_g = q(1 + \frac{1}{2}SR^2)
-\]&lt;/span&gt;
-となります。今、&lt;span class=&#34;math inline&#34;&gt;\(y\)&lt;/span&gt;をバックテストを行う年数とすると&lt;span class=&#34;math inline&#34;&gt;\(T=yq\)&lt;/span&gt;と書け、これを用いて上式を以下のように書き換えることができます(日次リターンで3年計測の場合、サンプルサイズ&lt;span class=&#34;math inline&#34;&gt;\(T\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(T=3×365=1095\)&lt;/span&gt;)。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+$$
+となります。今、$y$をバックテストを行う年数とすると$T=yq$と書け、これを用いて上式を以下のように書き換えることができます(日次リターンで3年計測の場合、サンプルサイズ$T$は$T=3×365=1095$)。&lt;/p&gt;
+&lt;p&gt;$$
 \hat{SR}(q)\sim^a \mathcal{N}(\sqrt{q}SR,\frac{1+\frac{1}{2}SR^2}{y}) \tag{1}
-\]&lt;/span&gt;
-頻度&lt;span class=&#34;math inline&#34;&gt;\(q\)&lt;/span&gt;はシャープレシオの平均には影響しますが分散には影響を及ぼしません。これでシャープレシオの推定値の漸近分布を導出することができました。さて、これを使ってなにをしたかったのかということですが、私たちは今バックテストの信頼性について考えていたのでした。つまり、FMが新商品を開発するために頭をひねって考え出した&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;個の投資戦略案のバックテストをした際に、それらのシャープレシオの真値がどれも0であるにも関わらず、非常に高い(良い)値が出る確率はいかほどなのかということです。Bailey et. al.(2015)では以下のように記述されていました。&lt;/p&gt;
+$$
+頻度$q$はシャープレシオの平均には影響しますが分散には影響を及ぼしません。これでシャープレシオの推定値の漸近分布を導出することができました。さて、これを使ってなにをしたかったのかということですが、私たちは今バックテストの信頼性について考えていたのでした。つまり、FMが新商品を開発するために頭をひねって考え出した$N$個の投資戦略案のバックテストをした際に、それらのシャープレシオの真値がどれも0であるにも関わらず、非常に高い(良い)値が出る確率はいかほどなのかということです。Bailey et. al.(2015)では以下のように記述されていました。&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;How high is the expected maximum Sharpe ratio IS among a set of strategy configurations where the true Sharpe ratio is zero?&lt;/em&gt;&lt;/p&gt;
 &lt;p&gt;また、期待最大シャープレシオの値を小さくするためには、いったいどれほどの期間バックテストをすべきなのかも知りたいわけです。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;the-minimum-backtest-lengthを導出してみる&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;4. &lt;code&gt;the minimum backtest length&lt;/code&gt;を導出してみる&lt;/h2&gt;
-&lt;p&gt;今考えている状況は、&lt;span class=&#34;math inline&#34;&gt;\(\mu=0\)&lt;/span&gt;で&lt;span class=&#34;math inline&#34;&gt;\(y\)&lt;/span&gt;を簡単化のために1年とすると(1)式より&lt;span class=&#34;math inline&#34;&gt;\(\hat{SR}(q)\)&lt;/span&gt;は標準正規分布&lt;span class=&#34;math inline&#34;&gt;\(\mathcal{N}(0,1)\)&lt;/span&gt;に従います。さて、今から私たちは&lt;span class=&#34;math inline&#34;&gt;\(\hat{SR}_n(n=1,2,...N)\)&lt;/span&gt;の最大値&lt;span class=&#34;math inline&#34;&gt;\(\max[\hat{SR}]_N\)&lt;/span&gt;の期待値について考えていくのですが、勘の良い人ならお気づきの通り、議論は極値統計の文脈に入っていくことになります。&lt;span class=&#34;math inline&#34;&gt;\(\hat{SR}_n\sim\mathcal{N}(0,1)\)&lt;/span&gt;はi.i.d.なので、その最大統計量の極値分布はFisher-Tippett-Gnedenko定理よりガンベル分布になります(証明追えてないです、ごめんなさい)。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+&lt;h2 id=&#34;4-the-minimum-backtest-lengthを導出してみる&#34;&gt;4. &lt;code&gt;the minimum backtest length&lt;/code&gt;を導出してみる&lt;/h2&gt;
+&lt;p&gt;今考えている状況は、$\mu=0$で$y$を簡単化のために1年とすると(1)式より$\hat{SR}(q)$は標準正規分布$\mathcal{N}(0,1)$に従います。さて、今から私たちは$\hat{SR}_n(n=1,2,&amp;hellip;N)$の最大値$\max[\hat{SR}]_N$の期待値について考えていくのですが、勘の良い人ならお気づきの通り、議論は極値統計の文脈に入っていくことになります。$\hat{SR}_n\sim\mathcal{N}(0,1)$はi.i.d.なので、その最大統計量の極値分布はFisher-Tippett-Gnedenko定理よりガンベル分布になります(証明追えてないです、ごめんなさい)。&lt;/p&gt;
+&lt;p&gt;$$
 \lim_{N\rightarrow\infty}prob[\frac{\max[\hat{SR}]_N-\alpha}{\beta}\leq x] = G(x) = e^{-e^{-x}}
-\]&lt;/span&gt;
-ここで、&lt;span class=&#34;math inline&#34;&gt;\(\alpha=Z(x)^{-1}[1-1/N], \beta=Z(x)^{-1}[1-1/Ne^{-1}]-\alpha\)&lt;/span&gt;で、&lt;span class=&#34;math inline&#34;&gt;\(Z(x)\)&lt;/span&gt;は標準正規分布の累積分布関数を表しています。ガンベル分布のモーメント母関数&lt;span class=&#34;math inline&#34;&gt;\(M_x(t)\)&lt;/span&gt;は&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\begin{eqnarray}
-M_x(t) &amp;amp;=&amp;amp; E[e^{tx}] = \int_{-\infty}^\infty e^{tx}e^{-x}e^{-e^{-x}}dx \\
-\end{eqnarray}
-\]&lt;/span&gt;
-と書け、&lt;span class=&#34;math inline&#34;&gt;\(x=-\log(y)\)&lt;/span&gt;と変数変換すると&lt;span class=&#34;math inline&#34;&gt;\(dx/dy=-1/y=-(e^{-x})^{-1}\)&lt;/span&gt;なので、&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\begin{eqnarray}
-M_x(t) &amp;amp;=&amp;amp; \int_{\infty}^0-e^{-t\log(y)}e^{-y}dy \\
-&amp;amp;=&amp;amp; \int_{0}^\infty y^{-t}e^{-y}dy \\
-&amp;amp;=&amp;amp; \Gamma(1-t)
-\end{eqnarray}
-\]&lt;/span&gt;
-となります。&lt;span class=&#34;math inline&#34;&gt;\(\Gamma(x)\)&lt;/span&gt;はガンマ関数です。ここから、標準化された最大統計量の期待値(平均)は&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\begin{eqnarray}
-\lim_{N\rightarrow\infty} E[\frac{\max[\hat{SR}]_N-\alpha}{\beta}] &amp;amp;=&amp;amp; M_x&amp;#39;(t)|_{t=0} \\
-&amp;amp;=&amp;amp; (-1)\Gamma&amp;#39;(1) \\
-&amp;amp;=&amp;amp; (-1)(-\gamma) = \gamma
-\end{eqnarray}
-\]&lt;/span&gt;
-となります。ここで、&lt;span class=&#34;math inline&#34;&gt;\(\gamma\approx0.5772156649...\)&lt;/span&gt;はEuler-Mascheroni定数です。よって、&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;が大きいとき、i.i.d.の標準正規分布の最大統計量の期待値は&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+$$
+ここで、$\alpha=Z(x)^{-1}[1-1/N], \beta=Z(x)^{-1}[1-1/Ne^{-1}]-\alpha$で、$Z(x)$は標準正規分布の累積分布関数を表しています。ガンベル分布のモーメント母関数$M_x(t)$は&lt;/p&gt;
+&lt;p&gt;$$
+&lt;code&gt;\begin{eqnarray} M_x(t) &amp;amp;=&amp;amp; E[e^{tx}] = \int_{-\infty}^\infty e^{tx}e^{-x}e^{-e^{-x}}dx \\ \end{eqnarray}&lt;/code&gt;
+$$
+と書け、$x=-\log(y)$と変数変換すると$dx/dy=-1/y=-(e^{-x})^{-1}$なので、&lt;/p&gt;
+&lt;p&gt;$$
+&lt;code&gt;\begin{eqnarray} M_x(t) &amp;amp;=&amp;amp; \int_{\infty}^0-e^{-t\log(y)}e^{-y}dy \\ &amp;amp;=&amp;amp; \int_{0}^\infty y^{-t}e^{-y}dy \\ &amp;amp;=&amp;amp; \Gamma(1-t) \end{eqnarray}&lt;/code&gt;
+$$
+となります。$\Gamma(x)$はガンマ関数です。ここから、標準化された最大統計量の期待値(平均)は&lt;/p&gt;
+&lt;p&gt;$$
+&lt;code&gt;\begin{eqnarray} \lim_{N\rightarrow\infty} E[\frac{\max[\hat{SR}]_N-\alpha}{\beta}] &amp;amp;=&amp;amp; M_x&#39;(t)|_{t=0} \\ &amp;amp;=&amp;amp; (-1)\Gamma&#39;(1) \\ &amp;amp;=&amp;amp; (-1)(-\gamma) = \gamma \end{eqnarray}&lt;/code&gt;
+$$
+となります。ここで、$\gamma\approx0.5772156649&amp;hellip;$はEuler-Mascheroni定数です。よって、$N$が大きいとき、i.i.d.の標準正規分布の最大統計量の期待値は&lt;/p&gt;
+&lt;p&gt;$$
 E[\max[\hat{SR}]] \approx \alpha + \gamma\beta = (1-\gamma)Z^{-1}[1-\frac{1}{N}]+\gamma Z^{-1}[1-\frac{1}{N}e^{-1}] \tag{2}
-\]&lt;/span&gt;
-と近似できます(&lt;span class=&#34;math inline&#34;&gt;\(N&amp;gt;1\)&lt;/span&gt;)。これがBailey et. al.(2015)のProposition 1.になります。&lt;span class=&#34;math inline&#34;&gt;\(E[\max[\hat{SR}]]\)&lt;/span&gt;を戦略数(試行錯誤数)&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;の関数としてプロットしたのが以下になります。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(ggplot2)
-ExMaxSR = function(N){
-  gamma_ct = -digamma(1)
-  Z = qnorm(0.99)
-  return((1-gamma_ct)*Z*(1-1/N) + gamma_ct*Z*(1-1/N*exp(1)^{-1}))
+$$
+と近似できます($N&amp;gt;1$)。これがBailey et. al.(2015)のProposition 1.になります。$E[\max[\hat{SR}]]$を戦略数(試行錯誤数)$N$の関数としてプロットしたのが以下になります。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(ggplot2)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## Warning: パッケージ &#39;ggplot2&#39; はバージョン 4.1.3 の R の下で造られました
+&lt;/code&gt;&lt;/pre&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;ExMaxSR &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(N){
+  gamma_ct &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;digamma&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)
+  Z &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;qnorm&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;0.99&lt;/span&gt;)
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;return&lt;/span&gt;((&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;gamma_ct)&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;Z&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1-1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;N) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; gamma_ct&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;Z&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1-1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;N&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;exp&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)^{&lt;span style=&#34;color:#ae81ff&#34;&gt;-1&lt;/span&gt;}))
 }
-N = list(0:100)
-result = purrr::map(N,ExMaxSR)
-ggplot2::ggplot(data.frame(ExpMaxSR = unlist(result),N = unlist(N)),aes(x=N,y=ExpMaxSR)) +
-  geom_line(size=1) + ylim(0,3)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-1-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
-&lt;p&gt;小さい&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;に対して急激に&lt;span class=&#34;math inline&#34;&gt;\(\max[\hat{SR}]\)&lt;/span&gt;の期待値が上昇していることがわかると思います。&lt;span class=&#34;math inline&#34;&gt;\(N=10\)&lt;/span&gt;の時、&lt;span class=&#34;math inline&#34;&gt;\(\max[\hat{SR}]=1.54\)&lt;/span&gt;となっており、全ての戦略のシャープレシオの真値が0にも拘わらず、少なくとも1つは見かけ上かなり良いパフォーマンスの戦略が見つかることが期待されます。金融ではhold-out法でのバックテストはしばしば使用されるかと思いますが、この方法は試行(錯誤)回数を考慮に入れていないため、&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;が大きいときには信頼に足る結果を返してくれないわけです。バックテストの結果を向上させるため、闇雲にあれやこれやとシミュレーションを行うことは非常に危険だと思いませんか？最終的にプレゼン資料に上がってくるのは&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;個の戦略のうち、最もパフォーマンスが良いもののみですから、今回の例のように10個戦略を考えただけでもどれかはシャープレシオが1.87付近に分布しているわけです。試行錯誤数なんてもちろん資料には記載しませんから、非常にミスリーディングなわけです。こういった資料を評価する際にはまず偽陽性を疑ってかかった方がいいかもしれません。&lt;/p&gt;
-&lt;p&gt;では、どうすれば良いのかという話ですが、Bailey et. al.(2015)では、Minimum Backtest Lengthを計算しています。要は試行(錯誤)数&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;を増やすにつれて、バックテストの年数&lt;span class=&#34;math inline&#34;&gt;\(y\)&lt;/span&gt;も伸ばしていけよと戒めているわけです。&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;とMinimum Backtest Lengthの関係性を示していきましょう。先ほどと同じく&lt;span class=&#34;math inline&#34;&gt;\(\mu=0\)&lt;/span&gt;を仮定しますが、&lt;span class=&#34;math inline&#34;&gt;\(y\neq 1\)&lt;/span&gt;であるケースを考えます。年率化シャープレシオの最大統計量の期待値は(2)式より、&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+N &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;list&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt;)
+result &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; purrr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;map&lt;/span&gt;(N,ExMaxSR)
+ggplot2&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;ggplot&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;data.frame&lt;/span&gt;(ExpMaxSR &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;unlist&lt;/span&gt;(result),N &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;unlist&lt;/span&gt;(N)),&lt;span style=&#34;color:#a6e22e&#34;&gt;aes&lt;/span&gt;(x&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;N,y&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;ExpMaxSR)) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;geom_line&lt;/span&gt;(size&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ylim&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../post/post19/index_files/figure-html/unnamed-chunk-1-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;小さい$N$に対して急激に$\max[\hat{SR}]$の期待値が上昇していることがわかると思います。$N=10$の時、$\max[\hat{SR}]=1.54$となっており、全ての戦略のシャープレシオの真値が0にも拘わらず、少なくとも1つは見かけ上かなり良いパフォーマンスの戦略が見つかることが期待されます。金融ではhold-out法でのバックテストはしばしば使用されるかと思いますが、この方法は試行(錯誤)回数を考慮に入れていないため、$N$が大きいときには信頼に足る結果を返してくれないわけです。バックテストの結果を向上させるため、闇雲にあれやこれやとシミュレーションを行うことは非常に危険だと思いませんか？最終的にプレゼン資料に上がってくるのは$N$個の戦略のうち、最もパフォーマンスが良いもののみですから、今回の例のように10個戦略を考えただけでもどれかはシャープレシオが1.87付近に分布しているわけです。試行錯誤数なんてもちろん資料には記載しませんから、非常にミスリーディングなわけです。こういった資料を評価する際にはまず偽陽性を疑ってかかった方がいいかもしれません。&lt;/p&gt;
+&lt;p&gt;では、どうすれば良いのかという話ですが、Bailey et. al.(2015)では、Minimum Backtest Lengthを計算しています。要は試行(錯誤)数$N$を増やすにつれて、バックテストの年数$y$も伸ばしていけよと戒めているわけです。$N$とMinimum Backtest Lengthの関係性を示していきましょう。先ほどと同じく$\mu=0$を仮定しますが、$y\neq 1$であるケースを考えます。年率化シャープレシオの最大統計量の期待値は(2)式より、&lt;/p&gt;
+&lt;p&gt;$$
 E[\max[\hat{SR}(q)]_N] \approx y^{-1/2}((1-\gamma)Z^{-1}[1-\frac{1}{N}]+\gamma Z^{-1}[1-\frac{1}{N}e^{-1}])
-\]&lt;/span&gt;
-となります。これを&lt;span class=&#34;math inline&#34;&gt;\(y\)&lt;/span&gt;に対して解いてやることでMinBTLが求まります。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+$$
+となります。これを$y$に対して解いてやることでMinBTLが求まります。&lt;/p&gt;
+&lt;p&gt;$$
 MinBTL \approx (\frac{(1-\gamma)Z^{-1}[1-\frac{1}{N}]+\gamma Z^{-1}[1-\frac{1}{N}e^{-1}]}{\bar{E[\max[\hat{SR}(q)]_N]}})^2
-\]&lt;/span&gt;
-ここで、&lt;span class=&#34;math inline&#34;&gt;\(\bar{E[\max[\hat{SR}(q)]_N]}\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(E[\max[\hat{SR}(q)]_N]\)&lt;/span&gt;の上限値で、シャープレシオの真値が0である&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;戦略でシャープレシオの最大統計量が取りうる値を抑えます。その際に、必要なバックテスト年数&lt;span class=&#34;math inline&#34;&gt;\(y\)&lt;/span&gt;がMinBTLとして導出されるのです。&lt;span class=&#34;math inline&#34;&gt;\(\bar{E[\max[\hat{SR}(q)]_N]}=1\)&lt;/span&gt;として、MinBTLを&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;の関数としてプロットしたものが以下です。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;MinBTL &amp;lt;- function(N,MaxSR){
-  return((ExMaxSR(N)/MaxSR)^2)
+$$
+ここで、$\bar{E[\max[\hat{SR}(q)]_N]}$は$E[\max[\hat{SR}(q)]_N]$の上限値で、シャープレシオの真値が0である$N$戦略でシャープレシオの最大統計量が取りうる値を抑えます。その際に、必要なバックテスト年数$y$がMinBTLとして導出されるのです。$\bar{E[\max[\hat{SR}(q)]_N]}=1$として、MinBTLを$N$の関数としてプロットしたものが以下です。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;MinBTL &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(N,MaxSR){
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;return&lt;/span&gt;((&lt;span style=&#34;color:#a6e22e&#34;&gt;ExMaxSR&lt;/span&gt;(N)&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;MaxSR)^2)
 }
-N = list(1:100)
-result = purrr::map2(N,1,MinBTL)
-ggplot2::ggplot(data.frame(MinBTL = unlist(result),N = unlist(N)),aes(x=N,y=MinBTL)) +
-  geom_line(size=1) + ylim(0,6)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-2-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;simSR &amp;lt;- function(T1){
-    r = rnorm(T1)
-    return(mean(r)/sd(r))
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;仮にバックテスト年数が3年以内しかできない場合は試行(錯誤)回数&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;はほぼ1回に抑えないといけないことになります。3年以内の場合は一発で当ててねという厳しめの制約です。注意しないといけないのは、MinBTLの範囲内でバックテストを行っていたとしてもオーバーフィットすることは考えられるということです。つまり、MinBTLは必要条件であって十分条件でないというわけです。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;終わりに&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;4. 終わりに&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3257497&#34;&gt;López de Prado(2018)&lt;/a&gt;では、オーバーフィッティングを防ぐ汎用的な手段として以下が挙げられています。&lt;/p&gt;
-&lt;ol style=&#34;list-style-type: decimal&#34;&gt;
-&lt;li&gt;&lt;p&gt;Develop models for entire asset classes or investment universes, rather than for specific securities. Investors diversify, hence they do not make mistake X only on security Y. If you find mistake X only on security Y, no matter how apparently profitable, it is likely a false discovery.
-(拙訳：特定の有価証券ではなく、アセットクラス全体またはユニバース全体のモデルを開発すること。投資家はリスクを分散させているので、彼らはある証券Yだけに対してミスXをすることはありません。あなたが証券YだけにミスXを見つけた場合は、それがどんなに明らかに有益であっても、誤発見である可能性が高い。)&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Apply bagging as a means to both prevent overfitting and reduce the variance of the forecasting error. If bagging deteriorates the performance of a strategy, it was likely overfit to a small number of observations or outliers.
-(拙訳：オーバーフィットを防ぎ、予測誤差の分散を減らすための手段として、バギングを適用すること。バギングが戦略のパフォーマンスを悪化させる場合、それは少数の観測値または外れ値にオーバーフィットした可能性が高い。)&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;&lt;strong&gt;Do not backtest until all your research is complete.&lt;/strong&gt;
-(拙訳：&lt;strong&gt;すべてのリサーチが完了するまでバックテストをしないこと。&lt;/strong&gt;)&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Record every backtest conducted on a dataset so that the probability of backtest overfitting may be estimated on the final selected result (see &lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2326253&#34;&gt;Bailey, Borwein, López de Prado and Zhu(2017)&lt;/a&gt;), and the Sharpe ratio may be properly deflated by the number of trials carried out (&lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2465675&#34;&gt;Bailey and López de Prado(2014.b)&lt;/a&gt;).
-(拙訳：研究者が最終的に選択したバックテスト結果がオーバーフィットしている確率を推定できるように、単一の(同じ)データセットで実施されたバックテストをすべて記録すること（Bailey, Borwein, López de Prado and Zhu [2017]）、また、実施された試行数によってシャープレシオを適切にデフレーションできるようにすること（Bailey and López de Prado [2014]）。)&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Simulate scenarios rather than history. A standard backtest is a historical simulation, which can be easily overfit. History is just the random path that was realized, and it could have been entirely different. Your strategy should be profitable under a wide range of scenarios, not just the anecdotal historical path. It is harder to overfit the outcome of thousands of “what if” scenarios.
-(拙訳：ヒストリカルではなくシナリオをシミュレーションすること。標準的なバックテストはヒストリカルシミュレーションであり、オーバーフィットしやすい。歴史(これまでの実績)はランダムなパスの実現値に過ぎず、全く違ったものになっていた可能性があります。あなたの戦略は、逸話的なヒストリカルパスではなく、様々なシナリオの下で利益を得ることができるものであるべきです。何千もの「もしも」のシナリオ結果をオーバーフィットさせるのは(ヒストリカルシミュレーションで過学習するよりも)より難しいことです。)&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Do not research under the influence of a backtest. If the backtest fails to identify a profitable strategy,
+N &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;list&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt;)
+result &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; purrr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;map2&lt;/span&gt;(N,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,MinBTL)
+ggplot2&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;ggplot&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;data.frame&lt;/span&gt;(MinBTL &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;unlist&lt;/span&gt;(result),N &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;unlist&lt;/span&gt;(N)),&lt;span style=&#34;color:#a6e22e&#34;&gt;aes&lt;/span&gt;(x&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;N,y&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;MinBTL)) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;geom_line&lt;/span&gt;(size&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ylim&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../post/post19/index_files/figure-html/unnamed-chunk-2-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;simSR &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(T1){
+    r &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;rnorm&lt;/span&gt;(T1)
+    &lt;span style=&#34;color:#a6e22e&#34;&gt;return&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;mean&lt;/span&gt;(r)&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;sd&lt;/span&gt;(r))
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;仮にバックテスト年数が3年以内しかできない場合は試行(錯誤)回数$N$はほぼ1回に抑えないといけないことになります。3年以内の場合は一発で当ててねという厳しめの制約です。注意しないといけないのは、MinBTLの範囲内でバックテストを行っていたとしてもオーバーフィットすることは考えられるということです。つまり、MinBTLは必要条件であって十分条件でないというわけです。&lt;/p&gt;
+&lt;h2 id=&#34;4-終わりに&#34;&gt;4. 終わりに&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3257497&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;López de Prado(2018)&lt;/a&gt;では、オーバーフィッティングを防ぐ汎用的な手段として以下が挙げられています。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;Develop models for entire asset classes or investment universes, rather than for specific securities. Investors diversify, hence they do not make mistake X only on security Y. If you find mistake X only on security Y, no matter how apparently profitable, it is likely a false discovery.
+(拙訳：特定の有価証券ではなく、アセットクラス全体またはユニバース全体のモデルを開発すること。投資家はリスクを分散させているので、彼らはある証券Yだけに対してミスXをすることはありません。あなたが証券YだけにミスXを見つけた場合は、それがどんなに明らかに有益であっても、誤発見である可能性が高い。)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Apply bagging as a means to both prevent overfitting and reduce the variance of the forecasting error. If bagging deteriorates the performance of a strategy, it was likely overfit to a small number of observations or outliers.
+(拙訳：オーバーフィットを防ぎ、予測誤差の分散を減らすための手段として、バギングを適用すること。バギングが戦略のパフォーマンスを悪化させる場合、それは少数の観測値または外れ値にオーバーフィットした可能性が高い。)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Do not backtest until all your research is complete.&lt;/strong&gt;
+(拙訳：&lt;strong&gt;すべてのリサーチが完了するまでバックテストをしないこと。&lt;/strong&gt;)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Record every backtest conducted on a dataset so that the probability of backtest overfitting may be estimated on the final selected result (see &lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2326253&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Bailey, Borwein, López de Prado and Zhu(2017)&lt;/a&gt;), and the Sharpe ratio may be properly deflated by the number of trials carried out (&lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2465675&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Bailey and López de Prado(2014.b)&lt;/a&gt;).
+(拙訳：研究者が最終的に選択したバックテスト結果がオーバーフィットしている確率を推定できるように、単一の(同じ)データセットで実施されたバックテストをすべて記録すること（Bailey, Borwein, López de Prado and Zhu [2017]）、また、実施された試行数によってシャープレシオを適切にデフレーションできるようにすること（Bailey and López de Prado [2014]）。)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Simulate scenarios rather than history. A standard backtest is a historical simulation, which can be easily overfit. History is just the random path that was realized, and it could have been entirely different. Your strategy should be profitable under a wide range of scenarios, not just the anecdotal historical path. It is harder to overfit the outcome of thousands of “what if” scenarios.
+(拙訳：ヒストリカルではなくシナリオをシミュレーションすること。標準的なバックテストはヒストリカルシミュレーションであり、オーバーフィットしやすい。歴史(これまでの実績)はランダムなパスの実現値に過ぎず、全く違ったものになっていた可能性があります。あなたの戦略は、逸話的なヒストリカルパスではなく、様々なシナリオの下で利益を得ることができるものであるべきです。何千もの「もしも」のシナリオ結果をオーバーフィットさせるのは(ヒストリカルシミュレーションで過学習するよりも)より難しいことです。)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Do not research under the influence of a backtest. If the backtest fails to identify a profitable strategy,
 start from scratch. Resist the temptation of reusing those results.
-(拙訳：バックテストのフィードバックを受けてリサーチしないこと。バックテストが有益な戦略を見つけ出すことに失敗した場合は、ゼロからリサーチを再始動してください。それらの結果を再利用する誘惑に抗ってください。)&lt;/p&gt;&lt;/li&gt;
+(拙訳：バックテストのフィードバックを受けてリサーチしないこと。バックテストが有益な戦略を見つけ出すことに失敗した場合は、ゼロからリサーチを再始動してください。それらの結果を再利用する誘惑に抗ってください。)&lt;/p&gt;
+&lt;/li&gt;
 &lt;/ol&gt;
-&lt;p&gt;3と6は本日の論文と関係のある文脈だと思います。この分野は他にも研究の蓄積があるので、業務でバックテストを行うという人は運用手法の勉強もいいですが、そもそものお作法としてバックテストの正しい運用方法について学ぶことをお勧めします。&lt;br /&gt;
+&lt;p&gt;3と6は本日の論文と関係のある文脈だと思います。この分野は他にも研究の蓄積があるので、業務でバックテストを行うという人は運用手法の勉強もいいですが、そもそものお作法としてバックテストの正しい運用方法について学ぶことをお勧めします。&lt;br&gt;
 さて、いつもとは違う観点で、少しメタ的なトピックに取り組んでみました。自分自身仕事柄バックテスト結果などを見ることも多いですし、このブログでもしばしばhold-out法でのバックテストをしています。得られた結果の不確実性を理解して、評価できるよう今後もこのトピックの研究を追っていきたいと思います。&lt;/p&gt;
-&lt;/div&gt;
 </description>
     </item>
     

@@ -21,22 +21,20 @@ output:
     toc: true
 ---
 
-おはこんばんにちは。前回、競走馬の馬体写真からCNNを用いて順位を予想するモデルを構築しました。結果は芳しくなく、特に`shap`値を用いた要因分析を行うと馬体よりも背景の厩舎に反応している様子が見えたりと分析の精緻化が必要となりました。今回はP`ytorch`のPre-trainedモデルを用いて馬体写真から背景を切り出し、馬体のみとなった写真で再分析を行いたいと思います。
+おはこんばんにちは。前回、競走馬の馬体写真からCNNを用いて順位を予想するモデルを構築しました。結果は芳しくなく、特に`shap`値を用いた要因分析を行うと馬体よりも背景の厩舎に反応している様子が見えたりと分析の精緻化が必要となりました。今回は`Pytorch`のPre-trainedモデルを用いて馬体写真から背景を切り出し、馬体のみとなった写真で再分析を行いたいと思います。
 
 ```{r,include=FALSE}
 library(reticulate)
-conda_path <- "C:\\Users\\aashi\\Anaconda3\\envs\\umanalytics"
-use_condaenv(conda_path)
+library(reticulate)
+PATH <- "C:\\Users\\aashi\\Anaconda3\\python.exe"
+Sys.setenv(RETICULATE_PYTHON = PATH)
+py_run_string("import os as os")
+py_run_string("os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = 'C:/Users/aashi/Anaconda3/Library/plugins/platforms'")
 ```
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(warning = FALSE)
 knitr::opts_chunk$set(message = FALSE)
-```
-
-```{python,include=FALSE}
-import os
-os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = 'C:/Users/aashi/Anaconda3/envs/umanalytics/Library/plugins/platforms'
 ```
 
 ## 1. Pre-trainedモデルのダウンロード
@@ -111,9 +109,9 @@ for i, folder in enumerate(folders):
 行っている処理はPre-trainedモデルで以下のような`mask`画像を出力し、実際の画像の`numpy`配列と`mask`画像を統合して、背景削除画像を生成しています。出力例は以下のような感じです。
 
 ```{python,include=FALSE}
-img = Image.open(r'C:\Users\aashi\Documents\myblog_multi\content\post\post20\ＮＨＫマイルＣ_レシステンシア　評価Ｂ.jpg')
-mask = Image.open(r'C:\Users\aashi\Documents\myblog_multi\content\post\post20\mask.jpg')
-outImage = Image.open(r'C:\Users\aashi\Documents\myblog_multi\content\post\post20\ＮＨＫマイルＣ_レシステンシア　評価Ｂ削除.jpg')
+img = Image.open(r'C:\Users\aashi\Documents\myblog_multi\content\ja\post\post20\ＮＨＫマイルＣ_レシステンシア　評価Ｂ.jpg')
+mask = Image.open(r'C:\Users\aashi\Documents\myblog_multi\content\ja\post\post20\mask.jpg')
+outImage = Image.open(r'C:\Users\aashi\Documents\myblog_multi\content\ja\post\post20\ＮＨＫマイルＣ_レシステンシア　評価Ｂ削除.jpg')
 ```
 ```{python}
 plt.gray()
@@ -256,52 +254,6 @@ shap.image_plot(shap_values[1],X_test[[4]])
 ```
 
 前足から顔にかけてを評価しているようです。意外に臀部を評価している様子はありません。
-各層において画像のどの側面を捉えているかを可視化してみたいと思います。
-
-```{python}
-from keras import models
-
-layer_outputs = [layer.output for layer in model.layers[:8]]
-layer_names = []
-for layer in model.layers[:8]:
-    layer_names.append(layer.name)
-images_per_row = 16
-
-activation_model = models.Model(inputs=model.input, outputs=layer_outputs)
-activations = activation_model.predict(X_train[[0]])
-
-for layer_name, layer_activation in zip(layer_names, activations):
-    n_features = layer_activation.shape[-1]
-
-    size = layer_activation.shape[1]
-
-    n_cols = n_features // images_per_row
-    display_grid = np.zeros((size * n_cols, images_per_row * size))
-
-    for col in range(n_cols):
-        for row in range(images_per_row):
-            channel_image = layer_activation[0,
-                                             :, :,
-                                             col * images_per_row + row]
-            channel_image -= channel_image.mean()
-            channel_image /= channel_image.std()
-            channel_image *= 64
-            channel_image += 128
-            channel_image = np.clip(channel_image, 0, 255).astype('uint8')
-            display_grid[col * size : (col + 1) * size,
-                         row * size : (row + 1) * size] = channel_image
-
-    scale = 1. / size
-    plt.figure(figsize=(scale * display_grid.shape[1],
-                        scale * display_grid.shape[0]))
-    plt.title(layer_name)
-    plt.grid(False)
-    plt.imshow(display_grid, cmap='viridis')
-    plt.show()
-    plt.close()
-```
-
-こっちはやっぱり分からないですね。
 
 ## 5.まとめ
 

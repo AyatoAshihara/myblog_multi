@@ -26,6 +26,8 @@ Hi. There are several ways to collect macroeconomic data, but collecting data fo
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(warning = FALSE)
 knitr::opts_chunk$set(message = FALSE)
+PATH <- r"(C:\Users\aashi\Anaconda3\python.exe)"
+Sys.setenv(RETICULATE_PYTHON = PATH)
 ```
 
 ```{python,include=FALSE}

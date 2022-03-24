@@ -1,7 +1,7 @@
 ---
-title: "【徹底比較】センチメントスコア算出手法！！ - 第1回"
+title: "【徹底比較】センチメントスコア算出手法！！ - 第2回"
 author: admin
-date: 2022-03-21T00:00:00Z
+date: 2022-03-24T00:00:00Z
 categories: ["単発"]
 tags: ["Python","前処理","機械学習","テキスト解析"]
 draft: false
@@ -17,11 +17,10 @@ projects: []
 summary: 機械学習を用いたセンチメントスコアの算出方法の発展を簡単にさらっていきます。
 output: 
   blogdown::html_page:
-    number_sections: false
     toc: true
+codefolding_show: "hide"
+bibliography: references.bib
 ---
-
-おはこんばんにちは。テキスト解析はデータ分析界隈ではもうかなり当たり前になってきています。テキストの感性情報(センチメント)を抽出する手法には、どのようなものがあるかあるのか調べたところかなり時代は進んでいると実感しました。今回は実際に`R`や`Python`で作成した機械学習モデルを用いて、それらの精度を比較してみたいと思います。 今回はその第１回目ということで、データセットや全体感のお話です。
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(warning = FALSE)
@@ -33,47 +32,50 @@ import os
 os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = r'C:\Users\aashi\Anaconda3\Library\plugins\platforms'
 ```
 
-## 1. 解きたい問題
+おはこんばんにちは。センチメントスコア算出企画の第2弾です。
+今回は辞書ベースのセンチメントスコア算出方法を実践します。
 
-今回解きたい問題は「景況感を表す文書表現を学習し、実際の景気判断を予測する」というタスクです。 データセットには、内閣府が出している景気ウオッチャー調査を使用します。
+## 1. 分析手法の説明
 
-### 1.1 景気ウオッチャー調査とは
+### 辞書ベース手法とは
 
-景気ウオッチャー調査とは、内閣府が月次で公表している景気動向判断のための統計情報です。調査の目的は以下の通りです([内閣府Webサイト](https://www5.cao.go.jp/keizai3/watcher/watcher_mokuteki.html#mokuteki)より)。
+辞書ベース手法はその名の通り、辞書を用いてセンチメントスコアを算出する手法です。各単語が持つ感情極性(ここでは、ポジティブな意味かネガティブな意味かを表す)をスコア化したものをあらかじめ辞書として保存し、文書内で出現した単語とそれぞれの辞書スコアを紐付け、(何らかの方法で)集計することで、その文書全体のセンチメントスコアを算出します。
 
-\<調査の目的>
+### センチメントスコアを参照する辞書
 
-:   地域の景気に関連の深い動きを観察できる立場にある人々の協力を得て、地域ごとの景気動向を的確かつ迅速に把握し、景気動向判断の基礎資料とすることを目的とする。
+上記においては、スコアをどのように算出するのかが重要になります。現在公開されている日本語辞書の中で有名な東京工業大学の高村研究室が作成した辞書[@takamura2005]では以下のような方法で算出を行っているようです([原典はこちら](http://lr-www.pi.titech.ac.jp/wp/?page_id=4))。
 
-では、この「地域の景気に関連の深い動きを観察できる立場にある人々」、「地域ごとの景気動向」、「的確かつ迅速に」という部分について少し深掘ってみます。
+> まず，辞書，シソーラス（類義語辞典），コーパスデータを用いて，極性が同じになりやすい単語ペアを抽出し，そしてそれらのペアを連結することにより巨大な語彙ネットワークを構築します．たとえば，「良い」と「良好」が類義語関係にあるので，この二単語を結ぶなどの作業を行います．ここで，単語の感情極性を電子スピンの方向とみなし，語彙ネットワークをスピン系とみなして，語彙ネットワークの状態（各スピンがどの方向を向いているか）を計算します．この計算結果を見ることにより，単語の感情極性がわかるのです．
 
-### 1.1.1 調査の対象範囲
+こちらの辞書はHPで公開されており、非営利目的であれば利用が可能のようです。ちょっと覗いてみましょう。
 
-調査の対象範囲は47都道府県となっています。また、調査対象者は「家計動向、企業動向、雇用等、代表的な経済活動項目の動向を敏感に反映する現象を観察できる業種の適当な職種の中から選定した2,050人」となっており、例えば小売店や飲食店の店員・店長、タクシー運転手、製造業・非製造業企業の経営者・従業員、人材派遣会社社員などを対象に行われています。
+```{r echo=FALSE}
+library(magrittr)
+# 単語感情極性対応表
+PNdict <- read.delim("http://www.lr.pi.titech.ac.jp/~takamura/pubs/pn_ja.dic", header=FALSE, sep=":") 
+colnames(PNdict) <- c("単語","読み仮名","品詞","感情極性スコア")
+PNdict %>% head()
+```
 
-### 1.1.2 調査期日および期間
+センチメントスコアは1から-1までを取り、1に近いほどポジティブを表します。最もポジティブな単語は「優れる」となっていることがわかります。 
 
-調査は月次で行われ、毎月25日から月末にかけて実施されます。当月の景況感について調査が行われ、翌月に公表されます。
+### 辞書ベース手法の利点・欠点
 
-### 1.1.3 調査の実施方法
+<利点>手法のわかりやすさ/教師データが不要:thumbsup:  
+辞書を利用する良い点は、手法のわかりやすさと教師データを必要としない点です。特に後者は辞書ベースならではの長所です。通常、文書分類器を作成するためには、その文書がポジティブ・ネガティブのどちらであるかという正解ラベルの付いた教師データが必要です。必要なデータは文脈にもよると思いますが、少なくとも100件は必要でしょう。これは分析者が少なくとも100件以上の文書を読んで、手作業でラベルを付与しなければならないことを意味します。
 
-アンケート調査を電話・Webサイト・電子メールのいずれかで回答することになっています。質問項目は以下の通りです([調査票](https://www5.cao.go.jp/keizai3/watcher/chousahyo.pdf))。
+<欠点>辞書の性能に結果が大きく依存する:thumbsdown:  
+短所としては、特殊な文脈におけるセンチメントスコアを参集する場合は専用の辞書が必要になるという点です。辞書ベースの分類法の場合、辞書に含まれない単語はセンチメントスコアへ影響を全く与えません。また、一般に公開されている辞書はwikipedia等のオールジャンルの文書を学習することによって開発されていることが多いため、感情極性が文脈に対してニュートラルになっています。よって、例えば金融等の文脈におけるセンチメントスコアを算出する場合、専門用語の感性極性が0となったり、文脈を考慮した感性極性が得られないことから、直感と異なる結果が出る可能性があります。
 
-1.  景気の現状に対する判断（方向性）
+## 2. 辞書ベース手法の実践
 
-2.  1.の理由
+### 使用データ
 
-3.  2.の追加説明及び具体的状況の説明(自由記述)
+では、実際に辞書ベース手法を用いて、景気ウォッチャー調査の文章からセンチメントスコアの抽出を試みます。景気ウオッチャー調査では、タクシー運転手や小売店の店主、旅館の経営者など景気に敏感な方々(景気ウオッチャー)に対して、5段階の景況感とその理由を毎月アンケートしています。5段階は、「良い(◎)」、「やや良い(○)」、「変わらない(■)」、「やや悪い(▲)」、「悪い(×)」となっています。
 
-4.  景気の先行きに対する判断(方向性)
+データを覗いてみると、以下のようになっています。
 
-5.  (4)の理由
-
-6.  (参考)景気の現状に対する判断(水準)
-
-ご参考までに2016年1月調査のサンプルデータをお見せします。
-
-```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 library(magrittr)
 sample <- readr::read_csv(r"(C:\Users\aashi\Desktop\TextMining\景気ウオッチャー\生データ\watcher_2016.csv)",locale=readr::locale(encoding="SHIFT-JIS"), show_col_types=FALSE)
 options(kableExtra.html.bsTable = TRUE)
@@ -81,159 +83,166 @@ knitr::kable(head(sample)) %>%
   kableExtra::kable_styling(bootstrap_options = c("striped"))
 ```
 
-### 1.2 問題設定
+「景気の現状判断」が景況感を表しており、その判断の理由が「追加説明及び具体的状況の説明」にある形です。よって、前者を教師データ、後者を説明データとする教師あり学習データとして利用することができます。
 
-今回の問題設定は、「追加説明及び具体的状況の説明」に記載されているテキスト情報をもとに、「景気の現状判断」を予測するタスクになります。
-「景気の現状判断」は「良い」、「やや良い」、「どちらとも言えない」、「やや悪い」、「悪い」となっており、これを2値分類問題にして学習を行います(どちらとも言えないはネガティブに分類)。
+### 前処理
 
-## 2. テキスト解析手法の進化の譜系
+まず、各手法で共通の前処理を行います。以下では、使用するモジュールを呼び出し、学習データのうち有効回答のみを抽出します。
+なお、使用するモジュールの関係でPythonでの処理を紹介しますが、Rでも同じ処理ができます。
 
-上記問題設定を解くためには、テキスト情報から感性情報(センチメント)を抽出する必要があります。私が調べた浅い知識によると、感性情報の抽出方法には以下のような手法があります。
+```{python include=FALSE}
+from sudachipy import tokenizer
+from sudachipy import dictionary
+from sklearn.preprocessing import LabelEncoder
+import pandas as pd
 
-1.  辞書ベース
-2.  ナイーブベイズ分類器
-3.  単語埋め込み(Word Embedding)を用いた方法
-4.  Recurrent neural network(RNN)
-5.  Transformer
-
-おそらく、下に行くにつれてより最新の手法になっており、精度も高いのではないかと推察されます。 また、1,2,3はやり方にもよるんでしょうが文章が与えられた際にその語順関係を考慮しません。 今後、各手法について解析結果の記事を投稿する予定ですので、詳しい中身についてはそれぞれの回で触れたいと思います。
-
-## 3. サンプルデータ概観
-
-### 3.1 サンプルデータの読み込み
-
-今回使用する景気ウオッチャー調査のサンプルは2016年~2020年のものとなっています。現状判断の調査結果を格のしたcsvファイル(景気判断理由集)を月ごとに内閣府のWebページからダウンロードし、整形したものを年ごとに連結しています。
-
-```{r, include=FALSE}
-filepath = r"(C:\Users\aashi\Desktop\TextMining\景気ウオッチャー\生データ)"
+sample = pd.read_csv(r"C:\Users\aashi\Desktop\TextMining\景気ウオッチャー\生データ\watcher_2016.csv",encoding="shift-jis")
+sample = sample[(sample.追加説明及び具体的状況の説明=='−')|(sample.追加説明及び具体的状況の説明=='＊')==False|(sample.景気の現状判断=='□')]
 ```
 
-```{r eval=FALSE}
-filepath = r"(C:\Users\hogehoge\Watcher\RawData)"
+```{python eval=FALSE}
+from sudachipy import tokenizer
+from sudachipy import dictionary
+from sklearn.preprocessing import LabelEncoder
+import pandas as pd
+
+sample = pd.read_csv(r"C:\Users\hogehoge\景気ウオッチャー\生データ\watcher_2016.csv",encoding="shift-jis")
+sample = sample[(sample.追加説明及び具体的状況の説明=='−')|(sample.追加説明及び具体的状況の説明=='＊')==False|(sample.景気の現状判断=='□')]
 ```
 
-```{r}
-files <- stringr::str_c(filepath, "\\",list.files(filepath, pattern = "*.csv"))
-sample <- readr::read_csv(files, locale=readr::locale(encoding="SHIFT-JIS"), show_col_types = FALSE)
-# 「－」は回答が存在しない、「＊」は主だった回答等が存在しないため、除外
-sample <- sample[sample$追加説明及び具体的状況の説明 != "－",]
-sample <- sample[sample$追加説明及び具体的状況の説明 != "＊",]
+次に、文書のトークン化を行います。日本語のような言語では英語などと異なり単語ごとの間にスペースがないため、別途区切りを入れてやる必要があります。区切られた各語は形態素と呼ばれ、言葉が意味を持つまとまりの単語の最小単位を指します。また、文章を形態素へ分割することを形態素解析と言います(英語のような場合単にTokenizationと言ったりします)。形態素解析を行うツールは以下のようなものが存在します。
+
+-   MeCab
+-   JUMAN
+-   JANOME
+-   Ginza
+-   Sudachi
+
+おそらく最も使用されているものはMecabではないかと思いますが、標準装備されている辞書(ipadic)の更新がストップしており、最近の新語に対応できないという問題があります。この点については新語に強いNEologd辞書を加えることで、対処可能であることを別記事で紹介していますが、今回はワークスアプリケーションズが提供しているSudachi[@TAKAOKA18.8884]を使用することにしたいと思います。公式GithubからSudachiの特長を引用します。
+
+-   複数の分割単位の併用
+
+    -   必要に応じて切り替え
+    -   形態素解析と固有表現抽出の融合
+
+-   多数の収録語彙
+
+    -   UniDic と NEologd をベースに調整
+
+-   機能のプラグイン化
+
+    -   文字正規化や未知語処理に機能追加が可能
+
+-   同義語辞書との連携
+
+    -   後日公開予定
+
+特質すべきは「複数の分割単位の併用」でしょう。Sudachiでは短い方から A, B, Cの3つの分割モードを提供しています。AはUniDic短単位相当、Cは固有表現相当、BはA, Cの中間的な単位となっており、以下のように同じ「選挙管理委員会」という単語でも形態素が異なることが確認できます。これはSudachi特有の特長になります。
+
+```{python}
+tokenizer_obj = dictionary.Dictionary().create()
+
+mode = tokenizer.Tokenizer.SplitMode.A
+[m.normalized_form() for m in tokenizer_obj.tokenize("選挙管理委員会", mode)]
+
+mode = tokenizer.Tokenizer.SplitMode.B
+[m.normalized_form() for m in tokenizer_obj.tokenize("選挙管理委員会", mode)]
+
+mode = tokenizer.Tokenizer.SplitMode.C
+[m.normalized_form() for m in tokenizer_obj.tokenize("選挙管理委員会", mode)]
 ```
 
-知らなかったんですが、`readr::read_csv`って2.0.0からファイルパスのリストを引数としてcsvを読み込み、その結果を連結してくれるようになったんですね。地味に便利です。
+また、辞書についてもUniDicとNEologdをベースとして更新が続けられており、新語にも対応できます。
 
-### 3.2 サンプルサイズ
-
-サンプルサイズは`r NROW(sample)`でした。サンプルサイズとしては申し分ないかと思います。
-
-```{r}
-NROW(sample)
+```{python}
+mode = tokenizer.Tokenizer.SplitMode.C
+[m.normalized_form() for m in tokenizer_obj.tokenize("新型コロナウイルス", mode)]
 ```
 
-念のため、各年ごとにも見てみます。
+個人的に素晴らしいと思うポイントは表記正規化や文字正規化ができると言うことです。以下のように旧字等で同じ意味だが表記が異なる単語や英語/日本語、書き間違え等を正規化する機能があります。
 
-```{r}
+```{python}
+tokenizer_obj.tokenize("附属", mode)[0].normalized_form()
+tokenizer_obj.tokenize("SUMMER", mode)[0].normalized_form()
+tokenizer_obj.tokenize("シュミレーション", mode)[0].normalized_form()
+```
+
+このような高性能な形態素解析ツールが無償でしかも商用利用も可というところに驚きを隠せません。後述しますが、このSudachiで形態素解析を行ったWord2vecモデルであるChiveもワークスアプリケーションズは提供をしています。
+
+説明が長くなりましたがSudachiでTokenizationを行いましょう。Sudachiは`Python`で使用することができます。説明が前後していますが、上記コードで行っているように`tokenizer`オブジェクトを作成し、`tokenize()`メソッドで文章をTokenizeします。Tokenizeされた結果は`MorphemeList`オブジェクトに格納されます。`MorphemeList`オブジェクトの各要素に対して`normalized_form()`メソッドを実行することで正規化された形態素を取得することができます。ここまでをやってみます。
+
+```{python}
+tokenizer_obj = dictionary.Dictionary().create()
+mode = tokenizer.Tokenizer.SplitMode.C
+tokenizer_sudachi = lambda t: [m.normalized_form() for m in tokenizer_obj.tokenize(t, mode)]
+tokens = sample.追加説明及び具体的状況の説明.map(tokenizer_sudachi)
+tokens.head()
+```
+
+Tokenizeすることができました。次に5段階の景況判断をLabel Encodingに変換します。変換には`Scikit-Learn`の`LabelEncoder`を使用します。
+
+```{python}
+score_mapping = {'◎': 1, '○': 1, '▲': 0, '×':0}
+label = sample.景気の現状判断.map(score_mapping)
+```
+
+これで前処理は完了です。
+
+### センチメントスコアの抽出
+
+では、実践です。`quanteda`というパッケージを用いるため、`R`で行っていきます。前処理は`R`で実施済みで、`toks_sent`という変数に各文書の形態素が文書別に格納されています。
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
 library(magrittr)
-sample %>% 
-  dplyr::group_by(基準年) %>% 
-  dplyr::summarise(サンプルサイズ=dplyr::n()) %>% 
-  dplyr::mutate(`割合(%)`=round(サンプルサイズ/sum(サンプルサイズ)*100, digits=1)) %>% 
-  knitr::kable() %>% 
-  kableExtra::kable_styling(bootstrap_options = c("striped"))
+sample <- readr::read_csv(r"(C:\Users\aashi\Desktop\TextMining\景気ウオッチャー\生データ\watcher_2016.csv)",locale=readr::locale(encoding="Shift-JIS"))
+sample <- sample[sample$追加説明及び具体的状況の説明!="-"|sample$追加説明及び具体的状況の説明!="*",]
+
+# sudachiによる形態素解析→Token化
+ja_stopwords <- quanteda::dictionary(yaml::read_yaml(r"(C:\Users\aashi\Desktop\TextMining\marimo-master\yaml\stopwords_ja.yml)"))
+corp <- quanteda::corpus(sample,text_field="追加説明及び具体的状況の説明")
+toks_sent <- corp %>% quanteda::texts() %>% 
+              sudachir::form(mode = "C",type = "normalized") %>% 
+              quanteda::as.tokens() %>% 
+              quanteda::tokens_remove(ja_stopwords, padding = TRUE)
+
+# メタデータをTokenに再付与
+quanteda::docvars(toks_sent) <- quanteda::docvars(corp)
 ```
 
-各年およそ14,000~16,000サンプルほど存在するようです。大きなバラツキもありません。
-
-### 3.3 `景気の現状判断`の分布
-
-これから予測を行う`景気の現状判断`はどのような分布になっているでしょうか。
+この`toks_sent`から文書行列を生成します。文書行列とは、単語と文書の関係を表す行列で、各行が単語(token)、各列が文書を表し、各要素は文書中の単語の出現回数となっています。
 
 ```{r}
-sample$景気の現状判断 <- factor(sample$景気の現状判断, levels=c("◎","○","□","▲","×"))
-sample %>% 
-  dplyr::group_by(景気の現状判断) %>%
-  dplyr::summarise(サンプルサイズ=dplyr::n()) %>% 
-  dplyr::mutate(`割合(%)`=round(サンプルサイズ/sum(サンプルサイズ)*100, digits=1)) %>% 
-  knitr::kable() %>% 
-  kableExtra::kable_styling(bootstrap_options = c("striped"))
+# 文書行列の生成
+dfmt_sent <- toks_sent %>% 
+              quanteda::dfm(remove = "") %>% 
+              quanteda::dfm_trim(min_termfreq = 10)
 ```
 
-思ったよりキレイな分布をしている印象です。このサンプル期間では、「どちらとも言えない」が最も多く、また、比較的「やや悪い」や「悪い」が多いことがわかります。このあたりは2019年度以降のコロナ禍の影響を反映している可能性があるので、新たに時間軸を追加し、クロス集計をしてみましょう。
+文書行列`dfmt_sent`と各単語のスコアベクトルの内積を取り、文書のセンチメントスコアを算出します。
 
 ```{r}
-sample %>% 
-  dplyr::group_by(基準年, 景気の現状判断) %>% 
-  dplyr::tally() %>% 
-  tidyr::spread(景気の現状判断, n) %>% 
-  knitr::kable() %>% 
-  kableExtra::kable_styling(bootstrap_options = c("striped"))
+# 単語感情極性対応表
+PNdict <- read.delim("http://www.lr.pi.titech.ac.jp/~takamura/pubs/pn_ja.dic",header=FALSE,sep=":")
+
+# 辞書の並びに合わせて文書行列の列を入れ替える。
+dfmt_sent_arranged <- quanteda::dfm_match(dfmt_sent, PNdict$V1)
+
+# 文書のセンチメントスコア算出
+n <- unname(quanteda::rowSums(dfmt_sent_arranged))
+score_dict <- ifelse(n>0, quanteda::rowSums(dfmt_sent_arranged %*% PNdict$V4)/n, NA)
+sample_with_score_dict <- sample %>% cbind(score_dict) 
+sample_with_score_dict %>% head()
+
+# 結果の可視化
+library(ggplot2)
+ggplot(sample_with_score_dict, aes(x=景気の現状判断,y=score_dict)) + geom_boxplot()
 ```
 
-やはり、2019年以降「悪い」が多く出現していることがわかります。一方で、「やや悪い」はそれ以前の年でも恒常的に多いようです。
+「景気の現状判断」毎にboxplotを書いてみましたが、ぱっと見はあまり変わらない結果になりました。
+どの判断も-0.5くらいが平均で、ほんの少し緩やかに右肩上がりのような気もしますが、文書を分類できている言える結果ではないことがわかります。
 
-### 3.4 回答者の属性
+## 3. 終わりに
 
-次に回答者の属性を確認しましょう。回答者の属性は`業種・職種`から取得できます。まず、どういった業種が多く回答しているのか確認してみます。回答数上位10番目までの業種を表示させます。
-
-```{r}
-sample %>% 
-  dplyr::mutate(業種 = stringr::str_remove(sample$`業種・職種`, "（.+）") %>% 
-stringr::str_remove("［.+］")) %>% 
-  dplyr::group_by(業種) %>% 
-  dplyr::summarise(サンプルサイズ=dplyr::n()) %>% 
-  dplyr::arrange(desc(サンプルサイズ)) %>% 
-  dplyr::top_n(10, サンプルサイズ) %>% 
-  dplyr::mutate(`割合(%)`=round(サンプルサイズ/sum(サンプルサイズ)*100, digits=1)) %>% 
-  knitr::kable() %>% 
-  kableExtra::kable_styling(bootstrap_options = c("striped"))
-```
-
-回答数上位には、百貨店やスーパーなど小売店が目立ちます。また、車のディーラーの方や人材派遣会社など生産・雇用に関連する業種の回答者も多いようです。
-
-次に、経営者や職員など職種の分布を確認します。こちらも上位10位までを表示します。
-
-```{r}
-sample %>% 
-  dplyr::mutate(職種 = stringr::str_extract(sample$`業種・職種`, "（.+）") %>% 
-  stringr::str_remove("（") %>%
-  stringr::str_remove("）")) %>% 
-  dplyr::group_by(職種) %>% 
-  dplyr::summarise(サンプルサイズ=dplyr::n()) %>% 
-  dplyr::arrange(desc(サンプルサイズ)) %>% 
-  dplyr::top_n(10, サンプルサイズ) %>% 
-  dplyr::mutate(`割合(%)`=round(サンプルサイズ/sum(サンプルサイズ)*100, digits=1)) %>% 
-  knitr::kable() %>% 
-  kableExtra::kable_styling(bootstrap_options = c("striped"))
-```
-
-職種別では経営者がダントツで多い結果となりました。代表者など表記揺れもありますので、実態はもう少し多いと思います。想像では、現場の職員の方の回答が多いと思っていましたが予想とは異なる結果となりました。
-
-### 3.5 `(景気)判断の理由`の分布
-
-次に`(景気)判断の理由`の分布を見ます。
-
-```{r}
-results <- sample %>% 
-            dplyr::group_by(判断の理由) %>% 
-            dplyr::summarise(サンプルサイズ=dplyr::n()) %>% 
-            dplyr::arrange(desc(サンプルサイズ)) %>% 
-            dplyr::mutate(`割合(%)`=round(サンプルサイズ/sum(サンプルサイズ)*100, digits=1))
-            
-results %>% 
-  knitr::kable() %>% 
-  kableExtra::kable_styling(bootstrap_options = c("striped"))
-```
-
-「来客数の動き」と「販売量の動き」が多く、「お客様の様子」や「受注量や販売量の動き」まで含めると7割を占めます。回答業種に小売店が多いことから、このような項目が上位にきているのだと推察されます。
-
-## 4. 終わりに
-
-これから各回で以下の手法を用いた予測モデルの構築を行っていきます。次回は、辞書ベースに基づくセンチメントの抽出を行い、文書のポジネガ分類を行います。
-
-1.  辞書ベース
-2.  ナイーブベイズ分類器
-3.  単語埋め込み(Word Embedding)を用いた方法
-4.  Recurrent neural network(RNN)
-5.  Transformer
-
-実は、解析自体は全て完了しており、文書を書くだけのフェーズになっています。ちゃんと結果も出ていますので、乞うご期待です！
+最も簡易な手法ということで予想はしていましたが、辞書ベース手法ではセンチメントスコアの抽出はできませんでした。もちろん、私のやり方が悪いのが理由で上手くやれば文書の分類は可能かもしれません。ただ、経済に特化した極性辞書を準備しなければ難しいのではないかというのが、私の感想です。
+次はナイーブベイズ分類器を用いた文書分類に取り組みます。
+ここまで、読み進めて頂きましてありがとうございました。次回の記事も期待していてください。

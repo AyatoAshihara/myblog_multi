@@ -17,180 +17,127 @@
       <link>/post/post17/</link>
       <pubDate>Sun, 19 Apr 2020 00:00:00 +0000</pubDate>
       <guid>/post/post17/</guid>
-      <description>
-&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
-
-&lt;div id=&#34;TOC&#34;&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;#mecabrmecabとは&#34;&gt;1. Mecab(RMeCab)とは？&lt;/a&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;#固有名詞に弱いデフォルトのmecab&#34;&gt;固有名詞に弱いデフォルトのMeCab&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#新語に強いneologd辞書&#34;&gt;新語に強いNEologd辞書&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#インストール手順&#34;&gt;2. インストール手順&lt;/a&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;#a.-windows-subsystem-for-linuxwslのインストール&#34;&gt;A. &lt;code&gt;Windows Subsystem for Linux&lt;/code&gt;(WSL)のインストール&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#b.-ubuntu-linuxのインストール&#34;&gt;B. Ubuntu Linuxのインストール&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#c.-ubuntu-linuxにmecabをインストール&#34;&gt;C. Ubuntu LinuxにMeCabをインストール&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#d.-ubuntu-for-linuxにneologd辞書をインストール&#34;&gt;D. Ubuntu for Linuxに&lt;code&gt;NEologd&lt;/code&gt;辞書をインストール&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#e.-ubuntu-for-linuxからwindowsへ辞書ファイルをコピー&#34;&gt;E. Ubuntu for LinuxからWindowsへ辞書ファイルをコピー&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#f.-windows内で辞書ファイルのコンパイルshift-jisを行う&#34;&gt;F. Windows内で辞書ファイルのコンパイル(&lt;code&gt;SHIFT-JIS&lt;/code&gt;)を行う。&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#まとめ&#34;&gt;3. まとめ&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/div&gt;
-
-&lt;p&gt;皆さんおはこんばんにちは。
+      <description>&lt;p&gt;皆さんおはこんばんにちは。
 最近在宅勤務で運動不足ですが、平日休日問わず研究活動をしています。
 学術誌投稿を目指したBlog記事には書けない内容なので、更新はストップしてしまっていますがちゃんと活動はしています。&lt;/p&gt;
 &lt;p&gt;今回はその研究の中で利用しているMeCabにまつわるTipsのご紹介です。MeCabというと形態素解析ソフトということはこのブログを読まれている方はお分かりかと思いますが、その辞書にNEologd辞書を使用できるようにしてみたというのが内容です。MeCabってなに？という方もいらっしゃるかもしれませんので、かなり簡単にご紹介します。&lt;/p&gt;
-&lt;div id=&#34;mecabrmecabとは&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;1. Mecab(RMeCab)とは？&lt;/h2&gt;
-&lt;p&gt;&lt;code&gt;MeCab&lt;/code&gt;は日本語テキストマイニングで使用される形態素解析ソフトです。英語などの言語とは異なり、日本語は単語毎にスペースを置かないため、テキストマイニングを行う際、そのままでは文章を単語単位に区切って集計するといったことができません。例えば、「これはペンです。」という文章はそのままでは「これはペンです。」という&lt;em&gt;1つ&lt;/em&gt;の単語として認識されてしまいます。ですが、単語の頻度分析を行う際などは、「これ/は/ペン/です/。」という風に文章を単語レベルにまで分割し、「ペン」という特徴量を取得したいわけです。それができるのが&lt;code&gt;RMeCab&lt;/code&gt;で、この処理は形態素解析と呼ばれます。&lt;a href=&#34;#fn1&#34; class=&#34;footnote-ref&#34; id=&#34;fnref1&#34;&gt;&lt;sup&gt;1&lt;/sup&gt;&lt;/a&gt;そして、&lt;code&gt;RMeCab&lt;/code&gt;とはこの&lt;code&gt;MeCab&lt;/code&gt;のラッパーになります。&lt;code&gt;R&lt;/code&gt;から&lt;code&gt;MeCab&lt;/code&gt;を使用するには&lt;code&gt;RMeCab&lt;/code&gt;を使用する必要があります。使用方法は簡単で、&lt;code&gt;RMeCabC&lt;/code&gt;関数に文章を渡すだけです。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(magrittr)
-library(RMeCab)
+&lt;h2 id=&#34;1-mecabrmecabとは&#34;&gt;1. Mecab(RMeCab)とは？&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;MeCab&lt;/code&gt;は日本語テキストマイニングで使用される形態素解析ソフトです。英語などの言語とは異なり、日本語は単語毎にスペースを置かないため、テキストマイニングを行う際、そのままでは文章を単語単位に区切って集計するといったことができません。例えば、「これはペンです。」という文章はそのままでは「これはペンです。」という&lt;em&gt;1つ&lt;/em&gt;の単語として認識されてしまいます。ですが、単語の頻度分析を行う際などは、「これ/は/ペン/です/。」という風に文章を単語レベルにまで分割し、「ペン」という特徴量を取得したいわけです。それができるのが&lt;code&gt;RMeCab&lt;/code&gt;で、この処理は形態素解析と呼ばれます。&lt;sup id=&#34;fnref:1&#34;&gt;&lt;a href=&#34;#fn:1&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;1&lt;/a&gt;&lt;/sup&gt;そして、&lt;code&gt;RMeCab&lt;/code&gt;とはこの&lt;code&gt;MeCab&lt;/code&gt;のラッパーになります。&lt;code&gt;R&lt;/code&gt;から&lt;code&gt;MeCab&lt;/code&gt;を使用するには&lt;code&gt;RMeCab&lt;/code&gt;を使用する必要があります。使用方法は簡単で、&lt;code&gt;RMeCabC&lt;/code&gt;関数に文章を渡すだけです。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(magrittr)
+&lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(RMeCab)
 
-RMeCabC(&amp;quot;これはペンです。&amp;quot;) %&amp;gt;% unlist()&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;##   名詞   助詞   名詞 助動詞   記号 
-## &amp;quot;これ&amp;quot;   &amp;quot;は&amp;quot; &amp;quot;ペン&amp;quot; &amp;quot;です&amp;quot;   &amp;quot;。&amp;quot;&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;code&gt;RMeCabC&lt;/code&gt;関数は結果をリストで返してくるので、&lt;code&gt;unlist&lt;/code&gt;でcharacterに変換しています。&lt;/p&gt;
-&lt;div id=&#34;固有名詞に弱いデフォルトのmecab&#34; class=&#34;section level3&#34;&gt;
-&lt;h3&gt;固有名詞に弱いデフォルトのMeCab&lt;/h3&gt;
+&lt;span style=&#34;color:#a6e22e&#34;&gt;RMeCabC&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;これはペンです。&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;unlist&lt;/span&gt;()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;##   名詞   助詞   名詞 助動詞   記号 
+## &amp;quot;これ&amp;quot;   &amp;quot;は&amp;quot; &amp;quot;ペン&amp;quot; &amp;quot;です&amp;quot;   &amp;quot;。&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;RMeCabC&lt;/code&gt;関数は結果をリストで返してくるので、&lt;code&gt;unlist&lt;/code&gt;でcharacterに変換しています。&lt;/p&gt;
+&lt;h3 id=&#34;固有名詞に弱いデフォルトのmecab&#34;&gt;固有名詞に弱いデフォルトのMeCab&lt;/h3&gt;
 &lt;p&gt;便利なように思えるのですが、デフォルトの&lt;code&gt;MeCab&lt;/code&gt;は固有名詞に弱いという弱点があります。例えば、「欅坂46が赤いきつねを食べている。」という文章を形態素解析してみましょう。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;RMeCabC(&amp;quot;欅坂46が赤いきつねを食べている。&amp;quot;) %&amp;gt;% unlist()&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;##     名詞     名詞     名詞     助詞   形容詞     名詞     助詞     動詞 
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;RMeCabC&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;欅坂46が赤いきつねを食べている。&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;unlist&lt;/span&gt;()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;##     名詞     名詞     名詞     助詞   形容詞     名詞     助詞     動詞 
 ##     &amp;quot;欅&amp;quot;     &amp;quot;坂&amp;quot;     &amp;quot;46&amp;quot;     &amp;quot;が&amp;quot;   &amp;quot;赤い&amp;quot; &amp;quot;きつね&amp;quot;     &amp;quot;を&amp;quot;   &amp;quot;食べ&amp;quot; 
 ##     助詞     動詞     記号 
-##     &amp;quot;て&amp;quot;   &amp;quot;いる&amp;quot;     &amp;quot;。&amp;quot;&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;予想していた結果は「欅坂46/が/赤いきつね/を/食べ/て/いる/。」でしょう。ただ、固有名詞を上手く形態素解析することができていないため、不必要なところで分割がなされており、「赤い/きつね/を/食べ」という部分については「赤い（動物の）きつね」を食べているかのような解析結果になっています。赤いきつねの「きつね」と動物の「きつね」を同等に扱ってしまうので、問題があります。また、経済においても以下のように日経平均株価が分割され、新聞社の「日経」と株価の「日経」が、大統領の「トランプ」とカードの「トランプ」が区別できないといったことが想定されます。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;RMeCabC(&amp;quot;今週の日経平均株価は、上値抵抗線を突破して上昇！&amp;quot;) %&amp;gt;% unlist()&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;##   名詞   助詞   名詞   名詞   名詞   助詞   記号   名詞   名詞   名詞   助詞 
+##     &amp;quot;て&amp;quot;   &amp;quot;いる&amp;quot;     &amp;quot;。&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;予想していた結果は「欅坂46/が/赤いきつね/を/食べ/て/いる/。」でしょう。ただ、固有名詞を上手く形態素解析することができていないため、不必要なところで分割がなされており、「赤い/きつね/を/食べ」という部分については「赤い（動物の）きつね」を食べているかのような解析結果になっています。赤いきつねの「きつね」と動物の「きつね」を同等に扱ってしまうので、問題があります。また、経済においても以下のように日経平均株価が分割され、新聞社の「日経」と株価の「日経」が、大統領の「トランプ」とカードの「トランプ」が区別できないといったことが想定されます。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;RMeCabC&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;今週の日経平均株価は、上値抵抗線を突破して上昇！&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;unlist&lt;/span&gt;()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;##   名詞   助詞   名詞   名詞   名詞   助詞   記号   名詞   名詞   名詞   助詞 
 ## &amp;quot;今週&amp;quot;   &amp;quot;の&amp;quot; &amp;quot;日経&amp;quot; &amp;quot;平均&amp;quot; &amp;quot;株価&amp;quot;   &amp;quot;は&amp;quot;   &amp;quot;、&amp;quot; &amp;quot;上値&amp;quot; &amp;quot;抵抗&amp;quot;   &amp;quot;線&amp;quot;   &amp;quot;を&amp;quot; 
 ##   名詞   動詞   助詞   名詞   記号 
-## &amp;quot;突破&amp;quot;   &amp;quot;し&amp;quot;   &amp;quot;て&amp;quot; &amp;quot;上昇&amp;quot;   &amp;quot;！&amp;quot;&lt;/code&gt;&lt;/pre&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;RMeCabC(&amp;quot;トランプ政権による経済活動再開の指針発表が評価される&amp;quot;) %&amp;gt;% unlist()&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;##       名詞       名詞       助詞       名詞       名詞       名詞       助詞 
+## &amp;quot;突破&amp;quot;   &amp;quot;し&amp;quot;   &amp;quot;て&amp;quot; &amp;quot;上昇&amp;quot;   &amp;quot;！&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;RMeCabC&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;トランプ政権による経済活動再開の指針発表が評価される&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;unlist&lt;/span&gt;()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;##       名詞       名詞       助詞       名詞       名詞       名詞       助詞 
 ## &amp;quot;トランプ&amp;quot;     &amp;quot;政権&amp;quot;   &amp;quot;による&amp;quot;     &amp;quot;経済&amp;quot;     &amp;quot;活動&amp;quot;     &amp;quot;再開&amp;quot;       &amp;quot;の&amp;quot; 
 ##       名詞       名詞       助詞       名詞       動詞       動詞 
-##     &amp;quot;指針&amp;quot;     &amp;quot;発表&amp;quot;       &amp;quot;が&amp;quot;     &amp;quot;評価&amp;quot;       &amp;quot;さ&amp;quot;     &amp;quot;れる&amp;quot;&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;これはデフォルトで&lt;code&gt;MeCab&lt;/code&gt;が使用している&lt;em&gt;辞書&lt;/em&gt;に原因があります。IPA辞書(&lt;code&gt;ipadic&lt;/code&gt;)と呼ばれる物で、奈良先端科学技術大学院大学が公開している茶筌と呼ばれる形態素解析ソフト用に作られました。&lt;a href=&#34;https://ja.osdn.net/projects/ipadic/releases/&#34;&gt;こちら&lt;/a&gt;を見ると辞書の更新は2007年でストップしており、新語や流行語がアップデートされていないために上記の固有名詞が上手く形態素解析できないことがわかります。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;新語に強いneologd辞書&#34; class=&#34;section level3&#34;&gt;
-&lt;h3&gt;新語に強いNEologd辞書&lt;/h3&gt;
-&lt;p&gt;最近&lt;code&gt;MeCab&lt;/code&gt;でよく使用されている辞書に&lt;code&gt;NEologd&lt;/code&gt;辞書というものがあります。&lt;code&gt;NEologd&lt;/code&gt;辞書とは、Web上から得た新語に対応しており、頻繁に更新される&lt;code&gt;MeCab&lt;/code&gt;用のシステム辞書です。&lt;a href=&#34;#fn2&#34; class=&#34;footnote-ref&#34; id=&#34;fnref2&#34;&gt;&lt;sup&gt;2&lt;/sup&gt;&lt;/a&gt;Twitterのアカウントには、&lt;/p&gt;
+##     &amp;quot;指針&amp;quot;     &amp;quot;発表&amp;quot;       &amp;quot;が&amp;quot;     &amp;quot;評価&amp;quot;       &amp;quot;さ&amp;quot;     &amp;quot;れる&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;これはデフォルトで&lt;code&gt;MeCab&lt;/code&gt;が使用している&lt;em&gt;辞書&lt;/em&gt;に原因があります。IPA辞書(&lt;code&gt;ipadic&lt;/code&gt;)と呼ばれる物で、奈良先端科学技術大学院大学が公開している茶筌と呼ばれる形態素解析ソフト用に作られました。&lt;a href=&#34;https://ja.osdn.net/projects/ipadic/releases/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;こちら&lt;/a&gt;を見ると辞書の更新は2007年でストップしており、新語や流行語がアップデートされていないために上記の固有名詞が上手く形態素解析できないことがわかります。&lt;/p&gt;
+&lt;h3 id=&#34;新語に強いneologd辞書&#34;&gt;新語に強いNEologd辞書&lt;/h3&gt;
+&lt;p&gt;最近&lt;code&gt;MeCab&lt;/code&gt;でよく使用されている辞書に&lt;code&gt;NEologd&lt;/code&gt;辞書というものがあります。&lt;code&gt;NEologd&lt;/code&gt;辞書とは、Web上から得た新語に対応しており、頻繁に更新される&lt;code&gt;MeCab&lt;/code&gt;用のシステム辞書です。&lt;sup id=&#34;fnref:2&#34;&gt;&lt;a href=&#34;#fn:2&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;2&lt;/a&gt;&lt;/sup&gt;Twitterのアカウントには、&lt;/p&gt;
 &lt;blockquote&gt;
 &lt;p&gt;特色は語彙の多さと更新頻度、新語の採録の速さ、読み仮名の正確さ、表記揺れへの対応。おもな解析対象はWeb上のニュース記事や流行した出来事。
 おもな用途は文書分類、文書ベクトル作成、単語埋め込みベクトル作成、読み仮名付与。&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;と記載されており、上述したIPA辞書の弱点を補完する辞書となっています。今回の記事はその辞書のインストール方法についてですが、インストールした辞書の威力を先にお見せしておきます。実行するには、&lt;code&gt;RMeCab&lt;/code&gt;関数に辞書ファイル(.dicファイル)のパスを渡してやれば良いです。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;dic_directory &amp;lt;- &amp;quot;C:\\hogehoge\\mecab-user-dict-seed.yyyymmdd.dic&amp;quot;&lt;/code&gt;&lt;/pre&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;RMeCabC(&amp;quot;欅坂46が赤いきつねを食べている。&amp;quot;,dic=dic_directory) %&amp;gt;% unlist()&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;##         名詞         助詞         名詞         助詞         動詞         助詞 
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;dic_directory &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;C:\\hogehoge\\mecab-user-dict-seed.yyyymmdd.dic&amp;#34;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;RMeCabC&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;欅坂46が赤いきつねを食べている。&amp;#34;&lt;/span&gt;,dic&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;dic_directory) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;unlist&lt;/span&gt;()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;##         名詞         助詞         名詞         助詞         動詞         助詞 
 ##     &amp;quot;欅坂46&amp;quot;         &amp;quot;が&amp;quot; &amp;quot;赤いきつね&amp;quot;         &amp;quot;を&amp;quot;       &amp;quot;食べ&amp;quot;         &amp;quot;て&amp;quot; 
 ##         動詞         記号 
-##       &amp;quot;いる&amp;quot;         &amp;quot;。&amp;quot;&lt;/code&gt;&lt;/pre&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;RMeCabC(&amp;quot;今週の日経平均株価は、上値抵抗線を突破して上昇！&amp;quot;,dic=dic_directory) %&amp;gt;% unlist()&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;##           名詞           助詞           名詞           助詞           記号 
+##       &amp;quot;いる&amp;quot;         &amp;quot;。&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;RMeCabC&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;今週の日経平均株価は、上値抵抗線を突破して上昇！&amp;#34;&lt;/span&gt;,dic&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;dic_directory) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;unlist&lt;/span&gt;()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;##           名詞           助詞           名詞           助詞           記号 
 ##         &amp;quot;今週&amp;quot;           &amp;quot;の&amp;quot; &amp;quot;日経平均株価&amp;quot;           &amp;quot;は&amp;quot;           &amp;quot;、&amp;quot; 
 ##           名詞           名詞           名詞           助詞           名詞 
 ##         &amp;quot;上値&amp;quot;         &amp;quot;抵抗&amp;quot;           &amp;quot;線&amp;quot;           &amp;quot;を&amp;quot;         &amp;quot;突破&amp;quot; 
 ##           動詞           助詞           名詞           記号 
-##           &amp;quot;し&amp;quot;           &amp;quot;て&amp;quot;         &amp;quot;上昇&amp;quot;           &amp;quot;！&amp;quot;&lt;/code&gt;&lt;/pre&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;RMeCabC(&amp;quot;トランプ政権による経済活動再開の指針発表が評価される&amp;quot;,dic=dic_directory) %&amp;gt;% unlist()&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;##           名詞           助詞           名詞           名詞           助詞 
+##           &amp;quot;し&amp;quot;           &amp;quot;て&amp;quot;         &amp;quot;上昇&amp;quot;           &amp;quot;！&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;RMeCabC&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;トランプ政権による経済活動再開の指針発表が評価される&amp;#34;&lt;/span&gt;,dic&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;dic_directory) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;unlist&lt;/span&gt;()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;##           名詞           助詞           名詞           名詞           助詞 
 ## &amp;quot;トランプ政権&amp;quot;       &amp;quot;による&amp;quot;     &amp;quot;経済活動&amp;quot;         &amp;quot;再開&amp;quot;           &amp;quot;の&amp;quot; 
 ##           名詞           名詞           助詞           名詞           動詞 
 ##         &amp;quot;指針&amp;quot;         &amp;quot;発表&amp;quot;           &amp;quot;が&amp;quot;         &amp;quot;評価&amp;quot;           &amp;quot;さ&amp;quot; 
 ##           動詞 
-##         &amp;quot;れる&amp;quot;&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;上値抵抗線は1語カウントしてほしいところではありますが、それ以外は上手く形態素解析できていそうです。
+##         &amp;quot;れる&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;上値抵抗線は1語カウントしてほしいところではありますが、それ以外は上手く形態素解析できていそうです。
 この&lt;code&gt;NEologd&lt;/code&gt;辞書ですが、&lt;em&gt;Windowsのインストールが想定されていません&lt;/em&gt;。つまり、Windowsユーザーは直接インストールすることができないのです。Windowsユーザーは少々ややこしい手順を踏まなければなりません。今回はそのややこしい手順を解説する記事です。Linuxでインストールを行い、それをWindows環境にコピー、その後辞書ファイルを作成します。&lt;/p&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;div id=&#34;インストール手順&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;2. インストール手順&lt;/h2&gt;
-&lt;div id=&#34;a.-windows-subsystem-for-linuxwslのインストール&#34; class=&#34;section level3&#34;&gt;
-&lt;h3&gt;A. &lt;code&gt;Windows Subsystem for Linux&lt;/code&gt;(WSL)のインストール&lt;/h3&gt;
+&lt;h2 id=&#34;2-インストール手順&#34;&gt;2. インストール手順&lt;/h2&gt;
+&lt;h3 id=&#34;a-windows-subsystem-for-linuxwslのインストール&#34;&gt;A. &lt;code&gt;Windows Subsystem for Linux&lt;/code&gt;(WSL)のインストール&lt;/h3&gt;
 &lt;p&gt;&lt;code&gt;Windows Power Shell&lt;/code&gt;を&lt;em&gt;管理者権限&lt;/em&gt;で開き、&lt;/p&gt;
-&lt;pre class=&#34;bash&#34;&gt;&lt;code&gt;Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;を実行する。WSLをインストールすることができます。&lt;/p&gt;
-&lt;div class=&#34;figure&#34;&gt;
-&lt;img src=&#34;../../my_blog/post/post21_files/powershell.PNG&#34; style=&#34;width:100.0%&#34; alt=&#34;&#34; /&gt;
-&lt;p class=&#34;caption&#34;&gt;powerShellでの実行の様子&lt;/p&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;div id=&#34;b.-ubuntu-linuxのインストール&#34; class=&#34;section level3&#34;&gt;
-&lt;h3&gt;B. Ubuntu Linuxのインストール&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;を実行する。WSLをインストールすることができます。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;../../my_blog/post/post21_files/powershell.PNG&#34; alt=&#34;powerShellでの実行の様子&#34;&gt;{width=100%}&lt;/p&gt;
+&lt;h3 id=&#34;b-ubuntu-linuxのインストール&#34;&gt;B. Ubuntu Linuxのインストール&lt;/h3&gt;
 &lt;p&gt;Microsoft Storeよりubuntuをダウンロードする。&lt;/p&gt;
-&lt;div class=&#34;figure&#34;&gt;
-&lt;img src=&#34;ubuntu.PNG&#34; style=&#34;width:100.0%&#34; alt=&#34;&#34; /&gt;
-&lt;p class=&#34;caption&#34;&gt;ubuntuの画面&lt;/p&gt;
-&lt;/div&gt;
+&lt;p&gt;&lt;img src=&#34;ubuntu.PNG&#34; alt=&#34;ubuntuの画面&#34;&gt;{width=100%}&lt;/p&gt;
 &lt;p&gt;インストールが完了したらubuntuを起動し、初期設定を完了させる(ID、パスワード)。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;c.-ubuntu-linuxにmecabをインストール&#34; class=&#34;section level3&#34;&gt;
-&lt;h3&gt;C. Ubuntu LinuxにMeCabをインストール&lt;/h3&gt;
+&lt;h3 id=&#34;c-ubuntu-linuxにmecabをインストール&#34;&gt;C. Ubuntu LinuxにMeCabをインストール&lt;/h3&gt;
 &lt;p&gt;ubuntuのコマンドプロンプトで、&lt;/p&gt;
-&lt;pre class=&#34;bash&#34;&gt;&lt;code&gt;sudo apt-get update
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;sudo apt-get update
 sudo apt install mecab
 sudo apt install libmecab-dev
-sudo apt install mecab-ipadic-utf8&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;を入力し、&lt;code&gt;MeCab&lt;/code&gt;をインストール。&lt;/p&gt;
-&lt;div class=&#34;figure&#34;&gt;
-&lt;img src=&#34;ubuntumecab.PNG&#34; style=&#34;width:100.0%&#34; alt=&#34;&#34; /&gt;
-&lt;p class=&#34;caption&#34;&gt;ubuntuでmecabをインストール&lt;/p&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;div id=&#34;d.-ubuntu-for-linuxにneologd辞書をインストール&#34; class=&#34;section level3&#34;&gt;
-&lt;h3&gt;D. Ubuntu for Linuxに&lt;code&gt;NEologd&lt;/code&gt;辞書をインストール&lt;/h3&gt;
+sudo apt install mecab-ipadic-utf8
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;を入力し、&lt;code&gt;MeCab&lt;/code&gt;をインストール。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;ubuntumecab.PNG&#34; alt=&#34;ubuntuでmecabをインストール&#34;&gt;{width=100%}&lt;/p&gt;
+&lt;h3 id=&#34;d-ubuntu-for-linuxにneologd辞書をインストール&#34;&gt;D. Ubuntu for Linuxに&lt;code&gt;NEologd&lt;/code&gt;辞書をインストール&lt;/h3&gt;
 &lt;p&gt;ubuntsuのコマンドプロンプトで&lt;/p&gt;
-&lt;pre class=&#34;bash&#34;&gt;&lt;code&gt;sudo apt install make
-git clone --depth 1 https://github.com/neologd/mecab-ipadic-neologd.git
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;sudo apt install make
+git clone --depth &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; https://github.com/neologd/mecab-ipadic-neologd.git
 cd mecab-ipadic-neologd
-sudo bin/install-mecab-ipadic-neologd -n -a&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;を実行。&lt;code&gt;NEologd&lt;/code&gt;辞書ファイルが(&lt;code&gt;/usr/lib/x86_64-linux-gnu/mecab/dic/mecab-ipadic-neologd/&lt;/code&gt;)にインストールできます。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;e.-ubuntu-for-linuxからwindowsへ辞書ファイルをコピー&#34; class=&#34;section level3&#34;&gt;
-&lt;h3&gt;E. Ubuntu for LinuxからWindowsへ辞書ファイルをコピー&lt;/h3&gt;
+sudo bin/install-mecab-ipadic-neologd -n -a
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;を実行。&lt;code&gt;NEologd&lt;/code&gt;辞書ファイルが(&lt;code&gt;/usr/lib/x86_64-linux-gnu/mecab/dic/mecab-ipadic-neologd/&lt;/code&gt;)にインストールできます。&lt;/p&gt;
+&lt;h3 id=&#34;e-ubuntu-for-linuxからwindowsへ辞書ファイルをコピー&#34;&gt;E. Ubuntu for LinuxからWindowsへ辞書ファイルをコピー&lt;/h3&gt;
 &lt;p&gt;ubuntuのコマンドプロンプトで&lt;/p&gt;
-&lt;pre class=&#34;bash&#34;&gt;&lt;code&gt;explorer.exe .&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;を入力。エクスプローラーが立ち上がるので、&lt;code&gt;/usr/lib/x86_64-linux-gnu/mecab/dic/mecab-ipadic-neologd/(ディレクトリ)&lt;/code&gt;をWindowsの任意のディレクトリにコピーする。完了したらUbuntuは閉じる。&lt;/p&gt;
-&lt;div class=&#34;figure&#34;&gt;
-&lt;img src=&#34;explorer.PNG&#34; style=&#34;width:100.0%&#34; alt=&#34;&#34; /&gt;
-&lt;p class=&#34;caption&#34;&gt;エクスプローラーでubuntu内部ディレクトリを確認する図&lt;/p&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;div id=&#34;f.-windows内で辞書ファイルのコンパイルshift-jisを行う&#34; class=&#34;section level3&#34;&gt;
-&lt;h3&gt;F. Windows内で辞書ファイルのコンパイル(&lt;code&gt;SHIFT-JIS&lt;/code&gt;)を行う。&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;explorer.exe .
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;を入力。エクスプローラーが立ち上がるので、&lt;code&gt;/usr/lib/x86_64-linux-gnu/mecab/dic/mecab-ipadic-neologd/(ディレクトリ)&lt;/code&gt;をWindowsの任意のディレクトリにコピーする。完了したらUbuntuは閉じる。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;explorer.PNG&#34; alt=&#34;エクスプローラーでubuntu内部ディレクトリを確認する図&#34;&gt;{width=100%}&lt;/p&gt;
+&lt;h3 id=&#34;f-windows内で辞書ファイルのコンパイルshift-jisを行う&#34;&gt;F. Windows内で辞書ファイルのコンパイル(&lt;code&gt;SHIFT-JIS&lt;/code&gt;)を行う。&lt;/h3&gt;
 &lt;p&gt;コピーしたディレクトリ内の以下のcsvを辞書ファイル(.dic)にコンパイルします。(yyyymmddは辞書の最終更新日なので変更してください)&lt;/p&gt;
-&lt;pre class=&#34;bash&#34;&gt;&lt;code&gt;-mecab-ipadic-neologd-buildmecab-ipadic-2.7.0-20070801-neologd-yyyymmdd-mecab-user-dict-seed.yyyymmdd.csv&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;その際、元ファイルは&lt;strong&gt;エンコーディングが&lt;code&gt;UTF-8&lt;/code&gt;となっているので、&lt;code&gt;SHIFT-JIS&lt;/code&gt;へ変換することに注意&lt;/strong&gt;です。これをしないと、&lt;code&gt;RMeCab&lt;/code&gt;を実行したときに結果が文字化けします。コンパイルにはMeCabのmecab-dict-indexというバイナリファイルを使用します。自分は以下のディレクトリに存在しました。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;-mecab-ipadic-neologd-buildmecab-ipadic-2.7.0-20070801-neologd-yyyymmdd-mecab-user-dict-seed.yyyymmdd.csv
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;その際、元ファイルは&lt;strong&gt;エンコーディングが&lt;code&gt;UTF-8&lt;/code&gt;となっているので、&lt;code&gt;SHIFT-JIS&lt;/code&gt;へ変換することに注意&lt;/strong&gt;です。これをしないと、&lt;code&gt;RMeCab&lt;/code&gt;を実行したときに結果が文字化けします。コンパイルにはMeCabのmecab-dict-indexというバイナリファイルを使用します。自分は以下のディレクトリに存在しました。&lt;/p&gt;
 &lt;p&gt;C:
 -Program Files (x86)
 -MeCab
 -bin
 -mecab-dict-index.exe&lt;/p&gt;
-&lt;p&gt;&lt;img src=&#34;mecab_dict_index.PNG&#34; style=&#34;width:100.0%&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;mecab_dict_index.PNG&#34; alt=&#34;&#34;&gt;{width=100%}&lt;/p&gt;
 &lt;p&gt;コマンドプロンプトを立ち上げ、&lt;/p&gt;
-&lt;pre class=&#34;bash&#34;&gt;&lt;code&gt;C:\Program Files (x86)\MeCab\bin\mecab-dict-index.exe -d .../mecab-ipadic-neologd/buildmecab/ipadic-2.7.0-20070801-neologd-yyyymmdd(ファイルの保存場所) -u NEologd.yyyymmdd.dic -f utf-8 -t shift-jis mecab-ipadic-neologd\buildmecab\ipadic-2.7.0-20070801-neologd-yyyymmdd\mecab-user-dict-seed.yyyymmdd.csv &lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;を適宜変更の上、入力。&lt;code&gt;.../mecab-ipadic-neologd/buildmecab/ipadic-2.7.0-20070801-neologd-yyyymmdd&lt;/code&gt;に辞書がコンパイルされ、&lt;code&gt;NEologd.yyyymmdd.dic&lt;/code&gt;ができます。&lt;/p&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;div id=&#34;まとめ&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;3. まとめ&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;C:&lt;span style=&#34;color:#ae81ff&#34;&gt;\P&lt;/span&gt;rogram Files &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;x86&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;\M&lt;/span&gt;eCab&lt;span style=&#34;color:#ae81ff&#34;&gt;\b&lt;/span&gt;in&lt;span style=&#34;color:#ae81ff&#34;&gt;\m&lt;/span&gt;ecab-dict-index.exe -d .../mecab-ipadic-neologd/buildmecab/ipadic-2.7.0-20070801-neologd-yyyymmdd&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;ファイルの保存場所&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; -u NEologd.yyyymmdd.dic -f utf-8 -t shift-jis mecab-ipadic-neologd&lt;span style=&#34;color:#ae81ff&#34;&gt;\b&lt;/span&gt;uildmecab&lt;span style=&#34;color:#ae81ff&#34;&gt;\i&lt;/span&gt;padic-2.7.0-20070801-neologd-yyyymmdd&lt;span style=&#34;color:#ae81ff&#34;&gt;\m&lt;/span&gt;ecab-user-dict-seed.yyyymmdd.csv 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;を適宜変更の上、入力。&lt;code&gt;.../mecab-ipadic-neologd/buildmecab/ipadic-2.7.0-20070801-neologd-yyyymmdd&lt;/code&gt;に辞書がコンパイルされ、&lt;code&gt;NEologd.yyyymmdd.dic&lt;/code&gt;ができます。&lt;/p&gt;
+&lt;h2 id=&#34;3-まとめ&#34;&gt;3. まとめ&lt;/h2&gt;
 &lt;p&gt;以上で、&lt;code&gt;NEologd&lt;/code&gt;辞書が使用できるようになります。非常に強力なツールなので使用してみてください。なお、辞書がアップデートされた際は同じ手続きを行う必要があります。&lt;/p&gt;
-&lt;p&gt;&lt;後日談&gt;
+&lt;p&gt;&amp;lt;後日談&amp;gt;
 Ubuntu for Linuxを使用しなくてもダウンロードできそうな方法ありました。&lt;/p&gt;
-&lt;p&gt;&lt;a href=&#34;https://qiita.com/zincjp/items/c61c441426b9482b5a48&#34; class=&#34;uri&#34;&gt;https://qiita.com/zincjp/items/c61c441426b9482b5a48&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://qiita.com/zincjp/items/c61c441426b9482b5a48&#34;&gt;https://qiita.com/zincjp/items/c61c441426b9482b5a48&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;ただ、自分は実行していないので実際にできるかはわかりません。辞書が更新されたら、やってみたいと思います。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div class=&#34;footnotes&#34;&gt;
-&lt;hr /&gt;
+&lt;section class=&#34;footnotes&#34; role=&#34;doc-endnotes&#34;&gt;
+&lt;hr&gt;
 &lt;ol&gt;
-&lt;li id=&#34;fn1&#34;&gt;&lt;p&gt;MeCab内部の仕組みについては&lt;a href=&#34;https://techlife.cookpad.com/entry/2016/05/11/170000&#34;&gt;こちら&lt;/a&gt;の記事が参考になります。&lt;a href=&#34;#fnref1&#34; class=&#34;footnote-back&#34;&gt;↩︎&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
-&lt;li id=&#34;fn2&#34;&gt;&lt;p&gt;2020/4/19時点の最近版は2020/3/15更新の辞書です。&lt;a href=&#34;#fnref2&#34; class=&#34;footnote-back&#34;&gt;↩︎&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;li id=&#34;fn:1&#34; role=&#34;doc-endnote&#34;&gt;
+&lt;p&gt;MeCab内部の仕組みについては&lt;a href=&#34;https://techlife.cookpad.com/entry/2016/05/11/170000&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;こちら&lt;/a&gt;の記事が参考になります。 &lt;a href=&#34;#fnref:1&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li id=&#34;fn:2&#34; role=&#34;doc-endnote&#34;&gt;
+&lt;p&gt;2020/4/19時点の最近版は2020/3/15更新の辞書です。 &lt;a href=&#34;#fnref:2&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
 &lt;/ol&gt;
-&lt;/div&gt;
+&lt;/section&gt;
 </description>
     </item>
     

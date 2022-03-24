@@ -88,8 +88,8 @@
     
       
       
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/xcode.min.css" crossorigin="anonymous" title="hl-light">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/xcode.min.css" crossorigin="anonymous" title="hl-dark" disabled>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/solarized-dark.min.css" crossorigin="anonymous" title="hl-light">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/solarized-dark.min.css" crossorigin="anonymous" title="hl-dark" disabled>
       
     
 
@@ -672,9 +672,44 @@
 
 
 
-  <article class="article">
+  <div class="container-fluid docs">
+  <div class="row flex-xl-nowrap">
 
-  
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <ul class="nav toc-top">
+        <li><a href="#" id="back_to_top" class="docs-toc-title">Contents</a></li>
+      </ul>
+      <nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#1-crawling-for-data-collection">1. Crawling for data collection</a>
+          <ul>
+            <li><a href="#where-to-get-the-data-from">Where to get the data from</a></li>
+            <li><a href="#running-crawling-by-selenium">Running crawling by selenium</a></li>
+          </ul>
+        </li>
+        <li><a href="#2-training-cnn-using-keras">2. Training CNN using <code>Keras</code></a>
+          <ul>
+            <li><a href="#what-is-keras">What is Keras?</a></li>
+            <li><a href="#what-is-cnn">What is CNN?</a></li>
+            <li><a href="#coding">Coding</a></li>
+            <li><a href="#undersampling-for-unbalanced-data-adjustment">Undersampling for unbalanced data adjustment</a></li>
+          </ul>
+        </li>
+        <li><a href="#3-interpretation-of-results-using-shap-values">3. Interpretation of results using Shap values</a></li>
+        <li><a href="#4-finally">4. Finally</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+      
+    </div>
+
+    <main class="col-12 col-md-0 col-xl-10 py-md-3 pl-md-5 docs-content" role="main">
+      <article class="article">
+
+        
 
 
 
@@ -707,6 +742,22 @@
   
 
 
+<div id="code-folding-buttons" class="dropdown btn-group pull-right">
+  <a class="btn btn-light btn-sm dropdown-toggle" href="#" role="button" id="allCodeToggleButton"
+     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    Code
+  </a>
+  <div class="dropdown-menu" aria-labelledby="allCodeToggleButton">
+    <a id="rmd-show-all-code" class="dropdown-item small" href="#">Show all</a>
+    <a id="rmd-hide-all-code" class="dropdown-item small" href="#">Hide all</a>
+  </div>
+</div>
+
+
+
+  
+
+
 <div class="article-metadata">
 
   
@@ -727,7 +778,7 @@
   
   <span class="middot-divider"></span>
   <span class="article-reading-time">
-    6 min read
+    5 min read
   </span>
   
 
@@ -774,376 +825,281 @@
 
 
 
-  <div class="article-container">
+        <div class="article-container">
 
-    <div class="article-style">
-      
-<script src="index_files/header-attrs/header-attrs.js"></script>
-
-<div id="TOC">
-<ul>
-<li><a href="#crawling-for-data-collection">1. Crawling for data collection</a>
-<ul>
-<li><a href="#where-to-get-the-data-from">Where to get the data from</a></li>
-<li><a href="#running-crawling-by-selenium">Running crawling by selenium</a></li>
-</ul></li>
-<li><a href="#training-cnn-using-keras">2. Training CNN using <code>Keras</code></a>
-<ul>
-<li><a href="#what-is-keras">What is Keras?</a></li>
-<li><a href="#what-is-cnn">What is CNN?</a></li>
-<li><a href="#coding">Coding</a></li>
-<li><a href="#undersampling-for-unbalanced-data-adjustment">Undersampling for unbalanced data adjustment</a></li>
-</ul></li>
-<li><a href="#interpretation-of-results-using-shap-values">3. Interpretation of results using Shap values</a></li>
-<li><a href="#finally">4. Finally</a></li>
-</ul>
-</div>
-
-<p>Hi. This time I would like to write an article about predicting horse racing. In the last post, I created a prediction model for horse racing rankings using table data obtained from yahoo horse racing using <code>LightGBM</code>. I used structural data last time, but anyone can do this kind of analysis in these days. So this time, I developed a <code>Convolutional Neural Network</code> (CNN) which extracts features from a horse’s body image and predicts its ranking. This is the second time I’ve used <code>Earth Engine</code> to analyze satellite images, and the first time I’ve used deep learning in this blog. The code is written in Python.</p>
-<div id="crawling-for-data-collection" class="section level2">
-<h2>1. Crawling for data collection</h2>
-<p>The first step is to collect images of the horse’s body from the internet; the best thing to do would be to use pictures of the paddock on race day. However, as far as I’ve been able to find, there are no sites that post photos of the paddock in a cohesive format. It may be interesting to use it as a clipped image or to apply it as a video to the <code>Encoder-Decoder</code> model of CNN to RNN, because it may be that a horse racing fan may have a paddock video on Youtube. However, I don’t have the ability to do that much.</p>
-<div id="where-to-get-the-data-from" class="section level3">
-<h3>Where to get the data from</h3>
-<p>So in this case, the data is taken from <a href="https://www.daily.co.jp/horse/horsecheck/photo/">Daley’s Web site</a>. Here you can find pre-race photos of horses running in the last 1 year? You can find pre-race photos of horses running in G1 races in the past year? Horse bettors who can’t go to the actual racecourse can look at these pictures and analyze the condition of the horses.<br />
-Please note that this site does not include body photos of all the horses that are entered in the race. Also, since this is only a limited number of G1 races, it’s entirely possible that all the horses are finished to begin with, and it’s entirely possible that you won’t be able to tell the difference. However, I’ll make it a priority to try and do it quickly and use this data for this one.</p>
-</div>
-<div id="running-crawling-by-selenium" class="section level3">
-<h3>Running crawling by selenium</h3>
-<p>For crawling, we’ll use selenium. I won’t go into web crawling as I’m mainly using CNN in this article. The code I used is as follows.<br />
+          <div class="article-style">
+            <p>Hi. This time I would like to write an article about predicting horse racing. In the last post, I created a prediction model for horse racing rankings using table data obtained from yahoo horse racing using <code>LightGBM</code>. I used structural data last time, but anyone can do this kind of analysis in these days. So this time, I developed a <code>Convolutional Neural Network</code> (CNN) which extracts features from a horse&rsquo;s body image and predicts its ranking. This is the second time I&rsquo;ve used <code>Earth Engine</code> to analyze satellite images, and the first time I&rsquo;ve used deep learning in this blog. The code is written in Python.</p>
+<h2 id="1-crawling-for-data-collection">1. Crawling for data collection</h2>
+<p>The first step is to collect images of the horse&rsquo;s body from the internet; the best thing to do would be to use pictures of the paddock on race day. However, as far as I&rsquo;ve been able to find, there are no sites that post photos of the paddock in a cohesive format. It may be interesting to use it as a clipped image or to apply it as a video to the <code>Encoder-Decoder</code> model of CNN to RNN, because it may be that a horse racing fan may have a paddock video on Youtube. However, I don&rsquo;t have the ability to do that much.</p>
+<h3 id="where-to-get-the-data-from">Where to get the data from</h3>
+<p>So in this case, the data is taken from <a href="https://www.daily.co.jp/horse/horsecheck/photo/" target="_blank" rel="noopener">Daley&rsquo;s Web site</a>. Here you can find pre-race photos of horses running in the last 1 year? You can find pre-race photos of horses running in G1 races in the past year? Horse bettors who can&rsquo;t go to the actual racecourse can look at these pictures and analyze the condition of the horses.<br>
+Please note that this site does not include body photos of all the horses that are entered in the race. Also, since this is only a limited number of G1 races, it&rsquo;s entirely possible that all the horses are finished to begin with, and it&rsquo;s entirely possible that you won&rsquo;t be able to tell the difference. However, I&rsquo;ll make it a priority to try and do it quickly and use this data for this one.</p>
+<h3 id="running-crawling-by-selenium">Running crawling by selenium</h3>
+<p>For crawling, we&rsquo;ll use selenium. I won&rsquo;t go into web crawling as I&rsquo;m mainly using CNN in this article. The code I used is as follows.<br>
 [Note] If you use the following codes, please do so at your own risk.</p>
-<pre class="python"><code>from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.select import Select
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.alert import Alert
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.common.action_chains import ActionChains
-from time import sleep
-from urllib import request
-import random
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> selenium <span style="color:#f92672">import</span> webdriver
+<span style="color:#f92672">from</span> selenium.webdriver.chrome.options <span style="color:#f92672">import</span> Options
+<span style="color:#f92672">from</span> selenium.webdriver.support.select <span style="color:#f92672">import</span> Select
+<span style="color:#f92672">from</span> selenium.webdriver.common.by <span style="color:#f92672">import</span> By
+<span style="color:#f92672">from</span> selenium.webdriver.common.keys <span style="color:#f92672">import</span> Keys
+<span style="color:#f92672">from</span> selenium.webdriver.common.alert <span style="color:#f92672">import</span> Alert
+<span style="color:#f92672">from</span> selenium.webdriver.support.ui <span style="color:#f92672">import</span> WebDriverWait
+<span style="color:#f92672">from</span> selenium.webdriver.support <span style="color:#f92672">import</span> expected_conditions <span style="color:#66d9ef">as</span> EC
+<span style="color:#f92672">from</span> selenium.common.exceptions <span style="color:#f92672">import</span> TimeoutException
+<span style="color:#f92672">from</span> selenium.webdriver.common.action_chains <span style="color:#f92672">import</span> ActionChains
+<span style="color:#f92672">from</span> time <span style="color:#f92672">import</span> sleep
+<span style="color:#f92672">from</span> urllib <span style="color:#f92672">import</span> request
+<span style="color:#f92672">import</span> random
 
-# selenium option settings (spell)
-options = Options()
-options.add_argument(&#39;--disable-gpu&#39;);
-options.add_argument(&#39;--disable-extensions&#39;);
-options.add_argument(&#39;--proxy-server=&quot;direct://&quot;&#39;);
-options.add_argument(&#39;--proxy-bypass-list=*&#39;);
-options.add_argument(&#39;--start-maximized&#39;);
+<span style="color:#75715e"># selenium option settings (spell)</span>
+options <span style="color:#f92672">=</span> Options()
+options<span style="color:#f92672">.</span>add_argument(<span style="color:#e6db74">&#39;--disable-gpu&#39;</span>);
+options<span style="color:#f92672">.</span>add_argument(<span style="color:#e6db74">&#39;--disable-extensions&#39;</span>);
+options<span style="color:#f92672">.</span>add_argument(<span style="color:#e6db74">&#39;--proxy-server=&#34;direct://&#34;&#39;</span>);
+options<span style="color:#f92672">.</span>add_argument(<span style="color:#e6db74">&#39;--proxy-bypass-list=*&#39;</span>);
+options<span style="color:#f92672">.</span>add_argument(<span style="color:#e6db74">&#39;--start-maximized&#39;</span>);
 
-# driver specification
-DRIVER_PATH = r&#39;C:/Users/aashi/Desktop/chromedriver_win32/chromedriver.exe&#39;
-driver = webdriver.Chrome(executable_path=DRIVER_PATH, chrome_options=options)
+<span style="color:#75715e"># driver specification</span>
+DRIVER_PATH <span style="color:#f92672">=</span> <span style="color:#e6db74">r</span><span style="color:#e6db74">&#39;C:/Users/aashi/Desktop/chromedriver_win32/chromedriver.exe&#39;</span>
+driver <span style="color:#f92672">=</span> webdriver<span style="color:#f92672">.</span>Chrome(executable_path<span style="color:#f92672">=</span>DRIVER_PATH, chrome_options<span style="color:#f92672">=</span>options)
 
-# Pass the url and go to the site
-url = &#39;https://www.daily.co.jp/horse/horsecheck/photo/&#39;
-driver.get(url)
-driver.implicitly_wait(15) # Maximum time to wait for an object to load, and if this is exceeded, an error
-sleep(5) # 1 second sleep as the web page transition is performed
+<span style="color:#75715e"># Pass the url and go to the site</span>
+url <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;https://www.daily.co.jp/horse/horsecheck/photo/&#39;</span>
+driver<span style="color:#f92672">.</span>get(url)
+driver<span style="color:#f92672">.</span>implicitly_wait(<span style="color:#ae81ff">15</span>) <span style="color:#75715e"># Maximum time to wait for an object to load, and if this is exceeded, an error</span>
+sleep(<span style="color:#ae81ff">5</span>) <span style="color:#75715e"># 1 second sleep as the web page transition is performed</span>
 
-# Image data is saved for each race.
-selector0 = &quot;body &gt; div &gt; main &gt; div &gt; div.primaryContents &gt; article &gt; div &gt; section &gt; a&quot;
-elements = driver.find_elements_by_css_selector(selector0)
-for i in range(0,len(elements)):
-  elements = driver.find_elements_by_css_selector(selector0)
-  element = elements[i]
-  element.click()
-  sleep(5) # 5 seconds sleep as the web page transition is performed
+<span style="color:#75715e"># Image data is saved for each race.</span>
+selector0 <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;body &gt; div &gt; main &gt; div &gt; div.primaryContents &gt; article &gt; div &gt; section &gt; a&#34;</span>
+elements <span style="color:#f92672">=</span> driver<span style="color:#f92672">.</span>find_elements_by_css_selector(selector0)
+<span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">0</span>,len(elements)):
+  elements <span style="color:#f92672">=</span> driver<span style="color:#f92672">.</span>find_elements_by_css_selector(selector0)
+  element <span style="color:#f92672">=</span> elements[i]
+  element<span style="color:#f92672">.</span>click()
+  sleep(<span style="color:#ae81ff">5</span>) <span style="color:#75715e"># 5 seconds sleep as the web page transition is performed</span>
 
-  target = driver.find_element_by_link_text(&#39;Ｇ１馬体診断写真集のTOP&#39;)
-  actions = ActionChains(driver)
-  actions.move_to_element(target)
-  actions.perform()
-  sleep(5) # 5 seconds sleep as the web page transition is performed
-  selector = &quot;body &gt; div.wrapper.horse.is-fixedHeader.is-fixedAnimation &gt; main &gt; div &gt; div.primaryContents &gt; article &gt; article &gt; div.photoDetail-wrapper &gt; section &gt; div &gt; figure&quot;
-  figures = driver.find_elements_by_css_selector(selector)
-  download_dir = r&#39;C:\Users\aashi\umanalytics\photo\image&#39;
-  selector = &quot;body &gt; div &gt; main &gt; div &gt; div.primaryContents &gt; article &gt; article &gt; div.photoDetail-wrapper &gt; section &gt; h1&quot;
-  race_name = driver.find_element_by_css_selector(selector).text
-  for figure in figures:
-    img_name = figure.find_element_by_tag_name(&#39;figcaption&#39;).text
-    horse_src = figure.find_element_by_tag_name(&#39;img&#39;).get_attribute(&quot;src&quot;)    
-    save_name = download_dir + &#39;/&#39; + race_name + &#39;_&#39; + img_name + &#39;.jpg&#39;
-    request.urlretrieve(horse_src,save_name)
-  driver.back()</code></pre>
-<p>The saved images were cross-checked with the actual race results and manually divided into the top three groups and the rest of the groups. The images are saved as follows.</p>
-<div class="figure">
-<img src="horse_photo.PNG" alt="" />
-<p class="caption">Stored Horse Image</p>
-</div>
+  target <span style="color:#f92672">=</span> driver<span style="color:#f92672">.</span>find_element_by_link_text(<span style="color:#e6db74">&#39;Ｇ１馬体診断写真集のTOP&#39;</span>)
+  actions <span style="color:#f92672">=</span> ActionChains(driver)
+  actions<span style="color:#f92672">.</span>move_to_element(target)
+  actions<span style="color:#f92672">.</span>perform()
+  sleep(<span style="color:#ae81ff">5</span>) <span style="color:#75715e"># 5 seconds sleep as the web page transition is performed</span>
+  selector <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;body &gt; div.wrapper.horse.is-fixedHeader.is-fixedAnimation &gt; main &gt; div &gt; div.primaryContents &gt; article &gt; article &gt; div.photoDetail-wrapper &gt; section &gt; div &gt; figure&#34;</span>
+  figures <span style="color:#f92672">=</span> driver<span style="color:#f92672">.</span>find_elements_by_css_selector(selector)
+  download_dir <span style="color:#f92672">=</span> <span style="color:#e6db74">r</span><span style="color:#e6db74">&#39;C:\Users\aashi\umanalytics\photo\image&#39;</span>
+  selector <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;body &gt; div &gt; main &gt; div &gt; div.primaryContents &gt; article &gt; article &gt; div.photoDetail-wrapper &gt; section &gt; h1&#34;</span>
+  race_name <span style="color:#f92672">=</span> driver<span style="color:#f92672">.</span>find_element_by_css_selector(selector)<span style="color:#f92672">.</span>text
+  <span style="color:#66d9ef">for</span> figure <span style="color:#f92672">in</span> figures:
+    img_name <span style="color:#f92672">=</span> figure<span style="color:#f92672">.</span>find_element_by_tag_name(<span style="color:#e6db74">&#39;figcaption&#39;</span>)<span style="color:#f92672">.</span>text
+    horse_src <span style="color:#f92672">=</span> figure<span style="color:#f92672">.</span>find_element_by_tag_name(<span style="color:#e6db74">&#39;img&#39;</span>)<span style="color:#f92672">.</span>get_attribute(<span style="color:#e6db74">&#34;src&#34;</span>)    
+    save_name <span style="color:#f92672">=</span> download_dir <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;/&#39;</span> <span style="color:#f92672">+</span> race_name <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;_&#39;</span> <span style="color:#f92672">+</span> img_name <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;.jpg&#39;</span>
+    request<span style="color:#f92672">.</span>urlretrieve(horse_src,save_name)
+  driver<span style="color:#f92672">.</span>back()
+</code></pre></div><p>The saved images were cross-checked with the actual race results and manually divided into the top three groups and the rest of the groups. The images are saved as follows.</p>
+<p><img src="horse_photo.PNG" alt="Stored Horse Image"></p>
 <p>This completes the collection of the original data.</p>
-</div>
-</div>
-<div id="training-cnn-using-keras" class="section level2">
-<h2>2. Training CNN using <code>Keras</code></h2>
-<div id="what-is-keras" class="section level3">
-<h3>What is Keras?</h3>
-<p>Now, let’s train CNN using <code>Keras</code>. <code>Keras</code> is one of the <code>Neural Network</code> libraries that runs on <code>Tensorflow</code> and <code>Theano</code>. <code>Keras</code> is one of the <code>Neural Network</code> libraries that runs on <code>Tensorflow</code> and <code>Theano</code>. <code>Keras</code> is characterized by its ability to build models with relatively short code and its many learning algorithms.</p>
-</div>
-<div id="what-is-cnn" class="section level3">
-<h3>What is CNN?</h3>
+<h2 id="2-training-cnn-using-keras">2. Training CNN using <code>Keras</code></h2>
+<h3 id="what-is-keras">What is Keras?</h3>
+<p>Now, let&rsquo;s train CNN using <code>Keras</code>. <code>Keras</code> is one of the <code>Neural Network</code> libraries that runs on <code>Tensorflow</code> and <code>Theano</code>. <code>Keras</code> is one of the <code>Neural Network</code> libraries that runs on <code>Tensorflow</code> and <code>Theano</code>. <code>Keras</code> is characterized by its ability to build models with relatively short code and its many learning algorithms.</p>
+<h3 id="what-is-cnn">What is CNN?</h3>
 <p>CNN is a type of <code>(Deep) Neural Network</code> often used in image analysis, and as its name suggests, it is an additional <code>convolution</code>. Convolution is a process like the following.</p>
-<div class="figure">
-<img src="https://cdn-ak.f.st-hatena.com/images/fotolife/t/tdualdir/20180501/20180501211957.png" alt="" />
-<p class="caption">Convolutional Layer Processing</p>
-</div>
+<p><img src="https://cdn-ak.f.st-hatena.com/images/fotolife/t/tdualdir/20180501/20180501211957.png" alt="Convolutional Layer Processing"></p>
 <p>The input here is the image data. Image analysis recognizes and analyzes images as numerical values. The image on the computer is represented by the <code>RGB</code> value, which is a numerical value from 0 to 255 of three colors, red (Red), green (Green) and blue (Blue). There are three layers of vectors in the form of 255 red, 0 green, 0 blue, and so on, and in this case a perfect red is represented. In the case above, you can think of a, b, c, etc. as representing one of the <code>RGB</code> values of each pixel. Convolution calculates the features of an image by taking the inner product of these <code>RGB</code> values with a matrix called the kernel. The following video(Japanese) is a good example of what the convolution layer means.</p>
-<iframe width="560" height="315" src="https://www.youtube.com/embed/vU-JfZNBdYU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
-</iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/vU-JfZNBdYU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 <p>By learning the kernel to successfully get the distinctive parts of that image, it is possible to identify the image. I think the convolutional layer is the most important part of the CNN.</p>
-<div class="figure">
-<img src="https://th.bing.com/th/id/OIP.F2Ik_XFzmu5jZF-byiAKQQHaCg?w=342&amp;h=118&amp;c=7&amp;o=5&amp;dpr=1.25&amp;pid=1.7" alt="" />
-<p class="caption">The Big Picture of CNN</p>
-</div>
+<p><img src="https://th.bing.com/th/id/OIP.F2Ik_XFzmu5jZF-byiAKQQHaCg?w=342&amp;h=118&amp;c=7&amp;o=5&amp;dpr=1.25&amp;pid=1.7" alt="The Big Picture of CNN"></p>
 <p>As shown in the above figure, CNN has not only convolutional layers but also input and output layers as well as usual <code>Neural Network</code> layers. If you want to know about the <code>MaxPooling</code> layer, see the following movie(Japanese).</p>
-<iframe width="560" height="315" src="https://www.youtube.com/embed/MLixg9K6oeU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
-</iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/MLixg9K6oeU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 <p>Although the gradient method is known as the most orthodox training method for deep learning, various extension algorithms such as <code>Adam</code> have been proposed. Basically, <code>Adam</code> or <code>momentum</code> is often used.</p>
-</div>
-<div id="coding" class="section level3">
-<h3>Coding</h3>
-<p>Now, let’s get to the coding.</p>
-<pre class="python"><code>from keras.utils import np_utils
-from keras.models import Sequential
-from keras.layers.convolutional import MaxPooling2D
-from keras.layers import Activation, Conv2D, Flatten, Dense,Dropout
-from sklearn.model_selection import train_test_split
-from keras.optimizers import SGD, Adadelta, Adagrad, Adam, Adamax, RMSprop, Nadam
-from PIL import Image
-import numpy as np
-import glob
-import matplotlib.pyplot as plt
-import time
-import os</code></pre>
-<p>The first step is to convert the collected image data to numerical data to create the training data.
+<h3 id="coding">Coding</h3>
+<p>Now, let&rsquo;s get to the coding.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> keras.utils <span style="color:#f92672">import</span> np_utils
+</code></pre></div><pre><code>## Using TensorFlow backend.
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> keras.models <span style="color:#f92672">import</span> Sequential
+<span style="color:#f92672">from</span> keras.layers.convolutional <span style="color:#f92672">import</span> MaxPooling2D
+<span style="color:#f92672">from</span> keras.layers <span style="color:#f92672">import</span> Activation, Conv2D, Flatten, Dense,Dropout
+<span style="color:#f92672">from</span> sklearn.model_selection <span style="color:#f92672">import</span> train_test_split
+<span style="color:#f92672">from</span> keras.optimizers <span style="color:#f92672">import</span> SGD, Adadelta, Adagrad, Adam, Adamax, RMSprop, Nadam
+<span style="color:#f92672">from</span> PIL <span style="color:#f92672">import</span> Image
+<span style="color:#f92672">import</span> numpy <span style="color:#f92672">as</span> np
+<span style="color:#f92672">import</span> glob
+<span style="color:#f92672">import</span> matplotlib.pyplot <span style="color:#f92672">as</span> plt
+<span style="color:#f92672">import</span> time
+<span style="color:#f92672">import</span> os
+</code></pre></div><p>The first step is to convert the collected image data to numerical data to create the training data.
 The directory structure is as follows, with the top image and other images being stored in separate directories. When we read in the images from each directory, we give a category variable of 1 for the top image and 0 for others.</p>
 <p>photograph of a horse</p>
 <ul>
 <li>superior (in rank)</li>
 <li>Other</li>
 </ul>
-<pre class="python"><code>#Specify a folder
-folders = os.listdir(r&quot;C:\Users\aashi\umanalytics\photo\image&quot;)
-#Specify the total number of strokes (50 x 50 x 3 in this case).
-image_size = 300
-dense_size = len(folders)
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#75715e">#Specify a folder</span>
+folders <span style="color:#f92672">=</span> os<span style="color:#f92672">.</span>listdir(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;C:\Users\aashi\umanalytics\photo\image&#34;</span>)
+<span style="color:#75715e">#Specify the total number of strokes (50 x 50 x 3 in this case).</span>
+image_size <span style="color:#f92672">=</span> <span style="color:#ae81ff">300</span>
+dense_size <span style="color:#f92672">=</span> len(folders)
 
-X = []
-Y = []
+X <span style="color:#f92672">=</span> []
+Y <span style="color:#f92672">=</span> []
 
-#Reads an image from each folder and converts it to a numpy array of RGB values using the Image function
-for i, folder in enumerate(folders):
-  files = glob.glob(&quot;C:/Users/aashi/umanalytics/photo/image/&quot; + folder + &quot;/*.jpg&quot;)
-  index = i
-  for k, file in enumerate(files):
-    image = Image.open(file)
-    image = image.convert(&quot;L&quot;).convert(&quot;RGB&quot;)
-    image = image.resize((image_size, image_size)) #I&#39;m dropping the number of pixels.
+<span style="color:#75715e">#Reads an image from each folder and converts it to a numpy array of RGB values using the Image function</span>
+<span style="color:#66d9ef">for</span> i, folder <span style="color:#f92672">in</span> enumerate(folders):
+  files <span style="color:#f92672">=</span> glob<span style="color:#f92672">.</span>glob(<span style="color:#e6db74">&#34;C:/Users/aashi/umanalytics/photo/image/&#34;</span> <span style="color:#f92672">+</span> folder <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;/*.jpg&#34;</span>)
+  index <span style="color:#f92672">=</span> i
+  <span style="color:#66d9ef">for</span> k, file <span style="color:#f92672">in</span> enumerate(files):
+    image <span style="color:#f92672">=</span> Image<span style="color:#f92672">.</span>open(file)
+    image <span style="color:#f92672">=</span> image<span style="color:#f92672">.</span>convert(<span style="color:#e6db74">&#34;L&#34;</span>)<span style="color:#f92672">.</span>convert(<span style="color:#e6db74">&#34;RGB&#34;</span>)
+    image <span style="color:#f92672">=</span> image<span style="color:#f92672">.</span>resize((image_size, image_size)) <span style="color:#75715e">#I&#39;m dropping the number of pixels.</span>
  
-    data = np.asarray(image)
-    X.append(data)
-    Y.append(index)
+    data <span style="color:#f92672">=</span> np<span style="color:#f92672">.</span>asarray(image)
+    X<span style="color:#f92672">.</span>append(data)
+    Y<span style="color:#f92672">.</span>append(index)
 
-X = np.array(X)
-Y = np.array(Y)
-X = X.astype(&#39;float32&#39;)
-X = X / 255.0 # Conversion to 0~1
-X.shape
-Y = np_utils.to_categorical(Y, dense_size)
+X <span style="color:#f92672">=</span> np<span style="color:#f92672">.</span>array(X)
+Y <span style="color:#f92672">=</span> np<span style="color:#f92672">.</span>array(Y)
+X <span style="color:#f92672">=</span> X<span style="color:#f92672">.</span>astype(<span style="color:#e6db74">&#39;float32&#39;</span>)
+X <span style="color:#f92672">=</span> X <span style="color:#f92672">/</span> <span style="color:#ae81ff">255.0</span> <span style="color:#75715e"># Conversion to 0~1</span>
+X<span style="color:#f92672">.</span>shape
+Y <span style="color:#f92672">=</span> np_utils<span style="color:#f92672">.</span>to_categorical(Y, dense_size)
 
-#splitting training data and test data
-X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.20)</code></pre>
-<p>I’ve been able to split the training data and the test data. What I’m considering now is a binary classification of “top” and “other”, but I defined “top” as the top 3, so the data is unbalanced (about 5 times as much other data as the top data). In this case, if we train on the data as it is, it is easier to predict the label with the larger sample size (in this case, “other”), and the model will have a bias. Therefore, it is necessary to adjust the training data so that the sample size is the same for each of the two classes.</p>
-<pre class="python"><code>index_zero = np.random.choice(np.array(np.where(y_train[:,1]==0))[0,],np.count_nonzero(y_train[:,1]==1),replace=False)
-index_one = np.array(np.where(y_train[:,1]==1))[0]
-y_resampled = y_train[np.hstack((index_one,index_zero))]
-X_resampled = X_train[np.hstack((index_one,index_zero))]</code></pre>
-<p>We will use this <code>y_resampled</code> and <code>X_resampled</code> for the training data. Next, we will build the CNN. In <code>Keras</code>, a model is defined by specifying a <code>sequential model</code> and adding a layer by <code>add</code> method.</p>
-<pre class="python"><code>model = Sequential()
-model.add(Conv2D(32, (3, 3), padding=&#39;same&#39;,input_shape=X_train.shape[1:]))
-model.add(Activation(&#39;relu&#39;))
-model.add(Conv2D(32, (3, 3)))
-model.add(Activation(&#39;relu&#39;))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.25))
+<span style="color:#75715e">#splitting training data and test data</span>
+X_train, X_test, y_train, y_test <span style="color:#f92672">=</span> train_test_split(X, Y, test_size<span style="color:#f92672">=</span><span style="color:#ae81ff">0.20</span>)
+</code></pre></div><p>I&rsquo;ve been able to split the training data and the test data. What I&rsquo;m considering now is a binary classification of &ldquo;top&rdquo; and &ldquo;other&rdquo;, but I defined &ldquo;top&rdquo; as the top 3, so the data is unbalanced (about 5 times as much other data as the top data). In this case, if we train on the data as it is, it is easier to predict the label with the larger sample size (in this case, &ldquo;other&rdquo;), and the model will have a bias. Therefore, it is necessary to adjust the training data so that the sample size is the same for each of the two classes.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">index_zero <span style="color:#f92672">=</span> np<span style="color:#f92672">.</span>random<span style="color:#f92672">.</span>choice(np<span style="color:#f92672">.</span>array(np<span style="color:#f92672">.</span>where(y_train[:,<span style="color:#ae81ff">1</span>]<span style="color:#f92672">==</span><span style="color:#ae81ff">0</span>))[<span style="color:#ae81ff">0</span>,],np<span style="color:#f92672">.</span>count_nonzero(y_train[:,<span style="color:#ae81ff">1</span>]<span style="color:#f92672">==</span><span style="color:#ae81ff">1</span>),replace<span style="color:#f92672">=</span>False)
+index_one <span style="color:#f92672">=</span> np<span style="color:#f92672">.</span>array(np<span style="color:#f92672">.</span>where(y_train[:,<span style="color:#ae81ff">1</span>]<span style="color:#f92672">==</span><span style="color:#ae81ff">1</span>))[<span style="color:#ae81ff">0</span>]
+y_resampled <span style="color:#f92672">=</span> y_train[np<span style="color:#f92672">.</span>hstack((index_one,index_zero))]
+X_resampled <span style="color:#f92672">=</span> X_train[np<span style="color:#f92672">.</span>hstack((index_one,index_zero))]
+</code></pre></div><p>We will use this <code>y_resampled</code> and <code>X_resampled</code> for the training data. Next, we will build the CNN. In <code>Keras</code>, a model is defined by specifying a <code>sequential model</code> and adding a layer by <code>add</code> method.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">model <span style="color:#f92672">=</span> Sequential()
+model<span style="color:#f92672">.</span>add(Conv2D(<span style="color:#ae81ff">32</span>, (<span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">3</span>), padding<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;same&#39;</span>,input_shape<span style="color:#f92672">=</span>X_train<span style="color:#f92672">.</span>shape[<span style="color:#ae81ff">1</span>:]))
+model<span style="color:#f92672">.</span>add(Activation(<span style="color:#e6db74">&#39;relu&#39;</span>))
+model<span style="color:#f92672">.</span>add(Conv2D(<span style="color:#ae81ff">32</span>, (<span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">3</span>)))
+model<span style="color:#f92672">.</span>add(Activation(<span style="color:#e6db74">&#39;relu&#39;</span>))
+model<span style="color:#f92672">.</span>add(MaxPooling2D(pool_size<span style="color:#f92672">=</span>(<span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">2</span>)))
+model<span style="color:#f92672">.</span>add(Dropout(<span style="color:#ae81ff">0.25</span>))
 
-model.add(Conv2D(64, (3, 3), padding=&#39;same&#39;))
-model.add(Activation(&#39;relu&#39;))
-model.add(Conv2D(64, (3, 3)))
-model.add(Activation(&#39;relu&#39;))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.25))
+model<span style="color:#f92672">.</span>add(Conv2D(<span style="color:#ae81ff">64</span>, (<span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">3</span>), padding<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;same&#39;</span>))
+model<span style="color:#f92672">.</span>add(Activation(<span style="color:#e6db74">&#39;relu&#39;</span>))
+model<span style="color:#f92672">.</span>add(Conv2D(<span style="color:#ae81ff">64</span>, (<span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">3</span>)))
+model<span style="color:#f92672">.</span>add(Activation(<span style="color:#e6db74">&#39;relu&#39;</span>))
+model<span style="color:#f92672">.</span>add(MaxPooling2D(pool_size<span style="color:#f92672">=</span>(<span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">2</span>)))
+model<span style="color:#f92672">.</span>add(Dropout(<span style="color:#ae81ff">0.25</span>))
 
-model.add(Flatten())
-model.add(Dense(512))
-model.add(Activation(&#39;relu&#39;))
-model.add(Dropout(0.5))
-model.add(Dense(dense_size))
-model.add(Activation(&#39;softmax&#39;))
+model<span style="color:#f92672">.</span>add(Flatten())
+model<span style="color:#f92672">.</span>add(Dense(<span style="color:#ae81ff">512</span>))
+model<span style="color:#f92672">.</span>add(Activation(<span style="color:#e6db74">&#39;relu&#39;</span>))
+model<span style="color:#f92672">.</span>add(Dropout(<span style="color:#ae81ff">0.5</span>))
+model<span style="color:#f92672">.</span>add(Dense(dense_size))
+model<span style="color:#f92672">.</span>add(Activation(<span style="color:#e6db74">&#39;softmax&#39;</span>))
 
-model.summary()</code></pre>
-<pre><code>## Model: &quot;sequential&quot;
+model<span style="color:#f92672">.</span>summary()
+</code></pre></div><pre><code>## Model: &quot;sequential_1&quot;
 ## _________________________________________________________________
 ## Layer (type)                 Output Shape              Param #   
 ## =================================================================
-## conv2d (Conv2D)              (None, 300, 300, 32)      896       
+## conv2d_1 (Conv2D)            (None, 300, 300, 32)      896       
 ## _________________________________________________________________
-## activation (Activation)      (None, 300, 300, 32)      0         
+## activation_1 (Activation)    (None, 300, 300, 32)      0         
 ## _________________________________________________________________
-## conv2d_1 (Conv2D)            (None, 298, 298, 32)      9248      
+## conv2d_2 (Conv2D)            (None, 298, 298, 32)      9248      
 ## _________________________________________________________________
-## activation_1 (Activation)    (None, 298, 298, 32)      0         
+## activation_2 (Activation)    (None, 298, 298, 32)      0         
 ## _________________________________________________________________
-## max_pooling2d (MaxPooling2D) (None, 149, 149, 32)      0         
+## max_pooling2d_1 (MaxPooling2 (None, 149, 149, 32)      0         
 ## _________________________________________________________________
-## dropout (Dropout)            (None, 149, 149, 32)      0         
+## dropout_1 (Dropout)          (None, 149, 149, 32)      0         
 ## _________________________________________________________________
-## conv2d_2 (Conv2D)            (None, 149, 149, 64)      18496     
+## conv2d_3 (Conv2D)            (None, 149, 149, 64)      18496     
 ## _________________________________________________________________
-## activation_2 (Activation)    (None, 149, 149, 64)      0         
+## activation_3 (Activation)    (None, 149, 149, 64)      0         
 ## _________________________________________________________________
-## conv2d_3 (Conv2D)            (None, 147, 147, 64)      36928     
+## conv2d_4 (Conv2D)            (None, 147, 147, 64)      36928     
 ## _________________________________________________________________
-## activation_3 (Activation)    (None, 147, 147, 64)      0         
+## activation_4 (Activation)    (None, 147, 147, 64)      0         
 ## _________________________________________________________________
-## max_pooling2d_1 (MaxPooling2 (None, 73, 73, 64)        0         
+## max_pooling2d_2 (MaxPooling2 (None, 73, 73, 64)        0         
 ## _________________________________________________________________
-## dropout_1 (Dropout)          (None, 73, 73, 64)        0         
+## dropout_2 (Dropout)          (None, 73, 73, 64)        0         
 ## _________________________________________________________________
-## flatten (Flatten)            (None, 341056)            0         
+## flatten_1 (Flatten)          (None, 341056)            0         
 ## _________________________________________________________________
-## dense (Dense)                (None, 512)               174621184 
+## dense_1 (Dense)              (None, 512)               174621184 
 ## _________________________________________________________________
-## activation_4 (Activation)    (None, 512)               0         
+## activation_5 (Activation)    (None, 512)               0         
 ## _________________________________________________________________
-## dropout_2 (Dropout)          (None, 512)               0         
+## dropout_3 (Dropout)          (None, 512)               0         
 ## _________________________________________________________________
-## dense_1 (Dense)              (None, 2)                 1026      
+## dense_2 (Dense)              (None, 2)                 1026      
 ## _________________________________________________________________
-## activation_5 (Activation)    (None, 2)                 0         
+## activation_6 (Activation)    (None, 2)                 0         
 ## =================================================================
 ## Total params: 174,687,778
 ## Trainable params: 174,687,778
 ## Non-trainable params: 0
-## _________________________________________________________________</code></pre>
-<p>Now, let’s get to the learning part. We’ll use <code>Adadelta</code> for the algorithm. I don’t really understand it.</p>
-<pre class="python"><code>optimizers =&quot;Adadelta&quot;
-results = {}
-epochs = 50
-model.compile(loss=&#39;categorical_crossentropy&#39;, optimizer=optimizers, metrics=[&#39;accuracy&#39;])
-results = model.fit(X_resampled, y_resampled, validation_split=0.2, epochs=epochs)</code></pre>
-</div>
-<div id="undersampling-for-unbalanced-data-adjustment" class="section level3">
-<h3>Undersampling for unbalanced data adjustment</h3>
-<p>From here, we perform binary classification with Test data, but since we are undersampling the training data, we have an undersampled sample selection bias when calculating the prediction probability. The paper is available <a href="https://www3.nd.edu/~dial/publications/dalpozzolo2015calibrating.pdf">here</a>.</p>
-<p>Therefore, I would like to formulate this part of the problem here, although a correction is needed. I will describe the current binary classification problem as the problem of predicting the objective variable <span class="math inline">\(Y\)</span>, which takes a binary value from the explanatory thousand <span class="math inline">\(X\)</span>. Let <span class="math inline">\((X,Y)\)</span> be a dataset where the positive example is considerably less than the negative example and the sample size of the negative example is matched to the positive example as <span class="math inline">\((X_s,Y_s)\)</span>. We define a categorical variable <span class="math inline">\(s\)</span> that takes 1 if the <span class="math inline">\((X,Y)\)</span> sample set is also included in <span class="math inline">\((X_s,Y_s)\)</span> and 0 if it is not.
-Given an explanatory variable <span class="math inline">\(x\)</span> to the model constructed using the dataset <span class="math inline">\((X,Y)\)</span>, the positive example and the conditional probability of predicting can be expressed as <span class="math inline">\(P(y=1|x)\)</span>. On the other hand, the conditional probability of predicting a positive example in a model constructed using <span class="math inline">\((X_s,Y_s)\)</span> can be expressed as <span class="math inline">\(P(y=1|x)\)</span> using Bayes’ theorem and the categorical variable <span class="math inline">\(s\)</span>.</p>
-<p><span class="math display">\[
+## _________________________________________________________________
+</code></pre><p>Now, let&rsquo;s get to the learning part. We&rsquo;ll use <code>Adadelta</code> for the algorithm. I don&rsquo;t really understand it.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">optimizers <span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Adadelta&#34;</span>
+results <span style="color:#f92672">=</span> {}
+epochs <span style="color:#f92672">=</span> <span style="color:#ae81ff">50</span>
+model<span style="color:#f92672">.</span>compile(loss<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;categorical_crossentropy&#39;</span>, optimizer<span style="color:#f92672">=</span>optimizers, metrics<span style="color:#f92672">=</span>[<span style="color:#e6db74">&#39;accuracy&#39;</span>])
+results <span style="color:#f92672">=</span> model<span style="color:#f92672">.</span>fit(X_resampled, y_resampled, validation_split<span style="color:#f92672">=</span><span style="color:#ae81ff">0.2</span>, epochs<span style="color:#f92672">=</span>epochs)
+</code></pre></div><h3 id="undersampling-for-unbalanced-data-adjustment">Undersampling for unbalanced data adjustment</h3>
+<p>From here, we perform binary classification with Test data, but since we are undersampling the training data, we have an undersampled sample selection bias when calculating the prediction probability. The paper is available <a href="https://www3.nd.edu/~dial/publications/dalpozzolo2015calibrating.pdf" target="_blank" rel="noopener">here</a>.</p>
+<p>Therefore, I would like to formulate this part of the problem here, although a correction is needed. I will describe the current binary classification problem as the problem of predicting the objective variable <code>\(Y\)</code>, which takes a binary value from the explanatory thousand <code>\(X\)</code>. Let <code>\((X,Y)\)</code> be a dataset where the positive example is considerably less than the negative example and the sample size of the negative example is matched to the positive example as <code>\((X_s,Y_s)\)</code>. We define a categorical variable <code>\(s\)</code> that takes 1 if the <code>\((X,Y)\)</code> sample set is also included in <code>\((X_s,Y_s)\)</code> and 0 if it is not.
+Given an explanatory variable <code>\(x\)</code> to the model constructed using the dataset <code>\((X,Y)\)</code>, the positive example and the conditional probability of predicting can be expressed as <code>\(P(y=1|x)\)</code>. On the other hand, the conditional probability of predicting a positive example in a model constructed using <code>\((X_s,Y_s)\)</code> can be expressed as <code>\(P(y=1|x)\)</code> using Bayes' theorem and the categorical variable <code>\(s\)</code>.</p>
+<p>$$
 P(y=1|x,s=1) = \frac{P(s=1|y=1)P(y=1|x)}{P(s=1|y=1)P(y=1|x) + P(s=1|y=0)P(y=0|x)}
-\]</span>
-It can be written as. Since <span class="math inline">\((X_s,Y_s)\)</span> matches the sample size of the negative example to the positive example, <span class="math inline">\(P(s=1,y=1)=1\)</span>, the above formula is rewritten as</p>
-<p><span class="math display">\[
+$$
+It can be written as. Since <code>\((X_s,Y_s)\)</code> matches the sample size of the negative example to the positive example, <code>\(P(s=1,y=1)=1\)</code>, the above formula is rewritten as</p>
+<p>$$
 P(y=1|x,s=1) = \frac{P(y=1|x)}{P(y=1|x) + P(s=1|y=0)P(y=0|x)}
 = \frac{P(y=1|x)}{P(y=1|x) + P(s=1|y=0)(1-P(y=1|x))}
-\]</span>
-It is self-evident from the definition of <span class="math inline">\((X_s,Y_s)\)</span> that <span class="math inline">\(P(s=1|y=0)\neq0\)</span> (0 would result in unbalanced data with only positive examples). Thus, as long as <span class="math inline">\(P(y=0,x) \neq0\)</span>, the probability that the undersampling model will be rejected as a positive example is positively biased against the probability that the original data set will produce. What we want to find is <span class="math inline">\(P(y=1|x)\)</span> with no bias, so <span class="math inline">\(P=P(y=1|x),P_s=P(y|x,s=1),\beta=P(s=1,y=0)\)</span>, then we can get</p>
-<p><span class="math display">\[
+$$
+It is self-evident from the definition of <code>\((X_s,Y_s)\)</code> that <code>\(P(s=1|y=0)\neq0\)</code> (0 would result in unbalanced data with only positive examples). Thus, as long as <code>\(P(y=0,x) \neq0\)</code>, the probability that the undersampling model will be rejected as a positive example is positively biased against the probability that the original data set will produce. What we want to find is <code>\(P(y=1|x)\)</code> with no bias, so <code>\(P=P(y=1|x),P_s=P(y|x,s=1),\beta=P(s=1,y=0)\)</code>, then we can get</p>
+<p>$$
 P = \frac{\beta P_s}{\beta P_s-P_s+1}
-\]</span>
+$$
 and can use this relationship formula to correct for bias.
-Let’s define what we’ve just identified as a function.</p>
-<pre class="python"><code>def calibration(y_proba, beta):
-    return y_proba / (y_proba + (1 - y_proba) / beta)
+Let&rsquo;s define what we&rsquo;ve just identified as a function.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">calibration</span>(y_proba, beta):
+    <span style="color:#66d9ef">return</span> y_proba <span style="color:#f92672">/</span> (y_proba <span style="color:#f92672">+</span> (<span style="color:#ae81ff">1</span> <span style="color:#f92672">-</span> y_proba) <span style="color:#f92672">/</span> beta)
 
-sampling_rate = sum(y_train[:,1]) / sum(1-y_train[:,1])
-y_proba_calib = calibration(model.predict(X_test), sampling_rate)
-y_pred = np_utils.to_categorical(np.argmax(y_proba_calib,axis=1), dense_size)
+sampling_rate <span style="color:#f92672">=</span> sum(y_train[:,<span style="color:#ae81ff">1</span>]) <span style="color:#f92672">/</span> sum(<span style="color:#ae81ff">1</span><span style="color:#f92672">-</span>y_train[:,<span style="color:#ae81ff">1</span>])
+y_proba_calib <span style="color:#f92672">=</span> calibration(model<span style="color:#f92672">.</span>predict(X_test), sampling_rate)
+y_pred <span style="color:#f92672">=</span> np_utils<span style="color:#f92672">.</span>to_categorical(np<span style="color:#f92672">.</span>argmax(y_proba_calib,axis<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>), dense_size)
 
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, accuracy_score
-score = accuracy_score(y_test, y_pred)
-print(&#39;Test accuracy:&#39;, score)</code></pre>
-<pre><code>## Test accuracy: 0.2711864406779661</code></pre>
-<p>It’s not good at all. I ran the <code>ConfusionMatrix</code> and found out that it doesn’t work.</p>
-<pre class="python"><code>ConfusionMatrixDisplay(confusion_matrix(np.argmax(y_test,axis=1), np.argmax(y_pred,axis=1))).plot()</code></pre>
-<pre><code>## &lt;sklearn.metrics._plot.confusion_matrix.ConfusionMatrixDisplay object at 0x0000000049341F88&gt;</code></pre>
-<pre class="python"><code>plt.show()</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
-<pre class="python"><code>plt.close()</code></pre>
-<p>I did a bias correction for the imbalance data, but the model is still very predictive of negative values. This doesn’t work.</p>
-</div>
-</div>
-<div id="interpretation-of-results-using-shap-values" class="section level2">
-<h2>3. Interpretation of results using Shap values</h2>
-<p>I would like to consider the <code>shap</code> value of the model we just learned and interpret the results. I’ll add an explanation of the <code>shap</code> value when I have time. Simply put, the visualization captures which parts of the image the CNN captured features and predicted the horse to be at the top. We’ll be analyzing this horse.</p>
-<pre class="python"><code>plt.imshow(X_test[0])
-plt.show()</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
-<pre class="python"><code>plt.close()</code></pre>
-<pre class="python"><code>import shap
-background = X_train[np.random.choice(X_train.shape[0],100,replace=False)]
+<span style="color:#f92672">from</span> sklearn.metrics <span style="color:#f92672">import</span> confusion_matrix, ConfusionMatrixDisplay, accuracy_score
+score <span style="color:#f92672">=</span> accuracy_score(y_test, y_pred)
+<span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#39;Test accuracy:&#39;</span>, score)
+</code></pre></div><pre><code>## Test accuracy: 0.3220338983050847
+</code></pre><p>It&rsquo;s not good at all. I ran the <code>ConfusionMatrix</code> and found out that it doesn&rsquo;t work.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">ConfusionMatrixDisplay(confusion_matrix(np<span style="color:#f92672">.</span>argmax(y_test,axis<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>), np<span style="color:#f92672">.</span>argmax(y_pred,axis<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>)))<span style="color:#f92672">.</span>plot()
+</code></pre></div><pre><code>## &lt;sklearn.metrics._plot.confusion_matrix.ConfusionMatrixDisplay object at 0x000000004A54CC88&gt;
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">plt<span style="color:#f92672">.</span>show()
+</code></pre></div><p><img src="../../../en/post/post18/index_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">plt<span style="color:#f92672">.</span>close()
+</code></pre></div><p>I did a bias correction for the imbalance data, but the model is still very predictive of negative values. This doesn&rsquo;t work.</p>
+<h2 id="3-interpretation-of-results-using-shap-values">3. Interpretation of results using Shap values</h2>
+<p>I would like to consider the <code>shap</code> value of the model we just learned and interpret the results. I&rsquo;ll add an explanation of the <code>shap</code> value when I have time. Simply put, the visualization captures which parts of the image the CNN captured features and predicted the horse to be at the top. We&rsquo;ll be analyzing this horse.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">plt<span style="color:#f92672">.</span>imshow(X_test[<span style="color:#ae81ff">0</span>])
+plt<span style="color:#f92672">.</span>show()
+</code></pre></div><p><img src="../../../en/post/post18/index_files/figure-html/unnamed-chunk-14-3.png" width="672" /></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">plt<span style="color:#f92672">.</span>close()
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> shap
+background <span style="color:#f92672">=</span> X_train[np<span style="color:#f92672">.</span>random<span style="color:#f92672">.</span>choice(X_train<span style="color:#f92672">.</span>shape[<span style="color:#ae81ff">0</span>],<span style="color:#ae81ff">100</span>,replace<span style="color:#f92672">=</span>False)]
 
-e = shap.GradientExplainer(model,background)
+e <span style="color:#f92672">=</span> shap<span style="color:#f92672">.</span>GradientExplainer(model,background)
 
-shap_values = e.shap_values(X_test[[0]])
-shap.image_plot(shap_values[1],X_test[[0]])</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-15-1.png" width="576" /></p>
-<p>It’s very subtle, but it looks like you’re appreciating the legs and buttocks, etc. It needs to be cropped to take out the horse’s body only, since it seems to be responding to the background. I think I need to build a model for object detection. I’ll think about this another time.
-I’d like to visualize which aspects of the image are captured at each layer.</p>
-<pre class="python"><code>from keras import models
+shap_values <span style="color:#f92672">=</span> e<span style="color:#f92672">.</span>shap_values(X_test[[<span style="color:#ae81ff">0</span>]])
+shap<span style="color:#f92672">.</span>image_plot(shap_values[<span style="color:#ae81ff">1</span>],X_test[[<span style="color:#ae81ff">0</span>]])
+</code></pre></div><p><img src="../../../en/post/post18/index_files/figure-html/unnamed-chunk-15-5.png" width="576" /></p>
+<p>It&rsquo;s very subtle, but it looks like you&rsquo;re appreciating the legs and buttocks, etc. It needs to be cropped to take out the horse&rsquo;s body only, since it seems to be responding to the background. I think I need to build a model for object detection. I&rsquo;ll think about this another time.</p>
+<h2 id="4-finally">4. Finally</h2>
+<p>To be honest, it hasn&rsquo;t worked out at all. Is it still difficult to predict rankings from the horse&rsquo;s body? Does multiplying it with other variables change the results? I don&rsquo;t think I&rsquo;m able to extract good features from the horses as it is.
+Do I need to get to the point where I can get a paddock video from Youtube and analyze it with the <code>Encoder-Decoder</code> model to make it work? I&rsquo;d love to do it when I&rsquo;m good enough to do it (I don&rsquo;t know when that will be). Until then, I need to improve my PC specs. Maybe I&rsquo;ll use the cash handout.</p>
 
-layer_outputs = [layer.output for layer in model.layers[:8]]
-layer_names = []
-for layer in model.layers[:8]:
-    layer_names.append(layer.name)
-images_per_row = 16
+          </div>
 
-activation_model = models.Model(inputs=model.input, outputs=layer_outputs)
-activations = activation_model.predict(X_train[[0]])
-
-for layer_name, layer_activation in zip(layer_names, activations):
-    n_features = layer_activation.shape[-1]
-
-    size = layer_activation.shape[1]
-
-    n_cols = n_features // images_per_row
-    display_grid = np.zeros((size * n_cols, images_per_row * size))
-
-    for col in range(n_cols):
-        for row in range(images_per_row):
-            channel_image = layer_activation[0,
-                                             :, :,
-                                             col * images_per_row + row]
-            channel_image -= channel_image.mean()
-            channel_image /= channel_image.std()
-            channel_image *= 64
-            channel_image += 128
-            channel_image = np.clip(channel_image, 0, 255).astype(&#39;uint8&#39;)
-            display_grid[col * size : (col + 1) * size,
-                         row * size : (row + 1) * size] = channel_image
-
-    scale = 1. / size
-    plt.figure(figsize=(scale * display_grid.shape[1],
-                        scale * display_grid.shape[0]))
-    plt.title(layer_name)
-    plt.grid(False)
-    plt.imshow(display_grid, cmap=&#39;viridis&#39;)
-    plt.show()
-    plt.close()</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-16-1.png" width="1536" /><img src="index_files/figure-html/unnamed-chunk-16-2.png" width="1536" /><img src="index_files/figure-html/unnamed-chunk-16-3.png" width="1536" /><img src="index_files/figure-html/unnamed-chunk-16-4.png" width="1536" /><img src="index_files/figure-html/unnamed-chunk-16-5.png" width="1536" /><img src="index_files/figure-html/unnamed-chunk-16-6.png" width="1536" /><img src="index_files/figure-html/unnamed-chunk-16-7.png" width="1536" /><img src="index_files/figure-html/unnamed-chunk-16-8.png" width="1536" /><img src="index_files/figure-html/unnamed-chunk-16-9.png" width="576" /></p>
-<p>It’s hard to interpret, partly because I’m inexperienced.</p>
-</div>
-<div id="finally" class="section level2">
-<h2>4. Finally</h2>
-<p>To be honest, it hasn’t worked out at all. Is it still difficult to predict rankings from the horse’s body? Does multiplying it with other variables change the results? I don’t think I’m able to extract good features from the horses as it is.
-Do I need to get to the point where I can get a paddock video from Youtube and analyze it with the <code>Encoder-Decoder</code> model to make it work? I’d love to do it when I’m good enough to do it (I don’t know when that will be). Until then, I need to improve my PC specs. Maybe I’ll use the cash handout.</p>
-</div>
-
-    </div>
-
-    
+          
 
 
 
@@ -1418,8 +1374,12 @@ Do I need to get to the point where I can get a paddock video from Youtube and a
 
 
 
+        </div>
+      </article>
+    </main>
+
   </div>
-</article>
+</div>
 
       
 
@@ -1533,11 +1493,9 @@ Do I need to get to the point where I can get a paddock video from Youtube and a
       
     
     
-      
     
     
-    
-    <script src="../../../js/wowchemy.min.2a3f95be2bc4762ba1847fb5d7a28317.js"></script>
+    <script src="../../../js/wowchemy.min.4c2bca31150ce93c5a5e43b8a50f22fd.js"></script>
 
     
 
@@ -1547,6 +1505,16 @@ Do I need to get to the point where I can get a paddock video from Youtube and a
   <div class="container">
     <footer class="site-footer">
   
+
+  
+   
+  <script>
+  $(document).ready(function () {
+    window.initializeCodeFolding("show" === "show");
+  });
+  </script>
+  <script src="../../../js/codefolding.js"></script>
+
 
   <p class="powered-by">
     

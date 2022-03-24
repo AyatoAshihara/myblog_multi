@@ -51,7 +51,7 @@ markup:
     codeFences: yes
   tableOfContents:
     endLevel: 3
-    startLevel: 2
+    startLevel: 1
 imaging:
   anchor: smart
   quality: 90

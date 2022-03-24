@@ -30,7 +30,7 @@ Hi. I wanted to do a fitting of the 10 year long term interest rate for a certai
 
 ## 1. Data collection
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 library(quantmod)
 
 # data name collected
@@ -83,7 +83,6 @@ testdata  <- na.omit(merge(macro_indicator["2016-01-01::"][,1],stats::lag(macro_
 # fitting OLS
 trial1 <- lm(GS10~.,data = traindata)
 summary(trial1)
-
 ```
 
 It's a higher degree of freedom-adjusted coefficient of determination; we use the model through 12/31/2015 to predict the out-sample data (01/01/2016\~) and calculate the mean squared error.
@@ -104,7 +103,6 @@ trial2 <- cv.glmnet(as.matrix(traindata[,-1]),as.matrix(traindata[,1]),family="g
 plot(trial2)
 trial2$lambda.min
 coef(trial2,s=trial2$lambda.min)
-
 ```
 
 `Unemployment Rate`, `3-Month Treasury Bill`, `Breakeven Inflation Rate`, `Moody's Seasoned Baa Corporate Bond Yield` and `Inflation Expectation Rate`. That's the result of a larger regression coefficient. Other than the unemployment rate, the results are within expectations. However, the correlation with the economy seems to be low as far as this result is concerned (does it only work in the opposite direction?). Calculate the MSE.
@@ -117,7 +115,7 @@ mse.lasso
 
 The `lasso` regression gives better results. Let's plot the predicted and actual values from the `lasso` regression as a time series.
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 library(tidyverse)
 
 ggplot(gather(data.frame(actual=Y[,1],lasso_prediction=est.lasso.Y[,1],OLS_prediction=est.OLS.Y,date=as.POSIXct(rownames(Y))),key=data,value=rate,-date),aes(x=date,y=rate, colour=data)) +
@@ -133,19 +131,16 @@ The sense of direction is good. On the other hand, I am not predicting a sharp d
 In addition to monthly analysis, I would like to do daily analysis. In the case of daily data, the `jagged edge` problem is unlikely to occur because the data is often released after the market closes. We will start by collecting daily data.
 
 ```{r}
-
 # data name collected
-symbols.name <- c("10-Year Treasury Constant Maturity Rate","Effective Federal Funds Rate","
-6-Month London Interbank Offered Rate (LIBOR), based on U.S. Dollar","NASDAQ Composite Index","3-Month Treasury Bill: Secondary Market Rate","Economic Policy Uncertainty Index for United States","
+symbols.name <- c("10-Year Treasury Constant Maturity Rate","Effective Federal Funds Rate", "based on U.S. Dollar","NASDAQ Composite Index","3-Month Treasury Bill: Secondary Market Rate","Economic Policy Uncertainty Index for United States","
 10-Year Breakeven Inflation Rate","Trade Weighted U.S. Dollar Index: Broad, Goods","Moody's Seasoned Baa Corporate Bond Yield","5-Year, 5-Year Forward Inflation Expectation Rate")
 
 # Collect economic data
-symbols <- c("DGS10","DFF","USD6MTD156N","NASDAQCOM","DTB3","USEPUINDXD","T10YIE","DTWEXB","DBAA","T5YIFR")
+symbols <- c("DGS10","DFF","NASDAQCOM","DTB3","USEPUINDXD","T10YIE","DTWEXB","DBAA","T5YIFR")
 getSymbols(symbols, from = '1980-01-01', src = "FRED", auto.assign = TRUE)
 NASDAQCOM.r <- ROC(na.omit(NASDAQCOM))
-macro_indicator.d <- merge(DGS10,DFF,USD6MTD156N,NASDAQCOM.r,DTB3,USEPUINDXD,T10YIE,DTWEXB,DBAA,T5YIFR)
-rm(DGS10,DFF,USD6MTD156N,NASDAQCOM,NASDAQCOM.r,DTB3,USEPUINDXD,T10YIE,DTWEXB,DBAA,T5YIFR)
-  
+macro_indicator.d <- merge(DGS10,DFF,NASDAQCOM.r,DTB3,USEPUINDXD,T10YIE,DTWEXB,DBAA,T5YIFR)
+rm(DGS10,DFF,NASDAQCOM,NASDAQCOM.r,DTB3,USEPUINDXD,T10YIE,DTWEXB,DBAA,T5YIFR)
 ```
 
 The next step is to build the data set. We separate the data for training and for training. Considering the actual prediction process, we use data from two business days ago as the explanatory variables.
@@ -158,7 +153,6 @@ testdata.d  <- na.omit(merge(macro_indicator.d["2010-01-01::"][,1],stats::lag(ma
 # fitting OLS
 trial1.d <- lm(DGS10~.,data = traindata.d)
 summary(trial1.d)
-
 ```
 
 The coefficient of determination remains high.
@@ -172,13 +166,12 @@ mse.OLS.d
 
 Next is the `lasso` regression. Determine $lambda$ in `CV`.
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 # fitting lasso regression
 trial2.d <- cv.glmnet(as.matrix(traindata.d[,-1]),as.matrix(traindata.d[,1]),family="gaussian",alpha=1)
 plot(trial2.d)
 trial2.d$lambda.min
 coef(trial2.d,s=trial2.d$lambda.min)
-
 ```
 
 The coefficient of `libor` became zero, and the MSE of `OLS` was higher than that of `libor`.
@@ -192,12 +185,10 @@ mse.lasso.d
 Plot the predictions.
 
 ```{r}
-
 ggplot(gather(data.frame(actual=Y.d[,1],lasso_prediction=est.lasso.Y.d[,1],OLS_prediction=est.OLS.Y.d,date=as.POSIXct(rownames(Y.d))),key=data,value=rate,-date),aes(x=date,y=rate, colour=data)) +
   geom_line(size=1.5) +
   scale_x_datetime(breaks = "2 year",date_labels = "%Y-%m") +
   scale_y_continuous(breaks=c(1,1.5,2,2.5,3,3.5),limits = c(1.25,5))
-
 ```
 
 As with the monthly, there is very little difference between the predicted values for `OLS` and `lasso`. We have been able to capture the fluctuations quite nicely, but we have not been able to capture the interest rate decline caused by the `United States federal government credit-rating downgrades` in 2011 or the interest rate increase associated with the economic recovery in 2013. The only daily economic indicator I have is POS data, but I might be able to use the recently used nightlight satellite imagery data, if I had to say so. I'll try it if I have time. For now, I'd like to end this article for now. Thank you for reading this article.

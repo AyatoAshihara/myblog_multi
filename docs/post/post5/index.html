@@ -86,8 +86,8 @@
     
       
       
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/xcode.min.css" crossorigin="anonymous" title="hl-light">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/xcode.min.css" crossorigin="anonymous" title="hl-dark" disabled>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/solarized-dark.min.css" crossorigin="anonymous" title="hl-light">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/solarized-dark.min.css" crossorigin="anonymous" title="hl-dark" disabled>
       
     
 
@@ -655,9 +655,37 @@
 
 
 
-  <article class="article">
+  <div class="container-fluid docs">
+  <div class="row flex-xl-nowrap">
 
-  
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <ul class="nav toc-top">
+        <li><a href="#" id="back_to_top" class="docs-toc-title">On this page</a></li>
+      </ul>
+      <nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#1-unrestricted-varについて">1. Unrestricted VARについて</a></li>
+        <li><a href="#2-bvarについて">2. BVARについて</a>
+          <ul>
+            <li><a href="#具体的な推定方法カルマンフィルタ">具体的な推定方法（カルマンフィルタ）</a></li>
+            <li><a href="#カルマンフィルタの初期値をどのようにきめるか">カルマンフィルタの初期値をどのようにきめるか</a></li>
+            <li><a href="#ハイパーパラメータの決定方法とその評価尺度">ハイパーパラメータの決定方法とその評価尺度</a></li>
+          </ul>
+        </li>
+        <li><a href="#3-rでの実装">3. Rでの実装</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+      
+    </div>
+
+    <main class="col-12 col-md-0 col-xl-10 py-md-3 pl-md-5 docs-content" role="main">
+      <article class="article">
+
+        
 
 
 
@@ -692,6 +720,22 @@
   
 
 
+<div id="code-folding-buttons" class="dropdown btn-group pull-right">
+  <a class="btn btn-light btn-sm dropdown-toggle" href="#" role="button" id="allCodeToggleButton"
+     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    Code
+  </a>
+  <div class="dropdown-menu" aria-labelledby="allCodeToggleButton">
+    <a id="rmd-show-all-code" class="dropdown-item small" href="#">Show all</a>
+    <a id="rmd-hide-all-code" class="dropdown-item small" href="#">Hide all</a>
+  </div>
+</div>
+
+
+
+  
+
+
 <div class="article-metadata">
 
   
@@ -714,7 +758,7 @@
   
   <span class="middot-divider"></span>
   <span class="article-reading-time">
-    24 分で読める
+    23 分で読める
   </span>
   
 
@@ -761,393 +805,277 @@
 
 
 
-  <div class="article-container">
+        <div class="article-container">
 
-    <div class="article-style">
-      
-<script src="index_files/header-attrs/header-attrs.js"></script>
-<link href="index_files/pagedtable/css/pagedtable.css" rel="stylesheet" />
-<script src="index_files/pagedtable/js/pagedtable.js"></script>
-
-<div id="TOC">
-<ul>
-<li><a href="#unrestricted-varについて">1. Unrestricted VARについて</a></li>
-<li><a href="#bvarについて">2. BVARについて</a>
-<ul>
-<li><a href="#具体的な推定方法カルマンフィルタ">具体的な推定方法（カルマンフィルタ）</a></li>
-<li><a href="#カルマンフィルタの初期値をどのようにきめるか">カルマンフィルタの初期値をどのようにきめるか</a></li>
-<li><a href="#ハイパーパラメータの決定方法とその評価尺度">ハイパーパラメータの決定方法とその評価尺度</a></li>
-</ul></li>
-<li><a href="#rでの実装">3. Rでの実装</a></li>
-</ul>
-</div>
-
-<p>　おはこんばんにちは。日次GDP推計を休日に進めているのですが、今日は少し勉強編で<code>BVAR</code>についての記事を書きたいと思います。この<code>BVAR</code>はFRBアトランタ連銀の<code>GDPNow</code>でも使用されていることから、日次GDP推計との親和性も高いと思われます。そもそも、時系列でアウトサンプルの予測精度を上げたいということになると真っ先に思いつくのが<code>BVAR</code>です。Doan, Litterman and Sims(1984)で提案されたこのモデルは予測精度が良いので、非常に有効な手段になると思われます。<code>BVAR</code>は<code>Bayesian Vector Autoregression</code>の略で、ベクトル自己回帰モデル（<code>VAR</code>）の派生版です。<code>VAR</code>とネットで調べるとまず<code>Value at Risk</code>（<code>VaR</code>）が出てくると思いますが、それとは違います。よく見るとaが小文字になっていることに気づくかと思います。
+          <div class="article-style">
+            <p>　おはこんばんにちは。日次GDP推計を休日に進めているのですが、今日は少し勉強編で<code>BVAR</code>についての記事を書きたいと思います。この<code>BVAR</code>はFRBアトランタ連銀の<code>GDPNow</code>でも使用されていることから、日次GDP推計との親和性も高いと思われます。そもそも、時系列でアウトサンプルの予測精度を上げたいということになると真っ先に思いつくのが<code>BVAR</code>です。Doan, Litterman and Sims(1984)で提案されたこのモデルは予測精度が良いので、非常に有効な手段になると思われます。<code>BVAR</code>は<code>Bayesian Vector Autoregression</code>の略で、ベクトル自己回帰モデル（<code>VAR</code>）の派生版です。<code>VAR</code>とネットで調べるとまず<code>Value at Risk</code>（<code>VaR</code>）が出てくると思いますが、それとは違います。よく見るとaが小文字になっていることに気づくかと思います。
 　さて、<code>BVAR</code>の説明をこれから行おうとするのですが、その前にまず基本的な<code>VAR</code>の説明からしたいと思います。ただし、歴史的な背景（大型マクロ計量モデルからの経緯など）には触れません。あくまで、<code>BVAR</code>を説明するうえで必要な知識について触れたいと思います。</p>
-<div id="unrestricted-varについて" class="section level2">
-<h2>1. Unrestricted VARについて</h2>
-<p>　まず、注意点を一点。この投稿では、もっとも基本的な<code>VAR</code>のことをUnrestricted VAR（UVAR）と呼ぶことにします。UVARはSims(1980)の論文が有名です。<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a></p>
+<h2 id="1-unrestricted-varについて">1. Unrestricted VARについて</h2>
+<p>　まず、注意点を一点。この投稿では、もっとも基本的な<code>VAR</code>のことをUnrestricted VAR（UVAR）と呼ぶことにします。UVARはSims(1980)の論文が有名です。<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup></p>
 <p>このモデルには、理論的な基礎づけは原則ありません。あくまで実証的なモデルです。UVARは一般系は以下のような形をしています。</p>
-<p><span class="math display">\[
-Y_{t} = A_{0} + A_{1}Y_{t-1} + ... + A_{K}Y_{t-K} + U_{t}, ~~ U_{t} ～ N(0,\Omega)
-\]</span>
-<span class="math display">\[
+<p>$$
+Y_{t} = A_{0} + A_{1}Y_{t-1} + &hellip; + A_{K}Y_{t-K} + U_{t}, ~~ U_{t} ～ N(0,\Omega)
+$$
+$$
 Y_{t} = \left(
-    \begin{array}{cccc}
-      y_{1,t} \\
-      y_{2,t} \\
-      \vdots  \\
-      y_{J,t} \\
-    \end{array}
-  \right),
-       A_{0} = \left(
-    \begin{array}{cccc}
-      a_{10} \\
-      a_{20} \\
-      \vdots  \\
-      a_{J0} \\
-    \end{array}
-  \right),
-      A_{k} = \left(
-    \begin{array}{cccc}
-      a_{11,k} &amp; a_{12,k} &amp; \ldots &amp; a_{1J,k} \\
-      a_{21,k} &amp; a_{22,k} &amp; \ldots &amp; a_{2J,k} \\
-      \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
-      a_{J1,k} &amp; a_{J2,k} &amp; \ldots &amp; a_{JJ,k}
-    \end{array}
-  \right),
-    U_{t} = \left(
-    \begin{array}{cccc}
-      u_{1,t} \\
-      u_{2,t} \\
-      \vdots  \\
-      u_{J,t} \\
-    \end{array}
-  \right)
-\]</span>
-ここで、<span class="math inline">\(t\)</span>は時点、<span class="math inline">\(J\)</span>は変数の数、<span class="math inline">\(K\)</span>はラグ数を表しています。上式を見ると、UVARは自己回帰＋他変数のラグでt期の変数<span class="math inline">\(y_{j,t}\)</span>を説明しようとするモデルであると言えます。しばしば、経済の実証分析で使用され、インサンプルの当てはまりが良いことも知られています（GDP、消費、投資、金利、マネーサプライの５変数<code>VAR</code>で金融政策の波及経路を分析したり･･･）。推定するパラメータの個数は、回帰式1本だけでJK+1個（定数項込み）の係数を含むので、J本になればJ(JK+1)個になります。また、<span class="math inline">\(\Omega\)</span>がJ(J+1)/2個のパラメータを持っているので、合計J(JK+1)+J(J+1)/2個のパラメータを推定することになり、かなりパラメータ数が多い印象です（これは後々重要になってきます）。具体的な推計方法ですが、UVARは同時方程式体系ではないのでそこまで面倒ではありません。UVAR自体は<code>Seemingly Unrestricted Regression Equation</code>（SUR）の一種でそれぞれの方程式は誤差項の相関を通じて関係してはいますが（<span class="math inline">\(\Omega\)</span>の部分）、全ての回帰式が同じ説明変数を持つため、各方程式を最小二乗法（<code>OLS</code>）によって推定するだけで良いことが知られています。
-　この事実を説明してみましょう（<code>BVAR</code>が気になる方は読み飛ばしてもらって構いません）。説明のために今、UVARをSURの一般系に書き直します。上式はt期の<code>VAR</code>(K)システムですが、UVARを推定する際はこれらJ本の方程式がサンプル数Tセット分存在するので、実際のシステム体系は以下のようになります。</p>
-<p><span class="math display">\[
-   \left(
-    \begin{array}{cccc}
-      Y_{1} \\
-      Y_{2} \\
-      \vdots  \\
-      Y_{J} \\
-    \end{array}
-  \right) = 
- \left(
-    \begin{array}{cccc}
-      X_{1} &amp; 0 &amp; \ldots &amp; 0 \\
-      0 &amp; X_{2} &amp; \ldots &amp; 0 \\
-      \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
-      0 &amp; 0 &amp; \ldots &amp; X_{J}
-    \end{array}
-  \right) 
-  \left(
-    \begin{array}{cccc}
-      A_{1} \\
-      A_{2} \\
-      \vdots  \\
-      A_{J} \\
-    \end{array}
-  \right) +
-  \left(
-    \begin{array}{cccc}
-      U_{1} \\
-      U_{2} \\
-      \vdots  \\
-      U_{J} \\
-    \end{array}
-  \right) = \overline{X}A + U (1式)
-\]</span>
-ここで、</p>
-<p><span class="math display">\[
-Y_{j} = \left(
-    \begin{array}{cccc}
-      y_{t,j} \\
-      y_{t+1,j} \\
-      \vdots  \\
-      y_{T,j} \\
-    \end{array}
-  \right) ,
-X_{j} = X = \left(
-    \begin{array}{cccc}
-      1 &amp; y_{t-1,1} &amp; \ldots &amp; y_{t-K,1} &amp; \ldots &amp; y_{t-K,J} \\
-      1 &amp; y_{t,1} &amp; \ldots &amp; y_{t-K+1,1} &amp; \ldots &amp; y_{t-K+1,J} \\
-      \vdots &amp; \vdots &amp; \ldots &amp; \ldots &amp; \ddots &amp; \vdots \\
-      1 &amp; y_{T-1,1} &amp; \ldots &amp; y_{T-K,1} &amp; \ldots &amp; y_{T-K,J} \\
-    \end{array}
-  \right),
- A_{j} = \left(
-    \begin{array}{cccc}
-      a_{00,j} \\
-      a_{11,j} \\
-      \vdots  \\
-      a_{JK,j} \\
-    \end{array}
-  \right)
-\]</span>
-です。上式とは違い、変数順で並べられていることに注意してください（つまり、各方程式を並べる優先順位は１番目にj、２番目にtとなっている）。また、<span class="math inline">\(X_{j}\)</span>が全ての変数<span class="math inline">\(j\)</span>について等しいことに注目してください（jに依存していません、<code>VAR</code>なので当たり前ですが）。これが後々非常に重要になってきます。<span class="math inline">\(U\)</span>の分散共分散行列は</p>
-<p><span class="math display">\[
-E[UU&#39;|X_{1}, X_{2},..,X_{J}] = \Omega = 
-\left(
-    \begin{array}{cccc}
-      \sigma_{11}I &amp; \sigma_{12}I &amp; \ldots &amp; \sigma_{1J}I \\
-      \sigma_{21}I &amp; \sigma_{22}I &amp; \ldots &amp; \sigma_{2J}I \\
-      \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
-      \sigma_{J1}I &amp; \sigma_{J2}I &amp; \ldots &amp; \sigma_{JJ}I \\
-    \end{array}
+\begin{array}{cccc}
+y_{1,t} \<br>
+y_{2,t} \<br>
+\vdots  \<br>
+y_{J,t} \<br>
+\end{array}
+\right),
+A_{0} = \left(
+\begin{array}{cccc}
+a_{10} \<br>
+a_{20} \<br>
+\vdots  \<br>
+a_{J0} \<br>
+\end{array}
+\right),
+A_{k} = \left(
+\begin{array}{cccc}
+a_{11,k} &amp; a_{12,k} &amp; \ldots &amp; a_{1J,k} \<br>
+a_{21,k} &amp; a_{22,k} &amp; \ldots &amp; a_{2J,k} \<br>
+\vdots &amp; \vdots &amp; \ddots &amp; \vdots \<br>
+a_{J1,k} &amp; a_{J2,k} &amp; \ldots &amp; a_{JJ,k}
+\end{array}
+\right),
+U_{t} = \left(
+\begin{array}{cccc}
+u_{1,t} \<br>
+u_{2,t} \<br>
+\vdots  \<br>
+u_{J,t} \<br>
+\end{array}
 \right)
-\]</span></p>
-<p>となっており、それぞれの変数は誤差項の相関を通じて関係しています（ただし、同じ変数内の異なる時点間の相関はないと仮定します）。このような場合、一般化最小二乗法（<code>GLS</code>）を用いて推計を行うことになりますが、これら方程式体系において説明変数が同じであるならば、<code>GLS</code>推定量と<code>OLS</code>推定量は同値になります。それを確かめてみましょう。上述した方程式体系(1)の<code>GLS</code>推定量は以下になります（<a href="http://user.keio.ac.jp/~nagakura/zemi/GLS.pdf">参考</a>）。</p>
-<p><span class="math display">\[
-A_{GLS} = (\overline{X}&#39;\Omega^{-1}\overline{X})^{-1}\overline{X}&#39;\Omega^{-1}Y = (\overline{X}&#39;(\Sigma^{-1}\otimes I)\overline{X})^{-1}\overline{X}&#39;(\Sigma^{-1}\otimes I)Y
-\]</span></p>
-<p>ここで、<span class="math inline">\(\Sigma\)</span>は誤差項の分散共分散行列のうち、スカラーである分散、共分散を取り出した行列です。先ほど確認したように、<span class="math inline">\(X_{1}=X_{2}=...=X_{J}=X\)</span>なので<span class="math inline">\(\overline{X}=I \otimes X\)</span>であり、その転置も<span class="math inline">\(\overline{X}&#39;=I \otimes X\)</span>となります。よって、<a href="https://mathwords.net/kuronekaseki">この</a>の性質を用いると、</p>
-<p><span class="math display">\[
-\begin{eqnarray}
-A_{GLS} &amp;=&amp; [(I \otimes X&#39;)(\Sigma^{-1}\otimes I)(I \otimes X)]^{-1}(I \otimes X&#39;)(\Sigma^{-1}\otimes I)Y \\
-&amp;=&amp; [(\Sigma^{-1}\otimes X&#39;)(I \otimes X)]^{-1}(\Sigma^{-1}\otimes X&#39;)y \\
-&amp;=&amp; (\Sigma^{-1}\otimes(X&#39;X))^{-1}(\Sigma^{-1}\otimes X&#39;)y \\
-&amp;=&amp; (I \otimes (X&#39;X)^{-1}X&#39;)y \\
-&amp;=&amp; (\overline{X}&#39;\overline{X})^{-1}\overline{X}&#39;Y \\
-&amp;=&amp;  \left(
-    \begin{array}{cccc}
-      (X&#39;X)^{-1}X&#39; &amp; 0 &amp; \ldots &amp; 0 \\
-      0 &amp; (X&#39;X)^{-1}X&#39; &amp; \ldots &amp; 0 \\
-      \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
-      0 &amp; 0 &amp; \ldots &amp; (X&#39;X)^{-1}X&#39;
-    \end{array}
-  \right) 
+$$
+ここで、$t$は時点、$J$は変数の数、$K$はラグ数を表しています。上式を見ると、UVARは自己回帰＋他変数のラグでt期の変数$y_{j,t}$を説明しようとするモデルであると言えます。しばしば、経済の実証分析で使用され、インサンプルの当てはまりが良いことも知られています（GDP、消費、投資、金利、マネーサプライの５変数<code>VAR</code>で金融政策の波及経路を分析したり･･･）。推定するパラメータの個数は、回帰式1本だけでJK+1個（定数項込み）の係数を含むので、J本になればJ(JK+1)個になります。また、$\Omega$がJ(J+1)/2個のパラメータを持っているので、合計J(JK+1)+J(J+1)/2個のパラメータを推定することになり、かなりパラメータ数が多い印象です（これは後々重要になってきます）。具体的な推計方法ですが、UVARは同時方程式体系ではないのでそこまで面倒ではありません。UVAR自体は<code>Seemingly Unrestricted Regression Equation</code>（SUR）の一種でそれぞれの方程式は誤差項の相関を通じて関係してはいますが（$\Omega$の部分）、全ての回帰式が同じ説明変数を持つため、各方程式を最小二乗法（<code>OLS</code>）によって推定するだけで良いことが知られています。
+　この事実を説明してみましょう（<code>BVAR</code>が気になる方は読み飛ばしてもらって構いません）。説明のために今、UVARをSURの一般系に書き直します。上式はt期の<code>VAR</code>(K)システムですが、UVARを推定する際はこれらJ本の方程式がサンプル数Tセット分存在するので、実際のシステム体系は以下のようになります。</p>
+<p>$$
 \left(
-    \begin{array}{cccc}
-      Y_{1} \\
-      Y_{2} \\
-      \vdots  \\
-      Y_{J} \\
-    \end{array}
-  \right)\\ 
-&amp;=&amp; \left(
-    \begin{array}{cccc}
-      (X&#39;X)^{-1}X&#39;Y_{1} \\
-      (X&#39;X)^{-1}X&#39;Y_{2} \\
-      \vdots  \\
-      (X&#39;X)^{-1}X&#39;Y_{J} \\
-    \end{array}
-  \right) \\
-&amp;=&amp; \left(
-    \begin{array}{cccc}
-      A_{1,OLS} \\
-      A_{2,OLS} \\
-      \vdots  \\
-      A_{J,OLS} \\
-    \end{array}
-  \right)
-\end{eqnarray}
-\]</span></p>
+\begin{array}{cccc}
+Y_{1} \<br>
+Y_{2} \<br>
+\vdots  \<br>
+Y_{J} \<br>
+\end{array}
+\right) = 
+\left(
+\begin{array}{cccc}
+X_{1} &amp; 0 &amp; \ldots &amp; 0 \<br>
+0 &amp; X_{2} &amp; \ldots &amp; 0 \<br>
+\vdots &amp; \vdots &amp; \ddots &amp; \vdots \<br>
+0 &amp; 0 &amp; \ldots &amp; X_{J}
+\end{array}
+\right) 
+\left(
+\begin{array}{cccc}
+A_{1} \<br>
+A_{2} \<br>
+\vdots  \<br>
+A_{J} \<br>
+\end{array}
+\right) +
+\left(
+\begin{array}{cccc}
+U_{1} \<br>
+U_{2} \<br>
+\vdots  \<br>
+U_{J} \<br>
+\end{array}
+\right) = \overline{X}A + U (1式)
+$$
+ここで、</p>
+<p>$$
+Y_{j} = \left(
+\begin{array}{cccc}
+y_{t,j} \<br>
+y_{t+1,j} \<br>
+\vdots  \<br>
+y_{T,j} \<br>
+\end{array}
+\right) ,
+X_{j} = X = \left(
+\begin{array}{cccc}
+1 &amp; y_{t-1,1} &amp; \ldots &amp; y_{t-K,1} &amp; \ldots &amp; y_{t-K,J} \<br>
+1 &amp; y_{t,1} &amp; \ldots &amp; y_{t-K+1,1} &amp; \ldots &amp; y_{t-K+1,J} \<br>
+\vdots &amp; \vdots &amp; \ldots &amp; \ldots &amp; \ddots &amp; \vdots \<br>
+1 &amp; y_{T-1,1} &amp; \ldots &amp; y_{T-K,1} &amp; \ldots &amp; y_{T-K,J} \<br>
+\end{array}
+\right),
+A_{j} = \left(
+\begin{array}{cccc}
+a_{00,j} \<br>
+a_{11,j} \<br>
+\vdots  \<br>
+a_{JK,j} \<br>
+\end{array}
+\right)
+$$
+です。上式とは違い、変数順で並べられていることに注意してください（つまり、各方程式を並べる優先順位は１番目にj、２番目にtとなっている）。また、$X_{j}$が全ての変数$j$について等しいことに注目してください（jに依存していません、<code>VAR</code>なので当たり前ですが）。これが後々非常に重要になってきます。$U$の分散共分散行列は</p>
+<p>$$
+E[UU'|X_{1}, X_{2},..,X_{J}] = \Omega = 
+\left(
+\begin{array}{cccc}
+\sigma_{11}I &amp; \sigma_{12}I &amp; \ldots &amp; \sigma_{1J}I \<br>
+\sigma_{21}I &amp; \sigma_{22}I &amp; \ldots &amp; \sigma_{2J}I \<br>
+\vdots &amp; \vdots &amp; \ddots &amp; \vdots \<br>
+\sigma_{J1}I &amp; \sigma_{J2}I &amp; \ldots &amp; \sigma_{JJ}I \<br>
+\end{array}
+\right)
+$$</p>
+<p>となっており、それぞれの変数は誤差項の相関を通じて関係しています（ただし、同じ変数内の異なる時点間の相関はないと仮定します）。このような場合、一般化最小二乗法（<code>GLS</code>）を用いて推計を行うことになりますが、これら方程式体系において説明変数が同じであるならば、<code>GLS</code>推定量と<code>OLS</code>推定量は同値になります。それを確かめてみましょう。上述した方程式体系(1)の<code>GLS</code>推定量は以下になります（<a href="http://user.keio.ac.jp/~nagakura/zemi/GLS.pdf" target="_blank" rel="noopener">参考</a>）。</p>
+<p>$$
+A_{GLS} = (\overline{X}'\Omega^{-1}\overline{X})^{-1}\overline{X}'\Omega^{-1}Y = (\overline{X}'(\Sigma^{-1}\otimes I)\overline{X})^{-1}\overline{X}'(\Sigma^{-1}\otimes I)Y
+$$</p>
+<p>ここで、$\Sigma$は誤差項の分散共分散行列のうち、スカラーである分散、共分散を取り出した行列です。先ほど確認したように、$X_{1}=X_{2}=&hellip;=X_{J}=X$なので$\overline{X}=I \otimes X$であり、その転置も$\overline{X}'=I \otimes X$となります。よって、<a href="https://mathwords.net/kuronekaseki" target="_blank" rel="noopener">この</a>の性質を用いると、</p>
+<p>$$
+<code>\begin{eqnarray} A_{GLS} &amp;=&amp; [(I \otimes X')(\Sigma^{-1}\otimes I)(I \otimes X)]^{-1}(I \otimes X')(\Sigma^{-1}\otimes I)Y \\ &amp;=&amp; [(\Sigma^{-1}\otimes X')(I \otimes X)]^{-1}(\Sigma^{-1}\otimes X')y \\ &amp;=&amp; (\Sigma^{-1}\otimes(X'X))^{-1}(\Sigma^{-1}\otimes X')y \\ &amp;=&amp; (I \otimes (X'X)^{-1}X')y \\ &amp;=&amp; (\overline{X}'\overline{X})^{-1}\overline{X}'Y \\ &amp;=&amp;  \left( \begin{array}{cccc} (X'X)^{-1}X' &amp; 0 &amp; \ldots &amp; 0 \\ 0 &amp; (X'X)^{-1}X' &amp; \ldots &amp; 0 \\ \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\ 0 &amp; 0 &amp; \ldots &amp; (X'X)^{-1}X' \end{array} \right)  \left( \begin{array}{cccc} Y_{1} \\ Y_{2} \\ \vdots  \\ Y_{J} \\ \end{array} \right)\\  &amp;=&amp; \left( \begin{array}{cccc} (X'X)^{-1}X'Y_{1} \\ (X'X)^{-1}X'Y_{2} \\ \vdots  \\ (X'X)^{-1}X'Y_{J} \\ \end{array} \right) \\ &amp;=&amp; \left( \begin{array}{cccc} A_{1,OLS} \\ A_{2,OLS} \\ \vdots  \\ A_{J,OLS} \\ \end{array} \right) \end{eqnarray}</code>
+$$</p>
 <p>となり、各経済変数の方程式を別個に<code>OLS</code>推計していけばよいことがわかります。
 　<code>OLS</code>推定に際し、<code>VAR</code>の次数Kの選択を選択する必要がありますが、次数Kは<code>AIC</code>（<code>BIC</code>）を評価軸に探索的に決定します。つまり、いろいろな値をKに設定し、<code>OLS</code>推計を行い、計算された<code>VAR</code>(K)の<code>AIC</code>(<code>BIC</code>)のうちで最も値が大きいモデルの次数を真のモデルの次数Kとして採用するということです。<code>R</code>にも<code>VARselect()</code>という関数があり、引数にラグの探索最大数とデータを渡すことで最適な次数を計算してくれます（便利）。
 　このようにUVARは<code>OLS</code>推計で各変数間の相互依存関係をデータから推計できる手軽な手法です。私が知っている分野ですと財政政策乗数の推計に使用されていました。GDP、消費、投資、政府支出の４変数で<code>VAR</code>を推定し、推定した<code>VAR</code>でインパルス応答を見ることで１単位の財政支出の増加がGDP等に与える影響を定量的にシミュレートすることができたりします（指導教官が論文を書いてました）。そもそも私の専門の<code>DSGE</code>も誘導系に書き直せば<code>VAR</code>形式になり、インパルス応答などは基本的に一緒です。また、経済変数は慣性が強いので（特に我が国の場合）、インサンプルのモデルの当てはまりもいいです。ただし、あくまでインサンプルです。<b>アウトサンプルの当てはまりはそれほど良い印象はありません。</b>なぜなら、推定パラメータが多すぎるからです。UVARの予測に関する問題点は<code>over-parametrization</code>です。例えば、先ほどの４変数UVARでラグが６期だったとすると、推定すべきパラメータは３１個になります。よって、データ数にもよりますが、パラメータ数がデータ数に近づくとインサンプルの補間に近づき、過学習を引き起こす危険性があります。日次GDP推計は大量の変数を使用するのでこの問題は非常に致命的になります。<code>BVAR</code>はこの問題を解決することに主眼を置いています。</p>
-</div>
-<div id="bvarについて" class="section level2">
-<h2>2. BVARについて</h2>
+<h2 id="2-bvarについて">2. BVARについて</h2>
 <p>　UVARの問題点は<code>over-parametrization</code>であると述べました。<code>BVAR</code>はこの問題を防ぐために不必要な説明変数（のパラメータ）をそぎ落とそうとします。ただ、不要なパラメータを推定する前に０と仮置き（カリブレート）するのではなく、１階の自己に関わるパラメータは１周り、その他変数のパラメータは０周りに正規分布するという形の制約を与えます。このモデルの最大の仮定は「各経済変数は多かれ少なかれドリフト付き１階のランダムウォークに従う」というものであり、上述したような事前分布を先験的に与えた上で推定を行うのです。砕けた言い方をすると、<code>BVAR</code>の考え方は「経済変数の挙動は基本はランダムウォークだけど他変数のラグに予測力向上に資するものがあればそれも取り入れるよ」というものなんです。さて、前置きが長くなりましたが、具体的な説明に移りたいと思います。</p>
-<div id="具体的な推定方法カルマンフィルタ" class="section level3">
-<h3>具体的な推定方法（カルマンフィルタ）</h3>
-<p>　上述した事前分布に加えて、<code>BVAR</code>がUVARと異なる点はパラメータが<code>time-varying</code>であるということです。なんとなく、パラメータがずっと固定よりもサンプルが増えるたびにその値が更新されるほうが予測精度が上がりそうですよね（笑）。推定手法としてはUVARの時のように<code>OLS</code>をそれぞれにかけることはせず、<a href="https://qiita.com/MoriKen/items/0c80ef75749977767b43">カルマンフィルタ</a> と呼ばれるアルゴリズムを用いて推定を行います。<code>BVAR</code>は以下のような状態空間モデルとして定義されます（各ベクトル、行列の次元はUVAR時と同じです）。</p>
-<p><span class="math display">\[
-Y_{t} = X_{t}B_{t} + u_{t} \\
-B_{t} = \Phi B_{t-1} + \epsilon_{t} \\
+<h3 id="具体的な推定方法カルマンフィルタ">具体的な推定方法（カルマンフィルタ）</h3>
+<p>　上述した事前分布に加えて、<code>BVAR</code>がUVARと異なる点はパラメータが<code>time-varying</code>であるということです。なんとなく、パラメータがずっと固定よりもサンプルが増えるたびにその値が更新されるほうが予測精度が上がりそうですよね（笑）。推定手法としてはUVARの時のように<code>OLS</code>をそれぞれにかけることはせず、<a href="https://qiita.com/MoriKen/items/0c80ef75749977767b43" target="_blank" rel="noopener">カルマンフィルタ</a> と呼ばれるアルゴリズムを用いて推定を行います。<code>BVAR</code>は以下のような状態空間モデルとして定義されます（各ベクトル、行列の次元はUVAR時と同じです）。</p>
+<p>$$
+Y_{t} = X_{t}B_{t} + u_{t} \<br>
+B_{t} = \Phi B_{t-1} + \epsilon_{t} \<br>
 B_{t} = \left(
-    \begin{array}{cccc}
-      \beta_{00,t} \\
-      \beta_{11,t} \\
-      \vdots  \\
-      \beta_{JK,t} \\
-    \end{array}
-  \right), 
+\begin{array}{cccc}
+\beta_{00,t} \<br>
+\beta_{11,t} \<br>
+\vdots  \<br>
+\beta_{JK,t} \<br>
+\end{array}
+\right), 
 \Phi = \left(
-    \begin{array}{cccc}
-      \phi_{00} &amp; 0 &amp; \ldots &amp; 0 \\
-      0 &amp; \phi_{11} &amp; \ldots &amp; 0 \\
-      \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
-      0 &amp; 0 &amp; \ldots &amp; \phi_{JK}
-    \end{array}
-  \right),
+\begin{array}{cccc}
+\phi_{00} &amp; 0 &amp; \ldots &amp; 0 \<br>
+0 &amp; \phi_{11} &amp; \ldots &amp; 0 \<br>
+\vdots &amp; \vdots &amp; \ddots &amp; \vdots \<br>
+0 &amp; 0 &amp; \ldots &amp; \phi_{JK}
+\end{array}
+\right),
 u_{t} = \left(
-    \begin{array}{cccc}
-      u_{1,t} \\
-      u_{2,t} \\
-      \vdots  \\
-      u_{J,t} \\
-    \end{array}
-  \right),
+\begin{array}{cccc}
+u_{1,t} \<br>
+u_{2,t} \<br>
+\vdots  \<br>
+u_{J,t} \<br>
+\end{array}
+\right),
 \epsilon_{t} = \left(
-    \begin{array}{cccc}
-      \epsilon_{00,t} \\
-      \epsilon_{11,t} \\
-      \vdots  \\
-      \epsilon_{JK,t} \\
-    \end{array}
-  \right)
-\]</span>
-状態空間モデルは観測可能なデータ（ex.経済統計）を用いて、観測不可能なデータ（ex.リスクプレミアムや限界消費性向等）を推定します。観測可能なデータと不可能なデータを関連付ける方程式を観測方程式、観測不可能なデータの挙動をモデル化した方程式を遷移方程式と呼びます。ここでは、1本目が観測方程式、2本目が遷移方程式となります。御覧の通り、観測方程式は通常の<code>VAR</code>の形をしている一方、遷移方程式は<code>AR(1)</code>となっており、これによってパラメータ<span class="math inline">\(B_{t}\)</span>は過去の値を引きずりながら<span class="math inline">\(\epsilon_{t}\)</span>によって確率的に変動します。<span class="math inline">\(\Phi\)</span>は自己回帰係数です。誤差項<span class="math inline">\(u_{t}\)</span>と<span class="math inline">\(\epsilon_{t}\)</span>は平均０の正規分布に従い、その分散は</p>
-<p><span class="math display">\[
-\begin{eqnarray}
-Var(u_{t}) &amp;=&amp; \sigma_{u}^{2} \\
-Var(\epsilon_{t}) &amp;=&amp; \sigma_{\epsilon}^{2}R
-\end{eqnarray}
-\]</span>
-で与えられます。ここで、<span class="math inline">\(\Phi,R,\sigma_{u}^{2},\sigma_{\epsilon}^{2}\)</span>は既知であるとします。今、t-1期までのデータが入手可能であるとすると、そのデータをカルマンフィルタアルゴリズムで推定した<span class="math inline">\(B_{t-1|t-1}\)</span>とその分散共分散行列<span class="math inline">\(P_{t-1|t-1}\)</span>を用いて、t期の予想値を以下のように計算します。</p>
-<p><span class="math display">\[
-\begin{eqnarray}
-B_{t|t-1} &amp;=&amp; \Phi B_{t-1|t-1} \\
-P_{t|t-1} &amp;=&amp; \Phi P_{t|t-1} \Phi&#39; + \sigma_{\epsilon}^{2}R
-\end{eqnarray}
-\]</span>
+\begin{array}{cccc}
+\epsilon_{00,t} \<br>
+\epsilon_{11,t} \<br>
+\vdots  \<br>
+\epsilon_{JK,t} \<br>
+\end{array}
+\right)
+$$
+状態空間モデルは観測可能なデータ（ex.経済統計）を用いて、観測不可能なデータ（ex.リスクプレミアムや限界消費性向等）を推定します。観測可能なデータと不可能なデータを関連付ける方程式を観測方程式、観測不可能なデータの挙動をモデル化した方程式を遷移方程式と呼びます。ここでは、1本目が観測方程式、2本目が遷移方程式となります。御覧の通り、観測方程式は通常の<code>VAR</code>の形をしている一方、遷移方程式は<code>AR(1)</code>となっており、これによってパラメータ$B_{t}$は過去の値を引きずりながら$\epsilon_{t}$によって確率的に変動します。$\Phi$は自己回帰係数です。誤差項$u_{t}$と$\epsilon_{t}$は平均０の正規分布に従い、その分散は</p>
+<p>$$
+<code>\begin{eqnarray} Var(u_{t}) &amp;=&amp; \sigma_{u}^{2} \\ Var(\epsilon_{t}) &amp;=&amp; \sigma_{\epsilon}^{2}R \end{eqnarray}</code>
+$$
+で与えられます。ここで、$\Phi,R,\sigma_{u}^{2},\sigma_{\epsilon}^{2}$は既知であるとします。今、t-1期までのデータが入手可能であるとすると、そのデータをカルマンフィルタアルゴリズムで推定した$B_{t-1|t-1}$とその分散共分散行列$P_{t-1|t-1}$を用いて、t期の予想値を以下のように計算します。</p>
+<p>$$
+<code>\begin{eqnarray} B_{t|t-1} &amp;=&amp; \Phi B_{t-1|t-1} \\ P_{t|t-1} &amp;=&amp; \Phi P_{t|t-1} \Phi' + \sigma_{\epsilon}^{2}R \end{eqnarray}</code>
+$$
 観測可能な変数の予測値はこの値を用いて計算します。</p>
-<p><span class="math display">\[
+<p>$$
 \hat{Y_{t}} = X_{t} B_{t|t-1}
-\]</span>
-次にt期の観測値が得られると次の更新方程式を用いて<span class="math inline">\(B_{t|t}, P_{t|t}\)</span>を計算します。</p>
-<p><span class="math display">\[
-\begin{eqnarray}
-B_{t|t} &amp;=&amp; B_{t|t-1} + P_{t|t-1}X_{t}&#39;(X_{t}P_{t|t-1}X_{t}&#39; + \sigma_{u}^{2})^{-1}(Y_{t}-X_{t}B_{t|t-1}) \\
-P_{t|t} &amp;=&amp; P_{t|t-1} + P_{t|t-1}X_{t}&#39;(X_{t}P_{t|t-1}X_{t}&#39; + \sigma_{u}^{2})^{-1}X_{t}P_{t|t-1}
-\end{eqnarray}
-\]</span>
-<span class="math inline">\(\sigma_{\epsilon}^{2}R = 0\)</span>かつ<span class="math inline">\(\Phi = I\)</span>の場合は<code>逐次最小二乗法</code>に一致します。要は入手できるサンプル増えるたびに<code>OLS</code>をやり直していくことと同値だということです。こうして推計を行うのが<code>BVAR</code>なのですが、カルマンフィルタは漸化式なので初期値<span class="math inline">\(B_{0|0}, P_{0|0}\)</span>を決めてやる必要があります。<code>BVAR</code>の２つ目の特徴は初期値の計算に混合推定法を用いているところであり、ここに前述した事前分布が関係してきます。</p>
-</div>
-<div id="カルマンフィルタの初期値をどのようにきめるか" class="section level3">
-<h3>カルマンフィルタの初期値をどのようにきめるか</h3>
-<p>初期値<span class="math inline">\(B_{0|0}, P_{0|0}\)</span>をどうやって計算するのかを考えた際にすぐ思いつく方法としては、カルマンフィルタのスタート地点tの前に、初期値推計期間をある程度用意し、<span class="math inline">\(Y = XB + \epsilon\)</span>で<span class="math inline">\(B_{0|0}, P_{0|0}\)</span>を推定する方法があります。つまり、観測方程式を<code>GLS</code>推計し、そのパラメータを初期値とする方法です。その際の<code>GLS</code>推定量は</p>
-<p><span class="math display">\[
-\hat{B} = (X&#39;V^{-1}X)^{-1}X&#39;V^{-1}Y
-\]</span></p>
-<p>です。これでもいいんですが、これではただ時変パラメータを推計しているだけで先ほど述べた<code>over-parametrization</code>の問題にはアプローチできていません。そこで、ここではパラメータ<span class="math inline">\(B\)</span>に対してなにか先験的な情報が得られているとしましょう。つまり、先述した「経済変数の挙動は基本はランダムウォークだけど他変数のラグに予測力向上に資するものがあればそれも取り入れるよ」という予想です。これを定式化してみましょう。つまり、パラメータ<span class="math inline">\(B\)</span>に対して以下の制約式を課します。</p>
-<p><span class="math display">\[
+$$
+次にt期の観測値が得られると次の更新方程式を用いて$B_{t|t}, P_{t|t}$を計算します。</p>
+<p>$$
+<code>\begin{eqnarray} B_{t|t} &amp;=&amp; B_{t|t-1} + P_{t|t-1}X_{t}'(X_{t}P_{t|t-1}X_{t}' + \sigma_{u}^{2})^{-1}(Y_{t}-X_{t}B_{t|t-1}) \\ P_{t|t} &amp;=&amp; P_{t|t-1} + P_{t|t-1}X_{t}'(X_{t}P_{t|t-1}X_{t}' + \sigma_{u}^{2})^{-1}X_{t}P_{t|t-1} \end{eqnarray}</code>
+$$
+<code>\(\sigma_{\epsilon}^{2}R = 0\)</code>かつ$\Phi = I$の場合は<code>逐次最小二乗法</code>に一致します。要は入手できるサンプル増えるたびに<code>OLS</code>をやり直していくことと同値だということです。こうして推計を行うのが<code>BVAR</code>なのですが、カルマンフィルタは漸化式なので初期値$B_{0|0}, P_{0|0}$を決めてやる必要があります。<code>BVAR</code>の２つ目の特徴は初期値の計算に混合推定法を用いているところであり、ここに前述した事前分布が関係してきます。</p>
+<h3 id="カルマンフィルタの初期値をどのようにきめるか">カルマンフィルタの初期値をどのようにきめるか</h3>
+<p>初期値$B_{0|0}, P_{0|0}$をどうやって計算するのかを考えた際にすぐ思いつく方法としては、カルマンフィルタのスタート地点tの前に、初期値推計期間をある程度用意し、$Y = XB + \epsilon$で$B_{0|0}, P_{0|0}$を推定する方法があります。つまり、観測方程式を<code>GLS</code>推計し、そのパラメータを初期値とする方法です。その際の<code>GLS</code>推定量は</p>
+<p>$$
+\hat{B} = (X&rsquo;V^{-1}X)^{-1}X&rsquo;V^{-1}Y
+$$</p>
+<p>です。これでもいいんですが、これではただ時変パラメータを推計しているだけで先ほど述べた<code>over-parametrization</code>の問題にはアプローチできていません。そこで、ここではパラメータ$B$に対してなにか先験的な情報が得られているとしましょう。つまり、先述した「経済変数の挙動は基本はランダムウォークだけど他変数のラグに予測力向上に資するものがあればそれも取り入れるよ」という予想です。これを定式化してみましょう。つまり、パラメータ$B$に対して以下の制約式を課します。</p>
+<p>$$
 r = RB + \nu
-\]</span>
-ここで、<span class="math inline">\(E(\nu) = 0,Var(\nu) = V_{0}\)</span>です。また、<span class="math inline">\(r\)</span>は<span class="math inline">\(RB\)</span>の予想値であり、<span class="math inline">\(V_{0}\)</span>はその予想値の周りでのばらつきを表しています。取っ付きにくいかもしれませんが、<span class="math inline">\(r\)</span>は１階自己回帰係数に関わる部分は1、それ以外は0となるベクトルで、<span class="math inline">\(R\)</span>は単位行列<span class="math inline">\(I\)</span>だと思ってもらえばいいです。つまり、</p>
-<p><span class="math display">\[
-\begin{eqnarray}
+$$
+ここで、$E(\nu) = 0,Var(\nu) = V_{0}$です。また、$r$は$RB$の予想値であり、$V_{0}$はその予想値の周りでのばらつきを表しています。取っ付きにくいかもしれませんが、$r$は１階自己回帰係数に関わる部分は1、それ以外は0となるベクトルで、$R$は単位行列$I$だと思ってもらえばいいです。つまり、</p>
+<p>$$
+<code>\begin{eqnarray} \left( \begin{array}{cccc} 0 \\ 1 \\ 0 \\ \vdots  \\ 1 \\ \vdots  \\ 0 \\ \end{array} \right) &amp;=&amp;  \left( \begin{array}{cccc} 　  \beta_{0,1}^{1} \\ \beta_{1,1}^{1} \\ \beta_{2,1}^{1} \\ \vdots  \\ \beta_{j,1}^{j} \\ \vdots  \\ \beta_{J,K}^{J} \\ \end{array} \right) + \left( \begin{array}{cccc} \nu_{0,1}^{1} \\ \nu_{1,1}^{1} \\ \nu_{2,1}^{1}  \\ \vdots  \\ \nu_{j,1}^{j}  \\ \vdots  \\ \nu_{J,K}^{J} \\ \end{array} \right) \end{eqnarray}</code>
+$$
+みたいな感じです。ここで$\beta_{j,k}^{i}$はi番目の方程式のj番目の変数のk次ラグにかかるパラメータを表しています。混合推定では、正規分布に従う観測値とこの事前分布が独立であるという仮定の下で観測方程式$Y = XB + \epsilon$と$ r = RB + \nu$を以下のように組み合わせます。</p>
+<p>$$
 \left(
-    \begin{array}{cccc}
-      0 \\
-      1 \\
-      0 \\
-      \vdots  \\
-      1 \\
-      \vdots  \\
-      0 \\
-    \end{array}
-  \right)
- &amp;=&amp; 
+\begin{array}{cccc}
+Y \<br>
+r 
+\end{array}
+\right) = \left(
+\begin{array}{cccc}
+X \<br>
+R 
+\end{array}
+\right)B + 
 \left(
-    \begin{array}{cccc}
-　  \beta_{0,1}^{1} \\
-      \beta_{1,1}^{1} \\
-      \beta_{2,1}^{1} \\
-      \vdots  \\
-      \beta_{j,1}^{j} \\
-      \vdots  \\
-      \beta_{J,K}^{J} \\
-    \end{array}
-  \right)
-+
-\left(
-    \begin{array}{cccc}
-      \nu_{0,1}^{1} \\
-      \nu_{1,1}^{1} \\
-      \nu_{2,1}^{1}  \\
-\vdots  \\
-      \nu_{j,1}^{j}  \\
-\vdots  \\
-      \nu_{J,K}^{J} \\
-    \end{array}
-  \right)
-\end{eqnarray}
-\]</span>
-みたいな感じです。ここで<span class="math inline">\(\beta_{j,k}^{i}\)</span>はi番目の方程式のj番目の変数のk次ラグにかかるパラメータを表しています。混合推定では、正規分布に従う観測値とこの事前分布が独立であるという仮定の下で観測方程式<span class="math inline">\(Y = XB + \epsilon\)</span>と$ r = RB + $を以下のように組み合わせます。</p>
-<p><span class="math display">\[
-\left(
-    \begin{array}{cccc}
-      Y \\
-      r 
-    \end{array}
-  \right) = \left(
-    \begin{array}{cccc}
-      X \\
-      R 
-    \end{array}
-  \right)B + 
-\left(
-    \begin{array}{cccc}
-      \epsilon \\
-      \nu 
-    \end{array}
-  \right)
-\]</span></p>
+\begin{array}{cccc}
+\epsilon \<br>
+\nu 
+\end{array}
+\right)
+$$</p>
 <p>ここで、</p>
-<p><span class="math display">\[
+<p>$$
 E\left(
-    \begin{array}{cccc}
-      \epsilon \\
-      \nu 
-    \end{array}
-  \right) = 0 \\
+\begin{array}{cccc}
+\epsilon \<br>
+\nu 
+\end{array}
+\right) = 0 \<br>
 Var\left(
-    \begin{array}{cccc}
-      \epsilon \\
-      \nu 
-    \end{array}
-  \right) = \left(
-    \begin{array}{cccc}
-      \sigma^{2}V &amp; 0 \\
-      0 &amp; V_{0} \\
-    \end{array}
-  \right)
-\]</span></p>
+\begin{array}{cccc}
+\epsilon \<br>
+\nu 
+\end{array}
+\right) = \left(
+\begin{array}{cccc}
+\sigma^{2}V &amp; 0 \<br>
+0 &amp; V_{0} \<br>
+\end{array}
+\right)
+$$</p>
 <p>そして、このシステム体系を<code>GLS</code>で推計するのです。こうすることで、事前分布を考慮した初期値の推定を行うことができます。<code>GLS</code>推定量は以下のようになります。</p>
-<p><span class="math inline">\(\displaystyle \hat{B}_{M} = (\frac{1}{\sigma^{2}}X&#39;V^{-1}X + R&#39;V_{0}^{-1}R)^{-1}(\frac{1}{\sigma^{2}}X&#39;V^{-1}y + R&#39;V_{0}^{-1}r)\)</span></p>
-<p>ご覧になればわかるように、<code>GLS</code>推定量は上記2本の連立方程式(実際には行列なので何本もありますが)それぞれのGLS推定量を按分したような推定量になります。ここで、<span class="math inline">\(\sigma^{2}\)</span>は既知ではないので、いったん<code>OLS</code>で推計しその推定量を用います。問題は<span class="math inline">\(V_{0}\)</span>の置き方です。<span class="math inline">\(V_{0}\)</span>の各要素を小さくとれば、事前分布に整合的な推定量が得られます（つまり、ランダムウォーク）。逆に、大きくとれば通常の<code>GLS</code>推定量に近づいていきます。Doan, Litternam and Sims (1984)では以下のように分散を置いています。</p>
-<p><span class="math display">\[
-\begin{eqnarray}
-\displaystyle Var(\beta_{j,k}^{j}) &amp;=&amp; \frac{\pi_{5}・\pi_{1}}{k・exp(\pi_{4}w_{i}^{i})} \\
-\displaystyle Var(\beta_{j,k}^{i}) &amp;=&amp; \frac{\pi_{5}・\pi_{2}・\sigma_{i}^{2}}{k・exp(\pi_{4}w_{j}^{i})・\sigma_{j}^{2}} \\
-Var(c^{i}) &amp;=&amp; \pi_{5}・\pi_{3}・\sigma_{i}^{2}
-\end{eqnarray}
-\]</span></p>
-<p>ここで、<span class="math inline">\(\beta_{j,k}^{j}\)</span>は<span class="math inline">\(i\)</span>番目の方程式の自己回帰パラメータ、<span class="math inline">\(\beta_{j,k}^{i}\)</span>は<span class="math inline">\(i\)</span>番目方程式の他変数ラグ項にかかるパラメータ、<span class="math inline">\(c^{i}\)</span>は定数項です。そして、<span class="math inline">\(\pi_{1},\pi_{2},\pi_{3},\pi_{4},\pi_{5}\)</span>はハイパーパラメータと呼ばれるもので、カルマンフィルタにかけるパラメータの初期値の事前分布の分布の広がりを決定するパラメータとなっています。これらは初期値の推定を行う前に値を指定する必要があります。各ハイパーパラメータの具体的な特徴は以下の通りです。<span class="math inline">\(\pi_{1}\)</span>は<span class="math inline">\(\beta_{j,k}^{j}\)</span>の分散にのみ出現することから自己回帰係数に影響を与えるパラメータとなっています。具体的には、<span class="math inline">\(\pi_{1}\)</span>が大きくなればなるほど自己回帰係数は事前分布から大きく離れた辺りを取りうることになります。<span class="math inline">\(\pi_{2}\)</span>は<span class="math inline">\(\beta_{j,k}^{i}\)</span>の分散にのみ出現することから他変数のラグ項に影響を与えるパラメータとなっています。こちらも値が大きくなればなるほど係数は事前分布から大きく離れた辺りを取りうることになります。<span class="math inline">\(\pi_{3}\)</span>は定数項の事前分布に影響を与えるパラメータでこちらも考え方は同じです。<span class="math inline">\(\pi_{4}\)</span>はラグ項の分散(つまり定数項以外)に影響を与えるパラメータで、値が大きくなるにつれ、初期値は事前分布に近づいていきます。最後に<span class="math inline">\(\pi_{5}\)</span>ですが、こちらは全体にかかるパラメータで、値が大きくなるにつれ、初期値は事前分布から遠ざかります。</p>
-<p>　上式には、ハイパーパラメータ以外にもパラメータや変数が存在します。<span class="math inline">\(\sigma_{i}, \sigma_{j}\)</span>は<span class="math inline">\(y_{j,t}, y_{i,t}\)</span>をそれぞれ<code>AR(m)</code>でフィッティングをかけた時の残差の標準偏差の推定値です。変数間のスケーリングの違いを考慮するために、<span class="math inline">\(\sigma_{i}\)</span>を<span class="math inline">\(\sigma_{j}\)</span>で割ったものを使用しています。本来ならば、<code>VAR</code>の残差の標準偏差を使用すべきなのですが、推定する前にわかるわけもないので、それぞれ<code>AR(m)</code>で推定をかけ、その標準偏差を使用しています((ランダムウォークが先験情報なので整合性は取れているような気がします))。<span class="math inline">\(w_{j}^{i}\)</span>は完全に恣意的なパラメータで、DLSではrelative weightsと呼ばれているものです。i番目の方程式のj番目の変数のラグ項にかかるパラメータが０であるかどうかについて、分析者の先験情報を反映するためのパラメータです。分散の式を見ればわかるように、relative weightが大きくなれば分散は小さくなり、推定値は事前分布に近づいていきます。DLSでは、ほとんどの変数は<span class="math inline">\(w_{i}^{i}=0,w_{j}^{i}=1\)</span>でよいと主張されています。つまり、自己ラグにかかる事前分布の分散に関しては確信をもってランダムウォークであるといえる一方、他変数ラグについては予測力向上に役立つもののあることを考え、値を１と置いているのです。一方、為替レートや株価はランダムウォーク色が強いということから大きい値を使用しています。最後に、<span class="math inline">\(Var(\beta_{j,k}^{j})\)</span>と<span class="math inline">\(Var(\beta_{j,k}^{i})\)</span>には分母にkがついています。つまり、ラグ次数kが大きくなればなるほど、その係数は０に近づいていくことを先験的情報として仮定していることになります((このおかげで<code>VAR</code>の次数をこちらで指定する必要がなくなります。適当に大きい次数を指定しておけば、必要のない次数の大きいパラメータに関しては事前と値が０になるので。))。
+<p><code>\(\displaystyle \hat{B}_{M} = (\frac{1}{\sigma^{2}}X'V^{-1}X + R'V_{0}^{-1}R)^{-1}(\frac{1}{\sigma^{2}}X'V^{-1}y + R'V_{0}^{-1}r)\)</code></p>
+<p>ご覧になればわかるように、<code>GLS</code>推定量は上記2本の連立方程式(実際には行列なので何本もありますが)それぞれのGLS推定量を按分したような推定量になります。ここで、$\sigma^{2}$は既知ではないので、いったん<code>OLS</code>で推計しその推定量を用います。問題は$V_{0}$の置き方です。$V_{0}$の各要素を小さくとれば、事前分布に整合的な推定量が得られます（つまり、ランダムウォーク）。逆に、大きくとれば通常の<code>GLS</code>推定量に近づいていきます。Doan, Litternam and Sims (1984)では以下のように分散を置いています。</p>
+<p>$$
+<code>\begin{eqnarray} \displaystyle Var(\beta_{j,k}^{j}) &amp;=&amp; \frac{\pi_{5}・\pi_{1}}{k・exp(\pi_{4}w_{i}^{i})} \\ \displaystyle Var(\beta_{j,k}^{i}) &amp;=&amp; \frac{\pi_{5}・\pi_{2}・\sigma_{i}^{2}}{k・exp(\pi_{4}w_{j}^{i})・\sigma_{j}^{2}} \\ Var(c^{i}) &amp;=&amp; \pi_{5}・\pi_{3}・\sigma_{i}^{2} \end{eqnarray}</code>
+$$</p>
+<p>ここで、$\beta_{j,k}^{j}$は$i$番目の方程式の自己回帰パラメータ、$\beta_{j,k}^{i}$は$i$番目方程式の他変数ラグ項にかかるパラメータ、$c^{i}$は定数項です。そして、$\pi_{1},\pi_{2},\pi_{3},\pi_{4},\pi_{5}$はハイパーパラメータと呼ばれるもので、カルマンフィルタにかけるパラメータの初期値の事前分布の分布の広がりを決定するパラメータとなっています。これらは初期値の推定を行う前に値を指定する必要があります。各ハイパーパラメータの具体的な特徴は以下の通りです。$\pi_{1}$は$\beta_{j,k}^{j}$の分散にのみ出現することから自己回帰係数に影響を与えるパラメータとなっています。具体的には、$\pi_{1}$が大きくなればなるほど自己回帰係数は事前分布から大きく離れた辺りを取りうることになります。$\pi_{2}$は$\beta_{j,k}^{i}$の分散にのみ出現することから他変数のラグ項に影響を与えるパラメータとなっています。こちらも値が大きくなればなるほど係数は事前分布から大きく離れた辺りを取りうることになります。$\pi_{3}$は定数項の事前分布に影響を与えるパラメータでこちらも考え方は同じです。$\pi_{4}$はラグ項の分散(つまり定数項以外)に影響を与えるパラメータで、値が大きくなるにつれ、初期値は事前分布に近づいていきます。最後に$\pi_{5}$ですが、こちらは全体にかかるパラメータで、値が大きくなるにつれ、初期値は事前分布から遠ざかります。</p>
+<p>　上式には、ハイパーパラメータ以外にもパラメータや変数が存在します。$\sigma_{i}, \sigma_{j}$は$y_{j,t}, y_{i,t}$をそれぞれ<code>AR(m)</code>でフィッティングをかけた時の残差の標準偏差の推定値です。変数間のスケーリングの違いを考慮するために、$\sigma_{i}$を$\sigma_{j}$で割ったものを使用しています。本来ならば、<code>VAR</code>の残差の標準偏差を使用すべきなのですが、推定する前にわかるわけもないので、それぞれ<code>AR(m)</code>で推定をかけ、その標準偏差を使用しています((ランダムウォークが先験情報なので整合性は取れているような気がします))。$w_{j}^{i}$は完全に恣意的なパラメータで、DLSではrelative weightsと呼ばれているものです。i番目の方程式のj番目の変数のラグ項にかかるパラメータが０であるかどうかについて、分析者の先験情報を反映するためのパラメータです。分散の式を見ればわかるように、relative weightが大きくなれば分散は小さくなり、推定値は事前分布に近づいていきます。DLSでは、ほとんどの変数は$w_{i}^{i}=0,w_{j}^{i}=1$でよいと主張されています。つまり、自己ラグにかかる事前分布の分散に関しては確信をもってランダムウォークであるといえる一方、他変数ラグについては予測力向上に役立つもののあることを考え、値を１と置いているのです。一方、為替レートや株価はランダムウォーク色が強いということから大きい値を使用しています。最後に、$Var(\beta_{j,k}^{j})$と$Var(\beta_{j,k}^{i})$には分母にkがついています。つまり、ラグ次数kが大きくなればなるほど、その係数は０に近づいていくことを先験的情報として仮定していることになります((このおかげで<code>VAR</code>の次数をこちらで指定する必要がなくなります。適当に大きい次数を指定しておけば、必要のない次数の大きいパラメータに関しては事前と値が０になるので。))。
 　
 　これらがいわゆる<code>Minnesota Prior</code>の正体です((実はこれに加えて自己回帰パラメータの総和が１、他変数のラグ項にかかるパラメータの総和が０となる制約を課すのですが、話が複雑になりすぎるので今回は割愛しました))。初期値が事前分布に近づけば<code>BVAR</code>はランダムウォークに近づきますし、離れるとUVARに近づきます。現実はその間となるのですが、なにを評価尺度としてハイパーパラメータの値を決めるかというと、それは当てはまりの良さということになります。</p>
-</div>
-<div id="ハイパーパラメータの決定方法とその評価尺度" class="section level3">
-<h3>ハイパーパラメータの決定方法とその評価尺度</h3>
-<p>当てはまりの良さと言ってもいろいろありますが、DLSはその時点で観測可能なデータから予測できるk期先の予測値の当てはまりの良さを基準としています。DLSでは以下の予測誤差ベクトル<span class="math inline">\(\hat{\epsilon}_{t+k|t}\)</span>のクロス積和を最小化することを目的関数として、ハイパーパラメータのチューニングを行っています。</p>
-<p><span class="math display">\[
-\hat{\epsilon}_{t+k|t} = \hat{Y}_{t+k|t}-Y_{t+k}
-\]</span>
-ここで、<span class="math inline">\(\hat{Y}_{t+k|t}\)</span>はカルマンフィルタによるk期先の予測値です（kをいくつ先にすれば良いかは不明）。このクロス積は<span class="math inline">\(\hat{\epsilon}_{t+k|t}\hat{\epsilon}&#39;_{t+k|t}\)</span>であり、これをフィルタリングをかけるt=1期からサンプル期間であるt=T期まで計算していくので、最終的にはT個の予測誤差ベクトルを得ることになり、以下のようなこれらの総和を最小化します。</p>
-<p><span class="math display">\[
-\displaystyle \sum_{t=1}^{T-k}\hat{\epsilon}_{t+k|t}\hat{\epsilon}&#39;_{t+k|t}
-\]</span>
+<h3 id="ハイパーパラメータの決定方法とその評価尺度">ハイパーパラメータの決定方法とその評価尺度</h3>
+<p>当てはまりの良さと言ってもいろいろありますが、DLSはその時点で観測可能なデータから予測できるk期先の予測値の当てはまりの良さを基準としています。DLSでは以下の予測誤差ベクトル$\hat{\epsilon}_{t+k|t}$のクロス積和を最小化することを目的関数として、ハイパーパラメータのチューニングを行っています。</p>
+<p>$$
+\hat{\epsilon}<em>{t+k|t} = \hat{Y}</em>{t+k|t}-Y_{t+k}
+$$
+ここで、$\hat{Y}_{t+k|t}$はカルマンフィルタによるk期先の予測値です（kをいくつ先にすれば良いかは不明）。このクロス積は$\hat{\epsilon}_{t+k|t}\hat{\epsilon}'_{t+k|t}$であり、これをフィルタリングをかけるt=1期からサンプル期間であるt=T期まで計算していくので、最終的にはT個の予測誤差ベクトルを得ることになり、以下のようなこれらの総和を最小化します。</p>
+<p>$$
+\displaystyle \sum_{t=1}^{T-k}\hat{\epsilon}_{t+k|t}\hat{\epsilon}'_{t+k|t}
+$$
 より厳密にはこのクロス積和の対数値を最小化するハイパーパラメータの値をグリッドサーチやランダムサーチで探索していくことになります((ここは機械学習等で用いられているベイズ最適化を利用するとより高速に収束させることが可能かもです。))。
 とまあ、<code>BVAR</code>の推定方法はこんな感じです。他の<code>VAR</code>と違い、恣意的であり、また推定方法が機械学習に近い点が特徴ではないかと思います。そもそも、<code>BVAR</code>は予測に特化した<code>VAR</code>ですから、他の<code>VAR</code>とは別物と考える方が良いかもです。</p>
 <p>（追記　2019/4/29）</p>
-</div>
-</div>
-<div id="rでの実装" class="section level2">
-<h2>3. Rでの実装</h2>
+<h2 id="3-rでの実装">3. Rでの実装</h2>
 <p>ここまでを<code>R</code>で実装したいと思います。まずは、<code>vars</code>パッケージに準備されているCanadaデータを使用して、通常の<code>VAR</code>の推定をやってみます。これはカナダの1980～2000年の労働生産性、雇用、失業率、実質賃金をまとめたものになります。</p>
-<pre class="r"><code>library(vars)
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">library</span>(vars)
 
-data(Canada)
-Canada.var &lt;- VAR(Canada,p=VARselect(Canada,lag.max = 4)$selection[1])
-summary(Canada.var)</code></pre>
-<pre><code>## 
+<span style="color:#a6e22e">data</span>(Canada)
+Canada.var <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">VAR</span>(Canada,p<span style="color:#f92672">=</span><span style="color:#a6e22e">VARselect</span>(Canada,lag.max <span style="color:#f92672">=</span> <span style="color:#ae81ff">4</span>)<span style="color:#f92672">$</span>selection[1])
+<span style="color:#a6e22e">summary</span>(Canada.var)
+</code></pre></div><pre><code>## 
 ## VAR Estimation Results:
 ## ========================= 
 ## Endogenous variables: e, prod, rw, U 
@@ -1179,11 +1107,11 @@ summary(Canada.var)</code></pre>
 ## U.l3       0.34139    0.20530   1.663 0.100938    
 ## const   -150.68737   61.00889  -2.470 0.016029 *  
 ## ---
-## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
 ## 
 ## Residual standard error: 0.3399 on 68 degrees of freedom
-## Multiple R-Squared: 0.9988,  Adjusted R-squared: 0.9985 
+## Multiple R-Squared: 0.9988,	Adjusted R-squared: 0.9985 
 ## F-statistic:  4554 on 12 and 68 DF,  p-value: &lt; 2.2e-16 
 ## 
 ## 
@@ -1206,11 +1134,11 @@ summary(Canada.var)</code></pre>
 ## U.l3       0.40078    0.39357   1.018   0.3121    
 ## const   -195.86985  116.95813  -1.675   0.0986 .  
 ## ---
-## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
 ## 
 ## Residual standard error: 0.6515 on 68 degrees of freedom
-## Multiple R-Squared:  0.98,   Adjusted R-squared: 0.9765 
+## Multiple R-Squared:  0.98,	Adjusted R-squared: 0.9765 
 ## F-statistic: 277.5 on 12 and 68 DF,  p-value: &lt; 2.2e-16 
 ## 
 ## 
@@ -1233,11 +1161,11 @@ summary(Canada.var)</code></pre>
 ## U.l3     1.506e-01  4.592e-01   0.328    0.744    
 ## const   -1.167e+01  1.365e+02  -0.086    0.932    
 ## ---
-## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
 ## 
 ## Residual standard error: 0.7601 on 68 degrees of freedom
-## Multiple R-Squared: 0.9989,  Adjusted R-squared: 0.9987 
+## Multiple R-Squared: 0.9989,	Adjusted R-squared: 0.9987 
 ## F-statistic:  5239 on 12 and 68 DF,  p-value: &lt; 2.2e-16 
 ## 
 ## 
@@ -1260,11 +1188,11 @@ summary(Canada.var)</code></pre>
 ## U.l3      0.06684    0.17027   0.393 0.695858    
 ## const   114.36732   50.59802   2.260 0.027008 *  
 ## ---
-## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
 ## 
 ## Residual standard error: 0.2819 on 68 degrees of freedom
-## Multiple R-Squared: 0.9736,  Adjusted R-squared: 0.969 
+## Multiple R-Squared: 0.9736,	Adjusted R-squared: 0.969 
 ## F-statistic: 209.2 on 12 and 68 DF,  p-value: &lt; 2.2e-16 
 ## 
 ## 
@@ -1281,481 +1209,482 @@ summary(Canada.var)</code></pre>
 ## e     1.0000 -0.14276 -0.1425 -0.73426
 ## prod -0.1428  1.00000  0.1129  0.08136
 ## rw   -0.1425  0.11286  1.0000  0.17084
-## U    -0.7343  0.08136  0.1708  1.00000</code></pre>
-<pre class="r"><code>plot(predict(Canada.var,n.ahead=20,ci=0.95))</code></pre>
-<p><img src="index_files/figure-html/r-1.png" width="480" style="display: block; margin: auto;" /></p>
+## U    -0.7343  0.08136  0.1708  1.00000
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">plot</span>(<span style="color:#a6e22e">predict</span>(Canada.var,n.ahead<span style="color:#f92672">=</span><span style="color:#ae81ff">20</span>,ci<span style="color:#f92672">=</span><span style="color:#ae81ff">0.95</span>))
+</code></pre></div><p><img src="../../post/post5/index_files/figure-html/r-1.png" width="480" style="display: block; margin: auto;" /></p>
 <p>パッケージが整備されているので簡単に実行できました。上で見たようにやっていることは別々の<code>OLS</code>を4本推定しているだけです。
 次に<code>BVAR</code>です。まず、カルマンフィルタと事前分布を定義します。カルマンフィルタは以前記事でご紹介したものと同じです。</p>
-<pre class="r"><code>library(seasonal)
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">library</span>(seasonal)
 
-kalmanfiter &lt;- function(y,I,t,z,c=0,R=NA,Q=NA,d=0,S=NA,h=NA,a_int=NA,sig_int=NA){
-  #-------------------------------------------------------------------
-  # Implemention of Kalman filter
-  #   y - observed variable
-  #   I - the number of unobserved variable
-  #   t - parameter of endogenous variable in state equation
-  #   z - parameter of endogenous variable in observable equation
-  #   c - constant in state equaion
-  #   R - parameter of exogenous variable in state equation
-  #   Q - var-cov matrix of exogenous variable in state equation
-  #   d - constant in observable equaion
-  #   S - parameter of exogenous variable in observable equation
-  #   h - var-cov matrix of exogenous variable in observable equation
-  #   a_int - initial value of endogenous variable
-  #   sig_int - initial value of variance of endogenous variable
-  #-------------------------------------------------------------------
+kalmanfiter <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(y,I,t,z,c<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>,R<span style="color:#f92672">=</span><span style="color:#66d9ef">NA</span>,Q<span style="color:#f92672">=</span><span style="color:#66d9ef">NA</span>,d<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>,S<span style="color:#f92672">=</span><span style="color:#66d9ef">NA</span>,h<span style="color:#f92672">=</span><span style="color:#66d9ef">NA</span>,a_int<span style="color:#f92672">=</span><span style="color:#66d9ef">NA</span>,sig_int<span style="color:#f92672">=</span><span style="color:#66d9ef">NA</span>){
+  <span style="color:#75715e">#-------------------------------------------------------------------</span>
+  <span style="color:#75715e"># Implemention of Kalman filter</span>
+  <span style="color:#75715e">#   y - observed variable</span>
+  <span style="color:#75715e">#   I - the number of unobserved variable</span>
+  <span style="color:#75715e">#   t - parameter of endogenous variable in state equation</span>
+  <span style="color:#75715e">#   z - parameter of endogenous variable in observable equation</span>
+  <span style="color:#75715e">#   c - constant in state equaion</span>
+  <span style="color:#75715e">#   R - parameter of exogenous variable in state equation</span>
+  <span style="color:#75715e">#   Q - var-cov matrix of exogenous variable in state equation</span>
+  <span style="color:#75715e">#   d - constant in observable equaion</span>
+  <span style="color:#75715e">#   S - parameter of exogenous variable in observable equation</span>
+  <span style="color:#75715e">#   h - var-cov matrix of exogenous variable in observable equation</span>
+  <span style="color:#75715e">#   a_int - initial value of endogenous variable</span>
+  <span style="color:#75715e">#   sig_int - initial value of variance of endogenous variable</span>
+  <span style="color:#75715e">#-------------------------------------------------------------------</span>
   
-  library(MASS)
+  <span style="color:#a6e22e">library</span>(MASS)
     
-  # 1.Define Variable
-  if (class(y)!=&quot;matrix&quot;){
-    y &lt;- as.matrix(y)
+  <span style="color:#75715e"># 1.Define Variable</span>
+  <span style="color:#a6e22e">if </span>(<span style="color:#a6e22e">class</span>(y)<span style="color:#f92672">!=</span><span style="color:#e6db74">&#34;matrix&#34;</span>){
+    y <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.matrix</span>(y)
   }
-  N &lt;- NROW(y) # sample size
-  L &lt;- NCOL(y) # the number of observable variable 
-  a_pre &lt;- array(0,dim = c(I,1,N)) # prediction of unobserved variable
-  a_fil &lt;- array(0,dim = c(I,1,N+1)) # filtered of unobserved variable
-  sig_pre &lt;- array(0,dim = c(I,I,N)) # prediction of var-cov mat. of unobserved variable
-  sig_fil &lt;- array(0,dim = c(I,I,N+1)) # filtered of var-cov mat. of unobserved variable
-  y_pre &lt;- array(0,dim = c(L,1,N)) # prediction of observed variable
-  F_pre &lt;- array(0,dim = c(L,L,N)) # auxiliary variable 
-  k &lt;- array(0,dim = c(I,L,N)) # kalman gain
+  N <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">NROW</span>(y) <span style="color:#75715e"># sample size</span>
+  L <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">NCOL</span>(y) <span style="color:#75715e"># the number of observable variable </span>
+  a_pre <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">array</span>(<span style="color:#ae81ff">0</span>,dim <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(I,<span style="color:#ae81ff">1</span>,N)) <span style="color:#75715e"># prediction of unobserved variable</span>
+  a_fil <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">array</span>(<span style="color:#ae81ff">0</span>,dim <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(I,<span style="color:#ae81ff">1</span>,N<span style="color:#ae81ff">+1</span>)) <span style="color:#75715e"># filtered of unobserved variable</span>
+  sig_pre <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">array</span>(<span style="color:#ae81ff">0</span>,dim <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(I,I,N)) <span style="color:#75715e"># prediction of var-cov mat. of unobserved variable</span>
+  sig_fil <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">array</span>(<span style="color:#ae81ff">0</span>,dim <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(I,I,N<span style="color:#ae81ff">+1</span>)) <span style="color:#75715e"># filtered of var-cov mat. of unobserved variable</span>
+  y_pre <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">array</span>(<span style="color:#ae81ff">0</span>,dim <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(L,<span style="color:#ae81ff">1</span>,N)) <span style="color:#75715e"># prediction of observed variable</span>
+  F_pre <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">array</span>(<span style="color:#ae81ff">0</span>,dim <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(L,L,N)) <span style="color:#75715e"># auxiliary variable </span>
+  k <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">array</span>(<span style="color:#ae81ff">0</span>,dim <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(I,L,N)) <span style="color:#75715e"># kalman gain</span>
   
-  if (any(is.na(a_int))){
-    a_int &lt;- matrix(0,nrow = I,ncol = 1)
+  <span style="color:#a6e22e">if </span>(<span style="color:#a6e22e">any</span>(<span style="color:#a6e22e">is.na</span>(a_int))){
+    a_int <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#ae81ff">0</span>,nrow <span style="color:#f92672">=</span> I,ncol <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>)
   }
-  if (any(is.na(sig_int))){
-    sig_int &lt;- diag(1,nrow = I,ncol = I)
+  <span style="color:#a6e22e">if </span>(<span style="color:#a6e22e">any</span>(<span style="color:#a6e22e">is.na</span>(sig_int))){
+    sig_int <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">diag</span>(<span style="color:#ae81ff">1</span>,nrow <span style="color:#f92672">=</span> I,ncol <span style="color:#f92672">=</span> I)
   }
-  if (any(is.na(R))){
-    R &lt;- diag(1,nrow = I,ncol = I)
+  <span style="color:#a6e22e">if </span>(<span style="color:#a6e22e">any</span>(<span style="color:#a6e22e">is.na</span>(R))){
+    R <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">diag</span>(<span style="color:#ae81ff">1</span>,nrow <span style="color:#f92672">=</span> I,ncol <span style="color:#f92672">=</span> I)
   }
-  if (any(is.na(Q))){
-    Q &lt;- diag(1,nrow = I,ncol = I)
+  <span style="color:#a6e22e">if </span>(<span style="color:#a6e22e">any</span>(<span style="color:#a6e22e">is.na</span>(Q))){
+    Q <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">diag</span>(<span style="color:#ae81ff">1</span>,nrow <span style="color:#f92672">=</span> I,ncol <span style="color:#f92672">=</span> I)
   }
-  if(any(is.na(S))){
-    S &lt;- matrix(1,nrow = L,ncol = L)
+  <span style="color:#a6e22e">if</span>(<span style="color:#a6e22e">any</span>(<span style="color:#a6e22e">is.na</span>(S))){
+    S <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#ae81ff">1</span>,nrow <span style="color:#f92672">=</span> L,ncol <span style="color:#f92672">=</span> L)
   }
-  if (any(is.na(h))){
-    H &lt;- array(0,dim = c(L,L,N))
-    for(i in 1:N){
-      diag(H[,,i]) = 1
+  <span style="color:#a6e22e">if </span>(<span style="color:#a6e22e">any</span>(<span style="color:#a6e22e">is.na</span>(h))){
+    H <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">array</span>(<span style="color:#ae81ff">0</span>,dim <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(L,L,N))
+    <span style="color:#a6e22e">for</span>(i in <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>N){
+      <span style="color:#a6e22e">diag</span>(H[,,i]) <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>
     }
-  }else if (class(h)!=&quot;array&quot;){
-    H &lt;- array(h,dim = c(NROW(h),NCOL(h),N))
+  }else <span style="color:#a6e22e">if </span>(<span style="color:#a6e22e">class</span>(h)<span style="color:#f92672">!=</span><span style="color:#e6db74">&#34;array&#34;</span>){
+    H <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">array</span>(h,dim <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">NROW</span>(h),<span style="color:#a6e22e">NCOL</span>(h),N))
   }
   
-  # fill infinite if observed data is NA
-  for(i in 1:N){
-    miss &lt;- is.na(y[i,])
-    diag(H[,,i])[miss] &lt;- 1e+32
+  <span style="color:#75715e"># fill infinite if observed data is NA</span>
+  <span style="color:#a6e22e">for</span>(i in <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>N){
+    miss <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">is.na</span>(y[i,])
+    <span style="color:#a6e22e">diag</span>(H[,,i])[miss] <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1e+32</span>
   }
-  y[is.na(y)] &lt;- 0
+  y<span style="color:#a6e22e">[is.na</span>(y)] <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">0</span>
   
-  # 2.Set Initial Value
-  a_fil[,,1] &lt;- a_int
-  sig_fil[,,1] &lt;- sig_int
+  <span style="color:#75715e"># 2.Set Initial Value</span>
+  a_fil[,,<span style="color:#ae81ff">1</span>] <span style="color:#f92672">&lt;-</span> a_int
+  sig_fil[,,<span style="color:#ae81ff">1</span>] <span style="color:#f92672">&lt;-</span> sig_int
   
-  # 3.Implement Kalman filter
-  for (i in 1:N){
-    if(class(z)==&quot;array&quot;){
-      Z &lt;- z[,,i]
+  <span style="color:#75715e"># 3.Implement Kalman filter</span>
+  <span style="color:#a6e22e">for </span>(i in <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>N){
+    <span style="color:#a6e22e">if</span>(<span style="color:#a6e22e">class</span>(z)<span style="color:#f92672">==</span><span style="color:#e6db74">&#34;array&#34;</span>){
+      Z <span style="color:#f92672">&lt;-</span> z[,,i]
     }else{
-      Z &lt;- z
+      Z <span style="color:#f92672">&lt;-</span> z
     }
-    a_pre[,,i] &lt;- t%*%a_fil[,,i] + c
-    sig_pre[,,i] &lt;- t%*%sig_fil[,,i]%*%t(t) + R%*%Q%*%t(R)
-    y_pre[,,i] &lt;- Z%*%a_pre[,,i] + d
-    F_pre[,,i] &lt;- Z%*%sig_pre[,,i]%*%t(Z) + S%*%H[,,i]%*%t(S)
-    k[,,i] &lt;- sig_pre[,,i]%*%t(Z)%*%ginv(F_pre[,,i])
-    a_fil[,,i+1] &lt;- a_pre[,,i] + k[,,i]%*%(y[i,]-y_pre[,,i])
-    sig_fil[,,i+1] &lt;- sig_pre[,,i] - k[,,i]%*%F_pre[,,i]%*%t(k[,,i])
+    a_pre[,,i] <span style="color:#f92672">&lt;-</span> t<span style="color:#f92672">%*%</span>a_fil[,,i] <span style="color:#f92672">+</span> c
+    sig_pre[,,i] <span style="color:#f92672">&lt;-</span> t<span style="color:#f92672">%*%</span>sig_fil[,,i]<span style="color:#f92672">%*%</span><span style="color:#a6e22e">t</span>(t) <span style="color:#f92672">+</span> R<span style="color:#f92672">%*%</span>Q<span style="color:#f92672">%*%</span><span style="color:#a6e22e">t</span>(R)
+    y_pre[,,i] <span style="color:#f92672">&lt;-</span> Z<span style="color:#f92672">%*%</span>a_pre[,,i] <span style="color:#f92672">+</span> d
+    F_pre[,,i] <span style="color:#f92672">&lt;-</span> Z<span style="color:#f92672">%*%</span>sig_pre[,,i]<span style="color:#f92672">%*%</span><span style="color:#a6e22e">t</span>(Z) <span style="color:#f92672">+</span> S<span style="color:#f92672">%*%</span>H[,,i]<span style="color:#f92672">%*%</span><span style="color:#a6e22e">t</span>(S)
+    k[,,i] <span style="color:#f92672">&lt;-</span> sig_pre[,,i]<span style="color:#f92672">%*%</span><span style="color:#a6e22e">t</span>(Z)<span style="color:#f92672">%*%</span><span style="color:#a6e22e">ginv</span>(F_pre[,,i])
+    a_fil[,,i<span style="color:#ae81ff">+1</span>] <span style="color:#f92672">&lt;-</span> a_pre[,,i] <span style="color:#f92672">+</span> k[,,i]<span style="color:#f92672">%*%</span>(y[i,]<span style="color:#f92672">-</span>y_pre[,,i])
+    sig_fil[,,i<span style="color:#ae81ff">+1</span>] <span style="color:#f92672">&lt;-</span> sig_pre[,,i] <span style="color:#f92672">-</span> k[,,i]<span style="color:#f92672">%*%</span>F_pre[,,i]<span style="color:#f92672">%*%</span><span style="color:#a6e22e">t</span>(k[,,i])
   }
   
-  # 4.Aggregate results
-  result &lt;- list(a_pre,a_fil,sig_pre,sig_fil,y_pre,k,t,z)
-  names(result) &lt;- c(&quot;state prediction&quot;, &quot;state filtered&quot;, &quot;state var prediction&quot;, 
-                     &quot;state var filtered&quot;, &quot;observable prediction&quot;, &quot;kalman gain&quot;,
-                     &quot;parameter of state eq&quot;, &quot;parameter of observable eq&quot;)
-  return(result)
-}</code></pre>
-<p>事前分布を計算する関数を定義します。まず、引数を計算しやすい形に変換しておきます。</p>
-<pre class="r"><code>  # set pi
-  pi &lt;- abs(rnorm(5)) # hyperparameter
-  x &lt;- Canada # dataset
-  order &lt;- 4 # order
+  <span style="color:#75715e"># 4.Aggregate results</span>
+  result <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>(a_pre,a_fil,sig_pre,sig_fil,y_pre,k,t,z)
+  <span style="color:#a6e22e">names</span>(result) <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;state prediction&#34;</span>, <span style="color:#e6db74">&#34;state filtered&#34;</span>, <span style="color:#e6db74">&#34;state var prediction&#34;</span>, 
+                     <span style="color:#e6db74">&#34;state var filtered&#34;</span>, <span style="color:#e6db74">&#34;observable prediction&#34;</span>, <span style="color:#e6db74">&#34;kalman gain&#34;</span>,
+                     <span style="color:#e6db74">&#34;parameter of state eq&#34;</span>, <span style="color:#e6db74">&#34;parameter of observable eq&#34;</span>)
+  <span style="color:#a6e22e">return</span>(result)
+}
+</code></pre></div><p>事前分布を計算する関数を定義します。まず、引数を計算しやすい形に変換しておきます。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">  <span style="color:#75715e"># set pi</span>
+  <span style="color:#66d9ef">pi</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">abs</span>(<span style="color:#a6e22e">rnorm</span>(<span style="color:#ae81ff">5</span>)) <span style="color:#75715e"># hyperparameter</span>
+  x <span style="color:#f92672">&lt;-</span> Canada <span style="color:#75715e"># dataset</span>
+  order <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">4</span> <span style="color:#75715e"># order</span>
   
-  library(MASS)
+  <span style="color:#a6e22e">library</span>(MASS)
     
-  # 1. Process row data
-  for (i in 1:5){
-    eval(parse(text = paste0(&quot;pi&quot;,i,&quot;=pi[[&quot;,i,&quot;]]&quot;)))
+  <span style="color:#75715e"># 1. Process row data</span>
+  <span style="color:#a6e22e">for </span>(i in <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#ae81ff">5</span>){
+    <span style="color:#a6e22e">eval</span>(<span style="color:#a6e22e">parse</span>(text <span style="color:#f92672">=</span> <span style="color:#a6e22e">paste0</span>(<span style="color:#e6db74">&#34;pi&#34;</span>,i,<span style="color:#e6db74">&#34;=pi[[&#34;</span>,i,<span style="color:#e6db74">&#34;]]&#34;</span>)))
   }
-  if (class(x)!=&quot;matrix&quot;){
-    x &lt;- as.matrix(x)
+  <span style="color:#a6e22e">if </span>(<span style="color:#a6e22e">class</span>(x)<span style="color:#f92672">!=</span><span style="color:#e6db74">&#34;matrix&#34;</span>){
+    x <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.matrix</span>(x)
   }
-  dependent &lt;- as.matrix(x[(order+1):NROW(x),1])
-  for (i in 2:NCOL(x)){
-    dependent &lt;- rbind(dependent,as.matrix(x[(order+1):NROW(x),i]))
+  dependent <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.matrix</span>(x<span style="color:#a6e22e">[</span>(order<span style="color:#ae81ff">+1</span>)<span style="color:#f92672">:</span><span style="color:#a6e22e">NROW</span>(x),<span style="color:#ae81ff">1</span>])
+  <span style="color:#a6e22e">for </span>(i in <span style="color:#ae81ff">2</span><span style="color:#f92672">:</span><span style="color:#a6e22e">NCOL</span>(x)){
+    dependent <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rbind</span>(dependent,<span style="color:#a6e22e">as.matrix</span>(x<span style="color:#a6e22e">[</span>(order<span style="color:#ae81ff">+1</span>)<span style="color:#f92672">:</span><span style="color:#a6e22e">NROW</span>(x),i]))
   }
-  explanatory &lt;- embed(cbind(1,x),order)[,-((order*NCOL(x)+order-NCOL(x)):(order*NCOL(x)+order))]
-  explanatory &lt;- diag(1,nrow = NCOL(x),ncol = NCOL(x))%x%as.matrix(explanatory)
-  npara &lt;- NCOL(explanatory) # the number of parameters/ ncol(x)*(ncol(x)*order + 1(const))</code></pre>
-<p>dependentは非説明変数、explanatoryは説明変数です。ちょうど1式を再現した形になります。</p>
-<p><span class="math display">\[
-   \left(
-    \begin{array}{cccc}
-      Y_{1} \\
-      Y_{2} \\
-      \vdots  \\
-      Y_{J} \\
-    \end{array}
-  \right) = 
- \left(
-    \begin{array}{cccc}
-      X_{1} &amp; 0 &amp; \ldots &amp; 0 \\
-      0 &amp; X_{2} &amp; \ldots &amp; 0 \\
-      \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
-      0 &amp; 0 &amp; \ldots &amp; X_{J}
-    \end{array}
-  \right) 
-  \left(
-    \begin{array}{cccc}
-      A_{1} \\
-      A_{2} \\
-      \vdots  \\
-      A_{J} \\
-    \end{array}
-  \right) +
-  \left(
-    \begin{array}{cccc}
-      U_{1} \\
-      U_{2} \\
-      \vdots  \\
-      U_{J} \\
-    \end{array}
-  \right)
-\]</span></p>
-<pre class="r"><code># 2. Make Prior matrixes
-  r &lt;- as.matrix(numeric(npara)) # a part of dependent variable in mixed estimation
-  iter1 &lt;- numeric(NCOL(x))
-  n &lt;- 2
-  for (i in 1:length(iter1)){
-    iter1[i] &lt;- n
-    n &lt;- n + order*NCOL(x) + 1
+  explanatory <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">embed</span>(<span style="color:#a6e22e">cbind</span>(<span style="color:#ae81ff">1</span>,x),order)[,<span style="color:#f92672">-</span>((order<span style="color:#f92672">*</span><span style="color:#a6e22e">NCOL</span>(x)<span style="color:#f92672">+</span>order<span style="color:#f92672">-</span><span style="color:#a6e22e">NCOL</span>(x))<span style="color:#f92672">:</span>(order<span style="color:#f92672">*</span><span style="color:#a6e22e">NCOL</span>(x)<span style="color:#f92672">+</span>order))]
+  explanatory <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">diag</span>(<span style="color:#ae81ff">1</span>,nrow <span style="color:#f92672">=</span> <span style="color:#a6e22e">NCOL</span>(x),ncol <span style="color:#f92672">=</span> <span style="color:#a6e22e">NCOL</span>(x))<span style="color:#f92672">%x%</span><span style="color:#a6e22e">as.matrix</span>(explanatory)
+  npara <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">NCOL</span>(explanatory) <span style="color:#75715e"># the number of parameters/ ncol(x)*(ncol(x)*order + 1(const))</span>
+</code></pre></div><p>dependentは非説明変数、explanatoryは説明変数です。ちょうど1式を再現した形になります。</p>
+<p>$$
+\left(
+\begin{array}{cccc}
+Y_{1} \<br>
+Y_{2} \<br>
+\vdots  \<br>
+Y_{J} \<br>
+\end{array}
+\right) = 
+\left(
+\begin{array}{cccc}
+X_{1} &amp; 0 &amp; \ldots &amp; 0 \<br>
+0 &amp; X_{2} &amp; \ldots &amp; 0 \<br>
+\vdots &amp; \vdots &amp; \ddots &amp; \vdots \<br>
+0 &amp; 0 &amp; \ldots &amp; X_{J}
+\end{array}
+\right) 
+\left(
+\begin{array}{cccc}
+A_{1} \<br>
+A_{2} \<br>
+\vdots  \<br>
+A_{J} \<br>
+\end{array}
+\right) +
+\left(
+\begin{array}{cccc}
+U_{1} \<br>
+U_{2} \<br>
+\vdots  \<br>
+U_{J} \<br>
+\end{array}
+\right)
+$$</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># 2. Make Prior matrixes</span>
+  r <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.matrix</span>(<span style="color:#a6e22e">numeric</span>(npara)) <span style="color:#75715e"># a part of dependent variable in mixed estimation</span>
+  iter1 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">numeric</span>(<span style="color:#a6e22e">NCOL</span>(x))
+  n <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">2</span>
+  <span style="color:#a6e22e">for </span>(i in <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#a6e22e">length</span>(iter1)){
+    iter1[i] <span style="color:#f92672">&lt;-</span> n
+    n <span style="color:#f92672">&lt;-</span> n <span style="color:#f92672">+</span> order<span style="color:#f92672">*</span><span style="color:#a6e22e">NCOL</span>(x) <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
   }
-  for (i in iter1){
-    r[i] &lt;- 1
+  <span style="color:#a6e22e">for </span>(i in iter1){
+    r[i] <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1</span>
   }
-  R &lt;- diag(1,nrow = npara,ncol = npara) # a part of explanatory variables in mixed estimation
-  V &lt;- diag(1,nrow = NROW(explanatory),ncol = NROW(explanatory)) # coefficient matrix of var-cov matrix in mixed estimation
+  R <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">diag</span>(<span style="color:#ae81ff">1</span>,nrow <span style="color:#f92672">=</span> npara,ncol <span style="color:#f92672">=</span> npara) <span style="color:#75715e"># a part of explanatory variables in mixed estimation</span>
+  V <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">diag</span>(<span style="color:#ae81ff">1</span>,nrow <span style="color:#f92672">=</span> <span style="color:#a6e22e">NROW</span>(explanatory),ncol <span style="color:#f92672">=</span> <span style="color:#a6e22e">NROW</span>(explanatory)) <span style="color:#75715e"># coefficient matrix of var-cov matrix in mixed estimation</span>
   
-  V0 &lt;- matrix(0,nrow = npara,ncol = npara) # Prior for var matrix
+  V0 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#ae81ff">0</span>,nrow <span style="color:#f92672">=</span> npara,ncol <span style="color:#f92672">=</span> npara) <span style="color:#75715e"># Prior for var matrix</span>
   
-  # PRIOR FOR VAR OF CONSTANT
-  sigi &lt;- numeric(NCOL(x)) # var of AR(m)
-  for (i in 1:NCOL(x)){
-    AR &lt;- ar(x[,i],order.max = order)
-    sigi[i] &lt;- AR$var.pred
+  <span style="color:#75715e"># PRIOR FOR VAR OF CONSTANT</span>
+  sigi <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">numeric</span>(<span style="color:#a6e22e">NCOL</span>(x)) <span style="color:#75715e"># var of AR(m)</span>
+  <span style="color:#a6e22e">for </span>(i in <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#a6e22e">NCOL</span>(x)){
+    AR <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ar</span>(x[,i],order.max <span style="color:#f92672">=</span> order)
+    sigi[i] <span style="color:#f92672">&lt;-</span> AR<span style="color:#f92672">$</span>var.pred
   }
-  sigma_AR &lt;- diag(sigi,nrow = NCOL(x),ncol = NCOL(x))
-  iter2 &lt;- seq(1,npara,(NCOL(x)*order+1))
-  n &lt;- 1
-  for (i in iter2){
-    V0[i,i] &lt;- pi5*pi3*sigi[n]
-    n &lt;- n + 1
+  sigma_AR <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">diag</span>(sigi,nrow <span style="color:#f92672">=</span> <span style="color:#a6e22e">NCOL</span>(x),ncol <span style="color:#f92672">=</span> <span style="color:#a6e22e">NCOL</span>(x))
+  iter2 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">seq</span>(<span style="color:#ae81ff">1</span>,npara,(<span style="color:#a6e22e">NCOL</span>(x)<span style="color:#f92672">*</span>order<span style="color:#ae81ff">+1</span>))
+  n <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1</span>
+  <span style="color:#a6e22e">for </span>(i in iter2){
+    V0[i,i] <span style="color:#f92672">&lt;-</span> pi5<span style="color:#f92672">*</span>pi3<span style="color:#f92672">*</span>sigi[n]
+    n <span style="color:#f92672">&lt;-</span> n <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
   }
   
-  # PRIOR FOR VAR OF AUTOREGRESSIVE PARAMETER
-  wi &lt;- 0 # prior weight on s.d. of autoregressive parameter
-  k &lt;- 0 # decay parameter
-  iter3 &lt;- numeric((NCOL(x)*order))
-  n &lt;- 2;iter3[1] &lt;- n
-  for (i in 2:length(iter3)){
-    if ((i-1)%%order == 0){
-      n &lt;- n + NCOL(x) + 2 # const
-      iter3[i] &lt;- n 
+  <span style="color:#75715e"># PRIOR FOR VAR OF AUTOREGRESSIVE PARAMETER</span>
+  wi <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">0</span> <span style="color:#75715e"># prior weight on s.d. of autoregressive parameter</span>
+  k <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">0</span> <span style="color:#75715e"># decay parameter</span>
+  iter3 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">numeric</span>((<span style="color:#a6e22e">NCOL</span>(x)<span style="color:#f92672">*</span>order))
+  n <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">2</span>;iter3[1] <span style="color:#f92672">&lt;-</span> n
+  <span style="color:#a6e22e">for </span>(i in <span style="color:#ae81ff">2</span><span style="color:#f92672">:</span><span style="color:#a6e22e">length</span>(iter3)){
+    <span style="color:#a6e22e">if </span>((i<span style="color:#ae81ff">-1</span>)<span style="color:#f92672">%%</span>order <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>){
+      n <span style="color:#f92672">&lt;-</span> n <span style="color:#f92672">+</span> <span style="color:#a6e22e">NCOL</span>(x) <span style="color:#f92672">+</span> <span style="color:#ae81ff">2</span> <span style="color:#75715e"># const</span>
+      iter3[i] <span style="color:#f92672">&lt;-</span> n 
     }else{
-      n &lt;- n + NCOL(x)
-      iter3[i] &lt;- n
+      n <span style="color:#f92672">&lt;-</span> n <span style="color:#f92672">+</span> <span style="color:#a6e22e">NCOL</span>(x)
+      iter3[i] <span style="color:#f92672">&lt;-</span> n
     }
   }
-  for (i in iter3) {
-    k &lt;- k + 1
-    V0[i,i] &lt;- pi5*pi1/(k*exp(pi4*wi))
-    if (k == order){
-      k = 0
+  <span style="color:#a6e22e">for </span>(i in iter3) {
+    k <span style="color:#f92672">&lt;-</span> k <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+    V0[i,i] <span style="color:#f92672">&lt;-</span> pi5<span style="color:#f92672">*</span>pi1<span style="color:#f92672">/</span>(k<span style="color:#f92672">*</span><span style="color:#a6e22e">exp</span>(pi4<span style="color:#f92672">*</span>wi))
+    <span style="color:#a6e22e">if </span>(k <span style="color:#f92672">==</span> order){
+      k <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
     }
   }
   
-  # PRIOR FOR VAR OF DISTRIBUTED LAG PARAMETER
-  wj &lt;- 1 # prior weight on s.d. of distributed lag parameter
-  k &lt;- 1 # decay parameter
-  count &lt;- 0
-  n &lt;- 1
-  ndis &lt;- npara - NCOL(x) - length(iter3) # the number of distibuted lag in each equation
+  <span style="color:#75715e"># PRIOR FOR VAR OF DISTRIBUTED LAG PARAMETER</span>
+  wj <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1</span> <span style="color:#75715e"># prior weight on s.d. of distributed lag parameter</span>
+  k <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1</span> <span style="color:#75715e"># decay parameter</span>
+  count <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">0</span>
+  n <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1</span>
+  ndis <span style="color:#f92672">&lt;-</span> npara <span style="color:#f92672">-</span> <span style="color:#a6e22e">NCOL</span>(x) <span style="color:#f92672">-</span> <span style="color:#a6e22e">length</span>(iter3) <span style="color:#75715e"># the number of distibuted lag in each equation</span>
   
-  l &lt;- rep(1:NCOL(x),length=npara)
-  temp &lt;- numeric(length(iter3))
-  j &lt;- 1;temp[1] &lt;- j
-  for (i in 2:length(temp)){
-    if ((i-1)%%order == 0){
-      j &lt;- j + NCOL(x) + 1 # const
-      temp[i] &lt;- j 
+  l <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#a6e22e">NCOL</span>(x),length<span style="color:#f92672">=</span>npara)
+  temp <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">numeric</span>(<span style="color:#a6e22e">length</span>(iter3))
+  j <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1</span>;temp[1] <span style="color:#f92672">&lt;-</span> j
+  <span style="color:#a6e22e">for </span>(i in <span style="color:#ae81ff">2</span><span style="color:#f92672">:</span><span style="color:#a6e22e">length</span>(temp)){
+    <span style="color:#a6e22e">if </span>((i<span style="color:#ae81ff">-1</span>)<span style="color:#f92672">%%</span>order <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>){
+      j <span style="color:#f92672">&lt;-</span> j <span style="color:#f92672">+</span> <span style="color:#a6e22e">NCOL</span>(x) <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span> <span style="color:#75715e"># const</span>
+      temp[i] <span style="color:#f92672">&lt;-</span> j 
     }else{
-      j &lt;- j + NCOL(x)
-      temp[i] &lt;- j
+      j <span style="color:#f92672">&lt;-</span> j <span style="color:#f92672">+</span> <span style="color:#a6e22e">NCOL</span>(x)
+      temp[i] <span style="color:#f92672">&lt;-</span> j
     }
   }
-  l &lt;- l[-c(temp)]; l &lt;- l[1:(ndis)]
+  l <span style="color:#f92672">&lt;-</span> l[<span style="color:#f92672">-</span><span style="color:#a6e22e">c</span>(temp)]; l <span style="color:#f92672">&lt;-</span> l[1<span style="color:#f92672">:</span>(ndis)]
   
-  iter4 &lt;- 1:npara; iter4 &lt;- iter4[-c(iter2,iter3)]
-  for (i in iter4){
-    count &lt;- count + 1
-    V0[i,i] &lt;- pi5*pi2*sigi[n]/(k*exp(pi4*wj)*sigi[l[count]])
-    if(count%%(order-1) == 0){
-      k &lt;- k + 1
+  iter4 <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>npara; iter4 <span style="color:#f92672">&lt;-</span> iter4[<span style="color:#f92672">-</span><span style="color:#a6e22e">c</span>(iter2,iter3)]
+  <span style="color:#a6e22e">for </span>(i in iter4){
+    count <span style="color:#f92672">&lt;-</span> count <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+    V0[i,i] <span style="color:#f92672">&lt;-</span> pi5<span style="color:#f92672">*</span>pi2<span style="color:#f92672">*</span>sigi[n]<span style="color:#f92672">/</span>(k<span style="color:#f92672">*</span><span style="color:#a6e22e">exp</span>(pi4<span style="color:#f92672">*</span>wj)<span style="color:#f92672">*</span>sigi[l[count]])
+    <span style="color:#a6e22e">if</span>(count<span style="color:#f92672">%%</span>(order<span style="color:#ae81ff">-1</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>){
+      k <span style="color:#f92672">&lt;-</span> k <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
     }
-    if (count%%(ndis/NCOL(x)) == 0){
-      n = n + 1
-      k = 1
+    <span style="color:#a6e22e">if </span>(count<span style="color:#f92672">%%</span>(ndis<span style="color:#f92672">/</span><span style="color:#a6e22e">NCOL</span>(x)) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>){
+      n <span style="color:#f92672">=</span> n <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+      k <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>
     }
   }
 
-  # 3. Estimate OLS
-  beta &lt;- ginv((t(explanatory)%*%explanatory))%*%t(explanatory)%*%dependent
-  sig &lt;- as.numeric((NROW(explanatory)-NCOL(explanatory))^(-1)*
-                      t(dependent-explanatory%*%beta)%*%ginv(V)%*%
-                      (dependent-explanatory%*%beta))
+  <span style="color:#75715e"># 3. Estimate OLS</span>
+  beta <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ginv</span>((<span style="color:#a6e22e">t</span>(explanatory)<span style="color:#f92672">%*%</span>explanatory))<span style="color:#f92672">%*%</span><span style="color:#a6e22e">t</span>(explanatory)<span style="color:#f92672">%*%</span>dependent
+  sig <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.numeric</span>((<span style="color:#a6e22e">NROW</span>(explanatory)<span style="color:#f92672">-</span><span style="color:#a6e22e">NCOL</span>(explanatory))<span style="color:#a6e22e">^</span>(<span style="color:#ae81ff">-1</span>)<span style="color:#f92672">*</span>
+                      <span style="color:#a6e22e">t</span>(dependent<span style="color:#f92672">-</span>explanatory<span style="color:#f92672">%*%</span>beta)<span style="color:#f92672">%*%</span><span style="color:#a6e22e">ginv</span>(V)<span style="color:#f92672">%*%</span>
+                      (dependent<span style="color:#f92672">-</span>explanatory<span style="color:#f92672">%*%</span>beta))
   
-  # 4. Implement Mixed Estimation for initial values
-  beta_M &lt;- ginv((1/sig)*t(explanatory)%*%ginv(V)%*%explanatory + t(R)%*%ginv(V0)%*%R)%*%
-    ((sig)^(-1)*t(explanatory)%*%ginv(V)%*%dependent + t(R)%*%ginv(V0)%*%r)
-  sig_M &lt;- sig*ginv((sig)^(-1)*t(explanatory)%*%ginv(V)%*%explanatory + t(R)%*%ginv(V0)%*%R)
+  <span style="color:#75715e"># 4. Implement Mixed Estimation for initial values</span>
+  beta_M <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ginv</span>((<span style="color:#ae81ff">1</span><span style="color:#f92672">/</span>sig)<span style="color:#f92672">*</span><span style="color:#a6e22e">t</span>(explanatory)<span style="color:#f92672">%*%</span><span style="color:#a6e22e">ginv</span>(V)<span style="color:#f92672">%*%</span>explanatory <span style="color:#f92672">+</span> <span style="color:#a6e22e">t</span>(R)<span style="color:#f92672">%*%</span><span style="color:#a6e22e">ginv</span>(V0)<span style="color:#f92672">%*%</span>R)<span style="color:#f92672">%*%</span>
+    ((sig)<span style="color:#a6e22e">^</span>(<span style="color:#ae81ff">-1</span>)<span style="color:#f92672">*</span><span style="color:#a6e22e">t</span>(explanatory)<span style="color:#f92672">%*%</span><span style="color:#a6e22e">ginv</span>(V)<span style="color:#f92672">%*%</span>dependent <span style="color:#f92672">+</span> <span style="color:#a6e22e">t</span>(R)<span style="color:#f92672">%*%</span><span style="color:#a6e22e">ginv</span>(V0)<span style="color:#f92672">%*%</span>r)
+  sig_M <span style="color:#f92672">&lt;-</span> sig<span style="color:#f92672">*</span><span style="color:#a6e22e">ginv</span>((sig)<span style="color:#a6e22e">^</span>(<span style="color:#ae81ff">-1</span>)<span style="color:#f92672">*</span><span style="color:#a6e22e">t</span>(explanatory)<span style="color:#f92672">%*%</span><span style="color:#a6e22e">ginv</span>(V)<span style="color:#f92672">%*%</span>explanatory <span style="color:#f92672">+</span> <span style="color:#a6e22e">t</span>(R)<span style="color:#f92672">%*%</span><span style="color:#a6e22e">ginv</span>(V0)<span style="color:#f92672">%*%</span>R)
   
-  # for kalman filter
-  observable &lt;- as.matrix(x[(order+1):NROW(x),]) # dependent variable
-  coefficient &lt;- array(0,dim = c(nrow = NCOL(x),ncol = npara,(NROW(x)-order))) # explanatory variable
-  for(i in 1:(NROW(x)-order)){
-    for (k in 1:NCOL(x)){
-      coefficient[k,(1+(k-1)*npara/NCOL(x)):(k*npara/NCOL(x)),i] &lt;- explanatory[i,1:(npara/NCOL(x))]
+  <span style="color:#75715e"># for kalman filter</span>
+  observable <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.matrix</span>(x<span style="color:#a6e22e">[</span>(order<span style="color:#ae81ff">+1</span>)<span style="color:#f92672">:</span><span style="color:#a6e22e">NROW</span>(x),]) <span style="color:#75715e"># dependent variable</span>
+  coefficient <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">array</span>(<span style="color:#ae81ff">0</span>,dim <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(nrow <span style="color:#f92672">=</span> <span style="color:#a6e22e">NCOL</span>(x),ncol <span style="color:#f92672">=</span> npara,(<span style="color:#a6e22e">NROW</span>(x)<span style="color:#f92672">-</span>order))) <span style="color:#75715e"># explanatory variable</span>
+  <span style="color:#a6e22e">for</span>(i in <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>(<span style="color:#a6e22e">NROW</span>(x)<span style="color:#f92672">-</span>order)){
+    <span style="color:#a6e22e">for </span>(k in <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#a6e22e">NCOL</span>(x)){
+      coefficient[k,(<span style="color:#ae81ff">1</span><span style="color:#f92672">+</span>(k<span style="color:#ae81ff">-1</span>)<span style="color:#f92672">*</span>npara<span style="color:#f92672">/</span><span style="color:#a6e22e">NCOL</span>(x))<span style="color:#f92672">:</span>(k<span style="color:#f92672">*</span>npara<span style="color:#f92672">/</span><span style="color:#a6e22e">NCOL</span>(x)),i] <span style="color:#f92672">&lt;-</span> explanatory[i,<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>(npara<span style="color:#f92672">/</span><span style="color:#a6e22e">NCOL</span>(x))]
     }
   }
   
-  result &lt;- list(observable, coefficient, beta_M, sig_M, sigma_AR, V0, order, npara)
-  names(result) &lt;- c(&quot;observable&quot;, &quot;coefficient&quot;,&quot;beta_M&quot;, &quot;sig_M&quot;,&quot;sigma_AR&quot;, &quot;V0&quot;,&quot;order&quot;,&quot;npara&quot;)
+  result <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>(observable, coefficient, beta_M, sig_M, sigma_AR, V0, order, npara)
+  <span style="color:#a6e22e">names</span>(result) <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;observable&#34;</span>, <span style="color:#e6db74">&#34;coefficient&#34;</span>,<span style="color:#e6db74">&#34;beta_M&#34;</span>, <span style="color:#e6db74">&#34;sig_M&#34;</span>,<span style="color:#e6db74">&#34;sigma_AR&#34;</span>, <span style="color:#e6db74">&#34;V0&#34;</span>,<span style="color:#e6db74">&#34;order&#34;</span>,<span style="color:#e6db74">&#34;npara&#34;</span>)
   
-  return(result)
-}</code></pre>
-<pre class="r"><code>MPrior &lt;- function(x,order,pi){
-  #-------------------------------------------------------------------
-  # Make Minnesota Prior
-  #   x - dataset
-  #   order - max lag of autoregression
-  #   pi - a set of hyper-parameter of prior matrix
-  #-------------------------------------------------------------------
+  <span style="color:#a6e22e">return</span>(result)
+}
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">MPrior <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(x,order,<span style="color:#66d9ef">pi</span>){
+  <span style="color:#75715e">#-------------------------------------------------------------------</span>
+  <span style="color:#75715e"># Make Minnesota Prior</span>
+  <span style="color:#75715e">#   x - dataset</span>
+  <span style="color:#75715e">#   order - max lag of autoregression</span>
+  <span style="color:#75715e">#   pi - a set of hyper-parameter of prior matrix</span>
+  <span style="color:#75715e">#-------------------------------------------------------------------</span>
 
-  library(MASS)
+  <span style="color:#a6e22e">library</span>(MASS)
     
-  # 1. Process row data
-  for (i in 1:5){
-    eval(parse(text = paste0(&quot;pi&quot;,i,&quot;=pi[[&quot;,i,&quot;]]&quot;)))
+  <span style="color:#75715e"># 1. Process row data</span>
+  <span style="color:#a6e22e">for </span>(i in <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#ae81ff">5</span>){
+    <span style="color:#a6e22e">eval</span>(<span style="color:#a6e22e">parse</span>(text <span style="color:#f92672">=</span> <span style="color:#a6e22e">paste0</span>(<span style="color:#e6db74">&#34;pi&#34;</span>,i,<span style="color:#e6db74">&#34;=pi[[&#34;</span>,i,<span style="color:#e6db74">&#34;]]&#34;</span>)))
   }
-  if (class(x)!=&quot;matrix&quot;){
-    x &lt;- as.matrix(x)
+  <span style="color:#a6e22e">if </span>(<span style="color:#a6e22e">class</span>(x)<span style="color:#f92672">!=</span><span style="color:#e6db74">&#34;matrix&#34;</span>){
+    x <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.matrix</span>(x)
   }
-  dependent &lt;- as.matrix(x[1:(NROW(x)-order),1])
-  for (i in 2:NCOL(x)){
-    dependent &lt;- rbind(dependent,as.matrix(x[(order+1):NROW(x),i]))
+  dependent <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.matrix</span>(x[1<span style="color:#f92672">:</span>(<span style="color:#a6e22e">NROW</span>(x)<span style="color:#f92672">-</span>order),<span style="color:#ae81ff">1</span>])
+  <span style="color:#a6e22e">for </span>(i in <span style="color:#ae81ff">2</span><span style="color:#f92672">:</span><span style="color:#a6e22e">NCOL</span>(x)){
+    dependent <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rbind</span>(dependent,<span style="color:#a6e22e">as.matrix</span>(x<span style="color:#a6e22e">[</span>(order<span style="color:#ae81ff">+1</span>)<span style="color:#f92672">:</span><span style="color:#a6e22e">NROW</span>(x),i]))
   }
-  explanatory &lt;- cbind(1,embed(x,order)[-1,])
-  explanatory &lt;- diag(1,nrow = NCOL(x),ncol = NCOL(x))%x%as.matrix(explanatory)
-  npara &lt;- NCOL(explanatory) # the number of parameters/ ncol(x)*(ncol(x)*order + 1(const))
+  explanatory <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">cbind</span>(<span style="color:#ae81ff">1</span>,<span style="color:#a6e22e">embed</span>(x,order)[<span style="color:#ae81ff">-1</span>,])
+  explanatory <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">diag</span>(<span style="color:#ae81ff">1</span>,nrow <span style="color:#f92672">=</span> <span style="color:#a6e22e">NCOL</span>(x),ncol <span style="color:#f92672">=</span> <span style="color:#a6e22e">NCOL</span>(x))<span style="color:#f92672">%x%</span><span style="color:#a6e22e">as.matrix</span>(explanatory)
+  npara <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">NCOL</span>(explanatory) <span style="color:#75715e"># the number of parameters/ ncol(x)*(ncol(x)*order + 1(const))</span>
   
-  # 2. Make Prior matrixes
-  r &lt;- as.matrix(numeric(npara)) # a part of dependent variable in mixed estimation
-  iter1 &lt;- numeric(NCOL(x))
-  n &lt;- 2
-  for (i in 1:length(iter1)){
-    iter1[i] &lt;- n
-    n &lt;- n + order*NCOL(x) + 1
+  <span style="color:#75715e"># 2. Make Prior matrixes</span>
+  r <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.matrix</span>(<span style="color:#a6e22e">numeric</span>(npara)) <span style="color:#75715e"># a part of dependent variable in mixed estimation</span>
+  iter1 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">numeric</span>(<span style="color:#a6e22e">NCOL</span>(x))
+  n <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">2</span>
+  <span style="color:#a6e22e">for </span>(i in <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#a6e22e">length</span>(iter1)){
+    iter1[i] <span style="color:#f92672">&lt;-</span> n
+    n <span style="color:#f92672">&lt;-</span> n <span style="color:#f92672">+</span> order<span style="color:#f92672">*</span><span style="color:#a6e22e">NCOL</span>(x) <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
   }
-  for (i in iter1){
-    r[i] &lt;- 1
+  <span style="color:#a6e22e">for </span>(i in iter1){
+    r[i] <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1</span>
   }
-  R &lt;- diag(1,nrow = npara,ncol = npara) # a part of explanatory variables in mixed estimation
-  V &lt;- diag(1,nrow = NROW(explanatory),ncol = NROW(explanatory)) # coefficient matrix of var-cov matrix in mixed estimation
+  R <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">diag</span>(<span style="color:#ae81ff">1</span>,nrow <span style="color:#f92672">=</span> npara,ncol <span style="color:#f92672">=</span> npara) <span style="color:#75715e"># a part of explanatory variables in mixed estimation</span>
+  V <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">diag</span>(<span style="color:#ae81ff">1</span>,nrow <span style="color:#f92672">=</span> <span style="color:#a6e22e">NROW</span>(explanatory),ncol <span style="color:#f92672">=</span> <span style="color:#a6e22e">NROW</span>(explanatory)) <span style="color:#75715e"># coefficient matrix of var-cov matrix in mixed estimation</span>
   
-  V0 &lt;- matrix(0,nrow = npara,ncol = npara) # Prior for var matrix
+  V0 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#ae81ff">0</span>,nrow <span style="color:#f92672">=</span> npara,ncol <span style="color:#f92672">=</span> npara) <span style="color:#75715e"># Prior for var matrix</span>
   
-  # PRIOR FOR VAR OF CONSTANT
-  sigi &lt;- numeric(NCOL(x)) # var of AR(m)
-  for (i in 1:NCOL(x)){
-    AR &lt;- ar(x[,i],order.max = order)
-    sigi[i] &lt;- AR$var.pred
+  <span style="color:#75715e"># PRIOR FOR VAR OF CONSTANT</span>
+  sigi <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">numeric</span>(<span style="color:#a6e22e">NCOL</span>(x)) <span style="color:#75715e"># var of AR(m)</span>
+  <span style="color:#a6e22e">for </span>(i in <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#a6e22e">NCOL</span>(x)){
+    AR <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ar</span>(x[,i],order.max <span style="color:#f92672">=</span> order)
+    sigi[i] <span style="color:#f92672">&lt;-</span> AR<span style="color:#f92672">$</span>var.pred
   }
-  sigma_AR &lt;- diag(sigi,nrow = NCOL(x),ncol = NCOL(x))
-  iter2 &lt;- seq(1,npara,(NCOL(x)*order+1))
-  n &lt;- 1
-  for (i in iter2){
-    V0[i,i] &lt;- pi5*pi3*sigi[n]
-    n &lt;- n + 1
+  sigma_AR <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">diag</span>(sigi,nrow <span style="color:#f92672">=</span> <span style="color:#a6e22e">NCOL</span>(x),ncol <span style="color:#f92672">=</span> <span style="color:#a6e22e">NCOL</span>(x))
+  iter2 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">seq</span>(<span style="color:#ae81ff">1</span>,npara,(<span style="color:#a6e22e">NCOL</span>(x)<span style="color:#f92672">*</span>order<span style="color:#ae81ff">+1</span>))
+  n <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1</span>
+  <span style="color:#a6e22e">for </span>(i in iter2){
+    V0[i,i] <span style="color:#f92672">&lt;-</span> pi5<span style="color:#f92672">*</span>pi3<span style="color:#f92672">*</span>sigi[n]
+    n <span style="color:#f92672">&lt;-</span> n <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
   }
   
-  # PRIOR FOR VAR OF AUTOREGRESSIVE PARAMETER
-  wi &lt;- 0 # prior weight on s.d. of autoregressive parameter
-  k &lt;- 0 # decay parameter
-  iter3 &lt;- numeric((NCOL(x)*order))
-  n &lt;- 2;iter3[1] &lt;- n
-  for (i in 2:length(iter3)){
-    if ((i-1)%%order == 0){
-      n &lt;- n + NCOL(x) + 2 # const
-      iter3[i] &lt;- n 
+  <span style="color:#75715e"># PRIOR FOR VAR OF AUTOREGRESSIVE PARAMETER</span>
+  wi <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">0</span> <span style="color:#75715e"># prior weight on s.d. of autoregressive parameter</span>
+  k <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">0</span> <span style="color:#75715e"># decay parameter</span>
+  iter3 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">numeric</span>((<span style="color:#a6e22e">NCOL</span>(x)<span style="color:#f92672">*</span>order))
+  n <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">2</span>;iter3[1] <span style="color:#f92672">&lt;-</span> n
+  <span style="color:#a6e22e">for </span>(i in <span style="color:#ae81ff">2</span><span style="color:#f92672">:</span><span style="color:#a6e22e">length</span>(iter3)){
+    <span style="color:#a6e22e">if </span>((i<span style="color:#ae81ff">-1</span>)<span style="color:#f92672">%%</span>order <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>){
+      n <span style="color:#f92672">&lt;-</span> n <span style="color:#f92672">+</span> <span style="color:#a6e22e">NCOL</span>(x) <span style="color:#f92672">+</span> <span style="color:#ae81ff">2</span> <span style="color:#75715e"># const</span>
+      iter3[i] <span style="color:#f92672">&lt;-</span> n 
     }else{
-      n &lt;- n + NCOL(x)
-      iter3[i] &lt;- n
+      n <span style="color:#f92672">&lt;-</span> n <span style="color:#f92672">+</span> <span style="color:#a6e22e">NCOL</span>(x)
+      iter3[i] <span style="color:#f92672">&lt;-</span> n
     }
   }
-  for (i in iter3) {
-    k &lt;- k + 1
-    V0[i,i] &lt;- pi5*pi1/(k*exp(pi4*wi))
-    if (k == order){
-      k = 0
+  <span style="color:#a6e22e">for </span>(i in iter3) {
+    k <span style="color:#f92672">&lt;-</span> k <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+    V0[i,i] <span style="color:#f92672">&lt;-</span> pi5<span style="color:#f92672">*</span>pi1<span style="color:#f92672">/</span>(k<span style="color:#f92672">*</span><span style="color:#a6e22e">exp</span>(pi4<span style="color:#f92672">*</span>wi))
+    <span style="color:#a6e22e">if </span>(k <span style="color:#f92672">==</span> order){
+      k <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
     }
   }
   
-  # PRIOR FOR VAR OF DISTRIBUTED LAG PARAMETER
-  wj &lt;- 1 # prior weight on s.d. of distributed lag parameter
-  k &lt;- 1 # decay parameter
-  count &lt;- 0
-  n &lt;- 1
-  ndis &lt;- npara - NCOL(x) - length(iter3) # the number of distibuted lag in each equation
+  <span style="color:#75715e"># PRIOR FOR VAR OF DISTRIBUTED LAG PARAMETER</span>
+  wj <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1</span> <span style="color:#75715e"># prior weight on s.d. of distributed lag parameter</span>
+  k <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1</span> <span style="color:#75715e"># decay parameter</span>
+  count <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">0</span>
+  n <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1</span>
+  ndis <span style="color:#f92672">&lt;-</span> npara <span style="color:#f92672">-</span> <span style="color:#a6e22e">NCOL</span>(x) <span style="color:#f92672">-</span> <span style="color:#a6e22e">length</span>(iter3) <span style="color:#75715e"># the number of distibuted lag in each equation</span>
   
-  l &lt;- rep(1:NCOL(x),length=npara)
-  temp &lt;- numeric(length(iter3))
-  j &lt;- 1;temp[1] &lt;- j
-  for (i in 2:length(temp)){
-    if ((i-1)%%order == 0){
-      j &lt;- j + NCOL(x) + 1 # const
-      temp[i] &lt;- j 
+  l <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#a6e22e">NCOL</span>(x),length<span style="color:#f92672">=</span>npara)
+  temp <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">numeric</span>(<span style="color:#a6e22e">length</span>(iter3))
+  j <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1</span>;temp[1] <span style="color:#f92672">&lt;-</span> j
+  <span style="color:#a6e22e">for </span>(i in <span style="color:#ae81ff">2</span><span style="color:#f92672">:</span><span style="color:#a6e22e">length</span>(temp)){
+    <span style="color:#a6e22e">if </span>((i<span style="color:#ae81ff">-1</span>)<span style="color:#f92672">%%</span>order <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>){
+      j <span style="color:#f92672">&lt;-</span> j <span style="color:#f92672">+</span> <span style="color:#a6e22e">NCOL</span>(x) <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span> <span style="color:#75715e"># const</span>
+      temp[i] <span style="color:#f92672">&lt;-</span> j 
     }else{
-      j &lt;- j + NCOL(x)
-      temp[i] &lt;- j
+      j <span style="color:#f92672">&lt;-</span> j <span style="color:#f92672">+</span> <span style="color:#a6e22e">NCOL</span>(x)
+      temp[i] <span style="color:#f92672">&lt;-</span> j
     }
   }
-  l &lt;- l[-c(temp)]; l &lt;- l[1:(ndis)]
+  l <span style="color:#f92672">&lt;-</span> l[<span style="color:#f92672">-</span><span style="color:#a6e22e">c</span>(temp)]; l <span style="color:#f92672">&lt;-</span> l[1<span style="color:#f92672">:</span>(ndis)]
   
-  iter4 &lt;- 1:npara; iter4 &lt;- iter4[-c(iter2,iter3)]
-  for (i in iter4){
-    count &lt;- count + 1
-    V0[i,i] &lt;- pi5*pi2*sigi[n]/(k*exp(pi4*wj)*sigi[l[count]])
-    if(count%%(order-1) == 0){
-      k &lt;- k + 1
+  iter4 <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>npara; iter4 <span style="color:#f92672">&lt;-</span> iter4[<span style="color:#f92672">-</span><span style="color:#a6e22e">c</span>(iter2,iter3)]
+  <span style="color:#a6e22e">for </span>(i in iter4){
+    count <span style="color:#f92672">&lt;-</span> count <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+    V0[i,i] <span style="color:#f92672">&lt;-</span> pi5<span style="color:#f92672">*</span>pi2<span style="color:#f92672">*</span>sigi[n]<span style="color:#f92672">/</span>(k<span style="color:#f92672">*</span><span style="color:#a6e22e">exp</span>(pi4<span style="color:#f92672">*</span>wj)<span style="color:#f92672">*</span>sigi[l[count]])
+    <span style="color:#a6e22e">if</span>(count<span style="color:#f92672">%%</span>(order<span style="color:#ae81ff">-1</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>){
+      k <span style="color:#f92672">&lt;-</span> k <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
     }
-    if (count%%(ndis/NCOL(x)) == 0){
-      n = n + 1
-      k = 1
+    <span style="color:#a6e22e">if </span>(count<span style="color:#f92672">%%</span>(ndis<span style="color:#f92672">/</span><span style="color:#a6e22e">NCOL</span>(x)) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>){
+      n <span style="color:#f92672">=</span> n <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+      k <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>
     }
   }
 
-  # 3. Estimate OLS
-  beta &lt;- ginv((t(explanatory)%*%explanatory))%*%t(explanatory)%*%dependent
-  sig &lt;- as.numeric((NROW(explanatory)-NCOL(explanatory))^(-1)*
-                      t(dependent-explanatory%*%beta)%*%ginv(V)%*%
-                      (dependent-explanatory%*%beta))
+  <span style="color:#75715e"># 3. Estimate OLS</span>
+  beta <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ginv</span>((<span style="color:#a6e22e">t</span>(explanatory)<span style="color:#f92672">%*%</span>explanatory))<span style="color:#f92672">%*%</span><span style="color:#a6e22e">t</span>(explanatory)<span style="color:#f92672">%*%</span>dependent
+  sig <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.numeric</span>((<span style="color:#a6e22e">NROW</span>(explanatory)<span style="color:#f92672">-</span><span style="color:#a6e22e">NCOL</span>(explanatory))<span style="color:#a6e22e">^</span>(<span style="color:#ae81ff">-1</span>)<span style="color:#f92672">*</span>
+                      <span style="color:#a6e22e">t</span>(dependent<span style="color:#f92672">-</span>explanatory<span style="color:#f92672">%*%</span>beta)<span style="color:#f92672">%*%</span><span style="color:#a6e22e">ginv</span>(V)<span style="color:#f92672">%*%</span>
+                      (dependent<span style="color:#f92672">-</span>explanatory<span style="color:#f92672">%*%</span>beta))
   
-  # 4. Implement Mixed Estimation for initial values
-  beta_M &lt;- ginv((1/sig)*t(explanatory)%*%ginv(V)%*%explanatory + t(R)%*%ginv(V0)%*%R)%*%
-    ((sig)^(-1)*t(explanatory)%*%ginv(V)%*%dependent + t(R)%*%ginv(V0)%*%r)
-  sig_M &lt;- sig*ginv((sig)^(-1)*t(explanatory)%*%ginv(V)%*%explanatory + t(R)%*%ginv(V0)%*%R)
+  <span style="color:#75715e"># 4. Implement Mixed Estimation for initial values</span>
+  beta_M <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ginv</span>((<span style="color:#ae81ff">1</span><span style="color:#f92672">/</span>sig)<span style="color:#f92672">*</span><span style="color:#a6e22e">t</span>(explanatory)<span style="color:#f92672">%*%</span><span style="color:#a6e22e">ginv</span>(V)<span style="color:#f92672">%*%</span>explanatory <span style="color:#f92672">+</span> <span style="color:#a6e22e">t</span>(R)<span style="color:#f92672">%*%</span><span style="color:#a6e22e">ginv</span>(V0)<span style="color:#f92672">%*%</span>R)<span style="color:#f92672">%*%</span>
+    ((sig)<span style="color:#a6e22e">^</span>(<span style="color:#ae81ff">-1</span>)<span style="color:#f92672">*</span><span style="color:#a6e22e">t</span>(explanatory)<span style="color:#f92672">%*%</span><span style="color:#a6e22e">ginv</span>(V)<span style="color:#f92672">%*%</span>dependent <span style="color:#f92672">+</span> <span style="color:#a6e22e">t</span>(R)<span style="color:#f92672">%*%</span><span style="color:#a6e22e">ginv</span>(V0)<span style="color:#f92672">%*%</span>r)
+  sig_M <span style="color:#f92672">&lt;-</span> sig<span style="color:#f92672">*</span><span style="color:#a6e22e">ginv</span>((sig)<span style="color:#a6e22e">^</span>(<span style="color:#ae81ff">-1</span>)<span style="color:#f92672">*</span><span style="color:#a6e22e">t</span>(explanatory)<span style="color:#f92672">%*%</span><span style="color:#a6e22e">ginv</span>(V)<span style="color:#f92672">%*%</span>explanatory <span style="color:#f92672">+</span> <span style="color:#a6e22e">t</span>(R)<span style="color:#f92672">%*%</span><span style="color:#a6e22e">ginv</span>(V0)<span style="color:#f92672">%*%</span>R)
   
-  # for kalman filter
-  observable &lt;- as.matrix(x[(order+1):NROW(x),]) # dependent variable
-  coefficient &lt;- array(0,dim = c(nrow = NCOL(x),ncol = npara,(NROW(x)-order))) # explanatory variable
-  for(i in 1:(NROW(x)-order)){
-    for (k in 1:NCOL(x)){
-      coefficient[k,(1+(k-1)*npara/NCOL(x)):(k*npara/NCOL(x)),i] &lt;- explanatory[i,1:(npara/NCOL(x))]
+  <span style="color:#75715e"># for kalman filter</span>
+  observable <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.matrix</span>(x<span style="color:#a6e22e">[</span>(order<span style="color:#ae81ff">+1</span>)<span style="color:#f92672">:</span><span style="color:#a6e22e">NROW</span>(x),]) <span style="color:#75715e"># dependent variable</span>
+  coefficient <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">array</span>(<span style="color:#ae81ff">0</span>,dim <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(nrow <span style="color:#f92672">=</span> <span style="color:#a6e22e">NCOL</span>(x),ncol <span style="color:#f92672">=</span> npara,(<span style="color:#a6e22e">NROW</span>(x)<span style="color:#f92672">-</span>order))) <span style="color:#75715e"># explanatory variable</span>
+  <span style="color:#a6e22e">for</span>(i in <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>(<span style="color:#a6e22e">NROW</span>(x)<span style="color:#f92672">-</span>order)){
+    <span style="color:#a6e22e">for </span>(k in <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#a6e22e">NCOL</span>(x)){
+      coefficient[k,(<span style="color:#ae81ff">1</span><span style="color:#f92672">+</span>(k<span style="color:#ae81ff">-1</span>)<span style="color:#f92672">*</span>npara<span style="color:#f92672">/</span><span style="color:#a6e22e">NCOL</span>(x))<span style="color:#f92672">:</span>(k<span style="color:#f92672">*</span>npara<span style="color:#f92672">/</span><span style="color:#a6e22e">NCOL</span>(x)),i] <span style="color:#f92672">&lt;-</span> explanatory[i,<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>(npara<span style="color:#f92672">/</span><span style="color:#a6e22e">NCOL</span>(x))]
     }
   }
   
-  result &lt;- list(observable, coefficient, beta_M, sig_M, sigma_AR, V0, order, npara)
-  names(result) &lt;- c(&quot;observable&quot;, &quot;coefficient&quot;,&quot;beta_M&quot;, &quot;sig_M&quot;,&quot;sigma_AR&quot;, &quot;V0&quot;,&quot;order&quot;,&quot;npara&quot;)
+  result <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>(observable, coefficient, beta_M, sig_M, sigma_AR, V0, order, npara)
+  <span style="color:#a6e22e">names</span>(result) <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;observable&#34;</span>, <span style="color:#e6db74">&#34;coefficient&#34;</span>,<span style="color:#e6db74">&#34;beta_M&#34;</span>, <span style="color:#e6db74">&#34;sig_M&#34;</span>,<span style="color:#e6db74">&#34;sigma_AR&#34;</span>, <span style="color:#e6db74">&#34;V0&#34;</span>,<span style="color:#e6db74">&#34;order&#34;</span>,<span style="color:#e6db74">&#34;npara&#34;</span>)
   
-  return(result)
-}</code></pre>
-<pre class="r"><code>BVAR &lt;- function(m){
-  #-------------------------------------------------------------------
-  # Estimation of Bayesian Vector Auto-Regression
-  #   m - dataset
-  #-------------------------------------------------------------------
+  <span style="color:#a6e22e">return</span>(result)
+}
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">BVAR <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(m){
+  <span style="color:#75715e">#-------------------------------------------------------------------</span>
+  <span style="color:#75715e"># Estimation of Bayesian Vector Auto-Regression</span>
+  <span style="color:#75715e">#   m - dataset</span>
+  <span style="color:#75715e">#-------------------------------------------------------------------</span>
   
-  # 1. Process data
-  observable &lt;- m$observable
-  coefficient &lt;- m$coefficient
-  beta_M &lt;- m$beta_M
-  sig_M &lt;- m$sig_M
-  sigma_AR &lt;- m$sigma_AR
-  V0 &lt;- m$V0
-  order &lt;- m$order
-  npara &lt;- m$npara
+  <span style="color:#75715e"># 1. Process data</span>
+  observable <span style="color:#f92672">&lt;-</span> m<span style="color:#f92672">$</span>observable
+  coefficient <span style="color:#f92672">&lt;-</span> m<span style="color:#f92672">$</span>coefficient
+  beta_M <span style="color:#f92672">&lt;-</span> m<span style="color:#f92672">$</span>beta_M
+  sig_M <span style="color:#f92672">&lt;-</span> m<span style="color:#f92672">$</span>sig_M
+  sigma_AR <span style="color:#f92672">&lt;-</span> m<span style="color:#f92672">$</span>sigma_AR
+  V0 <span style="color:#f92672">&lt;-</span> m<span style="color:#f92672">$</span>V0
+  order <span style="color:#f92672">&lt;-</span> m<span style="color:#f92672">$</span>order
+  npara <span style="color:#f92672">&lt;-</span> m<span style="color:#f92672">$</span>npara
   
-  # 2. Run Kalmanfilter
-  results &lt;- kalmanfiter(observable,npara,diag(1,nrow = npara,ncol = npara),
-                         coefficient,0,NA,V0,0,NA,sigma_AR,beta_M,sig_M)
-  return(results)
-}</code></pre>
-<pre class="r"><code>m &lt;- MPrior(Canada,3,abs(rnorm(5)))
-results &lt;- BVAR(m)
+  <span style="color:#75715e"># 2. Run Kalmanfilter</span>
+  results <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">kalmanfiter</span>(observable,npara,<span style="color:#a6e22e">diag</span>(<span style="color:#ae81ff">1</span>,nrow <span style="color:#f92672">=</span> npara,ncol <span style="color:#f92672">=</span> npara),
+                         coefficient,<span style="color:#ae81ff">0</span>,<span style="color:#66d9ef">NA</span>,V0,<span style="color:#ae81ff">0</span>,<span style="color:#66d9ef">NA</span>,sigma_AR,beta_M,sig_M)
+  <span style="color:#a6e22e">return</span>(results)
+}
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">m <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">MPrior</span>(Canada,<span style="color:#ae81ff">3</span>,<span style="color:#a6e22e">abs</span>(<span style="color:#a6e22e">rnorm</span>(<span style="color:#ae81ff">5</span>)))
+results <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">BVAR</span>(m)
 
-BVAR_Prediction &lt;- function(results,horizon){
+BVAR_Prediction <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(results,horizon){
   
-  state_pred &lt;- results$`state prediction`
-  state_fil &lt;- results$`state filtered`
-  obs_pred &lt;- results$`observable prediction`
-  A &lt;- results$`parameter of state eq`
+  state_pred <span style="color:#f92672">&lt;-</span> results<span style="color:#f92672">$</span>`state prediction`
+  state_fil <span style="color:#f92672">&lt;-</span> results<span style="color:#f92672">$</span>`state filtered`
+  obs_pred <span style="color:#f92672">&lt;-</span> results<span style="color:#f92672">$</span>`observable prediction`
+  A <span style="color:#f92672">&lt;-</span> results<span style="color:#f92672">$</span>`parameter of state eq`
     
-  nparaall &lt;- dim(state_pred)[1]
-  num &lt;- dim(obs_pred)[1]
-  npara &lt;- order*num+1
-  order &lt;- (nparaall-num)/(num^2)
-  samplesize &lt;- dim(state_pred)[3]
+  nparaall <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">dim</span>(state_pred)[1]
+  num <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">dim</span>(obs_pred)[1]
+  npara <span style="color:#f92672">&lt;-</span> order<span style="color:#f92672">*</span>num<span style="color:#ae81ff">+1</span>
+  order <span style="color:#f92672">&lt;-</span> (nparaall<span style="color:#f92672">-</span>num)<span style="color:#f92672">/</span>(num^2)
+  samplesize <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">dim</span>(state_pred)[3]
   
-  y &lt;- matrix(0,horizon,num)
-  B &lt;- matrix(0,horizon,nparaall)
-  x &lt;- results$`parameter of observable eq`[1,1:npara,samplesize]
+  y <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#ae81ff">0</span>,horizon,num)
+  B <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#ae81ff">0</span>,horizon,nparaall)
+  x <span style="color:#f92672">&lt;-</span> results<span style="color:#f92672">$</span>`parameter of observable eq`[1,<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>npara,samplesize]
   
-  B[1,] &lt;- state_fil[,1,samplesize]
+  B[1,] <span style="color:#f92672">&lt;-</span> state_fil[,<span style="color:#ae81ff">1</span>,samplesize]
   
-  for (i in 1:(horizon-1)) {
-    B[i+1,] &lt;- A%*%B[i,]
-    y[i+1,] &lt;- B[i+1,]%*%(diag(1,num)%x%x)
-    x &lt;- c(1,y[i+1,],x[-c(1,seq(from=(npara-order),to=npara))])
+  <span style="color:#a6e22e">for </span>(i in <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>(horizon<span style="color:#ae81ff">-1</span>)) {
+    B[i<span style="color:#ae81ff">+1</span>,] <span style="color:#f92672">&lt;-</span> A<span style="color:#f92672">%*%</span>B[i,]
+    y[i<span style="color:#ae81ff">+1</span>,] <span style="color:#f92672">&lt;-</span> B[i<span style="color:#ae81ff">+1</span>,]<span style="color:#f92672">%*%</span>(<span style="color:#a6e22e">diag</span>(<span style="color:#ae81ff">1</span>,num)<span style="color:#f92672">%x%</span>x)
+    x <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1</span>,y[i<span style="color:#ae81ff">+1</span>,],x[<span style="color:#f92672">-</span><span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1</span>,<span style="color:#a6e22e">seq</span>(from<span style="color:#f92672">=</span>(npara<span style="color:#f92672">-</span>order),to<span style="color:#f92672">=</span>npara))])
   }
   
-  result &lt;- list(B,y)
-  names(result) &lt;- c(&quot;B&quot;,&quot;y&quot;)
+  result <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>(B,y)
+  <span style="color:#a6e22e">names</span>(result) <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;B&#34;</span>,<span style="color:#e6db74">&#34;y&#34;</span>)
   
-  return(result)
+  <span style="color:#a6e22e">return</span>(result)
   
 }
 
-pre &lt;- BVAR_Prediction(results,20)
+pre <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">BVAR_Prediction</span>(results,<span style="color:#ae81ff">20</span>)
 
-BVAR_OPT &lt;- function(x){
-  int_pi &lt;- rnorm(5)
+BVAR_OPT <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(x){
+  int_pi <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rnorm</span>(<span style="color:#ae81ff">5</span>)
   
-}</code></pre>
-</div>
-<div class="footnotes">
-<hr />
+}
+</code></pre></div><section class="footnotes" role="doc-endnotes">
+<hr>
 <ol>
-<li id="fn1"><p>Sims, Christopher A, 1980. “Macroeconomics and Reality,” Econometrica, Econometric Society, vol. 48(1), pages 1-48, January.<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn:1" role="doc-endnote">
+<p>Sims, Christopher A, 1980. &ldquo;Macroeconomics and Reality,&rdquo; Econometrica, Econometric Society, vol. 48(1), pages 1-48, January. <a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
 </ol>
-</div>
+</section>
 
-    </div>
+          </div>
 
-    
+          
 
 
 
@@ -2009,8 +1938,12 @@ BVAR_OPT &lt;- function(x){
 
 
 
+        </div>
+      </article>
+    </main>
+
   </div>
-</article>
+</div>
 
       
 
@@ -2124,11 +2057,9 @@ BVAR_OPT &lt;- function(x){
       
     
     
-      
     
     
-    
-    <script src="../../js/wowchemy.min.2a3f95be2bc4762ba1847fb5d7a28317.js"></script>
+    <script src="../../js/wowchemy.min.4c2bca31150ce93c5a5e43b8a50f22fd.js"></script>
 
     
 
@@ -2138,6 +2069,16 @@ BVAR_OPT &lt;- function(x){
   <div class="container">
     <footer class="site-footer">
   
+
+  
+   
+  <script>
+  $(document).ready(function () {
+    window.initializeCodeFolding("show" === "show");
+  });
+  </script>
+  <script src="../../js/codefolding.js"></script>
+
 
   <p class="powered-by">
     

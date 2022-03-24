@@ -272,16 +272,15 @@ dataset1.xts <- xts(dataset1,order.by = as.Date(rownames(dataset1)))
 
 [主成分分析(Principal Component Analysis, PCA)～データセットの見える化・可視化といったらまずはこれ！～](https://datachemeng.com/principalcomponentanalysis/)
 
-では主成分分析を実行してみます。`R`では`princomp`関数を使用することで非常に簡単に主成分分析を行うことができます。
+では主成分分析を実行してみます。`R`では`prcomp`関数を使用することで非常に簡単に主成分分析を行うことができます。
 
 ```{r, message=FALSE, warning=FALSE}
 # 主成分分析を実行
-factor.pca <- princomp(~.,cor = TRUE,data = dataset1) # cor = TRUEでデータの基準化を自動で行ってくれる。
+factor.pca <- prcomp(x=dataset1, cor = TRUE) # cor = TRUEでデータの基準化を自動で行ってくれる。
 summary(factor.pca)
 screeplot(factor.pca)
-pc <- predict(factor.pca,dataset1)[,1:3] # 主成分を計算
-pc.xts <- xts(pc,order.by = as.Date(rownames(dataset1)))
+pc.xts <- xts(factor.pca$x[,1:3], order.by = as.Date(rownames(dataset1)))
 plot.zoo(pc.xts,col=c("red","blue","green","purple","yellow"),plot.type = "single") # 主成分を時系列プロット
 ```
 
-第3主成分まででデータの約80％が説明できる結果を得たので、第3主成分までのプロットをお見せします。第1主成分（赤）はリーマンショックや東日本大震災、消費税増税のあたりで急上昇しています。ゆえに経済全体のリスクセンチメントを表しているのではないかと思っています。第2主成分（青）と第3主成分（緑）はリーマンショックのあたりで大きく落ち込んでいることは共通していますが2015年～現在の動きが大きく異なっています。また、第2主成分（青）はサンプル期間を通して過去トレンドを持つことから日本経済の潜在能力のようなものを表しているのではないでしょうか（そうするとリーマンショックまで上昇傾向にあることが疑問なのですが）。第3主成分（緑）はいまだ解読不能です（物価＆為替動向を表しているのではないかと思っています）。とりあえず今日はこれまで。次回はGianonne et. al.(2008)の日本版の再現を行いたいと思います。
+第3主成分まででデータの約80％が説明できる結果を得たので、第3主成分までのプロットをお見せします。第1主成分（赤）はトレンドを表しており、これから景気の趨勢を読み取れると思います。第2主成分（青）は景気循環項でしょうか。周期的な動きが読み取れます。第3主成分（緑）は2014年に大きく上昇していますが、それ以外は特に目立った動きはありません。謎ですね。とりあえず今日はこれまで。時系列データをトレンド項、循環項、誤差項に分解したような結果でした。次回はGianonne et. al.(2008)の日本版の再現を行いたいと思います。

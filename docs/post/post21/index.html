@@ -88,8 +88,8 @@
     
       
       
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/xcode.min.css" crossorigin="anonymous" title="hl-light">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/xcode.min.css" crossorigin="anonymous" title="hl-dark" disabled>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/solarized-dark.min.css" crossorigin="anonymous" title="hl-light">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/solarized-dark.min.css" crossorigin="anonymous" title="hl-dark" disabled>
       
     
 
@@ -672,9 +672,34 @@
 
 
 
-  <article class="article">
+  <div class="container-fluid docs">
+  <div class="row flex-xl-nowrap">
 
-  
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <ul class="nav toc-top">
+        <li><a href="#" id="back_to_top" class="docs-toc-title">On this page</a></li>
+      </ul>
+      <nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#0-やりたいこと">0. やりたいこと</a></li>
+        <li><a href="#1-データの読み込み">1. データの読み込み</a></li>
+        <li><a href="#2-前処理">2. 前処理</a></li>
+        <li><a href="#3-jump統計量の計算">3. Jump統計量の計算</a></li>
+        <li><a href="#4-ggplot2を用いた可視化">4. ggplot2を用いた可視化</a></li>
+        <li><a href="#5-まとめ">5. まとめ</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+      
+    </div>
+
+    <main class="col-12 col-md-0 col-xl-10 py-md-3 pl-md-5 docs-content" role="main">
+      <article class="article">
+
+        
 
 
 
@@ -707,6 +732,22 @@
   
 
 
+<div id="code-folding-buttons" class="dropdown btn-group pull-right">
+  <a class="btn btn-light btn-sm dropdown-toggle" href="#" role="button" id="allCodeToggleButton"
+     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    Code
+  </a>
+  <div class="dropdown-menu" aria-labelledby="allCodeToggleButton">
+    <a id="rmd-show-all-code" class="dropdown-item small" href="#">Show all</a>
+    <a id="rmd-hide-all-code" class="dropdown-item small" href="#">Hide all</a>
+  </div>
+</div>
+
+
+
+  
+
+
 <div class="article-metadata">
 
   
@@ -727,7 +768,7 @@
   
   <span class="middot-divider"></span>
   <span class="article-reading-time">
-    13 分で読める
+    12 分で読める
   </span>
   
 
@@ -774,372 +815,362 @@
 
 
 
-  <div class="article-container">
+        <div class="article-container">
 
-    <div class="article-style">
-      
-<script src="../../post/post21/index_files/header-attrs/header-attrs.js"></script>
-
-
-<div id="やりたいこと" class="section level2">
-<h2>0. やりたいこと</h2>
-<p>今回お見せするのは前述の通り、為替のTickデータを使った前処理(と解析)になります。主眼を<code>Rcpp</code>を用いた効率化に置いていますので詳しくは踏み入りませんが、やりたいことをざっくりと先に示しておきます。<br />
+          <div class="article-style">
+            <h2 id="0-やりたいこと">0. やりたいこと</h2>
+<p>今回お見せするのは前述の通り、為替のTickデータを使った前処理(と解析)になります。主眼を<code>Rcpp</code>を用いた効率化に置いていますので詳しくは踏み入りませんが、やりたいことをざっくりと先に示しておきます。<br>
 やりたいのは、JPY/USDレートの5分刻みリターンから<em>Jump</em>を検知することです。ここでのJumpとはそれまでと比べて為替レートがガクッと上昇(下落)した点です。日中為替レートは小刻みに動きますが、なにかイベントがあると大きく上昇(下落)します。どんなイベントがJumpを引き起こすのかは非常に興味深い点です。これを検証するにはまずJumpを検知する必要があるのです。 参考とするのは以下の論文です。</p>
-<p><a href="https://academic.oup.com/rfs/article-abstract/21/6/2535/1574138?redirectedFrom=fulltext">Suzanne S. Lee &amp; Per A. Mykland, 2008. “Jumps in Financial Markets: A New Nonparametric Test and Jump Dynamics,” Review of Financial Studies, Society for Financial Studies, vol. 21(6), pages 2535-2563, November.</a></p>
-<p>Citationが204もある非常に評価されている論文です。推定方法を掻い摘んで説明します。まず、連続複利リターンを<span class="math inline">\(d\log S(t)\)</span> for <span class="math inline">\(t&gt;0\)</span>とします。ここで、<span class="math inline">\(S(t)\)</span>は<span class="math inline">\(t\)</span>時点での資産価格です。市場にJumpがない場合、<span class="math inline">\(S(t)\)</span>は以下の確率過程に従うと仮定します。
-<span class="math display">\[
+<p><a href="https://academic.oup.com/rfs/article-abstract/21/6/2535/1574138?redirectedFrom=fulltext" target="_blank" rel="noopener">Suzanne S. Lee &amp; Per A. Mykland, 2008. &ldquo;Jumps in Financial Markets: A New Nonparametric Test and Jump Dynamics,&rdquo; Review of Financial Studies, Society for Financial Studies, vol. 21(6), pages 2535-2563, November.</a></p>
+<p>Citationが204もある非常に評価されている論文です。推定方法を掻い摘んで説明します。まず、連続複利リターンを$d\log S(t)$ for $t&gt;0$とします。ここで、$S(t)$は$t$時点での資産価格です。市場にJumpがない場合、$S(t)$は以下の確率過程に従うと仮定します。 
+$$
 d\log S(t) = \mu(t)dt + \sigma(t)dW(t) \tag{1}
-\]</span>
-ここで、<span class="math inline">\(W(t)\)</span>は標準ブラウン運動、<span class="math inline">\(\mu(t)\)</span>はドリフト項、<span class="math inline">\(\sigma(t)\)</span>はスポットボラティリティです。また、Jumpがあるとき、<span class="math inline">\(S(t)\)</span>は
-<span class="math display">\[
+$$ 
+ここで、$W(t)$は標準ブラウン運動、$\mu(t)$はドリフト項、$\sigma(t)$はスポットボラティリティです。また、Jumpがあるとき、$S(t)$は 
+$$
 d\log S(t) = \mu(t)dt + \sigma(t)dW(t) + Y(t)dJ(t) \tag{2}
-\]</span>
-に従うと仮定します。ここで、<span class="math inline">\(J(t)\)</span>は<span class="math inline">\(W(t)\)</span>とは独立したカウント過程です。<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a><span class="math inline">\(Y(t)\)</span>はジャンプのサイズを表現しており、予測可能な過程であるとします。</p>
-<p>次に、<span class="math inline">\(S(t)\)</span>の対数リターンを考えます。それはつまり<span class="math inline">\(\log S(t_i)/S(t_{i-1})\)</span>ですが、これは正規分布<span class="math inline">\(N(0,\sigma(t_i))\)</span>に従います。<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>ここで、<span class="math inline">\(t_{i-1}\)</span>から<span class="math inline">\(t_{i}\)</span>にJumpがあった際の<span class="math inline">\(t_i\)</span>時点の統計量<span class="math inline">\(\mathcal{L(i)}\)</span>を以下で定義します。</p>
-<p><span class="math display">\[
-    \mathcal{L(i)} \equiv \frac{|\log S(t_i)/S(t_{i-1})|}{\hat{\sigma}_{t_i}} \tag{3}
-\]</span>
-上記は対数リターンの絶対値を単純に標準化したものですが、標準偏差の推定量には以下で定義される”Realized Bipower Variation”を使用しています。
-<span class="math display">\[
-    \hat{\sigma}_{t_i} = \frac{1}{K-2}\sum_{j=i-K+2}^{i-2}|\log S(t_j)/\log S(t_{j-1})||\log S(t_{j-1})/\log S(t_{j-2})| \tag{4}
-\]</span>
-<span class="math inline">\(K\)</span>はWindowに含まれるサンプルサイズの数です。仮に5min刻みリターンを用い、2020/9/10 10:00にJumpが発生した場合、<span class="math inline">\(K=270\)</span>としている場合は前日2020/9/9 11:30から2020/9/11 09:55までのサンプルを用いて計算することになります。やっていることは、リターンの絶対値をかけたものを足し合わせるということですが、これでJumpが生じた次の瞬間(つまり<span class="math inline">\(t_{i+1}\)</span>とか）の推定値がJumpに影響されにくいようです。ちなみに<span class="math inline">\(K=270\)</span>は5min刻みリターンの場合の推奨値と別の文献で紹介されています。</p>
-<p>こうして計算されたJump統計量<span class="math inline">\(\mathcal{L(i)}\)</span>をどのように統計的検定に用いてJumpを検出するかに話を移しましょう。これは確率変数である<span class="math inline">\(\mathcal{L(i)}\)</span>の最大値(こちらも確率変数)を考え、その分布から大きく逸脱した値を取った場合(95%点とか)、そのリターンをJumpとします。
-期間<span class="math inline">\([t_{i-1},t_{i}]\)</span>にJumpがないとした場合、この期間の長さ<span class="math inline">\(\Delta=t_{i}-t_{i-1}\)</span>を<span class="math inline">\(0\)</span>に近づけると、つまり<span class="math inline">\(\Delta\rightarrow0\)</span>とすると、標準正規変数の絶対値の最大値は、ガンベル分布に収束します。皆さん大好き極値統計ですね。よって、Jumpは以下の条件が満たされた際に帰無仮説が棄却され、検出することができます。
-<span class="math display">\[
+$$ 
+に従うと仮定します。ここで、$J(t)$は$W(t)$とは独立したカウント過程です。<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup>$Y(t)$はジャンプのサイズを表現しており、予測可能な過程であるとします。</p>
+<p>次に、$S(t)$の対数リターンを考えます。それはつまり$\log S(t_i)/S(t_{i-1})$ですが、これは正規分布$N(0,\sigma(t_i))$に従います。<sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup>ここで、$t_{i-1}$から$t_{i}$にJumpがあった際の$t_i$時点の統計量$\mathcal{L(i)}$を以下で定義します。</p>
+<p>$$
+\mathcal{L(i)} \equiv \frac{|\log S(t_i)/S(t_{i-1})|}{\hat{\sigma}_{t_i}} \tag{3}
+$$ 
+上記は対数リターンの絶対値を単純に標準化したものですが、標準偏差の推定量には以下で定義される&quot;Realized Bipower Variation&quot;を使用しています。
+$$
+\hat{\sigma}_{t_i} = \frac{1}{K-2}\sum_{j=i-K+2}^{i-2}|\log S(t_j)/\log S(t_{j-1})||\log S(t_{j-1})/\log S(t_{j-2})| \tag{4}
+$$ 
+$K$はWindowに含まれるサンプルサイズの数です。仮に5min刻みリターンを用い、2020/9/10 10:00にJumpが発生した場合、$K=270$としている場合は前日2020/9/9 11:30から2020/9/11 09:55までのサンプルを用いて計算することになります。やっていることは、リターンの絶対値をかけたものを足し合わせるということですが、これでJumpが生じた次の瞬間(つまり$t_{i+1}$とか）の推定値がJumpに影響されにくいようです。ちなみに$K=270$は5min刻みリターンの場合の推奨値と別の文献で紹介されています。</p>
+<p>こうして計算されたJump統計量$\mathcal{L(i)}$をどのように統計的検定に用いてJumpを検出するかに話を移しましょう。これは確率変数である$\mathcal{L(i)}$の最大値(こちらも確率変数)を考え、その分布から大きく逸脱した値を取った場合(95%点とか)、そのリターンをJumpとします。
+期間$[t_{i-1},t_{i}]$にJumpがないとした場合、この期間の長さ$\Delta=t_{i}-t_{i-1}$を$0$に近づけると、つまり$\Delta\rightarrow0$とすると、標準正規変数の絶対値の最大値は、ガンベル分布に収束します。皆さん大好き極値統計ですね。よって、Jumpは以下の条件が満たされた際に帰無仮説が棄却され、検出することができます。 
+$$
 \mathcal{L(i)} &gt; G^{-1}(1-\alpha)S_{n} + C_{n} \tag{5}
-\]</span>
-ここで、<span class="math inline">\(G^{-1}(1-\alpha)\)</span>は標準ガンベル分布の<span class="math inline">\((1-\alpha)\)</span>分位関数です。<span class="math inline">\(\alpha=10%\)</span>だと2.25になります。また、
-<span class="math display">\[
-S_{n} = \frac{1}{c(2\log n)^{0.5}},~ \\
+$$ 
+ここで、$G^{-1}(1-\alpha)$は標準ガンベル分布の$(1-\alpha)$分位関数です。$\alpha=10%$だと2.25になります。また、 
+$$
+S_{n} = \frac{1}{c(2\log n)^{0.5}},~ \<br>
 C_{n} = \frac{(2\log n)^{0.5}}{c}-\frac{\log \pi+\log(\log n)}{2c(2\log n)^{0.5}}
-\]</span>
-です(導出はしませんが、1式と2式を使って証明できます)。ここで、<span class="math inline">\(c=(2/\pi)^{0.5}\)</span>で、<span class="math inline">\(n\)</span>は推定に使用する総サンプルサイズです。 最終的に、<span class="math inline">\(Jump_{t_i}\)</span>は
-<span class="math display">\[
+$$ 
+です(導出はしませんが、1式と2式を使って証明できます)。ここで、$c=(2/\pi)^{0.5}$で、$n$は推定に使用する総サンプルサイズです。 最終的に、$Jump_{t_i}$は
+$$
 Jump_{t_i} = \log\frac{S(t_i)}{S(t_{i-1})}×I(\mathcal{L(i)} - G^{-1}(1-\alpha)S_{n} + C_{n})\tag{6}
-\]</span>
-で求められることになります。ここで、<span class="math inline">\(I(・)\)</span>は中身が0より大きいと1、それ以外は0を返すIndicator関数です。</p>
-</div>
-<div id="データの読み込み" class="section level2">
-<h2>1. データの読み込み</h2>
+$$ 
+で求められることになります。ここで、$I(・)$は中身が0より大きいと1、それ以外は0を返すIndicator関数です。</p>
+<h2 id="1-データの読み込み">1. データの読み込み</h2>
 <p>では、推定方法がわかったのでまずTickデータの読み込みをしましょう。データは<code>QuantDataManager</code>からcsvを取得し、それを作業ディレクトリに保存しています。</p>
-<pre class="r"><code>library(magrittr)
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">library</span>(magrittr)
 
-# Tick dataの読み込み
-strPath &lt;- r&quot;(C:\Users\hogehoge\JPYUSD_Tick_2011.csv)&quot;
-JPYUSD &lt;- readr::read_csv(strPath)</code></pre>
-<p>関係ないんですが、最近Rを4.0.2へ上げました。4.0以上では<code>Python</code>でできた文字列のEscapeができるとうことで今までのストレスが解消されてかなりうれしいです。
+<span style="color:#75715e"># Tick dataの読み込み</span>
+strPath <span style="color:#f92672">&lt;-</span> r<span style="color:#e6db74">&#34;(C:\Users\hogehoge\JPYUSD_Tick_2011.csv)&#34;</span>
+JPYUSD <span style="color:#f92672">&lt;-</span> readr<span style="color:#f92672">::</span><span style="color:#a6e22e">read_csv</span>(strPath)
+</code></pre></div><p>関係ないんですが、最近Rを4.0.2へ上げました。4.0以上では<code>Python</code>でできた文字列のEscapeができるとうことで今までのストレスが解消されてかなりうれしいです。
 データは以下のような感じで、日付の他にBid値、Ask値と取引量が格納されています。なお、ここでは2011年のTickを使用しています。東日本大震災の時のドル円を対象とするためです。</p>
-<pre class="r"><code>summary(JPYUSD)</code></pre>
-<pre><code>##     DateTime                        Bid             Ask            Volume     
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">summary</span>(JPYUSD)
+</code></pre></div><pre><code>##     DateTime                        Bid             Ask            Volume     
 ##  Min.   :2011-01-03 07:00:00   Min.   :75.57   Min.   :75.58   Min.   : 1.00  
 ##  1st Qu.:2011-03-30 15:09:23   1st Qu.:77.43   1st Qu.:77.44   1st Qu.: 2.00  
 ##  Median :2011-06-15 14:00:09   Median :80.40   Median :80.42   Median : 2.00  
 ##  Mean   :2011-06-22 05:43:11   Mean   :79.91   Mean   :79.92   Mean   : 2.55  
 ##  3rd Qu.:2011-09-09 13:54:51   3rd Qu.:81.93   3rd Qu.:81.94   3rd Qu.: 3.00  
-##  Max.   :2011-12-30 06:59:59   Max.   :85.52   Max.   :85.54   Max.   :90.00</code></pre>
-<p>ちなみに、<code>DateTime</code>はUTC基準で日本時間だと2011/1/3 07:00:00から2011-12-30 06:59::59(米国時間2011-12-30 16:59:59)までを含んでいます。サンプルサイズは約1200万件です。</p>
-<pre class="r"><code>NROW(JPYUSD)</code></pre>
-<pre><code>## [1] 11946621</code></pre>
-</div>
-<div id="前処理" class="section level2">
-<h2>2. 前処理</h2>
+##  Max.   :2011-12-30 06:59:59   Max.   :85.52   Max.   :85.54   Max.   :90.00
+</code></pre><p>ちなみに、<code>DateTime</code>はUTC基準で日本時間だと2011/1/3 07:00:00から2011-12-30 06:59::59(米国時間2011-12-30 16:59:59)までを含んでいます。サンプルサイズは約1200万件です。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">NROW</span>(JPYUSD)
+</code></pre></div><pre><code>## [1] 11946621
+</code></pre><h2 id="2-前処理">2. 前処理</h2>
 <p>では次にBidとAskから仲値を計算し、後でリターンを算出するために対数を取っておきます。</p>
-<pre class="r"><code># AskとBidの仲値を計算し、対数化(対数リターン算出用)
-JPYUSD &lt;- JPYUSD %&gt;% dplyr::mutate(Mid = (Ask+Bid)/2) %&gt;% 
-                     dplyr::mutate(logMid = log(Mid))</code></pre>
-<p>現状不規則に並んでいる取引データを5min刻みのリターンに整形します。やり方は、
-1. 1年間を5min毎に刻んだ<code>POSIXct</code>ベクトルを作る。
-2. 1.を引数として渡すと、その5minのWindowのうち、最初と最後のサンプルから対数リターンを順々に計算する関数を作成する。
-3. 実行。
-という計画です。まず、1.のベクトルを作成します。</p>
-<pre class="r"><code># 5min刻みでのリターンを算出するためのPOSIXベクトルを作成(288×日数)
-start &lt;- as.POSIXct(&quot;2011-01-02 22:00:00&quot;,tz=&quot;UTC&quot;)
-end &lt;- as.POSIXct(&quot;2011-12-31 21:55:00&quot;,tz=&quot;UTC&quot;)
-from &lt;- seq(from=start,to=end,by=5*60)</code></pre>
-<p>では、2.に移ろうということなんですが、データが1200万件もあると<code>R</code>で<code>purrr::map</code>とか<code>apply</code>属を使用したとしても、関数呼び出しに時間がかかって結構非効率だったりします。。。<code>sapply</code>でやってみましたがなかなか処理が完了せず、強制終了しました。こういうときには、<code>Rccp</code>が便利です。<code>R</code>はグラフや統計処理のための非常に便利な関数が多数ありますが、ユーザーで定義した関数の呼び出しを含む、大量の繰り返し処理を苦手とします(スクリプト言語なのでコンパイル言語よりはという意味です)。なので、繰り返し処理の部分だけ、<code>C++</code>で書いてしまって、それを<code>Rcpp</code>をつかって<code>R</code>の関数としてコンパイルし、実行。結果の集計や可視化、執筆は<code>R</code>で行うというフローが非常に効率的です。
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># AskとBidの仲値を計算し、対数化(対数リターン算出用)</span>
+JPYUSD <span style="color:#f92672">&lt;-</span> JPYUSD <span style="color:#f92672">%&gt;%</span> dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">mutate</span>(Mid <span style="color:#f92672">=</span> (Ask<span style="color:#f92672">+</span>Bid)<span style="color:#f92672">/</span><span style="color:#ae81ff">2</span>) <span style="color:#f92672">%&gt;%</span> 
+                     dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">mutate</span>(logMid <span style="color:#f92672">=</span> <span style="color:#a6e22e">log</span>(Mid))
+</code></pre></div><p>現状不規則に並んでいる取引データを5min刻みのリターンに整形します。やり方は、</p>
+<ol>
+<li>1年間を5min毎に刻んだ<code>POSIXct</code>ベクトルを作る。</li>
+<li>1.を引数として渡すと、その5minのWindowのうち、最初と最後のサンプルから対数リターンを順々に計算する関数を作成する。</li>
+<li>実行。
+という計画です。まず、1.のベクトルを作成します。</li>
+</ol>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># 5min刻みでのリターンを算出するためのPOSIXベクトルを作成(288×日数)</span>
+start <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.POSIXct</span>(<span style="color:#e6db74">&#34;2011-01-02 22:00:00&#34;</span>,tz<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;UTC&#34;</span>)
+end <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.POSIXct</span>(<span style="color:#e6db74">&#34;2011-12-31 21:55:00&#34;</span>,tz<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;UTC&#34;</span>)
+from <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">seq</span>(from<span style="color:#f92672">=</span>start,to<span style="color:#f92672">=</span>end,by<span style="color:#f92672">=</span><span style="color:#ae81ff">5</span><span style="color:#f92672">*</span><span style="color:#ae81ff">60</span>)
+</code></pre></div><p>では、2.に移ろうということなんですが、データが1200万件もあると<code>R</code>で<code>purrr::map</code>とか<code>apply</code>属を使用したとしても、関数呼び出しに時間がかかって結構非効率だったりします。。。<code>sapply</code>でやってみましたがなかなか処理が完了せず、強制終了しました。こういうときには、<code>Rccp</code>が便利です。<code>R</code>はグラフや統計処理のための非常に便利な関数が多数ありますが、ユーザーで定義した関数の呼び出しを含む、大量の繰り返し処理を苦手とします(スクリプト言語なのでコンパイル言語よりはという意味です)。なので、繰り返し処理の部分だけ、<code>C++</code>で書いてしまって、それを<code>Rcpp</code>をつかって<code>R</code>の関数としてコンパイルし、実行。結果の集計や可視化、執筆は<code>R</code>で行うというフローが非常に効率的です。
 また、<code>Rccp</code>は<code>R</code>に似た違和感の少ない記述方法で<code>C++</code>を記述するのを助けてくれます。詳しいことは以下を見れば問題ないと思います。かなりまとまっていて控えめに言って神です。</p>
-<p><a href="https://teuder.github.io/rcpp4everyone_ja/">みんなのRcpp</a></p>
+<p><a href="https://teuder.github.io/rcpp4everyone_ja/" target="_blank" rel="noopener">みんなのRcpp</a></p>
 <p>では、2.にあたるコードを書いていきます。コーディングに当たってはネット上の記事を参考にしました。<code>C++</code>は<code>R</code>よりも歴史があるし、使用者も多いので知りたい情報はすぐ見つけられます。</p>
-<pre class="cpp"><code>#include &lt;Rcpp.h&gt;
-#include &lt;algorithm&gt;
-
-using namespace Rcpp;
-//[[Rcpp::plugins(cpp11)]]
-
-// [[Rcpp::export]]
-DataFrame Rolling_r_cpp(
-    DataFrame input,               //（計測時刻time, 計測値data）のデータフレーム
-    newDatetimeVector from,        //計算するタイミングの始点ベクトル
-    double time_window = 5*60)  //計算するwindow幅（秒）
-{ 
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-cpp" data-lang="cpp"><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;Rcpp.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;algorithm&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span>
+<span style="color:#66d9ef">using</span> <span style="color:#66d9ef">namespace</span> Rcpp;
+<span style="color:#75715e">//[[Rcpp::plugins(cpp11)]]
+</span><span style="color:#75715e"></span>
+<span style="color:#75715e">// [[Rcpp::export]]
+</span><span style="color:#75715e"></span>DataFrame <span style="color:#a6e22e">Rolling_r_cpp</span>(
+    DataFrame input,               <span style="color:#75715e">//（計測時刻time, 計測値data）のデータフレーム
+</span><span style="color:#75715e"></span>    newDatetimeVector from,        <span style="color:#75715e">//計算するタイミングの始点ベクトル
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">double</span> time_window <span style="color:#f92672">=</span> <span style="color:#ae81ff">5</span><span style="color:#f92672">*</span><span style="color:#ae81ff">60</span>)  <span style="color:#75715e">//計算するwindow幅（秒）
+</span><span style="color:#75715e"></span>{ 
   
-  // 計測時刻と計測値をベクトルとして取り出す
-  newDatetimeVector time = input[&quot;DateTime&quot;]; // 今回は time は昇順にソートされているのが前提です。
-  NumericVector     data = input[&quot;logMid&quot;];
+  <span style="color:#75715e">// 計測時刻と計測値をベクトルとして取り出す
+</span><span style="color:#75715e"></span>  newDatetimeVector time <span style="color:#f92672">=</span> input[<span style="color:#e6db74">&#34;DateTime&#34;</span>]; <span style="color:#75715e">// 今回は time は昇順にソートされているのが前提です。
+</span><span style="color:#75715e"></span>  NumericVector     data <span style="color:#f92672">=</span> input[<span style="color:#e6db74">&#34;logMid&#34;</span>];
   
-  // 計算するタイミングの終点ベクトル
-  newDatetimeVector to = from + time_window;
+  <span style="color:#75715e">// 計算するタイミングの終点ベクトル
+</span><span style="color:#75715e"></span>  newDatetimeVector to <span style="color:#f92672">=</span> from <span style="color:#f92672">+</span> time_window;
   
-  // 計算する数
-  R_xlen_t N = from.length();
+  <span style="color:#75715e">// 計算する数
+</span><span style="color:#75715e"></span>  R_xlen_t N <span style="color:#f92672">=</span> from.length();
   
-  // 格納するベクトル
-  NumericVector value(N);
+  <span style="color:#75715e">// 格納するベクトル
+</span><span style="color:#75715e"></span>  NumericVector value(N);
   
-  // ベクトル要素の位置をあらわすオブジェクト
-  newDatetimeVector::iterator begin = time.begin();
-  newDatetimeVector::iterator end   = time.end();
-  newDatetimeVector::iterator p1    = begin;
-  newDatetimeVector::iterator p2    = begin;
+  <span style="color:#75715e">// ベクトル要素の位置をあらわすオブジェクト
+</span><span style="color:#75715e"></span>  newDatetimeVector<span style="color:#f92672">::</span>iterator begin <span style="color:#f92672">=</span> time.begin();
+  newDatetimeVector<span style="color:#f92672">::</span>iterator end   <span style="color:#f92672">=</span> time.end();
+  newDatetimeVector<span style="color:#f92672">::</span>iterator p1    <span style="color:#f92672">=</span> begin;
+  newDatetimeVector<span style="color:#f92672">::</span>iterator p2    <span style="color:#f92672">=</span> begin;
   
-  // window i についてループ
-  for(R_xlen_t i = 0; i &lt; N; ++i){
-    // Rcout &lt;&lt; &quot;i=&quot; &lt;&lt; i &lt;&lt; &quot;\n&quot;;
+  <span style="color:#75715e">// window i についてループ
+</span><span style="color:#75715e"></span>  <span style="color:#66d9ef">for</span>(R_xlen_t i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> N; <span style="color:#f92672">++</span>i){
+    <span style="color:#75715e">// Rcout &lt;&lt; &#34;i=&#34; &lt;&lt; i &lt;&lt; &#34;\n&#34;;
+</span><span style="color:#75715e"></span>    
+    <span style="color:#66d9ef">double</span> f <span style="color:#f92672">=</span> from[i];         <span style="color:#75715e">//windowの始点の時刻
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">double</span> t <span style="color:#f92672">=</span> f <span style="color:#f92672">+</span> time_window; <span style="color:#75715e">//windowの終点の時刻
+</span><span style="color:#75715e"></span>    
+    <span style="color:#75715e">// windowの終点が最初の計測時刻以前の時はNA、または
+</span><span style="color:#75715e"></span>    <span style="color:#75715e">// windowの始点が最後の計測時刻のより後の時はNA
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span>(t <span style="color:#f92672">&lt;=</span> <span style="color:#f92672">*</span>begin <span style="color:#f92672">||</span> f <span style="color:#f92672">&gt;</span> <span style="color:#f92672">*</span>(end<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)){ 
+      value[i]  <span style="color:#f92672">=</span> NA_REAL;
+      <span style="color:#66d9ef">continue</span>;<span style="color:#75715e">//次のループへ
+</span><span style="color:#75715e"></span>    }
     
-    double f = from[i];         //windowの始点の時刻
-    double t = f + time_window; //windowの終点の時刻
+    <span style="color:#75715e">// ベクトル time の位置 p1 以降の要素xから
+</span><span style="color:#75715e"></span>    <span style="color:#75715e">// 時刻がwindowの始点f「以降」である「最初の要素」の位置を p1 とする
+</span><span style="color:#75715e"></span>    p1 <span style="color:#f92672">=</span> std<span style="color:#f92672">::</span>find_if(p1, end, [<span style="color:#f92672">&amp;</span>f](<span style="color:#66d9ef">double</span> x){<span style="color:#66d9ef">return</span> f<span style="color:#f92672">&lt;=</span>x;});
+    <span style="color:#75715e">// p1 = std::lower_bound(p1, end, f); //上と同義
+</span><span style="color:#75715e"></span>    
+    <span style="color:#75715e">// ベクトル time の位置 p1 以降の要素xから
+</span><span style="color:#75715e"></span>    <span style="color:#75715e">// 時刻がwindowの終点t「より前」である「最後の要素」の位置を p2 とする
+</span><span style="color:#75715e"></span>    <span style="color:#75715e">// （下では、時刻がwindowの終点t「以降」である「最初の要素」の１つ前の位置、にすることで実現している’）
+</span><span style="color:#75715e"></span>    p2 <span style="color:#f92672">=</span> std<span style="color:#f92672">::</span>find_if(p1, end, [<span style="color:#f92672">&amp;</span>t](<span style="color:#66d9ef">double</span> x){<span style="color:#66d9ef">return</span> t<span style="color:#f92672">&lt;=</span>x;}) <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span> ;
+    <span style="color:#75715e">// p2 = std::lower_bound(p1, end, t) - 1 ;//上と同義
+</span><span style="color:#75715e"></span>    
+    <span style="color:#75715e">// 要素の位置p1,p2を、要素番号i1, i2に変換する
+</span><span style="color:#75715e"></span>    R_xlen_t i1 <span style="color:#f92672">=</span> p1 <span style="color:#f92672">-</span> begin;
+    R_xlen_t i2 <span style="color:#f92672">=</span> p2 <span style="color:#f92672">-</span> begin; 
     
-    // windowの終点が最初の計測時刻以前の時はNA、または
-    // windowの始点が最後の計測時刻のより後の時はNA
-    if(t &lt;= *begin || f &gt; *(end-1)){ 
-      value[i]  = NA_REAL;
-      continue;//次のループへ
+    
+    <span style="color:#75715e">// 要素番号の確認
+</span><span style="color:#75715e"></span>    <span style="color:#75715e">// C++は要素番号が0から始まるのでRに合わせるために1を足している
+</span><span style="color:#75715e"></span>    <span style="color:#75715e">// Rcout &lt;&lt; &#34;i1 = &#34; &lt;&lt; i1+1 &lt;&lt; &#34; i2 = &#34; &lt;&lt; i2+1 &lt;&lt; &#34;\n&#34;;
+</span><span style="color:#75715e"></span>    
+    
+    <span style="color:#75715e">// 該当する範囲のデータについて計算する
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span>(i1<span style="color:#f92672">&gt;</span>i2) {
+      value[i] <span style="color:#f92672">=</span> NA_REAL; <span style="color:#75715e">// window内にデータがない場合
+</span><span style="color:#75715e"></span>    } <span style="color:#66d9ef">else</span> { 
+      value[i] <span style="color:#f92672">=</span> data[i2] <span style="color:#f92672">-</span> data[i1];
     }
-    
-    // ベクトル time の位置 p1 以降の要素xから
-    // 時刻がwindowの始点f「以降」である「最初の要素」の位置を p1 とする
-    p1 = std::find_if(p1, end, [&amp;f](double x){return f&lt;=x;});
-    // p1 = std::lower_bound(p1, end, f); //上と同義
-    
-    // ベクトル time の位置 p1 以降の要素xから
-    // 時刻がwindowの終点t「より前」である「最後の要素」の位置を p2 とする
-    // （下では、時刻がwindowの終点t「以降」である「最初の要素」の１つ前の位置、にすることで実現している’）
-    p2 = std::find_if(p1, end, [&amp;t](double x){return t&lt;=x;}) - 1 ;
-    // p2 = std::lower_bound(p1, end, t) - 1 ;//上と同義
-    
-    // 要素の位置p1,p2を、要素番号i1, i2に変換する
-    R_xlen_t i1 = p1 - begin;
-    R_xlen_t i2 = p2 - begin; 
-    
-    
-    // 要素番号の確認
-    // C++は要素番号が0から始まるのでRに合わせるために1を足している
-    // Rcout &lt;&lt; &quot;i1 = &quot; &lt;&lt; i1+1 &lt;&lt; &quot; i2 = &quot; &lt;&lt; i2+1 &lt;&lt; &quot;\n&quot;;
-    
-    
-    // 該当する範囲のデータについて計算する
-    if(i1&gt;i2) {
-      value[i] = NA_REAL; // window内にデータがない場合
-    } else { 
-      value[i] = data[i2] - data[i1];
-    }
-    // ↑を変更することで様々なwindow関数を作成できる
-    
+    <span style="color:#75715e">// ↑を変更することで様々なwindow関数を作成できる
+</span><span style="color:#75715e"></span>    
   }
   
-  // 計算した時間と、値をデータフレームとして出力する
-  DataFrame out =
-    DataFrame::create(
-      Named(&quot;from&quot;, from),
-      Named(&quot;r&quot;, value*100));
+  <span style="color:#75715e">// 計算した時間と、値をデータフレームとして出力する
+</span><span style="color:#75715e"></span>  DataFrame out <span style="color:#f92672">=</span>
+    DataFrame<span style="color:#f92672">::</span>create(
+      Named(<span style="color:#e6db74">&#34;from&#34;</span>, from),
+      Named(<span style="color:#e6db74">&#34;r&#34;</span>, value<span style="color:#f92672">*</span><span style="color:#ae81ff">100</span>));
   
-  return out;
-}</code></pre>
-<p><code>Rcpp::sourceCpp</code>でコンパイルしたら、以下のように<code>R</code>の関数として実行します。</p>
-<pre class="r"><code>system.time(results &lt;- Rolling_r_cpp(JPYUSD,from))</code></pre>
-<pre><code>##    ユーザ   システム       経過  
-##       0.06       0.00       0.07</code></pre>
-<p>はい。1200万件のデータの処理に1秒かかりません。便利ー。</p>
-<pre class="r"><code>summary(results)</code></pre>
-<pre><code>##       from                           r         
+  <span style="color:#66d9ef">return</span> out;
+}
+</code></pre></div><p><code>Rcpp::sourceCpp</code>でコンパイルしたら、以下のように<code>R</code>の関数として実行します。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">system.time</span>(results <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">Rolling_r_cpp</span>(JPYUSD,from))
+</code></pre></div><pre><code>##    ユーザ   システム       経過  
+##       0.06       0.00       0.07
+</code></pre><p>はい。1200万件のデータの処理に1秒かかりません。便利ー。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">summary</span>(results)
+</code></pre></div><pre><code>##       from                           r         
 ##  Min.   :2011-01-02 22:00:00   Min.   :-1.823  
 ##  1st Qu.:2011-04-03 15:58:45   1st Qu.:-0.014  
 ##  Median :2011-07-03 09:57:30   Median : 0.000  
 ##  Mean   :2011-07-03 09:57:30   Mean   : 0.000  
 ##  3rd Qu.:2011-10-02 03:56:15   3rd Qu.: 0.015  
 ##  Max.   :2011-12-31 21:55:00   Max.   : 2.880  
-##                                NA&#39;s   :29977</code></pre>
-<p>問題なく、リターンが計算されています。では、<code>Realized Bipower Variation</code>の計算に移りましょう。5min刻みの場合はWindowの長さは270が推奨でしたが、そこも引数として柔軟を持たせた作りにします。また、<code>NA</code>の処理についても丁寧に行います。</p>
-<pre class="cpp"><code>#include &lt;Rcpp.h&gt;
-#include &lt;cmath&gt;
-
-using namespace Rcpp;
-//[[Rcpp::plugins(cpp11)]]
-
-// [[Rcpp::export]]
-float rbv_cpp(
-    NumericVector x, // rbvを計算するリターンベクトル
-    bool na_rm = true) // xにNAが含まれている場合、取り除いて計算するか
-{
+##                                NA's   :29977
+</code></pre><p>問題なく、リターンが計算されています。では、<code>Realized Bipower Variation</code>の計算に移りましょう。5min刻みの場合はWindowの長さは270が推奨でしたが、そこも引数として柔軟を持たせた作りにします。また、<code>NA</code>の処理についても丁寧に行います。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-cpp" data-lang="cpp"><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;Rcpp.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;cmath&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span>
+<span style="color:#66d9ef">using</span> <span style="color:#66d9ef">namespace</span> Rcpp;
+<span style="color:#75715e">//[[Rcpp::plugins(cpp11)]]
+</span><span style="color:#75715e"></span>
+<span style="color:#75715e">// [[Rcpp::export]]
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">float</span> <span style="color:#a6e22e">rbv_cpp</span>(
+    NumericVector x, <span style="color:#75715e">// rbvを計算するリターンベクトル
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">bool</span> na_rm <span style="color:#f92672">=</span> true) <span style="color:#75715e">// xにNAが含まれている場合、取り除いて計算するか
+</span><span style="color:#75715e"></span>{
   
-  // 計算回数を取得
-  R_xlen_t N = x.length();
+  <span style="color:#75715e">// 計算回数を取得
+</span><span style="color:#75715e"></span>  R_xlen_t N <span style="color:#f92672">=</span> x.length();
   
-  // 計算結果を入れる変数を定義
-  float out = 0;
+  <span style="color:#75715e">// 計算結果を入れる変数を定義
+</span><span style="color:#75715e"></span>  <span style="color:#66d9ef">float</span> out <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
 
-  // xの欠損有無を確認
-  LogicalVector lg_NA = is_na(x);
+  <span style="color:#75715e">// xの欠損有無を確認
+</span><span style="color:#75715e"></span>  LogicalVector lg_NA <span style="color:#f92672">=</span> is_na(x);
   
-  // xにNAが存在した場合、そのNAを除いて計算するかどうか
-  if(any(lg_NA).is_true() and na_rm==FALSE){
-    out = NA_REAL; // NAを計算結果として出力
-  } else {
+  <span style="color:#75715e">// xにNAが存在した場合、そのNAを除いて計算するかどうか
+</span><span style="color:#75715e"></span>  <span style="color:#66d9ef">if</span>(any(lg_NA).is_true() and na_rm<span style="color:#f92672">==</span>FALSE){
+    out <span style="color:#f92672">=</span> NA_REAL; <span style="color:#75715e">// NAを計算結果として出力
+</span><span style="color:#75715e"></span>  } <span style="color:#66d9ef">else</span> {
     
-    // NAを除く場合
-    if (any(lg_NA).is_true() and na_rm==TRUE){
-      x[is_na(x)==TRUE] = 0.00; // NAに0を埋め、実質的に計算から除外する
+    <span style="color:#75715e">// NAを除く場合
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (any(lg_NA).is_true() and na_rm<span style="color:#f92672">==</span>TRUE){
+      x[is_na(x)<span style="color:#f92672">==</span>TRUE] <span style="color:#f92672">=</span> <span style="color:#ae81ff">0.00</span>; <span style="color:#75715e">// NAに0を埋め、実質的に計算から除外する
+</span><span style="color:#75715e"></span>    }
+    
+    <span style="color:#75715e">// rbvの分子(総和)を計算
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">for</span>(R_xlen_t i <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>; i <span style="color:#f92672">&lt;</span> N; <span style="color:#f92672">++</span>i){
+      out <span style="color:#f92672">=</span> out <span style="color:#f92672">+</span> std<span style="color:#f92672">::</span>abs(x[i])<span style="color:#f92672">*</span>std<span style="color:#f92672">::</span>abs(x[i<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>]);
     }
     
-    // rbvの分子(総和)を計算
-    for(R_xlen_t i = 1; i &lt; N; ++i){
-      out = out + std::abs(x[i])*std::abs(x[i-1]);
+    <span style="color:#75715e">// 平均値を計算し、ルートをとる
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">long</span> denomi; <span style="color:#75715e">//分母
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span>(N<span style="color:#f92672">-</span>sum(lg_NA)<span style="color:#f92672">-</span><span style="color:#ae81ff">2</span><span style="color:#f92672">&gt;</span><span style="color:#ae81ff">0</span>){
+      denomi <span style="color:#f92672">=</span> N<span style="color:#f92672">-</span>sum(lg_NA)<span style="color:#f92672">-</span><span style="color:#ae81ff">2</span>;
+    } <span style="color:#66d9ef">else</span> {
+      denomi <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
     }
-    
-    // 平均値を計算し、ルートをとる
-    long denomi; //分母
-    if(N-sum(lg_NA)-2&gt;0){
-      denomi = N-sum(lg_NA)-2;
-    } else {
-      denomi = 1;
-    }
-    out = out/denomi;
-    out = std::sqrt(out);
+    out <span style="color:#f92672">=</span> out<span style="color:#f92672">/</span>denomi;
+    out <span style="color:#f92672">=</span> std<span style="color:#f92672">::</span>sqrt(out);
   }
   
-  return out;
+  <span style="color:#66d9ef">return</span> out;
 }
 
-// [[Rcpp::export]]
-DataFrame Rolling_rbv_cpp(
-    DataFrame input, //（計測時刻time, 計測値data）のデータフレーム
-    int K = 270, // 計算するRolling Window幅
-    bool na_pad = false, // Window幅が足りないときにNAを返すか
-    bool na_remove = false // Window幅の中にNAが存在した場合、除いて計算を行うか
-){
-  // リターンベクトルとサンプル数を取り出す
-  NumericVector data = input[&quot;r&quot;];
-  R_xlen_t T = data.length();
+<span style="color:#75715e">// [[Rcpp::export]]
+</span><span style="color:#75715e"></span>DataFrame <span style="color:#a6e22e">Rolling_rbv_cpp</span>(
+    DataFrame input, <span style="color:#75715e">//（計測時刻time, 計測値data）のデータフレーム
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">int</span> K <span style="color:#f92672">=</span> <span style="color:#ae81ff">270</span>, <span style="color:#75715e">// 計算するRolling Window幅
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">bool</span> na_pad <span style="color:#f92672">=</span> false, <span style="color:#75715e">// Window幅が足りないときにNAを返すか
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">bool</span> na_remove <span style="color:#f92672">=</span> false <span style="color:#75715e">// Window幅の中にNAが存在した場合、除いて計算を行うか
+</span><span style="color:#75715e"></span>){
+  <span style="color:#75715e">// リターンベクトルとサンプル数を取り出す
+</span><span style="color:#75715e"></span>  NumericVector data <span style="color:#f92672">=</span> input[<span style="color:#e6db74">&#34;r&#34;</span>];
+  R_xlen_t T <span style="color:#f92672">=</span> data.length();
   
-  // 計算結果を格納するベクトルを準備
-  NumericVector value(T);
+  <span style="color:#75715e">// 計算結果を格納するベクトルを準備
+</span><span style="color:#75715e"></span>  NumericVector value(T);
   
-  // Windows幅毎にRBVを計算し、格納する
-  if(na_pad==TRUE){
-    value[0] = NA_REAL; // NAを返す
-    value[1] = NA_REAL; // NAを返す
-    value[2] = NA_REAL; // NAを返す
-  } else {
-    value[0] = 0; // 0を返す
-    value[1] = 0; // 0を返す
-    value[2] = 0; // NAを返す
+  <span style="color:#75715e">// Windows幅毎にRBVを計算し、格納する
+</span><span style="color:#75715e"></span>  <span style="color:#66d9ef">if</span>(na_pad<span style="color:#f92672">==</span>TRUE){
+    value[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">=</span> NA_REAL; <span style="color:#75715e">// NAを返す
+</span><span style="color:#75715e"></span>    value[<span style="color:#ae81ff">1</span>] <span style="color:#f92672">=</span> NA_REAL; <span style="color:#75715e">// NAを返す
+</span><span style="color:#75715e"></span>    value[<span style="color:#ae81ff">2</span>] <span style="color:#f92672">=</span> NA_REAL; <span style="color:#75715e">// NAを返す
+</span><span style="color:#75715e"></span>  } <span style="color:#66d9ef">else</span> {
+    value[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; <span style="color:#75715e">// 0を返す
+</span><span style="color:#75715e"></span>    value[<span style="color:#ae81ff">1</span>] <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; <span style="color:#75715e">// 0を返す
+</span><span style="color:#75715e"></span>    value[<span style="color:#ae81ff">2</span>] <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; <span style="color:#75715e">// NAを返す
+</span><span style="color:#75715e"></span>  }
+  
+  <span style="color:#66d9ef">for</span>(R_xlen_t t <span style="color:#f92672">=</span> <span style="color:#ae81ff">3</span>; t <span style="color:#f92672">&lt;</span> T; <span style="color:#f92672">++</span>t){
+    <span style="color:#75715e">// Windows幅が足りるかどうかで処理を分岐
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (t<span style="color:#f92672">-</span>K<span style="color:#f92672">&gt;=</span><span style="color:#ae81ff">0</span>){
+      value[t] <span style="color:#f92672">=</span> rbv_cpp(data[seq(t<span style="color:#f92672">-</span>K,t<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)],na_remove); <span style="color:#75715e">// 通常計算を実行
+</span><span style="color:#75715e"></span>    } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span>(na_pad<span style="color:#f92672">==</span>FALSE) {
+      value[t] <span style="color:#f92672">=</span> rbv_cpp(data[seq(<span style="color:#ae81ff">0</span>,t<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)],na_remove); <span style="color:#75715e">// Kに満たない不完全なWidnows幅で計算を実行
+</span><span style="color:#75715e"></span>    } <span style="color:#66d9ef">else</span> {
+      value[t] <span style="color:#f92672">=</span> NA_REAL; <span style="color:#75715e">// NAを返す
+</span><span style="color:#75715e"></span>    }
   }
   
-  for(R_xlen_t t = 3; t &lt; T; ++t){
-    // Windows幅が足りるかどうかで処理を分岐
-    if (t-K&gt;=0){
-      value[t] = rbv_cpp(data[seq(t-K,t-1)],na_remove); // 通常計算を実行
-    } else if(na_pad==FALSE) {
-      value[t] = rbv_cpp(data[seq(0,t-1)],na_remove); // Kに満たない不完全なWidnows幅で計算を実行
-    } else {
-      value[t] = NA_REAL; // NAを返す
-    }
-  }
+  <span style="color:#75715e">// 計算した時間と値をデータフレームとして出力する
+</span><span style="color:#75715e"></span>  DataFrame out <span style="color:#f92672">=</span>
+    DataFrame<span style="color:#f92672">::</span>create(
+      Named(<span style="color:#e6db74">&#34;from&#34;</span>, input[<span style="color:#e6db74">&#34;from&#34;</span>]),
+      Named(<span style="color:#e6db74">&#34;r&#34;</span>, data),
+      Named(<span style="color:#e6db74">&#34;rbv&#34;</span>,value));
   
-  // 計算した時間と値をデータフレームとして出力する
-  DataFrame out =
-    DataFrame::create(
-      Named(&quot;from&quot;, input[&quot;from&quot;]),
-      Named(&quot;r&quot;, data),
-      Named(&quot;rbv&quot;,value));
-  
-  return out;
-}</code></pre>
-<p>では、これもコンパイルし、<code>R</code>で実行します。</p>
-<pre class="r"><code>system.time(results &lt;- results %&gt;% Rolling_rbv_cpp(na_remove = FALSE))</code></pre>
-<pre><code>##    ユーザ   システム       経過  
-##       1.00       0.38       1.45</code></pre>
-<p>こちらも一瞬ですね。</p>
-</div>
-<div id="jump統計量の計算" class="section level2">
-<h2>3. Jump統計量の計算</h2>
-<p>では、次に今計算したリターンと標準偏差から統計量<span class="math inline">\(\mathcal{L}_{t_i}\)</span>を計算しましょう。</p>
-<pre class="r"><code># 対数リターンの絶対値を標準化=Jump統計量
-results &lt;- results %&gt;% dplyr::mutate(J=ifelse(rbv&gt;0,abs(r)/rbv,NA))</code></pre>
-<p>今こんな感じです。</p>
-<pre class="r"><code>summary(results)</code></pre>
-<pre><code>##       from                           r               rbv              J        
+  <span style="color:#66d9ef">return</span> out;
+}
+</code></pre></div><p>では、これもコンパイルし、<code>R</code>で実行します。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">system.time</span>(results <span style="color:#f92672">&lt;-</span> results <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">Rolling_rbv_cpp</span>(na_remove <span style="color:#f92672">=</span> <span style="color:#66d9ef">FALSE</span>))
+</code></pre></div><pre><code>##    ユーザ   システム       経過  
+##       1.00       0.38       1.45
+</code></pre><p>こちらも一瞬ですね。</p>
+<h2 id="3-jump統計量の計算">3. Jump統計量の計算</h2>
+<p>では、次に今計算したリターンと標準偏差から統計量$\mathcal{L}_{t_i}$を計算しましょう。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># 対数リターンの絶対値を標準化=Jump統計量</span>
+results <span style="color:#f92672">&lt;-</span> results <span style="color:#f92672">%&gt;%</span> dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">mutate</span>(J<span style="color:#f92672">=</span><span style="color:#a6e22e">ifelse</span>(rbv<span style="color:#f92672">&gt;</span><span style="color:#ae81ff">0</span>,<span style="color:#a6e22e">abs</span>(r)<span style="color:#f92672">/</span>rbv,<span style="color:#66d9ef">NA</span>))
+</code></pre></div><p>今こんな感じです。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">summary</span>(results)
+</code></pre></div><pre><code>##       from                           r               rbv              J        
 ##  Min.   :2011-01-02 22:00:00   Min.   :-1.823   Min.   :0.00    Min.   : 0.00  
 ##  1st Qu.:2011-04-03 15:58:45   1st Qu.:-0.014   1st Qu.:0.02    1st Qu.: 0.28  
 ##  Median :2011-07-03 09:57:30   Median : 0.000   Median :0.02    Median : 0.64  
 ##  Mean   :2011-07-03 09:57:30   Mean   : 0.000   Mean   :0.03    Mean   : 0.93  
 ##  3rd Qu.:2011-10-02 03:56:15   3rd Qu.: 0.015   3rd Qu.:0.03    3rd Qu.: 1.23  
 ##  Max.   :2011-12-31 21:55:00   Max.   : 2.880   Max.   :0.16    Max.   :58.60  
-##                                NA&#39;s   :29977    NA&#39;s   :44367   NA&#39;s   :44423</code></pre>
-<p>では、Jump検定に移りましょう。まず、必要な関数を定義しておきます。</p>
-<pre class="r"><code># Jump検定を計算するための定数&amp;関数を準備
-c &lt;- (2/pi)^0.5
-Cn &lt;- function(n){
-  return((2*log(n))^0.5/c - (log(pi)+log(log(n)))/(2*c*(2*log(n))^0.5))
+##                                NA's   :29977    NA's   :44367   NA's   :44423
+</code></pre><p>では、Jump検定に移りましょう。まず、必要な関数を定義しておきます。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># Jump検定を計算するための定数&amp;関数を準備</span>
+c <span style="color:#f92672">&lt;-</span> (<span style="color:#ae81ff">2</span><span style="color:#f92672">/</span><span style="color:#66d9ef">pi</span>)^0.5
+Cn <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(n){
+  <span style="color:#a6e22e">return</span>((<span style="color:#ae81ff">2</span><span style="color:#f92672">*</span><span style="color:#a6e22e">log</span>(n))^0.5<span style="color:#f92672">/</span>c <span style="color:#f92672">-</span> (<span style="color:#a6e22e">log</span>(<span style="color:#66d9ef">pi</span>)<span style="color:#f92672">+</span><span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">log</span>(n)))<span style="color:#f92672">/</span>(<span style="color:#ae81ff">2</span><span style="color:#f92672">*</span>c<span style="color:#f92672">*</span>(<span style="color:#ae81ff">2</span><span style="color:#f92672">*</span><span style="color:#a6e22e">log</span>(n))^0.5))
 }
-Sn &lt;- function(n){
-  1/(c*(2*log(n))^0.5)
-}</code></pre>
-<p>では検定を行います。棄却されたサンプルは1、それ以外は0を返します。</p>
-<pre class="r"><code># Jump検定(10%)を実行(返り値はlogical)
-N &lt;- NROW(results$J)
-results &lt;- results %&gt;% dplyr::mutate(Jump = J &gt; 2.25*Sn(N) + Cn(N))
-summary(results)</code></pre>
-<pre><code>##       from                           r               rbv              J        
+Sn <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(n){
+  <span style="color:#ae81ff">1</span><span style="color:#f92672">/</span>(c<span style="color:#f92672">*</span>(<span style="color:#ae81ff">2</span><span style="color:#f92672">*</span><span style="color:#a6e22e">log</span>(n))^0.5)
+}
+</code></pre></div><p>では検定を行います。棄却されたサンプルは1、それ以外は0を返します。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># Jump検定(10%)を実行(返り値はlogical)</span>
+N <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">NROW</span>(results<span style="color:#f92672">$</span>J)
+results <span style="color:#f92672">&lt;-</span> results <span style="color:#f92672">%&gt;%</span> dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">mutate</span>(Jump <span style="color:#f92672">=</span> J <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">2.25</span><span style="color:#f92672">*</span><span style="color:#a6e22e">Sn</span>(N) <span style="color:#f92672">+</span> <span style="color:#a6e22e">Cn</span>(N))
+<span style="color:#a6e22e">summary</span>(results)
+</code></pre></div><pre><code>##       from                           r               rbv              J        
 ##  Min.   :2011-01-02 22:00:00   Min.   :-1.823   Min.   :0.00    Min.   : 0.00  
 ##  1st Qu.:2011-04-03 15:58:45   1st Qu.:-0.014   1st Qu.:0.02    1st Qu.: 0.28  
 ##  Median :2011-07-03 09:57:30   Median : 0.000   Median :0.02    Median : 0.64  
 ##  Mean   :2011-07-03 09:57:30   Mean   : 0.000   Mean   :0.03    Mean   : 0.93  
 ##  3rd Qu.:2011-10-02 03:56:15   3rd Qu.: 0.015   3rd Qu.:0.03    3rd Qu.: 1.23  
 ##  Max.   :2011-12-31 21:55:00   Max.   : 2.880   Max.   :0.16    Max.   :58.60  
-##                                NA&#39;s   :29977    NA&#39;s   :44367   NA&#39;s   :44423  
+##                                NA's   :29977    NA's   :44367   NA's   :44423  
 ##     Jump        
 ##  Mode :logical  
 ##  FALSE:59864    
 ##  TRUE :257      
-##  NA&#39;s :44423    
+##  NA's :44423    
 ##                 
 ##                 
-## </code></pre>
-</div>
-<div id="ggplot2を用いた可視化" class="section level2">
-<h2>4. ggplot2を用いた可視化</h2>
+## 
+</code></pre><h2 id="4-ggplot2を用いた可視化">4. ggplot2を用いた可視化</h2>
 <p>数値が計算できましたので可視化しましょう。2011/03/11の日中のJPY/USDの5min刻み対数リターンの推移とJumpを重ねてPlotします。ちなみに横軸は日本時間に修正しています。</p>
-<pre class="r"><code># 2011/03/11の東日本大震災発生時のJumpについてPlot
-results %&gt;% 
-  dplyr::filter(from &gt;= as.POSIXct(&quot;2011-03-11 00:00:00&quot;,tz=&quot;UTC&quot;),from &lt; as.POSIXct(&quot;2011-03-12 00:00:00&quot;,tz=&quot;UTC&quot;)) %&gt;% 
-  ggplot2::ggplot(ggplot2::aes(x=from,y=r)) +
-  ggplot2::geom_path(linetype=3) +
-  ggplot2::geom_path(ggplot2::aes(x=from,y=r*Jump,colour=&quot;red&quot;)) +
-  ggplot2::scale_x_datetime(date_breaks = &quot;2 hours&quot;, labels = scales::date_format(format=&quot;%H:%M&quot;,tz=&quot;Asia/Tokyo&quot;)) +
-  ggplot2::ggtitle(&quot;JPY/USD Jumps within Tohoku earthquake on 2011-3-11&quot;)</code></pre>
-<pre><code>## Warning: Removed 36 row(s) containing missing values (geom_path).
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># 2011/03/11の東日本大震災発生時のJumpについてPlot</span>
+results <span style="color:#f92672">%&gt;%</span> 
+  dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">filter</span>(from <span style="color:#f92672">&gt;=</span> <span style="color:#a6e22e">as.POSIXct</span>(<span style="color:#e6db74">&#34;2011-03-11 00:00:00&#34;</span>,tz<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;UTC&#34;</span>),from <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">as.POSIXct</span>(<span style="color:#e6db74">&#34;2011-03-12 00:00:00&#34;</span>,tz<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;UTC&#34;</span>)) <span style="color:#f92672">%&gt;%</span> 
+  ggplot2<span style="color:#f92672">::</span><span style="color:#a6e22e">ggplot</span>(ggplot2<span style="color:#f92672">::</span><span style="color:#a6e22e">aes</span>(x<span style="color:#f92672">=</span>from,y<span style="color:#f92672">=</span>r)) <span style="color:#f92672">+</span>
+  ggplot2<span style="color:#f92672">::</span><span style="color:#a6e22e">geom_path</span>(linetype<span style="color:#f92672">=</span><span style="color:#ae81ff">3</span>) <span style="color:#f92672">+</span>
+  ggplot2<span style="color:#f92672">::</span><span style="color:#a6e22e">geom_path</span>(ggplot2<span style="color:#f92672">::</span><span style="color:#a6e22e">aes</span>(x<span style="color:#f92672">=</span>from,y<span style="color:#f92672">=</span>r<span style="color:#f92672">*</span>Jump,colour<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;red&#34;</span>)) <span style="color:#f92672">+</span>
+  ggplot2<span style="color:#f92672">::</span><span style="color:#a6e22e">scale_x_datetime</span>(date_breaks <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;2 hours&#34;</span>, labels <span style="color:#f92672">=</span> scales<span style="color:#f92672">::</span><span style="color:#a6e22e">date_format</span>(format<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;%H:%M&#34;</span>,tz<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Asia/Tokyo&#34;</span>)) <span style="color:#f92672">+</span>
+  ggplot2<span style="color:#f92672">::</span><span style="color:#a6e22e">ggtitle</span>(<span style="color:#e6db74">&#34;JPY/USD Jumps within Tohoku earthquake on 2011-3-11&#34;</span>)
+</code></pre></div><pre><code>## Warning: Removed 36 row(s) containing missing values (geom_path).
 
-## Warning: Removed 36 row(s) containing missing values (geom_path).</code></pre>
-<p><img src="../../post/post21/index_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
+## Warning: Removed 36 row(s) containing missing values (geom_path).
+</code></pre><p><img src="index_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
 <p>ここまで執筆するのに結構時間使っていて、今23:37なんで深い考察は控えますが、震災が発生したのが14:46:18ですから市場は震災直後即座に円安に反応したことが分かります。その後なぜか円高方向へ進み19:00にはピークになっています。安全資産の円とか言われますが、この時ばかりは不確実性の高まりからして安全じゃないだろと思いますが。。。</p>
-</div>
-<div id="まとめ" class="section level2">
-<h2>5. まとめ</h2>
+<h2 id="5-まとめ">5. まとめ</h2>
 <p><code>Rcpp</code>を使った<code>R</code>分析の効率化について紹介しました。<code>C++</code>は愚直にコードを書いてもRより格段に処理が早いのでコーディングミスしにくい印象です。学術的な実装をやるときは内容が複雑になるのでこれはありがたいです。また、コンパイルエラーが起こってもRStudioを使っていればどこでコンパイルエラーが起こっているか手がかりをくれますのでその点でもストレスはないのでお勧めです。</p>
-</div>
-<div class="footnotes">
-<hr />
+<section class="footnotes" role="doc-endnotes">
+<hr>
 <ol>
-<li id="fn1"><p>非負、整数、非減少の値を持つ確率過程のこと。<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
-<li id="fn2"><p>平均はドリフト項の形状により必ずしも0にはなりませんが、今ドリフト項は十分小さい値を想定しているのでこの書き方にさせてください。論文ではより厳密に定義しています。<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+<li id="fn:1" role="doc-endnote">
+<p>非負、整数、非減少の値を持つ確率過程のこと。 <a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:2" role="doc-endnote">
+<p>平均はドリフト項の形状により必ずしも0にはなりませんが、今ドリフト項は十分小さい値を想定しているのでこの書き方にさせてください。論文ではより厳密に定義しています。 <a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
 </ol>
-</div>
+</section>
 
-    </div>
+          </div>
 
-    
+          
 
 
 
@@ -1406,7 +1437,7 @@ results %&gt;%
       
       <li><a href="../../post/post9/">rvestでyahoo競馬にある過去のレース結果をクローリングしてみた</a></li>
       
-      <li><a href="../../post/post27/">【徹底比較】センチメントスコア算出手法！！ - 第1回</a></li>
+      <li><a href="../../post/post27/">【徹底比較】センチメントスコア算出手法！！ - 第2回</a></li>
       
     </ul>
   </div>
@@ -1416,8 +1447,12 @@ results %&gt;%
 
 
 
+        </div>
+      </article>
+    </main>
+
   </div>
-</article>
+</div>
 
       
 
@@ -1531,11 +1566,9 @@ results %&gt;%
       
     
     
-      
     
     
-    
-    <script src="../../js/wowchemy.min.2a3f95be2bc4762ba1847fb5d7a28317.js"></script>
+    <script src="../../js/wowchemy.min.4c2bca31150ce93c5a5e43b8a50f22fd.js"></script>
 
     
 
@@ -1545,6 +1578,16 @@ results %&gt;%
   <div class="container">
     <footer class="site-footer">
   
+
+  
+   
+  <script>
+  $(document).ready(function () {
+    window.initializeCodeFolding("show" === "show");
+  });
+  </script>
+  <script src="../../js/codefolding.js"></script>
+
 
   <p class="powered-by">
     

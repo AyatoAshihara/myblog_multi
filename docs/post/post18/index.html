@@ -88,8 +88,8 @@
     
       
       
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/xcode.min.css" crossorigin="anonymous" title="hl-light">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/xcode.min.css" crossorigin="anonymous" title="hl-dark" disabled>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/solarized-dark.min.css" crossorigin="anonymous" title="hl-light">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/solarized-dark.min.css" crossorigin="anonymous" title="hl-dark" disabled>
       
     
 
@@ -672,9 +672,44 @@
 
 
 
-  <article class="article">
+  <div class="container-fluid docs">
+  <div class="row flex-xl-nowrap">
 
-  
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <ul class="nav toc-top">
+        <li><a href="#" id="back_to_top" class="docs-toc-title">On this page</a></li>
+      </ul>
+      <nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#1-データ収集のためのクローリング">1. データ収集のためのクローリング</a>
+          <ul>
+            <li><a href="#データをどこから取得するか">データをどこから取得するか</a></li>
+            <li><a href="#seleniumでクローリングを実行する">seleniumでクローリングを実行する</a></li>
+          </ul>
+        </li>
+        <li><a href="#2-kerasを用いてcnnを学習させる">2. <code>Keras</code>を用いてCNNを学習させる</a>
+          <ul>
+            <li><a href="#kerasとは">Kerasとは？</a></li>
+            <li><a href="#cnnとは">CNNとは？</a></li>
+            <li><a href="#コーディング">コーディング</a></li>
+            <li><a href="#不均衡データ調整のためのアンダーサンプリング">不均衡データ調整のためのアンダーサンプリング</a></li>
+          </ul>
+        </li>
+        <li><a href="#3-shap値を用いた結果解釈">3. Shap値を用いた結果解釈</a></li>
+        <li><a href="#4-最後に">4. 最後に</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+      
+    </div>
+
+    <main class="col-12 col-md-0 col-xl-10 py-md-3 pl-md-5 docs-content" role="main">
+      <article class="article">
+
+        
 
 
 
@@ -707,6 +742,22 @@
   
 
 
+<div id="code-folding-buttons" class="dropdown btn-group pull-right">
+  <a class="btn btn-light btn-sm dropdown-toggle" href="#" role="button" id="allCodeToggleButton"
+     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    Code
+  </a>
+  <div class="dropdown-menu" aria-labelledby="allCodeToggleButton">
+    <a id="rmd-show-all-code" class="dropdown-item small" href="#">Show all</a>
+    <a id="rmd-hide-all-code" class="dropdown-item small" href="#">Hide all</a>
+  </div>
+</div>
+
+
+
+  
+
+
 <div class="article-metadata">
 
   
@@ -727,7 +778,7 @@
   
   <span class="middot-divider"></span>
   <span class="article-reading-time">
-    11 分で読める
+    10 分で読める
   </span>
   
 
@@ -774,376 +825,281 @@
 
 
 
-  <div class="article-container">
+        <div class="article-container">
 
-    <div class="article-style">
-      
-<script src="index_files/header-attrs/header-attrs.js"></script>
-
-<div id="TOC">
-<ul>
-<li><a href="#データ収集のためのクローリング">1. データ収集のためのクローリング</a>
-<ul>
-<li><a href="#データをどこから取得するか">データをどこから取得するか</a></li>
-<li><a href="#seleniumでクローリングを実行する">seleniumでクローリングを実行する</a></li>
-</ul></li>
-<li><a href="#kerasを用いてcnnを学習させる">2. <code>Keras</code>を用いてCNNを学習させる</a>
-<ul>
-<li><a href="#kerasとは">Kerasとは？</a></li>
-<li><a href="#cnnとは">CNNとは？</a></li>
-<li><a href="#コーディング">コーディング</a></li>
-<li><a href="#不均衡データ調整のためのアンダーサンプリング">不均衡データ調整のためのアンダーサンプリング</a></li>
-</ul></li>
-<li><a href="#shap値を用いた結果解釈">3. Shap値を用いた結果解釈</a></li>
-<li><a href="#最後に">4. 最後に</a></li>
-</ul>
-</div>
-
-<p>おはこんばんにちは。今回は競馬予想についての記事を書きたいと思います。前回、<code>LightGBM</code>を用いてyahoo競馬から取得したレース結果データ(テーブルデータ)を用いて、競馬順位予想モデルを作成しました。前回は構造データを用いましたが、このご時世ですからこんな分析は誰にでもできるわけです。時代は非構造データ、というわけで今回は馬体画像から特徴量を抽出し、順位予想を行う畳み込みニューラルネットワーク(<code>Convolutional Neural Network</code>, CNN)を作成してみました。画像解析は<code>Earth Engine</code>を用いた衛星画像の解析に続いて2回目、深層学習はこのブログでは初めてと言うことになります。なお、Pythonを使用しています。</p>
-<div id="データ収集のためのクローリング" class="section level2">
-<h2>1. データ収集のためのクローリング</h2>
+          <div class="article-style">
+            <p>おはこんばんにちは。今回は競馬予想についての記事を書きたいと思います。前回、<code>LightGBM</code>を用いてyahoo競馬から取得したレース結果データ(テーブルデータ)を用いて、競馬順位予想モデルを作成しました。前回は構造データを用いましたが、このご時世ですからこんな分析は誰にでもできるわけです。時代は非構造データ、というわけで今回は馬体画像から特徴量を抽出し、順位予想を行う畳み込みニューラルネットワーク(<code>Convolutional Neural Network</code>, CNN)を作成してみました。画像解析は<code>Earth Engine</code>を用いた衛星画像の解析に続いて2回目、深層学習はこのブログでは初めてと言うことになります。なお、Pythonを使用しています。</p>
+<h2 id="1-データ収集のためのクローリング">1. データ収集のためのクローリング</h2>
 <p>まず、馬体画像をネットから収集することから始めます。1番良いのはレース当日のパドックの写真を使用することでしょう。ただ、パドックの写真をまとまった形で掲載してくれているサイトは調べた限りは存在しませんでした。もしかしたら、Youtubeに競馬ファンの方がパドック動画を上げていらっしゃるかも知れませんので、それを画像に切り抜いて使う or 動画としてCNN→RNNの<code>Encoder-Decoder</code>モデルに適用すると面白いかもしれません。しかし、そこまでの能力は今の自分にはありません。</p>
-<div id="データをどこから取得するか" class="section level3">
-<h3>データをどこから取得するか</h3>
-<p>そこで、今回は<a href="https://www.daily.co.jp/horse/horsecheck/photo/">デイリーのWebサイト</a>からデータを取得しています。ここには直近1年間?のG1レースに出馬する競走馬のレース前の馬体写真が掲載されています。実際のレース場へ行けない馬券師さんたちはこの写真を見て馬の状態を分析していると思われます。<br />
+<h3 id="データをどこから取得するか">データをどこから取得するか</h3>
+<p>そこで、今回は<a href="https://www.daily.co.jp/horse/horsecheck/photo/" target="_blank" rel="noopener">デイリーのWebサイト</a>からデータを取得しています。ここには直近1年間?のG1レースに出馬する競走馬のレース前の馬体写真が掲載されています。実際のレース場へ行けない馬券師さんたちはこの写真を見て馬の状態を分析していると思われます。<br>
 なお、このサイトには出馬全頭の馬体写真が掲載されているわけではありません。また、G1の限られたレースのみですので、そもそも全ての馬が仕上がっている可能性もあり、差がつかないことも十分予想されます。ただ、手っ取り早くやってみることを優先し、今回はこのデータを使用することにしたいと思います。</p>
-</div>
-<div id="seleniumでクローリングを実行する" class="section level3">
-<h3>seleniumでクローリングを実行する</h3>
-<p>クローリングにはseleniumを使用します。今回はCNNがメインなのでWebクローリングについては説明しません。使用したコードは以下です。<br />
+<h3 id="seleniumでクローリングを実行する">seleniumでクローリングを実行する</h3>
+<p>クローリングにはseleniumを使用します。今回はCNNがメインなのでWebクローリングについては説明しません。使用したコードは以下です。<br>
 【注意】以下のコードを使用される場合は自己責任でお願いします。</p>
-<pre class="python"><code>from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.select import Select
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.alert import Alert
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.common.action_chains import ActionChains
-from time import sleep
-from urllib import request
-import random
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> selenium <span style="color:#f92672">import</span> webdriver
+<span style="color:#f92672">from</span> selenium.webdriver.chrome.options <span style="color:#f92672">import</span> Options
+<span style="color:#f92672">from</span> selenium.webdriver.support.select <span style="color:#f92672">import</span> Select
+<span style="color:#f92672">from</span> selenium.webdriver.common.by <span style="color:#f92672">import</span> By
+<span style="color:#f92672">from</span> selenium.webdriver.common.keys <span style="color:#f92672">import</span> Keys
+<span style="color:#f92672">from</span> selenium.webdriver.common.alert <span style="color:#f92672">import</span> Alert
+<span style="color:#f92672">from</span> selenium.webdriver.support.ui <span style="color:#f92672">import</span> WebDriverWait
+<span style="color:#f92672">from</span> selenium.webdriver.support <span style="color:#f92672">import</span> expected_conditions <span style="color:#66d9ef">as</span> EC
+<span style="color:#f92672">from</span> selenium.common.exceptions <span style="color:#f92672">import</span> TimeoutException
+<span style="color:#f92672">from</span> selenium.webdriver.common.action_chains <span style="color:#f92672">import</span> ActionChains
+<span style="color:#f92672">from</span> time <span style="color:#f92672">import</span> sleep
+<span style="color:#f92672">from</span> urllib <span style="color:#f92672">import</span> request
+<span style="color:#f92672">import</span> random
 
-# seleniumのオプション設定（おまじない）
-options = Options()
-options.add_argument(&#39;--disable-gpu&#39;);
-options.add_argument(&#39;--disable-extensions&#39;);
-options.add_argument(&#39;--proxy-server=&quot;direct://&quot;&#39;);
-options.add_argument(&#39;--proxy-bypass-list=*&#39;);
-options.add_argument(&#39;--start-maximized&#39;);
+<span style="color:#75715e"># seleniumのオプション設定（おまじない）</span>
+options <span style="color:#f92672">=</span> Options()
+options<span style="color:#f92672">.</span>add_argument(<span style="color:#e6db74">&#39;--disable-gpu&#39;</span>);
+options<span style="color:#f92672">.</span>add_argument(<span style="color:#e6db74">&#39;--disable-extensions&#39;</span>);
+options<span style="color:#f92672">.</span>add_argument(<span style="color:#e6db74">&#39;--proxy-server=&#34;direct://&#34;&#39;</span>);
+options<span style="color:#f92672">.</span>add_argument(<span style="color:#e6db74">&#39;--proxy-bypass-list=*&#39;</span>);
+options<span style="color:#f92672">.</span>add_argument(<span style="color:#e6db74">&#39;--start-maximized&#39;</span>);
 
-# driver指定
-DRIVER_PATH = r&#39;C:/Users/aashi/Desktop/chromedriver_win32/chromedriver.exe&#39;
-driver = webdriver.Chrome(executable_path=DRIVER_PATH, chrome_options=options)
+<span style="color:#75715e"># driver指定</span>
+DRIVER_PATH <span style="color:#f92672">=</span> <span style="color:#e6db74">r</span><span style="color:#e6db74">&#39;C:/Users/aashi/Desktop/chromedriver_win32/chromedriver.exe&#39;</span>
+driver <span style="color:#f92672">=</span> webdriver<span style="color:#f92672">.</span>Chrome(executable_path<span style="color:#f92672">=</span>DRIVER_PATH, chrome_options<span style="color:#f92672">=</span>options)
 
-# urlを渡し、サイトへアクセス
-url = &#39;https://www.daily.co.jp/horse/horsecheck/photo/&#39;
-driver.get(url)
-driver.implicitly_wait(15) # オブジェクトのロード待ちの最大時間でこれを越えるとエラー
-sleep(5) # webページの遷移を行うので1秒sleep
+<span style="color:#75715e"># urlを渡し、サイトへアクセス</span>
+url <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;https://www.daily.co.jp/horse/horsecheck/photo/&#39;</span>
+driver<span style="color:#f92672">.</span>get(url)
+driver<span style="color:#f92672">.</span>implicitly_wait(<span style="color:#ae81ff">15</span>) <span style="color:#75715e"># オブジェクトのロード待ちの最大時間でこれを越えるとエラー</span>
+sleep(<span style="color:#ae81ff">5</span>) <span style="color:#75715e"># webページの遷移を行うので1秒sleep</span>
 
-# 各レース毎に画像データ保存
-selector0 = &quot;body &gt; div &gt; main &gt; div &gt; div.primaryContents &gt; article &gt; div &gt; section &gt; a&quot;
-elements = driver.find_elements_by_css_selector(selector0)
-for i in range(0,len(elements)):
-  elements = driver.find_elements_by_css_selector(selector0)
-  element = elements[i]
-  element.click()
-  sleep(5) # webページの遷移を行うので5秒sleep
+<span style="color:#75715e"># 各レース毎に画像データ保存</span>
+selector0 <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;body &gt; div &gt; main &gt; div &gt; div.primaryContents &gt; article &gt; div &gt; section &gt; a&#34;</span>
+elements <span style="color:#f92672">=</span> driver<span style="color:#f92672">.</span>find_elements_by_css_selector(selector0)
+<span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">0</span>,len(elements)):
+  elements <span style="color:#f92672">=</span> driver<span style="color:#f92672">.</span>find_elements_by_css_selector(selector0)
+  element <span style="color:#f92672">=</span> elements[i]
+  element<span style="color:#f92672">.</span>click()
+  sleep(<span style="color:#ae81ff">5</span>) <span style="color:#75715e"># webページの遷移を行うので5秒sleep</span>
 
-  target = driver.find_element_by_link_text(&#39;Ｇ１馬体診断写真集のTOP&#39;)
-  actions = ActionChains(driver)
-  actions.move_to_element(target)
-  actions.perform()
-  sleep(5) # webページの遷移を行うので5秒sleep
-  selector = &quot;body &gt; div.wrapper.horse.is-fixedHeader.is-fixedAnimation &gt; main &gt; div &gt; div.primaryContents &gt; article &gt; article &gt; div.photoDetail-wrapper &gt; section &gt; div &gt; figure&quot;
-  figures = driver.find_elements_by_css_selector(selector)
-  download_dir = r&#39;C:\Users\aashi\umanalytics\photo\image&#39;
-  selector = &quot;body &gt; div &gt; main &gt; div &gt; div.primaryContents &gt; article &gt; article &gt; div.photoDetail-wrapper &gt; section &gt; h1&quot;
-  race_name = driver.find_element_by_css_selector(selector).text
-  for figure in figures:
-    img_name = figure.find_element_by_tag_name(&#39;figcaption&#39;).text
-    horse_src = figure.find_element_by_tag_name(&#39;img&#39;).get_attribute(&quot;src&quot;)    
-    save_name = download_dir + &#39;/&#39; + race_name + &#39;_&#39; + img_name + &#39;.jpg&#39;
-    request.urlretrieve(horse_src,save_name)
-  driver.back()</code></pre>
-<p>保存した画像を実際のレース結果と突合し、手作業で上位3位以内グループとそれ以外のグループに分けました。以下のような感じで画像が保存されています。</p>
-<div class="figure">
-<img src="horse_photo.PNG" alt="" />
-<p class="caption">保存された馬体画像</p>
-</div>
+  target <span style="color:#f92672">=</span> driver<span style="color:#f92672">.</span>find_element_by_link_text(<span style="color:#e6db74">&#39;Ｇ１馬体診断写真集のTOP&#39;</span>)
+  actions <span style="color:#f92672">=</span> ActionChains(driver)
+  actions<span style="color:#f92672">.</span>move_to_element(target)
+  actions<span style="color:#f92672">.</span>perform()
+  sleep(<span style="color:#ae81ff">5</span>) <span style="color:#75715e"># webページの遷移を行うので5秒sleep</span>
+  selector <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;body &gt; div.wrapper.horse.is-fixedHeader.is-fixedAnimation &gt; main &gt; div &gt; div.primaryContents &gt; article &gt; article &gt; div.photoDetail-wrapper &gt; section &gt; div &gt; figure&#34;</span>
+  figures <span style="color:#f92672">=</span> driver<span style="color:#f92672">.</span>find_elements_by_css_selector(selector)
+  download_dir <span style="color:#f92672">=</span> <span style="color:#e6db74">r</span><span style="color:#e6db74">&#39;C:\Users\aashi\umanalytics\photo\image&#39;</span>
+  selector <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;body &gt; div &gt; main &gt; div &gt; div.primaryContents &gt; article &gt; article &gt; div.photoDetail-wrapper &gt; section &gt; h1&#34;</span>
+  race_name <span style="color:#f92672">=</span> driver<span style="color:#f92672">.</span>find_element_by_css_selector(selector)<span style="color:#f92672">.</span>text
+  <span style="color:#66d9ef">for</span> figure <span style="color:#f92672">in</span> figures:
+    img_name <span style="color:#f92672">=</span> figure<span style="color:#f92672">.</span>find_element_by_tag_name(<span style="color:#e6db74">&#39;figcaption&#39;</span>)<span style="color:#f92672">.</span>text
+    horse_src <span style="color:#f92672">=</span> figure<span style="color:#f92672">.</span>find_element_by_tag_name(<span style="color:#e6db74">&#39;img&#39;</span>)<span style="color:#f92672">.</span>get_attribute(<span style="color:#e6db74">&#34;src&#34;</span>)    
+    save_name <span style="color:#f92672">=</span> download_dir <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;/&#39;</span> <span style="color:#f92672">+</span> race_name <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;_&#39;</span> <span style="color:#f92672">+</span> img_name <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;.jpg&#39;</span>
+    request<span style="color:#f92672">.</span>urlretrieve(horse_src,save_name)
+  driver<span style="color:#f92672">.</span>back()
+</code></pre></div><p>保存した画像を実際のレース結果と突合し、手作業で上位3位以内グループとそれ以外のグループに分けました。以下のような感じで画像が保存されています。</p>
+<p><img src="horse_photo.PNG" alt="保存された馬体画像"></p>
 <p>これで元データの収集が完了しました。</p>
-</div>
-</div>
-<div id="kerasを用いてcnnを学習させる" class="section level2">
-<h2>2. <code>Keras</code>を用いてCNNを学習させる</h2>
-<div id="kerasとは" class="section level3">
-<h3>Kerasとは？</h3>
+<h2 id="2-kerasを用いてcnnを学習させる">2. <code>Keras</code>を用いてCNNを学習させる</h2>
+<h3 id="kerasとは">Kerasとは？</h3>
 <p>さて、次に<code>Keras</code>を使ってCNNを学習させましょう。まず、<code>Keras</code>とは<code>Tensorflow</code>や<code>Theano</code>上で動く<code>Neural Network</code>ライブラリの1つです。<code>Keras</code>は比較的短いコードでモデルを組むことができ、また学習アルゴリズムが多いことが特徴のようです。</p>
-</div>
-<div id="cnnとは" class="section level3">
-<h3>CNNとは？</h3>
+<h3 id="cnnとは">CNNとは？</h3>
 <p>CNNは画像解析を行う際によく使用される<code>(Deep) Neural Network</code>の1種で、その名の通り<code>Convolution</code>(畳み込み)を追加した物となっています。畳み込みとは以下のような処理のことを言います。</p>
-<div class="figure">
-<img src="https://cdn-ak.f.st-hatena.com/images/fotolife/t/tdualdir/20180501/20180501211957.png" alt="" />
-<p class="caption">畳み込み層の処理</p>
-</div>
+<p><img src="https://cdn-ak.f.st-hatena.com/images/fotolife/t/tdualdir/20180501/20180501211957.png" alt="畳み込み層の処理"></p>
 <p>ここのインプットとは画像データのことです。画像解析では画像を数値として認識し、解析を行います。コンピュータ上の画像は<code>RGB</code>値という、赤(Red)、緑(Green)、青(Blue)の3色の0~255までの数値の強弱で表現されています。赤255、緑0、青0といった形で3層のベクトルになっており、この場合完全な赤が表現されます。上図の場合、a,b,cなどが各ピクセルの<code>RGB</code>値のいずれかを表していると考えることができます。畳み込みはこの<code>RGB</code>値をカーネルと呼ばれる行列との内積をとることで画像の特徴量を計算します。畳み込み層の意味は以下の動画がわかりやすいです。</p>
-<iframe width="560" height="315" src="https://www.youtube.com/embed/vU-JfZNBdYU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
-</iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/vU-JfZNBdYU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 <p>カーネルを上手くその画像の特徴的な部分を取得できるように学習することで、画像の識別が可能になります。畳み込み層はCNNの最重要部分だと思います。</p>
-<div class="figure">
-<img src="https://th.bing.com/th/id/OIP.F2Ik_XFzmu5jZF-byiAKQQHaCg?w=342&amp;h=118&amp;c=7&amp;o=5&amp;dpr=1.25&amp;pid=1.7" alt="" />
-<p class="caption">CNNの全体像</p>
-</div>
+<p><img src="https://th.bing.com/th/id/OIP.F2Ik_XFzmu5jZF-byiAKQQHaCg?w=342&amp;h=118&amp;c=7&amp;o=5&amp;dpr=1.25&amp;pid=1.7" alt="CNNの全体像"></p>
 <p>上図のようにCNNは畳み込み意外にももちろん入力層や出力層など通常の<code>Neural Network</code>と同じ層も持っています。なお、<code>MaxPooling</code>層について知りたい人は以下の動画を参照されてください。</p>
-<iframe width="560" height="315" src="https://www.youtube.com/embed/MLixg9K6oeU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
-</iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/MLixg9K6oeU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 <p>深層学習の学習方法については最急下降法(勾配法)がオーソドックスなものとして知られていますが、<code>Adam</code>など色々な拡張アルゴリズムが提案されています。基本的には、<code>Adam</code>は<code>momentum</code>を使用することが多いでしょうか。</p>
-</div>
-<div id="コーディング" class="section level3">
-<h3>コーディング</h3>
+<h3 id="コーディング">コーディング</h3>
 <p>では、実際にコーディングしていきます。</p>
-<pre class="python"><code>from keras.utils import np_utils
-from keras.models import Sequential
-from keras.layers.convolutional import MaxPooling2D
-from keras.layers import Activation, Conv2D, Flatten, Dense,Dropout
-from sklearn.model_selection import train_test_split
-from keras.optimizers import SGD, Adadelta, Adagrad, Adam, Adamax, RMSprop, Nadam
-from PIL import Image
-import numpy as np
-import glob
-import matplotlib.pyplot as plt
-import time
-import os</code></pre>
-<p>まず最初に収集してきた画像データを数値データに変換し学習データを作成します。
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> keras.utils <span style="color:#f92672">import</span> np_utils
+</code></pre></div><pre><code>## Using TensorFlow backend.
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> keras.models <span style="color:#f92672">import</span> Sequential
+<span style="color:#f92672">from</span> keras.layers.convolutional <span style="color:#f92672">import</span> MaxPooling2D
+<span style="color:#f92672">from</span> keras.layers <span style="color:#f92672">import</span> Activation, Conv2D, Flatten, Dense,Dropout
+<span style="color:#f92672">from</span> sklearn.model_selection <span style="color:#f92672">import</span> train_test_split
+<span style="color:#f92672">from</span> keras.optimizers <span style="color:#f92672">import</span> SGD, Adadelta, Adagrad, Adam, Adamax, RMSprop, Nadam
+<span style="color:#f92672">from</span> PIL <span style="color:#f92672">import</span> Image
+<span style="color:#f92672">import</span> numpy <span style="color:#f92672">as</span> np
+<span style="color:#f92672">import</span> glob
+<span style="color:#f92672">import</span> matplotlib.pyplot <span style="color:#f92672">as</span> plt
+<span style="color:#f92672">import</span> time
+<span style="color:#f92672">import</span> os
+</code></pre></div><p>まず最初に収集してきた画像データを数値データに変換し学習データを作成します。
 ディレクトリ構造は以下のようになっており、上位画像とその他画像が別ディレクトリに保存されています。各ディレクトリから画像を読み込む際に、上位画像には1、その他には0というカテゴリ変数を与えます。</p>
 <p>馬体写真</p>
 <ul>
 <li>上位</li>
 <li>その他</li>
 </ul>
-<pre class="python"><code>#フォルダを指定
-folders = os.listdir(r&quot;C:\Users\aashi\umanalytics\photo\image&quot;)
-#画総数を指定(今回は50×50×3)。
-image_size = 300
-dense_size = len(folders)
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#75715e">#フォルダを指定</span>
+folders <span style="color:#f92672">=</span> os<span style="color:#f92672">.</span>listdir(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;C:\Users\aashi\umanalytics\photo\image&#34;</span>)
+<span style="color:#75715e">#画総数を指定(今回は50×50×3)。</span>
+image_size <span style="color:#f92672">=</span> <span style="color:#ae81ff">300</span>
+dense_size <span style="color:#f92672">=</span> len(folders)
 
-X = []
-Y = []
+X <span style="color:#f92672">=</span> []
+Y <span style="color:#f92672">=</span> []
 
-#それぞれのフォルダから画像を読み込み、Image関数を使用してRGB値ベクトル(numpy array)へ変換
-for i, folder in enumerate(folders):
-  files = glob.glob(&quot;C:/Users/aashi/umanalytics/photo/image/&quot; + folder + &quot;/*.jpg&quot;)
-  index = i
-  for k, file in enumerate(files):
-    image = Image.open(file)
-    image = image.convert(&quot;L&quot;).convert(&quot;RGB&quot;)
-    image = image.resize((image_size, image_size)) #画素数を落としている
+<span style="color:#75715e">#それぞれのフォルダから画像を読み込み、Image関数を使用してRGB値ベクトル(numpy array)へ変換</span>
+<span style="color:#66d9ef">for</span> i, folder <span style="color:#f92672">in</span> enumerate(folders):
+  files <span style="color:#f92672">=</span> glob<span style="color:#f92672">.</span>glob(<span style="color:#e6db74">&#34;C:/Users/aashi/umanalytics/photo/image/&#34;</span> <span style="color:#f92672">+</span> folder <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;/*.jpg&#34;</span>)
+  index <span style="color:#f92672">=</span> i
+  <span style="color:#66d9ef">for</span> k, file <span style="color:#f92672">in</span> enumerate(files):
+    image <span style="color:#f92672">=</span> Image<span style="color:#f92672">.</span>open(file)
+    image <span style="color:#f92672">=</span> image<span style="color:#f92672">.</span>convert(<span style="color:#e6db74">&#34;L&#34;</span>)<span style="color:#f92672">.</span>convert(<span style="color:#e6db74">&#34;RGB&#34;</span>)
+    image <span style="color:#f92672">=</span> image<span style="color:#f92672">.</span>resize((image_size, image_size)) <span style="color:#75715e">#画素数を落としている</span>
  
-    data = np.asarray(image)
-    X.append(data)
-    Y.append(index)
+    data <span style="color:#f92672">=</span> np<span style="color:#f92672">.</span>asarray(image)
+    X<span style="color:#f92672">.</span>append(data)
+    Y<span style="color:#f92672">.</span>append(index)
 
-X = np.array(X)
-Y = np.array(Y)
-X = X.astype(&#39;float32&#39;)
-X = X / 255.0 # 0~1へ変換
-X.shape
-Y = np_utils.to_categorical(Y, dense_size)
+X <span style="color:#f92672">=</span> np<span style="color:#f92672">.</span>array(X)
+Y <span style="color:#f92672">=</span> np<span style="color:#f92672">.</span>array(Y)
+X <span style="color:#f92672">=</span> X<span style="color:#f92672">.</span>astype(<span style="color:#e6db74">&#39;float32&#39;</span>)
+X <span style="color:#f92672">=</span> X <span style="color:#f92672">/</span> <span style="color:#ae81ff">255.0</span> <span style="color:#75715e"># 0~1へ変換</span>
+X<span style="color:#f92672">.</span>shape
+Y <span style="color:#f92672">=</span> np_utils<span style="color:#f92672">.</span>to_categorical(Y, dense_size)
 
-#訓練データとテストデータへ変換
-X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.20)</code></pre>
-<p>訓練データとテストデータの分割ができました。今考えているのは「上位」と「その他」の2値分類となっていますが、「上位」を3位以内と定義したので不均衡なデータとなっています(その他データが上位データの5倍くらい)。こういった場合、そのままのデータで学習をするとサンプルサイズが多い方のラベル(この場合「その他」)を予測しやすくなり、バイアスのあるモデルとなります。よって、学習データは2クラスそれぞれが同じサンプルサイズとなるよう調整してやる必要があります。</p>
-<pre class="python"><code>index_zero = np.random.choice(np.array(np.where(y_train[:,1]==0))[0,],np.count_nonzero(y_train[:,1]==1),replace=False)
-index_one = np.array(np.where(y_train[:,1]==1))[0]
-y_resampled = y_train[np.hstack((index_one,index_zero))]
-X_resampled = X_train[np.hstack((index_one,index_zero))]</code></pre>
-<p>学習データにはこの<code>y_resampled</code>と<code>X_resampled</code>を使用します。次に、CNNを構築していきます。<code>Keras</code>では、<code>sequential model</code>を指定し、<code>add</code>メソッドで層を追加して行くことでモデルを定義します。</p>
-<pre class="python"><code>model = Sequential()
-model.add(Conv2D(32, (3, 3), padding=&#39;same&#39;,input_shape=X_train.shape[1:]))
-model.add(Activation(&#39;relu&#39;))
-model.add(Conv2D(32, (3, 3)))
-model.add(Activation(&#39;relu&#39;))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.25))
+<span style="color:#75715e">#訓練データとテストデータへ変換</span>
+X_train, X_test, y_train, y_test <span style="color:#f92672">=</span> train_test_split(X, Y, test_size<span style="color:#f92672">=</span><span style="color:#ae81ff">0.20</span>)
+</code></pre></div><p>訓練データとテストデータの分割ができました。今考えているのは「上位」と「その他」の2値分類となっていますが、「上位」を3位以内と定義したので不均衡なデータとなっています(その他データが上位データの5倍くらい)。こういった場合、そのままのデータで学習をするとサンプルサイズが多い方のラベル(この場合「その他」)を予測しやすくなり、バイアスのあるモデルとなります。よって、学習データは2クラスそれぞれが同じサンプルサイズとなるよう調整してやる必要があります。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">index_zero <span style="color:#f92672">=</span> np<span style="color:#f92672">.</span>random<span style="color:#f92672">.</span>choice(np<span style="color:#f92672">.</span>array(np<span style="color:#f92672">.</span>where(y_train[:,<span style="color:#ae81ff">1</span>]<span style="color:#f92672">==</span><span style="color:#ae81ff">0</span>))[<span style="color:#ae81ff">0</span>,],np<span style="color:#f92672">.</span>count_nonzero(y_train[:,<span style="color:#ae81ff">1</span>]<span style="color:#f92672">==</span><span style="color:#ae81ff">1</span>),replace<span style="color:#f92672">=</span>False)
+index_one <span style="color:#f92672">=</span> np<span style="color:#f92672">.</span>array(np<span style="color:#f92672">.</span>where(y_train[:,<span style="color:#ae81ff">1</span>]<span style="color:#f92672">==</span><span style="color:#ae81ff">1</span>))[<span style="color:#ae81ff">0</span>]
+y_resampled <span style="color:#f92672">=</span> y_train[np<span style="color:#f92672">.</span>hstack((index_one,index_zero))]
+X_resampled <span style="color:#f92672">=</span> X_train[np<span style="color:#f92672">.</span>hstack((index_one,index_zero))]
+</code></pre></div><p>学習データにはこの<code>y_resampled</code>と<code>X_resampled</code>を使用します。次に、CNNを構築していきます。<code>Keras</code>では、<code>sequential model</code>を指定し、<code>add</code>メソッドで層を追加して行くことでモデルを定義します。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">model <span style="color:#f92672">=</span> Sequential()
+model<span style="color:#f92672">.</span>add(Conv2D(<span style="color:#ae81ff">32</span>, (<span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">3</span>), padding<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;same&#39;</span>,input_shape<span style="color:#f92672">=</span>X_train<span style="color:#f92672">.</span>shape[<span style="color:#ae81ff">1</span>:]))
+model<span style="color:#f92672">.</span>add(Activation(<span style="color:#e6db74">&#39;relu&#39;</span>))
+model<span style="color:#f92672">.</span>add(Conv2D(<span style="color:#ae81ff">32</span>, (<span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">3</span>)))
+model<span style="color:#f92672">.</span>add(Activation(<span style="color:#e6db74">&#39;relu&#39;</span>))
+model<span style="color:#f92672">.</span>add(MaxPooling2D(pool_size<span style="color:#f92672">=</span>(<span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">2</span>)))
+model<span style="color:#f92672">.</span>add(Dropout(<span style="color:#ae81ff">0.25</span>))
 
-model.add(Conv2D(64, (3, 3), padding=&#39;same&#39;))
-model.add(Activation(&#39;relu&#39;))
-model.add(Conv2D(64, (3, 3)))
-model.add(Activation(&#39;relu&#39;))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.25))
+model<span style="color:#f92672">.</span>add(Conv2D(<span style="color:#ae81ff">64</span>, (<span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">3</span>), padding<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;same&#39;</span>))
+model<span style="color:#f92672">.</span>add(Activation(<span style="color:#e6db74">&#39;relu&#39;</span>))
+model<span style="color:#f92672">.</span>add(Conv2D(<span style="color:#ae81ff">64</span>, (<span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">3</span>)))
+model<span style="color:#f92672">.</span>add(Activation(<span style="color:#e6db74">&#39;relu&#39;</span>))
+model<span style="color:#f92672">.</span>add(MaxPooling2D(pool_size<span style="color:#f92672">=</span>(<span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">2</span>)))
+model<span style="color:#f92672">.</span>add(Dropout(<span style="color:#ae81ff">0.25</span>))
 
-model.add(Flatten())
-model.add(Dense(512))
-model.add(Activation(&#39;relu&#39;))
-model.add(Dropout(0.5))
-model.add(Dense(dense_size))
-model.add(Activation(&#39;softmax&#39;))
+model<span style="color:#f92672">.</span>add(Flatten())
+model<span style="color:#f92672">.</span>add(Dense(<span style="color:#ae81ff">512</span>))
+model<span style="color:#f92672">.</span>add(Activation(<span style="color:#e6db74">&#39;relu&#39;</span>))
+model<span style="color:#f92672">.</span>add(Dropout(<span style="color:#ae81ff">0.5</span>))
+model<span style="color:#f92672">.</span>add(Dense(dense_size))
+model<span style="color:#f92672">.</span>add(Activation(<span style="color:#e6db74">&#39;softmax&#39;</span>))
 
-model.summary()</code></pre>
-<pre><code>## Model: &quot;sequential&quot;
+model<span style="color:#f92672">.</span>summary()
+</code></pre></div><pre><code>## Model: &quot;sequential_1&quot;
 ## _________________________________________________________________
 ## Layer (type)                 Output Shape              Param #   
 ## =================================================================
-## conv2d (Conv2D)              (None, 300, 300, 32)      896       
+## conv2d_1 (Conv2D)            (None, 300, 300, 32)      896       
 ## _________________________________________________________________
-## activation (Activation)      (None, 300, 300, 32)      0         
+## activation_1 (Activation)    (None, 300, 300, 32)      0         
 ## _________________________________________________________________
-## conv2d_1 (Conv2D)            (None, 298, 298, 32)      9248      
+## conv2d_2 (Conv2D)            (None, 298, 298, 32)      9248      
 ## _________________________________________________________________
-## activation_1 (Activation)    (None, 298, 298, 32)      0         
+## activation_2 (Activation)    (None, 298, 298, 32)      0         
 ## _________________________________________________________________
-## max_pooling2d (MaxPooling2D) (None, 149, 149, 32)      0         
+## max_pooling2d_1 (MaxPooling2 (None, 149, 149, 32)      0         
 ## _________________________________________________________________
-## dropout (Dropout)            (None, 149, 149, 32)      0         
+## dropout_1 (Dropout)          (None, 149, 149, 32)      0         
 ## _________________________________________________________________
-## conv2d_2 (Conv2D)            (None, 149, 149, 64)      18496     
+## conv2d_3 (Conv2D)            (None, 149, 149, 64)      18496     
 ## _________________________________________________________________
-## activation_2 (Activation)    (None, 149, 149, 64)      0         
+## activation_3 (Activation)    (None, 149, 149, 64)      0         
 ## _________________________________________________________________
-## conv2d_3 (Conv2D)            (None, 147, 147, 64)      36928     
+## conv2d_4 (Conv2D)            (None, 147, 147, 64)      36928     
 ## _________________________________________________________________
-## activation_3 (Activation)    (None, 147, 147, 64)      0         
+## activation_4 (Activation)    (None, 147, 147, 64)      0         
 ## _________________________________________________________________
-## max_pooling2d_1 (MaxPooling2 (None, 73, 73, 64)        0         
+## max_pooling2d_2 (MaxPooling2 (None, 73, 73, 64)        0         
 ## _________________________________________________________________
-## dropout_1 (Dropout)          (None, 73, 73, 64)        0         
+## dropout_2 (Dropout)          (None, 73, 73, 64)        0         
 ## _________________________________________________________________
-## flatten (Flatten)            (None, 341056)            0         
+## flatten_1 (Flatten)          (None, 341056)            0         
 ## _________________________________________________________________
-## dense (Dense)                (None, 512)               174621184 
+## dense_1 (Dense)              (None, 512)               174621184 
 ## _________________________________________________________________
-## activation_4 (Activation)    (None, 512)               0         
+## activation_5 (Activation)    (None, 512)               0         
 ## _________________________________________________________________
-## dropout_2 (Dropout)          (None, 512)               0         
+## dropout_3 (Dropout)          (None, 512)               0         
 ## _________________________________________________________________
-## dense_1 (Dense)              (None, 2)                 1026      
+## dense_2 (Dense)              (None, 2)                 1026      
 ## _________________________________________________________________
-## activation_5 (Activation)    (None, 2)                 0         
+## activation_6 (Activation)    (None, 2)                 0         
 ## =================================================================
 ## Total params: 174,687,778
 ## Trainable params: 174,687,778
 ## Non-trainable params: 0
-## _________________________________________________________________</code></pre>
-<p>では、学習パートに入ります。アルゴリズムには<code>Adadelta</code>を使用します。よくわかってないんですけどね。。。</p>
-<pre class="python"><code>optimizers =&quot;Adadelta&quot;
-results = {}
-epochs = 50
-model.compile(loss=&#39;categorical_crossentropy&#39;, optimizer=optimizers, metrics=[&#39;accuracy&#39;])
-results = model.fit(X_resampled, y_resampled, validation_split=0.2, epochs=epochs)</code></pre>
-</div>
-<div id="不均衡データ調整のためのアンダーサンプリング" class="section level3">
-<h3>不均衡データ調整のためのアンダーサンプリング</h3>
-<p>ここから、Testデータで2値分類を行うのですが、学習データをアンダーサンプリングしているので、予測確率を計算する際にアンダーサンプリングを行ったサンプル選択バイアスが生じてしまいます。論文は<a href="https://www3.nd.edu/~dial/publications/dalpozzolo2015calibrating.pdf">こちら</a>。
-よって、補正が必要になるのですがこの部分の定式化をここでしておきたいと思います。現在行っている2値分類問題を説明千数<span class="math inline">\(X\)</span>から2値を取る目的変数<span class="math inline">\(Y\)</span>を予測する問題と表現することにします。データセット<span class="math inline">\((X,Y)\)</span>は正例が負例よりもかなり少なく、負例のサンプルサイズを正例に合わせたデータセットを<span class="math inline">\((X_s,Y_s)\)</span>とします。ここで、<span class="math inline">\((X,Y)\)</span>のサンプル組が<span class="math inline">\((X_s,Y_s)\)</span>にも含まれる場合に1を取り、含まれない場合に0をとるカテゴリ変数<span class="math inline">\(s\)</span>を定義します。
-データセット<span class="math inline">\((X,Y)\)</span>を用いて構築したモデルに説明変数<span class="math inline">\(x\)</span>を与えた時、正例と予測する条件付き確率は<span class="math inline">\(P(y=1|x)\)</span>で表すことができます。一方、<span class="math inline">\((X_s,Y_s)\)</span>を用いて構築したモデルで正例を予測する条件付き確率はベイズの定理とカテゴリ変数<span class="math inline">\(s\)</span>を用いて、</p>
-<p><span class="math display">\[
+## _________________________________________________________________
+</code></pre><p>では、学習パートに入ります。アルゴリズムには<code>Adadelta</code>を使用します。よくわかってないんですけどね。。。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">optimizers <span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Adadelta&#34;</span>
+results <span style="color:#f92672">=</span> {}
+epochs <span style="color:#f92672">=</span> <span style="color:#ae81ff">50</span>
+model<span style="color:#f92672">.</span>compile(loss<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;categorical_crossentropy&#39;</span>, optimizer<span style="color:#f92672">=</span>optimizers, metrics<span style="color:#f92672">=</span>[<span style="color:#e6db74">&#39;accuracy&#39;</span>])
+results <span style="color:#f92672">=</span> model<span style="color:#f92672">.</span>fit(X_resampled, y_resampled, validation_split<span style="color:#f92672">=</span><span style="color:#ae81ff">0.2</span>, epochs<span style="color:#f92672">=</span>epochs)
+</code></pre></div><h3 id="不均衡データ調整のためのアンダーサンプリング">不均衡データ調整のためのアンダーサンプリング</h3>
+<p>ここから、Testデータで2値分類を行うのですが、学習データをアンダーサンプリングしているので、予測確率を計算する際にアンダーサンプリングを行ったサンプル選択バイアスが生じてしまいます。論文は<a href="https://www3.nd.edu/~dial/publications/dalpozzolo2015calibrating.pdf" target="_blank" rel="noopener">こちら</a>。
+よって、補正が必要になるのですがこの部分の定式化をここでしておきたいと思います。現在行っている2値分類問題を説明千数$X$から2値を取る目的変数$Y$を予測する問題と表現することにします。データセット$(X,Y)$は正例が負例よりもかなり少なく、負例のサンプルサイズを正例に合わせたデータセットを$(X_s,Y_s)$とします。ここで、$(X,Y)$のサンプル組が$(X_s,Y_s)$にも含まれる場合に1を取り、含まれない場合に0をとるカテゴリ変数$s$を定義します。
+データセット$(X,Y)$を用いて構築したモデルに説明変数$x$を与えた時、正例と予測する条件付き確率は$P(y=1|x)$で表すことができます。一方、$(X_s,Y_s)$を用いて構築したモデルで正例を予測する条件付き確率はベイズの定理とカテゴリ変数$s$を用いて、</p>
+<p>$$
 P(y=1|x,s=1) = \frac{P(s=1|y=1)P(y=1|x)}{P(s=1|y=1)P(y=1|x) + P(s=1|y=0)P(y=0|x)}
-\]</span>
-と書けます。<span class="math inline">\((X_s,Y_s)\)</span>は負例のサンプルサイズを正例に合わせているため、<span class="math inline">\(P(s=1,y=1)=1\)</span>であるので上式は</p>
-<p><span class="math display">\[
+$$
+と書けます。$(X_s,Y_s)$は負例のサンプルサイズを正例に合わせているため、$P(s=1,y=1)=1$であるので上式は</p>
+<p>$$
 P(y=1|x,s=1) = \frac{P(y=1|x)}{P(y=1|x) + P(s=1|y=0)P(y=0|x)}
 = \frac{P(y=1|x)}{P(y=1|x) + P(s=1|y=0)(1-P(y=1|x))}
-\]</span>
-と書き換えることができます。<span class="math inline">\(P(s=1|y=0)\neq0\)</span>であることは<span class="math inline">\((X_s,Y_s)\)</span>の定義より自明です(0だと正例しかない不均衡データになる)。よって、<span class="math inline">\(P(y=0,x)\neq0\)</span>である限り、アンダーサンプリングのモデルが正例とはじき出す確率は元のデータセットが出す確率に対して正のバイアスがあることがわかります。求めたいのはバイアスのない<span class="math inline">\(P(y=1|x)\)</span>なので<span class="math inline">\(P=P(y=1|x),P_s=P(y|x,s=1),\beta=P(s=1,y=0)\)</span>とすると、</p>
-<p><span class="math display">\[
+$$
+と書き換えることができます。$P(s=1|y=0)\neq0$であることは$(X_s,Y_s)$の定義より自明です(0だと正例しかない不均衡データになる)。よって、$P(y=0,x)\neq0$である限り、アンダーサンプリングのモデルが正例とはじき出す確率は元のデータセットが出す確率に対して正のバイアスがあることがわかります。求めたいのはバイアスのない$P(y=1|x)$なので$P=P(y=1|x),P_s=P(y|x,s=1),\beta=P(s=1,y=0)$とすると、</p>
+<p>$$
 P = \frac{\beta P_s}{\beta P_s-P_s+1}
-\]</span>
+$$
 とかけ、この関係式を用いてバイアスを補正することができます。
 今確認したことを関数として定義しましょう。</p>
-<pre class="python"><code>def calibration(y_proba, beta):
-    return y_proba / (y_proba + (1 - y_proba) / beta)
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">calibration</span>(y_proba, beta):
+    <span style="color:#66d9ef">return</span> y_proba <span style="color:#f92672">/</span> (y_proba <span style="color:#f92672">+</span> (<span style="color:#ae81ff">1</span> <span style="color:#f92672">-</span> y_proba) <span style="color:#f92672">/</span> beta)
 
-sampling_rate = sum(y_train[:,1]) / sum(1-y_train[:,1])
-y_proba_calib = calibration(model.predict(X_test), sampling_rate)
-y_pred = np_utils.to_categorical(np.argmax(y_proba_calib,axis=1), dense_size)
+sampling_rate <span style="color:#f92672">=</span> sum(y_train[:,<span style="color:#ae81ff">1</span>]) <span style="color:#f92672">/</span> sum(<span style="color:#ae81ff">1</span><span style="color:#f92672">-</span>y_train[:,<span style="color:#ae81ff">1</span>])
+y_proba_calib <span style="color:#f92672">=</span> calibration(model<span style="color:#f92672">.</span>predict(X_test), sampling_rate)
+y_pred <span style="color:#f92672">=</span> np_utils<span style="color:#f92672">.</span>to_categorical(np<span style="color:#f92672">.</span>argmax(y_proba_calib,axis<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>), dense_size)
 
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, accuracy_score
-score = accuracy_score(y_test, y_pred)
-print(&#39;Test accuracy:&#39;, score)</code></pre>
-<pre><code>## Test accuracy: 0.288135593220339</code></pre>
-<p>まったく良くない結果です。<code>ConfusionMatrix</code>を出してみたところどうやらうまくいっていないことがわかりました。</p>
-<pre class="python"><code>ConfusionMatrixDisplay(confusion_matrix(np.argmax(y_test,axis=1), np.argmax(y_pred,axis=1))).plot()</code></pre>
-<pre><code>## &lt;sklearn.metrics._plot.confusion_matrix.ConfusionMatrixDisplay object at 0x000000004939E748&gt;</code></pre>
-<pre class="python"><code>plt.show()</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
-<pre class="python"><code>plt.close()</code></pre>
-<p>不均衡データのバイアス修正はしたんですが、それでもなお負値を予測しやすいモデルとなっています。これでは使えないですね。</p>
-</div>
-</div>
-<div id="shap値を用いた結果解釈" class="section level2">
-<h2>3. Shap値を用いた結果解釈</h2>
+<span style="color:#f92672">from</span> sklearn.metrics <span style="color:#f92672">import</span> confusion_matrix, ConfusionMatrixDisplay, accuracy_score
+score <span style="color:#f92672">=</span> accuracy_score(y_test, y_pred)
+<span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#39;Test accuracy:&#39;</span>, score)
+</code></pre></div><pre><code>## Test accuracy: 0.22033898305084745
+</code></pre><p>まったく良くない結果です。<code>ConfusionMatrix</code>を出してみたところどうやらうまくいっていないことがわかりました。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">ConfusionMatrixDisplay(confusion_matrix(np<span style="color:#f92672">.</span>argmax(y_test,axis<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>), np<span style="color:#f92672">.</span>argmax(y_pred,axis<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>)))<span style="color:#f92672">.</span>plot()
+</code></pre></div><pre><code>## &lt;sklearn.metrics._plot.confusion_matrix.ConfusionMatrixDisplay object at 0x000000005474F108&gt;
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">plt<span style="color:#f92672">.</span>show()
+</code></pre></div><p><img src="../../post/post18/index_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">plt<span style="color:#f92672">.</span>close()
+</code></pre></div><p>不均衡データのバイアス修正はしたんですが、それでもなお負値を予測しやすいモデルとなっています。これでは使えないですね。</p>
+<h2 id="3-shap値を用いた結果解釈">3. Shap値を用いた結果解釈</h2>
 <p>今学習したモデルの<code>shap</code>値を考え、結果の解釈をしたいと思います。<code>shap</code>値については時間があれば、説明を追記したいと思います。簡単に言えば、CNNが画像のどの部分に特徴を捉え、馬が上位に入るかを予想したかを可視化で捉えることができます。この馬の解析をすることにします。</p>
-<pre class="python"><code>plt.imshow(X_test[0])
-plt.show()</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
-<pre class="python"><code>plt.close()</code></pre>
-<pre class="python"><code>import shap
-background = X_train[np.random.choice(X_train.shape[0],100,replace=False)]
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">plt<span style="color:#f92672">.</span>imshow(X_test[<span style="color:#ae81ff">0</span>])
+plt<span style="color:#f92672">.</span>show()
+</code></pre></div><p><img src="../../post/post18/index_files/figure-html/unnamed-chunk-13-3.png" width="672" /></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">plt<span style="color:#f92672">.</span>close()
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> shap
+background <span style="color:#f92672">=</span> X_train[np<span style="color:#f92672">.</span>random<span style="color:#f92672">.</span>choice(X_train<span style="color:#f92672">.</span>shape[<span style="color:#ae81ff">0</span>],<span style="color:#ae81ff">100</span>,replace<span style="color:#f92672">=</span>False)]
 
-e = shap.GradientExplainer(model,background)
+e <span style="color:#f92672">=</span> shap<span style="color:#f92672">.</span>GradientExplainer(model,background)
 
-shap_values = e.shap_values(X_test[[0]])
-shap.image_plot(shap_values[1],X_test[[0]])</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-15-1.png" width="576" /></p>
-<p>非常に微妙ですが、足や臀部などを評価しているようにみえます。ですが、背景に反応しているようにも見えるので馬体のみ取り出すトリミングをやる必要がありますね。これは物体検知のモデルを構築する必要がありそうです。また、今度の機会に考えます。
-各層において画像のどの側面を捉えているかを可視化してみたいと思います。</p>
-<pre class="python"><code>from keras import models
-
-layer_outputs = [layer.output for layer in model.layers[:8]]
-layer_names = []
-for layer in model.layers[:8]:
-    layer_names.append(layer.name)
-images_per_row = 16
-
-activation_model = models.Model(inputs=model.input, outputs=layer_outputs)
-activations = activation_model.predict(X_train[[0]])
-
-for layer_name, layer_activation in zip(layer_names, activations):
-    n_features = layer_activation.shape[-1]
-
-    size = layer_activation.shape[1]
-
-    n_cols = n_features // images_per_row
-    display_grid = np.zeros((size * n_cols, images_per_row * size))
-
-    for col in range(n_cols):
-        for row in range(images_per_row):
-            channel_image = layer_activation[0,
-                                             :, :,
-                                             col * images_per_row + row]
-            channel_image -= channel_image.mean()
-            channel_image /= channel_image.std()
-            channel_image *= 64
-            channel_image += 128
-            channel_image = np.clip(channel_image, 0, 255).astype(&#39;uint8&#39;)
-            display_grid[col * size : (col + 1) * size,
-                         row * size : (row + 1) * size] = channel_image
-
-    scale = 1. / size
-    plt.figure(figsize=(scale * display_grid.shape[1],
-                        scale * display_grid.shape[0]))
-    plt.title(layer_name)
-    plt.grid(False)
-    plt.imshow(display_grid, cmap=&#39;viridis&#39;)
-    plt.show()
-    plt.close()</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-16-1.png" width="1536" /><img src="index_files/figure-html/unnamed-chunk-16-2.png" width="1536" /><img src="index_files/figure-html/unnamed-chunk-16-3.png" width="1536" /><img src="index_files/figure-html/unnamed-chunk-16-4.png" width="1536" /><img src="index_files/figure-html/unnamed-chunk-16-5.png" width="1536" /><img src="index_files/figure-html/unnamed-chunk-16-6.png" width="1536" /><img src="index_files/figure-html/unnamed-chunk-16-7.png" width="1536" /><img src="index_files/figure-html/unnamed-chunk-16-8.png" width="1536" /><img src="index_files/figure-html/unnamed-chunk-16-9.png" width="576" /></p>
-<p>自分が未熟なこともあり、解釈が難しいですね。</p>
-</div>
-<div id="最後に" class="section level2">
-<h2>4. 最後に</h2>
+shap_values <span style="color:#f92672">=</span> e<span style="color:#f92672">.</span>shap_values(X_test[[<span style="color:#ae81ff">0</span>]])
+shap<span style="color:#f92672">.</span>image_plot(shap_values[<span style="color:#ae81ff">1</span>],X_test[[<span style="color:#ae81ff">0</span>]])
+</code></pre></div><p><img src="../../post/post18/index_files/figure-html/unnamed-chunk-14-5.png" width="576" /></p>
+<p>非常に微妙ですが、足や臀部などを評価しているようにみえます。ですが、背景に反応しているようにも見えるので馬体のみ取り出すトリミングをやる必要がありますね。これは物体検知のモデルを構築する必要がありそうです。また、今度の機会に考えます。</p>
+<h2 id="4-最後に">4. 最後に</h2>
 <p>正直まったく上手くいっていません。やはり馬体から順位予測をするのは難しいのでしょうか。ほかの変数と掛け合わせると結果が変わったりするのでしょうか。今のままだとよい特徴量を抽出することができていないように思います。
 Youtubeからパドック動画を取得して、<code>Encoder-Decoder</code>モデルで解析するところまでやらないとうまくいかないんですかね。自分の実力が十分上がれば是非やってみたいと思います(いつになることやら)。それまでには、PCのスペックを上げないといけません。定額給付金を使うかな。。。</p>
-</div>
 
-    </div>
+          </div>
 
-    
+          
 
 
 
@@ -1404,11 +1360,11 @@ Youtubeからパドック動画を取得して、<code>Encoder-Decoder</code>モ
       
       <li><a href="../../post/post16/">LightGBMを使用して競馬結果を予想してみる</a></li>
       
-      <li><a href="../../post/post27/">【徹底比較】センチメントスコア算出手法！！ - 第1回</a></li>
+      <li><a href="../../post/post27/">【徹底比較】センチメントスコア算出手法！！ - 第2回</a></li>
+      
+      <li><a href="../../post/post25/">【徹底比較】センチメントスコア算出手法！！ - 第1回</a></li>
       
       <li><a href="../../post/post22/">OECD.orgからマクロパネルデータをAPIで取得する</a></li>
-      
-      <li><a href="../../post/post11/">rvestでyahoo競馬にある過去のレース結果をスクレイピングしてみた（2回目）</a></li>
       
     </ul>
   </div>
@@ -1418,8 +1374,12 @@ Youtubeからパドック動画を取得して、<code>Encoder-Decoder</code>モ
 
 
 
+        </div>
+      </article>
+    </main>
+
   </div>
-</article>
+</div>
 
       
 
@@ -1533,11 +1493,9 @@ Youtubeからパドック動画を取得して、<code>Encoder-Decoder</code>モ
       
     
     
-      
     
     
-    
-    <script src="../../js/wowchemy.min.2a3f95be2bc4762ba1847fb5d7a28317.js"></script>
+    <script src="../../js/wowchemy.min.4c2bca31150ce93c5a5e43b8a50f22fd.js"></script>
 
     
 
@@ -1547,6 +1505,16 @@ Youtubeからパドック動画を取得して、<code>Encoder-Decoder</code>モ
   <div class="container">
     <footer class="site-footer">
   
+
+  
+   
+  <script>
+  $(document).ready(function () {
+    window.initializeCodeFolding("show" === "show");
+  });
+  </script>
+  <script src="../../js/codefolding.js"></script>
+
 
   <p class="powered-by">
     

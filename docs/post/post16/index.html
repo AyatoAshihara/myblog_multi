@@ -88,8 +88,8 @@
     
       
       
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/xcode.min.css" crossorigin="anonymous" title="hl-light">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/xcode.min.css" crossorigin="anonymous" title="hl-dark" disabled>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/solarized-dark.min.css" crossorigin="anonymous" title="hl-light">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/solarized-dark.min.css" crossorigin="anonymous" title="hl-dark" disabled>
       
     
 
@@ -672,9 +672,32 @@
 
 
 
-  <article class="article">
+  <div class="container-fluid docs">
+  <div class="row flex-xl-nowrap">
 
-  
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <ul class="nav toc-top">
+        <li><a href="#" id="back_to_top" class="docs-toc-title">On this page</a></li>
+      </ul>
+      <nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#1データインポート">1.データインポート</a></li>
+        <li><a href="#2-予測モデルの作成">2. 予測モデルの作成</a></li>
+        <li><a href="#3-shapでの結果解釈">3. shapでの結果解釈</a></li>
+        <li><a href="#4-最後に">4. 最後に</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+      
+    </div>
+
+    <main class="col-12 col-md-0 col-xl-10 py-md-3 pl-md-5 docs-content" role="main">
+      <article class="article">
+
+        
 
 
 
@@ -703,6 +726,22 @@
   <h1>LightGBMを使用して競馬結果を予想してみる</h1>
 
   
+
+  
+
+
+<div id="code-folding-buttons" class="dropdown btn-group pull-right">
+  <a class="btn btn-light btn-sm dropdown-toggle" href="#" role="button" id="allCodeToggleButton"
+     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    Code
+  </a>
+  <div class="dropdown-menu" aria-labelledby="allCodeToggleButton">
+    <a id="rmd-show-all-code" class="dropdown-item small" href="#">Show all</a>
+    <a id="rmd-hide-all-code" class="dropdown-item small" href="#">Hide all</a>
+  </div>
+</div>
+
+
 
   
 
@@ -774,112 +813,99 @@
 
 
 
-  <div class="article-container">
+        <div class="article-container">
 
-    <div class="article-style">
-      
-<script src="index_files/header-attrs/header-attrs.js"></script>
-
-<div id="TOC">
-<ul>
-<li><a href="#データインポート">1.データインポート</a></li>
-<li><a href="#予測モデルの作成">2. 予測モデルの作成</a></li>
-<li><a href="#shapでの結果解釈">3. shapでの結果解釈</a></li>
-<li><a href="#最後に">4. 最後に</a></li>
-</ul>
-</div>
-
-<p>おはこんばんにちは。かなり久しぶりではありますが、Pythonの勉強をかねて以前yahoo.keibaで収集した競馬のレース結果データから、レース結果を予想するモデルを作成したいと思います。</p>
-<div id="データインポート" class="section level2">
-<h2>1.データインポート</h2>
+          <div class="article-style">
+            <p>おはこんばんにちは。かなり久しぶりではありますが、Pythonの勉強をかねて以前yahoo.keibaで収集した競馬のレース結果データから、レース結果を予想するモデルを作成したいと思います。</p>
+<h2 id="1データインポート">1.データインポート</h2>
 <p>まず、前回<code>sqlite</code>に保存したレース結果データを<code>pandas</code>データフレームへ保存します。</p>
-<pre class="python"><code>conn = sqlite3.connect(r&#39;C:\hogehoge\horse_data.db&#39;)
-sql = r&#39;SELECT * FROM race_result&#39;
-df = pd.read_sql(con=conn,sql=sql)</code></pre>
-<p>データの中身を確認してみましょう。列は以下のようになっています。orderが着順となっています。</p>
-<pre class="python"><code>df.columns</code></pre>
-<pre><code>## Index([&#39;order&#39;, &#39;frame_number&#39;, &#39;horse_number&#39;, &#39;trainer&#39;, &#39;passing_rank&#39;,
-##        &#39;last_3F&#39;, &#39;time&#39;, &#39;margin&#39;, &#39;horse_name&#39;, &#39;horse_age&#39;, &#39;horse_sex&#39;,
-##        &#39;horse_weight&#39;, &#39;horse_weight_change&#39;, &#39;brinker&#39;, &#39;jockey&#39;,
-##        &#39;jockey_weight&#39;, &#39;jockey_weight_change&#39;, &#39;odds&#39;, &#39;popularity&#39;,
-##        &#39;race_date&#39;, &#39;race_course&#39;, &#39;race_name&#39;, &#39;race_distance&#39;, &#39;type&#39;,
-##        &#39;race_turn&#39;, &#39;race_condition&#39;, &#39;race_weather&#39;, &#39;colour&#39;, &#39;owner&#39;,
-##        &#39;farm&#39;, &#39;locality&#39;, &#39;horse_birthday&#39;, &#39;father&#39;, &#39;mother&#39;, &#39;prize&#39;,
-##        &#39;http&#39;],
-##       dtype=&#39;object&#39;)</code></pre>
-<p>orderの中身を確認してみると、括弧（）がついている物が多く、また取消や中止、失格などが存在するため、文字型に認識されていることがわかります。ちなみに括弧（）内の順位は入線順位というやつで、他馬の走行を妨害したりして順位が降着させられたことを意味します（<a href="http://www.jra.go.jp/judge/" class="uri">http://www.jra.go.jp/judge/</a>）。</p>
-<pre class="python"><code>df.loc[:,&#39;order&#39;].unique()</code></pre>
-<pre><code>## array([&#39;1&#39;, &#39;7&#39;, &#39;2&#39;, &#39;8&#39;, &#39;5&#39;, &#39;15&#39;, &#39;6&#39;, &#39;12&#39;, &#39;11&#39;, &#39;14&#39;, &#39;3&#39;, &#39;13&#39;,
-##        &#39;4&#39;, &#39;16&#39;, &#39;9&#39;, &#39;10&#39;, &#39;取消&#39;, &#39;中止&#39;, &#39;除外&#39;, &#39;17&#39;, &#39;18&#39;, &#39;4(3)&#39;, &#39;2(1)&#39;,
-##        &#39;3(2)&#39;, &#39;6(4)&#39;, &#39;失格&#39;, &#39;9(8)&#39;, &#39;16(6)&#39;, &#39;12(12)&#39;, &#39;13(9)&#39;, &#39;6(3)&#39;,
-##        &#39;10(7)&#39;, &#39;6(5)&#39;, &#39;9(3)&#39;, &#39;11(8)&#39;, &#39;13(2)&#39;, &#39;12(9)&#39;, &#39;14(7)&#39;,
-##        &#39;10(1)&#39;, &#39;16(8)&#39;, &#39;14(6)&#39;, &#39;10(3)&#39;, &#39;12(1)&#39;, &#39;13(6)&#39;, &#39;7(1)&#39;,
-##        &#39;12(6)&#39;, &#39;6(2)&#39;, &#39;11(2)&#39;, &#39;15(6)&#39;, &#39;13(10)&#39;, &#39;14(4)&#39;, &#39;7(5)&#39;,
-##        &#39;17(4)&#39;, &#39;9(7)&#39;, &#39;16(14)&#39;, &#39;12(11)&#39;, &#39;14(2)&#39;, &#39;8(2)&#39;, &#39;9(5)&#39;,
-##        &#39;11(5)&#39;, &#39;12(7)&#39;, &#39;11(1)&#39;, &#39;12(8)&#39;, &#39;7(4)&#39;, &#39;5(4)&#39;, &#39;13(12)&#39;,
-##        &#39;14(3)&#39;, &#39;10(2)&#39;, &#39;11(10)&#39;, &#39;18(3)&#39;, &#39;10(4)&#39;, &#39;15(8)&#39;, &#39;8(3)&#39;,
-##        &#39;5(1)&#39;, &#39;10(5)&#39;, &#39;7(3)&#39;, &#39;5(2)&#39;, &#39;9(1)&#39;, &#39;13(3)&#39;, &#39;16(11)&#39;,
-##        &#39;11(3)&#39;, &#39;18(15)&#39;, &#39;11(6)&#39;, &#39;10(6)&#39;, &#39;14(12)&#39;, &#39;12(5)&#39;, &#39;15(14)&#39;,
-##        &#39;17(8)&#39;, &#39;18(6)&#39;, &#39;4(2)&#39;, &#39;18(10)&#39;, &#39;16(7)&#39;, &#39;13(1)&#39;, &#39;16(10)&#39;,
-##        &#39;15(7)&#39;, &#39;9(4)&#39;, &#39;15(5)&#39;, &#39;12(3)&#39;, &#39;8(7)&#39;, &#39;15(2)&#39;, &#39;12(10)&#39;,
-##        &#39;14(9)&#39;, &#39;3(1)&#39;, &#39;6(1)&#39;, &#39;14(5)&#39;, &#39;15(4)&#39;, &#39;11(4)&#39;, &#39;12(4)&#39;,
-##        &#39;16(4)&#39;, &#39;9(2)&#39;, &#39;13(5)&#39;, &#39;12(2)&#39;, &#39;15(1)&#39;, &#39;4(1)&#39;, &#39;14(13)&#39;,
-##        &#39;14(1)&#39;, &#39;13(7)&#39;, &#39;5(3)&#39;, &#39;8(6)&#39;, &#39;15(13)&#39;, &#39;7(2)&#39;, &#39;15(11)&#39;,
-##        &#39;10(9)&#39;, &#39;11(9)&#39;, &#39;8(4)&#39;, &#39;15(3)&#39;, &#39;13(4)&#39;, &#39;16(12)&#39;, &#39;16(5)&#39;,
-##        &#39;18(11)&#39;, &#39;10(8)&#39;, &#39;18(8)&#39;, &#39;14(8)&#39;, &#39;16(9)&#39;, &#39;8(5)&#39;, &#39;8(1)&#39;,
-##        &#39;14(11)&#39;, &#39;9(6)&#39;, &#39;16(13)&#39;, &#39;16(15)&#39;, &#39;11(11)&#39;, &#39;15(10)&#39;, &#39;7(6)&#39;],
-##       dtype=object)</code></pre>
-<p>まずここを修正しましょう。括弧を除去してint型に型変更し、入線順位は新たな列<code>arriving order</code>として追加します。</p>
-<pre class="python"><code>df[&#39;arriving order&#39;] = df[df.order.str.contains(r&#39;\d*\(\d*\)&#39;,regex=True)][&#39;order&#39;].replace(r&#39;\d+\(&#39;,r&#39;&#39;,regex=True).replace(r&#39;\)&#39;,r&#39;&#39;,regex=True).astype(&#39;float64&#39;)
-df[&#39;arriving order&#39;].unique()</code></pre>
-<pre><code>## array([nan,  3.,  1.,  2.,  4.,  8.,  6., 12.,  9.,  7.,  5., 10., 14.,
-##        11., 15., 13.])</code></pre>
-<pre class="python"><code>df[&#39;order&#39;] = df[&#39;order&#39;].replace(r&#39;\(\d+\)&#39;,r&#39;&#39;,regex=True)
-df = df[lambda df: ~df.order.str.contains(r&#39;(取消|中止|除外|失格)&#39;,regex=True)]</code></pre>
-<pre><code>## C:\Users\aashi\Anaconda3\envs\umanalytics\lib\site-packages\pandas\core\strings.py:1954: UserWarning: This pattern has match groups. To actually get the groups, use str.extract.
-##   return func(self, *args, **kwargs)</code></pre>
-<pre class="python"><code>df[&#39;order&#39;] = df[&#39;order&#39;].astype(&#39;float64&#39;)
-df[&#39;order&#39;].unique()</code></pre>
-<pre><code>## array([ 1.,  7.,  2.,  8.,  5., 15.,  6., 12., 11., 14.,  3., 13.,  4.,
-##        16.,  9., 10., 17., 18.])</code></pre>
-<p>きれいな<code>float</code>型に処理することができました。では、次にラスト3Fのタイムの前処理に移ります。前走のラスト3Fのタイムを予測に使用します。</p>
-<pre class="python"><code>import numpy as np
-df[&#39;last_3F&#39;] = df[&#39;last_3F&#39;].replace(r&#39;character(0)&#39;,np.nan,regex=False).astype(&#39;float64&#39;)
-df[&#39;last_3F&#39;] = df.groupby(&#39;horse_name&#39;)[&#39;last_3F&#39;].shift(-1)</code></pre>
-<p>前走のレースと順位、追加順位もデータセットへ含めましょう。</p>
-<pre class="python"><code>df[&#39;prerace&#39;] = df.groupby(&#39;horse_name&#39;)[&#39;race_name&#39;].shift(-1)
-df[&#39;preorder&#39;] = df.groupby(&#39;horse_name&#39;)[&#39;order&#39;].shift(-1)
-df[&#39;prepassing&#39;] = df.groupby(&#39;horse_name&#39;)[&#39;passing_rank&#39;].shift(-1)</code></pre>
-<p>出走時点で獲得している累積賞金額も追加します。</p>
-<pre class="python"><code>df[&#39;preprize&#39;] = df.groupby(&#39;horse_name&#39;)[&#39;prize&#39;].shift(-1)
-df[&#39;preprize&#39;] = df[&#39;preprize&#39;].fillna(0)
-df[&#39;margin&#39;] = df.groupby(&#39;horse_name&#39;)[&#39;margin&#39;].shift(-1)</code></pre>
-<p>その他、欠損値やデータ型の修正、カテゴリデータのラベルエンコーディングです。</p>
-<pre class="python"><code>df[&#39;horse_weight&#39;] = df[&#39;horse_weight&#39;].astype(&#39;float64&#39;)
-df[&#39;margin&#39;] = df[&#39;margin&#39;].replace(r&#39;character(0)&#39;,np.nan,regex=False)
-df[&#39;horse_age&#39;] = df[&#39;horse_age&#39;].astype(&#39;float64&#39;)
-df[&#39;horse_weight_change&#39;] = df[&#39;horse_weight_change&#39;].astype(&#39;float64&#39;)
-df[&#39;jockey_weight&#39;] = df[&#39;jockey_weight&#39;].astype(&#39;float64&#39;)
-df[&#39;race_distance&#39;] = df[&#39;race_distance&#39;].replace(r&#39;m&#39;,r&#39;&#39;,regex=True).astype(&#39;float64&#39;)
-df[&#39;race_turn&#39;] = df[&#39;race_turn&#39;].replace(r&#39;character(0)&#39;,np.nan,regex=False)
-df.loc[df[&#39;order&#39;]!=1,&#39;order&#39;] = 0
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">conn <span style="color:#f92672">=</span> sqlite3<span style="color:#f92672">.</span>connect(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#39;C:\hogehoge\horse_data.db&#39;</span>)
+sql <span style="color:#f92672">=</span> <span style="color:#e6db74">r</span><span style="color:#e6db74">&#39;SELECT * FROM race_result&#39;</span>
+df <span style="color:#f92672">=</span> pd<span style="color:#f92672">.</span>read_sql(con<span style="color:#f92672">=</span>conn,sql<span style="color:#f92672">=</span>sql)
+</code></pre></div><p>データの中身を確認してみましょう。列は以下のようになっています。orderが着順となっています。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">df<span style="color:#f92672">.</span>columns
+</code></pre></div><pre><code>## Index(['order', 'frame_number', 'horse_number', 'trainer', 'passing_rank',
+##        'last_3F', 'time', 'margin', 'horse_name', 'horse_age', 'horse_sex',
+##        'horse_weight', 'horse_weight_change', 'brinker', 'jockey',
+##        'jockey_weight', 'jockey_weight_change', 'odds', 'popularity',
+##        'race_date', 'race_course', 'race_name', 'race_distance', 'type',
+##        'race_turn', 'race_condition', 'race_weather', 'colour', 'owner',
+##        'farm', 'locality', 'horse_birthday', 'father', 'mother', 'prize',
+##        'http'],
+##       dtype='object')
+</code></pre><p>orderの中身を確認してみると、括弧（）がついている物が多く、また取消や中止、失格などが存在するため、文字型に認識されていることがわかります。ちなみに括弧（）内の順位は入線順位というやつで、他馬の走行を妨害したりして順位が降着させられたことを意味します（http://www.jra.go.jp/judge/）。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">df<span style="color:#f92672">.</span>loc[:,<span style="color:#e6db74">&#39;order&#39;</span>]<span style="color:#f92672">.</span>unique()
+</code></pre></div><pre><code>## array(['1', '7', '2', '8', '5', '15', '6', '12', '11', '14', '3', '13',
+##        '4', '16', '9', '10', '取消', '中止', '除外', '17', '18', '4(3)', '2(1)',
+##        '3(2)', '6(4)', '失格', '9(8)', '16(6)', '12(12)', '13(9)', '6(3)',
+##        '10(7)', '6(5)', '9(3)', '11(8)', '13(2)', '12(9)', '14(7)',
+##        '10(1)', '16(8)', '14(6)', '10(3)', '12(1)', '13(6)', '7(1)',
+##        '12(6)', '6(2)', '11(2)', '15(6)', '13(10)', '14(4)', '7(5)',
+##        '17(4)', '9(7)', '16(14)', '12(11)', '14(2)', '8(2)', '9(5)',
+##        '11(5)', '12(7)', '11(1)', '12(8)', '7(4)', '5(4)', '13(12)',
+##        '14(3)', '10(2)', '11(10)', '18(3)', '10(4)', '15(8)', '8(3)',
+##        '5(1)', '10(5)', '7(3)', '5(2)', '9(1)', '13(3)', '16(11)',
+##        '11(3)', '18(15)', '11(6)', '10(6)', '14(12)', '12(5)', '15(14)',
+##        '17(8)', '18(6)', '4(2)', '18(10)', '16(7)', '13(1)', '16(10)',
+##        '15(7)', '9(4)', '15(5)', '12(3)', '8(7)', '15(2)', '12(10)',
+##        '14(9)', '3(1)', '6(1)', '14(5)', '15(4)', '11(4)', '12(4)',
+##        '16(4)', '9(2)', '13(5)', '12(2)', '15(1)', '4(1)', '14(13)',
+##        '14(1)', '13(7)', '5(3)', '8(6)', '15(13)', '7(2)', '15(11)',
+##        '10(9)', '11(9)', '8(4)', '15(3)', '13(4)', '16(12)', '16(5)',
+##        '18(11)', '10(8)', '18(8)', '14(8)', '16(9)', '8(5)', '8(1)',
+##        '14(11)', '9(6)', '16(13)', '16(15)', '11(11)', '15(10)', '7(6)'],
+##       dtype=object)
+</code></pre><p>まずここを修正しましょう。括弧を除去してint型に型変更し、入線順位は新たな列<code>arriving order</code>として追加します。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">df[<span style="color:#e6db74">&#39;arriving order&#39;</span>] <span style="color:#f92672">=</span> df[df<span style="color:#f92672">.</span>order<span style="color:#f92672">.</span>str<span style="color:#f92672">.</span>contains(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#39;\d*\(\d*\)&#39;</span>,regex<span style="color:#f92672">=</span>True)][<span style="color:#e6db74">&#39;order&#39;</span>]<span style="color:#f92672">.</span>replace(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#39;\d+\(&#39;</span>,<span style="color:#e6db74">r</span><span style="color:#e6db74">&#39;&#39;</span>,regex<span style="color:#f92672">=</span>True)<span style="color:#f92672">.</span>replace(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#39;\)&#39;</span>,<span style="color:#e6db74">r</span><span style="color:#e6db74">&#39;&#39;</span>,regex<span style="color:#f92672">=</span>True)<span style="color:#f92672">.</span>astype(<span style="color:#e6db74">&#39;float64&#39;</span>)
+df[<span style="color:#e6db74">&#39;arriving order&#39;</span>]<span style="color:#f92672">.</span>unique()
+</code></pre></div><pre><code>## array([nan,  3.,  1.,  2.,  4.,  8.,  6., 12.,  9.,  7.,  5., 10., 14.,
+##        11., 15., 13.])
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">df[<span style="color:#e6db74">&#39;order&#39;</span>] <span style="color:#f92672">=</span> df[<span style="color:#e6db74">&#39;order&#39;</span>]<span style="color:#f92672">.</span>replace(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#39;\(\d+\)&#39;</span>,<span style="color:#e6db74">r</span><span style="color:#e6db74">&#39;&#39;</span>,regex<span style="color:#f92672">=</span>True)
+df <span style="color:#f92672">=</span> df[<span style="color:#66d9ef">lambda</span> df: <span style="color:#f92672">~</span>df<span style="color:#f92672">.</span>order<span style="color:#f92672">.</span>str<span style="color:#f92672">.</span>contains(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#39;(取消|中止|除外|失格)&#39;</span>,regex<span style="color:#f92672">=</span>True)]
+</code></pre></div><pre><code>## C:\Users\aashi\ANACON~1\lib\site-packages\pandas\core\strings.py:1954: UserWarning: This pattern has match groups. To actually get the groups, use str.extract.
+##   return func(self, *args, **kwargs)
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">df[<span style="color:#e6db74">&#39;order&#39;</span>] <span style="color:#f92672">=</span> df[<span style="color:#e6db74">&#39;order&#39;</span>]<span style="color:#f92672">.</span>astype(<span style="color:#e6db74">&#39;float64&#39;</span>)
+df[<span style="color:#e6db74">&#39;order&#39;</span>]<span style="color:#f92672">.</span>unique()
+</code></pre></div><pre><code>## array([ 1.,  7.,  2.,  8.,  5., 15.,  6., 12., 11., 14.,  3., 13.,  4.,
+##        16.,  9., 10., 17., 18.])
+</code></pre><p>きれいな<code>float</code>型に処理することができました。では、次にラスト3Fのタイムの前処理に移ります。前走のラスト3Fのタイムを予測に使用します。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> numpy <span style="color:#f92672">as</span> np
+df[<span style="color:#e6db74">&#39;last_3F&#39;</span>] <span style="color:#f92672">=</span> df[<span style="color:#e6db74">&#39;last_3F&#39;</span>]<span style="color:#f92672">.</span>replace(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#39;character(0)&#39;</span>,np<span style="color:#f92672">.</span>nan,regex<span style="color:#f92672">=</span>False)<span style="color:#f92672">.</span>astype(<span style="color:#e6db74">&#39;float64&#39;</span>)
+df[<span style="color:#e6db74">&#39;last_3F&#39;</span>] <span style="color:#f92672">=</span> df<span style="color:#f92672">.</span>groupby(<span style="color:#e6db74">&#39;horse_name&#39;</span>)[<span style="color:#e6db74">&#39;last_3F&#39;</span>]<span style="color:#f92672">.</span>shift(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)
+</code></pre></div><p>前走のレースと順位、追加順位もデータセットへ含めましょう。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">df[<span style="color:#e6db74">&#39;prerace&#39;</span>] <span style="color:#f92672">=</span> df<span style="color:#f92672">.</span>groupby(<span style="color:#e6db74">&#39;horse_name&#39;</span>)[<span style="color:#e6db74">&#39;race_name&#39;</span>]<span style="color:#f92672">.</span>shift(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)
+df[<span style="color:#e6db74">&#39;preorder&#39;</span>] <span style="color:#f92672">=</span> df<span style="color:#f92672">.</span>groupby(<span style="color:#e6db74">&#39;horse_name&#39;</span>)[<span style="color:#e6db74">&#39;order&#39;</span>]<span style="color:#f92672">.</span>shift(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)
+df[<span style="color:#e6db74">&#39;prepassing&#39;</span>] <span style="color:#f92672">=</span> df<span style="color:#f92672">.</span>groupby(<span style="color:#e6db74">&#39;horse_name&#39;</span>)[<span style="color:#e6db74">&#39;passing_rank&#39;</span>]<span style="color:#f92672">.</span>shift(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)
+</code></pre></div><p>出走時点で獲得している累積賞金額も追加します。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">df[<span style="color:#e6db74">&#39;preprize&#39;</span>] <span style="color:#f92672">=</span> df<span style="color:#f92672">.</span>groupby(<span style="color:#e6db74">&#39;horse_name&#39;</span>)[<span style="color:#e6db74">&#39;prize&#39;</span>]<span style="color:#f92672">.</span>shift(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)
+df[<span style="color:#e6db74">&#39;preprize&#39;</span>] <span style="color:#f92672">=</span> df[<span style="color:#e6db74">&#39;preprize&#39;</span>]<span style="color:#f92672">.</span>fillna(<span style="color:#ae81ff">0</span>)
+df[<span style="color:#e6db74">&#39;margin&#39;</span>] <span style="color:#f92672">=</span> df<span style="color:#f92672">.</span>groupby(<span style="color:#e6db74">&#39;horse_name&#39;</span>)[<span style="color:#e6db74">&#39;margin&#39;</span>]<span style="color:#f92672">.</span>shift(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)
+</code></pre></div><p>その他、欠損値やデータ型の修正、カテゴリデータのラベルエンコーディングです。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">df[<span style="color:#e6db74">&#39;horse_weight&#39;</span>] <span style="color:#f92672">=</span> df[<span style="color:#e6db74">&#39;horse_weight&#39;</span>]<span style="color:#f92672">.</span>astype(<span style="color:#e6db74">&#39;float64&#39;</span>)
+df[<span style="color:#e6db74">&#39;margin&#39;</span>] <span style="color:#f92672">=</span> df[<span style="color:#e6db74">&#39;margin&#39;</span>]<span style="color:#f92672">.</span>replace(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#39;character(0)&#39;</span>,np<span style="color:#f92672">.</span>nan,regex<span style="color:#f92672">=</span>False)
+df[<span style="color:#e6db74">&#39;horse_age&#39;</span>] <span style="color:#f92672">=</span> df[<span style="color:#e6db74">&#39;horse_age&#39;</span>]<span style="color:#f92672">.</span>astype(<span style="color:#e6db74">&#39;float64&#39;</span>)
+df[<span style="color:#e6db74">&#39;horse_weight_change&#39;</span>] <span style="color:#f92672">=</span> df[<span style="color:#e6db74">&#39;horse_weight_change&#39;</span>]<span style="color:#f92672">.</span>astype(<span style="color:#e6db74">&#39;float64&#39;</span>)
+df[<span style="color:#e6db74">&#39;jockey_weight&#39;</span>] <span style="color:#f92672">=</span> df[<span style="color:#e6db74">&#39;jockey_weight&#39;</span>]<span style="color:#f92672">.</span>astype(<span style="color:#e6db74">&#39;float64&#39;</span>)
+df[<span style="color:#e6db74">&#39;race_distance&#39;</span>] <span style="color:#f92672">=</span> df[<span style="color:#e6db74">&#39;race_distance&#39;</span>]<span style="color:#f92672">.</span>replace(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#39;m&#39;</span>,<span style="color:#e6db74">r</span><span style="color:#e6db74">&#39;&#39;</span>,regex<span style="color:#f92672">=</span>True)<span style="color:#f92672">.</span>astype(<span style="color:#e6db74">&#39;float64&#39;</span>)
+df[<span style="color:#e6db74">&#39;race_turn&#39;</span>] <span style="color:#f92672">=</span> df[<span style="color:#e6db74">&#39;race_turn&#39;</span>]<span style="color:#f92672">.</span>replace(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#39;character(0)&#39;</span>,np<span style="color:#f92672">.</span>nan,regex<span style="color:#f92672">=</span>False)
+df<span style="color:#f92672">.</span>loc[df[<span style="color:#e6db74">&#39;order&#39;</span>]<span style="color:#f92672">!=</span><span style="color:#ae81ff">1</span>,<span style="color:#e6db74">&#39;order&#39;</span>] <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
 
-df[&#39;race_turn&#39;] = df[&#39;race_turn&#39;].fillna(&#39;missing&#39;)
-df[&#39;colour&#39;] = df[&#39;colour&#39;].fillna(&#39;missing&#39;)
-df[&#39;prepassing&#39;] = df[&#39;prepassing&#39;].fillna(&#39;missing&#39;)
-df[&#39;prerace&#39;] = df[&#39;prerace&#39;].fillna(&#39;missing&#39;)
-df[&#39;father&#39;] = df[&#39;father&#39;].fillna(&#39;missing&#39;)
-df[&#39;mother&#39;] = df[&#39;mother&#39;].fillna(&#39;missing&#39;)
+df[<span style="color:#e6db74">&#39;race_turn&#39;</span>] <span style="color:#f92672">=</span> df[<span style="color:#e6db74">&#39;race_turn&#39;</span>]<span style="color:#f92672">.</span>fillna(<span style="color:#e6db74">&#39;missing&#39;</span>)
+df[<span style="color:#e6db74">&#39;colour&#39;</span>] <span style="color:#f92672">=</span> df[<span style="color:#e6db74">&#39;colour&#39;</span>]<span style="color:#f92672">.</span>fillna(<span style="color:#e6db74">&#39;missing&#39;</span>)
+df[<span style="color:#e6db74">&#39;prepassing&#39;</span>] <span style="color:#f92672">=</span> df[<span style="color:#e6db74">&#39;prepassing&#39;</span>]<span style="color:#f92672">.</span>fillna(<span style="color:#e6db74">&#39;missing&#39;</span>)
+df[<span style="color:#e6db74">&#39;prerace&#39;</span>] <span style="color:#f92672">=</span> df[<span style="color:#e6db74">&#39;prerace&#39;</span>]<span style="color:#f92672">.</span>fillna(<span style="color:#e6db74">&#39;missing&#39;</span>)
+df[<span style="color:#e6db74">&#39;father&#39;</span>] <span style="color:#f92672">=</span> df[<span style="color:#e6db74">&#39;father&#39;</span>]<span style="color:#f92672">.</span>fillna(<span style="color:#e6db74">&#39;missing&#39;</span>)
+df[<span style="color:#e6db74">&#39;mother&#39;</span>] <span style="color:#f92672">=</span> df[<span style="color:#e6db74">&#39;mother&#39;</span>]<span style="color:#f92672">.</span>fillna(<span style="color:#e6db74">&#39;missing&#39;</span>)
 
-from sklearn import preprocessing
-cat_list = [&#39;trainer&#39;, &#39;horse_name&#39;, &#39;horse_sex&#39;, &#39;brinker&#39;, &#39;jockey&#39;, &#39;race_course&#39;, &#39;race_name&#39;, &#39;type&#39;, &#39;race_turn&#39;, &#39;race_condition&#39;, &#39;race_weather&#39;, &#39;colour&#39;, &#39;father&#39;, &#39;mother&#39;, &#39;prerace&#39;, &#39;prepassing&#39;]
-for column in cat_list:
-    target_column = df[column]
-    le = preprocessing.LabelEncoder()
-    le.fit(target_column)
-    label_encoded_column = le.transform(target_column)
-    df[column] = pd.Series(label_encoded_column).astype(&#39;category&#39;)</code></pre>
-<pre><code>## LabelEncoder()
+<span style="color:#f92672">from</span> sklearn <span style="color:#f92672">import</span> preprocessing
+cat_list <span style="color:#f92672">=</span> [<span style="color:#e6db74">&#39;trainer&#39;</span>, <span style="color:#e6db74">&#39;horse_name&#39;</span>, <span style="color:#e6db74">&#39;horse_sex&#39;</span>, <span style="color:#e6db74">&#39;brinker&#39;</span>, <span style="color:#e6db74">&#39;jockey&#39;</span>, <span style="color:#e6db74">&#39;race_course&#39;</span>, <span style="color:#e6db74">&#39;race_name&#39;</span>, <span style="color:#e6db74">&#39;type&#39;</span>, <span style="color:#e6db74">&#39;race_turn&#39;</span>, <span style="color:#e6db74">&#39;race_condition&#39;</span>, <span style="color:#e6db74">&#39;race_weather&#39;</span>, <span style="color:#e6db74">&#39;colour&#39;</span>, <span style="color:#e6db74">&#39;father&#39;</span>, <span style="color:#e6db74">&#39;mother&#39;</span>, <span style="color:#e6db74">&#39;prerace&#39;</span>, <span style="color:#e6db74">&#39;prepassing&#39;</span>]
+<span style="color:#66d9ef">for</span> column <span style="color:#f92672">in</span> cat_list:
+    target_column <span style="color:#f92672">=</span> df[column]
+    le <span style="color:#f92672">=</span> preprocessing<span style="color:#f92672">.</span>LabelEncoder()
+    le<span style="color:#f92672">.</span>fit(target_column)
+    label_encoded_column <span style="color:#f92672">=</span> le<span style="color:#f92672">.</span>transform(target_column)
+    df[column] <span style="color:#f92672">=</span> pd<span style="color:#f92672">.</span>Series(label_encoded_column)<span style="color:#f92672">.</span>astype(<span style="color:#e6db74">&#39;category&#39;</span>)
+</code></pre></div><pre><code>## LabelEncoder()
 ## LabelEncoder()
 ## LabelEncoder()
 ## LabelEncoder()
@@ -894,117 +920,92 @@ for column in cat_list:
 ## LabelEncoder()
 ## LabelEncoder()
 ## LabelEncoder()
-## LabelEncoder()</code></pre>
-<pre class="python"><code>import pandas_profiling as pdq
-profile = pdq.ProfileReport(df)
-profile</code></pre>
-</div>
-<div id="予測モデルの作成" class="section level2">
-<h2>2. 予測モデルの作成</h2>
+## LabelEncoder()
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> pandas_profiling <span style="color:#f92672">as</span> pdq
+profile <span style="color:#f92672">=</span> pdq<span style="color:#f92672">.</span>ProfileReport(df)
+profile
+</code></pre></div><h2 id="2-予測モデルの作成">2. 予測モデルの作成</h2>
 <p>では<code>LightGBM</code>で予測モデルを作ってみます。<code>optuna</code>の<code>LightGBM</code>を使用して、ハイパーパラメータチューニングを行い、学習したモデルを用いて計算したテストデータの予測値と実績値の<code>confusion matrix</code>ならびに正解率を算出します。</p>
-<pre class="python"><code>import optuna.integration.lightgbm as lgb
-from sklearn.model_selection import train_test_split
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> optuna.integration.lightgbm <span style="color:#f92672">as</span> lgb
+<span style="color:#f92672">from</span> sklearn.model_selection <span style="color:#f92672">import</span> train_test_split
 
-y = df[&#39;order&#39;]
-x = df.drop([&#39;order&#39;,&#39;passing_rank&#39;,&#39;time&#39;,&#39;odds&#39;,&#39;popularity&#39;,&#39;owner&#39;,&#39;farm&#39;,&#39;locality&#39;,&#39;horse_birthday&#39;,&#39;http&#39;,&#39;prize&#39;,&#39;race_date&#39;,&#39;margin&#39;],axis=1)
+y <span style="color:#f92672">=</span> df[<span style="color:#e6db74">&#39;order&#39;</span>]
+x <span style="color:#f92672">=</span> df<span style="color:#f92672">.</span>drop([<span style="color:#e6db74">&#39;order&#39;</span>,<span style="color:#e6db74">&#39;passing_rank&#39;</span>,<span style="color:#e6db74">&#39;time&#39;</span>,<span style="color:#e6db74">&#39;odds&#39;</span>,<span style="color:#e6db74">&#39;popularity&#39;</span>,<span style="color:#e6db74">&#39;owner&#39;</span>,<span style="color:#e6db74">&#39;farm&#39;</span>,<span style="color:#e6db74">&#39;locality&#39;</span>,<span style="color:#e6db74">&#39;horse_birthday&#39;</span>,<span style="color:#e6db74">&#39;http&#39;</span>,<span style="color:#e6db74">&#39;prize&#39;</span>,<span style="color:#e6db74">&#39;race_date&#39;</span>,<span style="color:#e6db74">&#39;margin&#39;</span>],axis<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>)
 
-X_train, X_test, y_train, y_test = train_test_split(x, y)
-X_train, x_val, y_train, y_val = train_test_split(X_train, y_train)
+X_train, X_test, y_train, y_test <span style="color:#f92672">=</span> train_test_split(x, y)
+X_train, x_val, y_train, y_val <span style="color:#f92672">=</span> train_test_split(X_train, y_train)
 
-lgb_train = lgb.Dataset(X_train, y_train)
-lgb_eval = lgb.Dataset(x_val, y_val)
-lgb_test = lgb.Dataset(X_test, y_test, reference=lgb_train)
+lgb_train <span style="color:#f92672">=</span> lgb<span style="color:#f92672">.</span>Dataset(X_train, y_train)
+lgb_eval <span style="color:#f92672">=</span> lgb<span style="color:#f92672">.</span>Dataset(x_val, y_val)
+lgb_test <span style="color:#f92672">=</span> lgb<span style="color:#f92672">.</span>Dataset(X_test, y_test, reference<span style="color:#f92672">=</span>lgb_train)
 
-lgbm_params = {
-        &#39;objective&#39;: &#39;binary&#39;,
-        &#39;boost_from_average&#39;: False
+lgbm_params <span style="color:#f92672">=</span> {
+        <span style="color:#e6db74">&#39;objective&#39;</span>: <span style="color:#e6db74">&#39;binary&#39;</span>,
+        <span style="color:#e6db74">&#39;boost_from_average&#39;</span>: False
     }
 
-best_params, history = {}, []
-model = lgb.train(lgbm_params, lgb_train, categorical_feature = cat_list,valid_sets = lgb_eval, num_boost_round=100,early_stopping_rounds=20,best_params=best_params,tuning_history=history, verbose_eval=False)
-best_params
+model <span style="color:#f92672">=</span> lgb<span style="color:#f92672">.</span>train(lgbm_params, lgb_train, categorical_feature <span style="color:#f92672">=</span> cat_list, valid_sets <span style="color:#f92672">=</span> lgb_eval,  num_boost_round<span style="color:#f92672">=</span><span style="color:#ae81ff">100</span>, early_stopping_rounds<span style="color:#f92672">=</span><span style="color:#ae81ff">20</span>, verbose_eval<span style="color:#f92672">=</span>False)
 
-def calibration(y_proba, beta):
-    return y_proba / (y_proba + (1 - y_proba) / beta)
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">calibration</span>(y_proba, beta):
+    <span style="color:#66d9ef">return</span> y_proba <span style="color:#f92672">/</span> (y_proba <span style="color:#f92672">+</span> (<span style="color:#ae81ff">1</span> <span style="color:#f92672">-</span> y_proba) <span style="color:#f92672">/</span> beta)
 
-sampling_rate = y_train.sum() / len(y_train)
-y_proba = model.predict(X_test, num_iteration=model.best_iteration)
-y_proba_calib = calibration(y_proba, sampling_rate)
+sampling_rate <span style="color:#f92672">=</span> y_train<span style="color:#f92672">.</span>sum() <span style="color:#f92672">/</span> len(y_train)
+y_proba <span style="color:#f92672">=</span> model<span style="color:#f92672">.</span>predict(X_test, num_iteration<span style="color:#f92672">=</span>model<span style="color:#f92672">.</span>best_iteration)
+y_proba_calib <span style="color:#f92672">=</span> calibration(y_proba, sampling_rate)
 
-y_pred = np.vectorize(lambda x: 1 if x &gt; 0.49 else 0)(y_proba_calib)</code></pre>
-<p>可視化パートです。</p>
-<pre class="python"><code>from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, accuracy_score, precision_score, recall_score, f1_score, roc_curve, auc
-import matplotlib.pyplot as plt
-import seaborn as sns
+y_pred <span style="color:#f92672">=</span> np<span style="color:#f92672">.</span>vectorize(<span style="color:#66d9ef">lambda</span> x: <span style="color:#ae81ff">1</span> <span style="color:#66d9ef">if</span> x <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0.49</span> <span style="color:#66d9ef">else</span> <span style="color:#ae81ff">0</span>)(y_proba_calib)
+</code></pre></div><p>可視化パートです。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> sklearn.metrics <span style="color:#f92672">import</span> confusion_matrix, ConfusionMatrixDisplay, accuracy_score, precision_score, recall_score, f1_score
+<span style="color:#f92672">import</span> matplotlib.pyplot <span style="color:#f92672">as</span> plt
 
-# AUC (Area Under the Curve) を計算する
-fpr, tpr, thresholds = roc_curve(y_test, y_pred)
-auc = auc(fpr, tpr)
+<span style="color:#75715e"># Confusion Matrixを生成</span>
+ConfusionMatrixDisplay(confusion_matrix(y_test, y_pred))<span style="color:#f92672">.</span>plot()
+</code></pre></div><pre><code>## &lt;sklearn.metrics._plot.confusion_matrix.ConfusionMatrixDisplay object at 0x00000000C3E2F7C8&gt;
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">plt<span style="color:#f92672">.</span>show()
+</code></pre></div><p><img src="../../post/post16/index_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">plt<span style="color:#f92672">.</span>close()
 
-# ROC曲線をプロット
-plt.plot(fpr, tpr, label=&#39;ROC curve (area = %.2f)&#39;%auc)
-plt.legend()
-plt.title(&#39;ROC curve&#39;)
-plt.xlabel(&#39;False Positive Rate&#39;)
-plt.ylabel(&#39;True Positive Rate&#39;)
-plt.grid(True)
-plt.show()</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
-<pre class="python"><code>plt.close()
+accuracy_score(y_test, y_pred)
+</code></pre></div><pre><code>## 0.9299209299125913
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">precision_score(y_test, y_pred)
+</code></pre></div><pre><code>## 0.9401709401709402
+</code></pre><p><code>accuracy_score</code>（予測精度）が90%を超え、<code>precision_Score</code>（適合率、陽=1着と予想したデータの正解率）もいい感じです。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">recall_score(y_test, y_pred)
+</code></pre></div><pre><code>## 0.009727052997700878
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">f1_score(y_test, y_pred)
+</code></pre></div><pre><code>## 0.019254893952212852
+</code></pre><p>一方、<code>recall_score</code>(再現性、陽=1着のサンプルのうち実際に正解した割合)が低く偽陰性が高いことが確認できます。その結果、<code>F1</code>値も低くなっていますね。競馬予測モデルの場合、偽陰性が高いことは偽陽性が高いことよりはましなのですが、回収率を上げるためには偽陰性を下げることを頑張らなければいけません。これは今後の課題ですね。次節では<code>shapley</code>値を使って要因分解をしたいと思います。。</p>
+<h2 id="3-shapでの結果解釈">3. shapでの結果解釈</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> shap
 
-# Confusion Matrixを生成
-ConfusionMatrixDisplay(confusion_matrix(y_test, y_pred)).plot()</code></pre>
-<pre><code>## &lt;sklearn.metrics._plot.confusion_matrix.ConfusionMatrixDisplay object at 0x000000004F873388&gt;</code></pre>
-<pre class="python"><code>plt.show()</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-16-2.png" width="672" /></p>
-<pre class="python"><code>plt.close()
-
-accuracy_score(y_test, y_pred)</code></pre>
-<pre><code>## 0.9300814465677578</code></pre>
-<pre class="python"><code>precision_score(y_test, y_pred)</code></pre>
-<pre><code>## 0.9426605504587156</code></pre>
-<p><code>accuracy_score</code>（予測精度）が90%を超え、<code>precision_Score</code>（適合率、陽=1着と予想したデータの正解率）もいい感じです。</p>
-<pre class="python"><code>recall_score(y_test, y_pred)</code></pre>
-<pre><code>## 0.01211460236986382</code></pre>
-<pre class="python"><code>f1_score(y_test, y_pred)</code></pre>
-<pre><code>## 0.02392177405273267</code></pre>
-<p>一方、<code>recall_score</code>(再現性、陽=1着のサンプルのうち実際に正解した割合)が低く偽陰性が高いことが確認できます。その結果、<code>F1</code>値も低くなっていますね。競馬予測モデルの場合、偽陰性が高いことは偽陽性が高いことよりはましなのですが、回収率を上げるためには偽陰性を下げることを頑張らなければいけません。これは今後の課題ですね。次節では<code>shapley</code>値を使って要因分解をしたいと思います。。</p>
-</div>
-<div id="shapでの結果解釈" class="section level2">
-<h2>3. shapでの結果解釈</h2>
-<pre class="python"><code>import shap
-
-shap.initjs()</code></pre>
-<pre><code>## &lt;IPython.core.display.HTML object&gt;</code></pre>
-<pre class="python"><code>explainer = shap.TreeExplainer(model)</code></pre>
-<pre><code>## Setting feature_perturbation = &quot;tree_path_dependent&quot; because no background data was given.</code></pre>
-<pre class="python"><code>shap_values = explainer.shap_values(X_test)</code></pre>
-<pre><code>## LightGBM binary classifier with TreeExplainer shap values output has changed to a list of ndarray</code></pre>
-<p>まず、各特徴量の重要度を見ることにします。<code>summary_plot</code>メソッドを使用します。</p>
-<pre class="python"><code>shap.summary_plot(shap_values, X_test)</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-19-1.png" width="768" /></p>
+shap<span style="color:#f92672">.</span>initjs()
+</code></pre></div><pre><code>## &lt;IPython.core.display.HTML object&gt;
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">explainer <span style="color:#f92672">=</span> shap<span style="color:#f92672">.</span>TreeExplainer(model)
+</code></pre></div><pre><code>## Setting feature_perturbation = &quot;tree_path_dependent&quot; because no background data was given.
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">shap_values <span style="color:#f92672">=</span> explainer<span style="color:#f92672">.</span>shap_values(X_test)
+</code></pre></div><pre><code>## LightGBM binary classifier with TreeExplainer shap values output has changed to a list of ndarray
+</code></pre><p>まず、各特徴量の重要度を見ることにします。<code>summary_plot</code>メソッドを使用します。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">shap<span style="color:#f92672">.</span>summary_plot(shap_values, X_test)
+</code></pre></div><p><img src="../../post/post16/index_files/figure-html/unnamed-chunk-19-3.png" width="768" /></p>
 <p>横軸は各特徴量の平均的な重要度を表しています(shap値の絶対値)。preprize(前走までの賞金獲得金額)やhorse_age、preorder(前走の着順)などが予測に重要であることが分かります。特にpreprizeの重要度は1着の予測、1着以外の予測どちらに対しても大きいです。horse_ageも同様です。ただ、これでは重要というだけで定性的な評価はできません。例えば、preprizeが大きい→1位になる確率が上昇といった関係が確認できれば、それは重要な情報になり得ます。次にそれを確認します。<code>summary_plot</code>メソッドを使用します。</p>
-<pre class="python"><code>shap.summary_plot(shap_values[1], X_test)</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-20-1.png" width="768" /></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">shap<span style="color:#f92672">.</span>summary_plot(shap_values[<span style="color:#ae81ff">1</span>], X_test)
+</code></pre></div><p><img src="../../post/post16/index_files/figure-html/unnamed-chunk-20-5.png" width="768" /></p>
 <p>上図も各特徴量の重要度を表しています(今回は絶対値ではありません)。今回はそれぞれの特徴量の重要度がバイオリンプロットによって表されており、かつ特徴量の値の大きさで色分けがされています。例えば、preprizeだと横軸が0以上の部分でのみ赤色の分布が発生しており、ここからpreprizeの特徴量が大きい、つまり前走までの獲得賞金額が多いと平均的に1着の確率が上がるという当たり前の解釈をすることができます。
 他にも、horse_age,preorder,last_3Fは特徴量が小さくなるほど1着になる確率があがることも読み取れます。horse_weight, jokey_weightは大きくなるほど1着になる確率が上がるようです。一方、その他は特に定性的な関係を読み取ることはできません。</p>
-<p>次に、特徴量と確率の関係をより詳しく確認してみましょう。先ほど、preprizeは特徴量が大きくなるほど1着になる確率が上昇するということがわかりました。ただ、その確率の上昇は1次関数的に増加するのか、指数的に増大するのか、それとも<span class="math inline">\(\log x\)</span>のように逓減していくのか、わかりません。<code>dependence_plot</code>を使用してそれを確認してみましょう。</p>
-<pre class="python"><code>shap.dependence_plot(ind=&quot;preprize&quot;, shap_values=shap_values[1], features=X_test)</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-21-1.png" width="720" /></p>
+<p>次に、特徴量と確率の関係をより詳しく確認してみましょう。先ほど、preprizeは特徴量が大きくなるほど1着になる確率が上昇するということがわかりました。ただ、その確率の上昇は1次関数的に増加するのか、指数的に増大するのか、それとも$\log x$のように逓減していくのか、わかりません。<code>dependence_plot</code>を使用してそれを確認してみましょう。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">shap<span style="color:#f92672">.</span>dependence_plot(ind<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;preprize&#34;</span>, shap_values<span style="color:#f92672">=</span>shap_values[<span style="color:#ae81ff">1</span>], features<span style="color:#f92672">=</span>X_test)
+</code></pre></div><p><img src="../../post/post16/index_files/figure-html/unnamed-chunk-21-7.png" width="720" /></p>
 <p>上図は学習した<code>LightGBM</code>をpreprizeの関数として見たときの概形をplotしたものです。先に確認したとおり、やはり特徴量が大きくなるにつれ、1着になる確率が上昇していきます。ただ、その上昇は徐々に逓減していき、2000万円を超えるところでほぼ頭打ちとなります。また、上図ではhorse_ageでの色分けを行っており、preprizeとの関係性も確認できるようになっています。やはり、直感と同じく、preprizeが高い馬の中でもhorse_ageが若い馬の1着確率が高くなることが見て取れます。</p>
 <p>preorderの<code>dependence_plot</code>も確認してみましょう。</p>
-<pre class="python"><code>shap.dependence_plot(ind=&quot;preorder&quot;, shap_values=shap_values[1], features=X_test)</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-22-1.png" width="720" /></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">shap<span style="color:#f92672">.</span>dependence_plot(ind<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;preorder&#34;</span>, shap_values<span style="color:#f92672">=</span>shap_values[<span style="color:#ae81ff">1</span>], features<span style="color:#f92672">=</span>X_test)
+</code></pre></div><p><img src="../../post/post16/index_files/figure-html/unnamed-chunk-22-9.png" width="720" /></p>
 <p>やはり、前走の着順が上位になるほど1着確率が高まることがここからも分かります。また、その確率は6着以上とそれ以外で水準感が変わることも分かります。last_3Fのタイムとの関係性も確認していますが、こちらはあまり関連性はなさそうです。</p>
-</div>
-<div id="最後に" class="section level2">
-<h2>4. 最後に</h2>
+<h2 id="4-最後に">4. 最後に</h2>
 <p><code>LightGBM</code>を使用し、競馬の予測モデルを作成してみました。さすが<code>LightGBM</code>といった感じで、予測精度は高かったです。また、<code>shap</code>値を使用した重要特徴量の検出も上手くいきました。これによって、<code>LightGBM</code>の気持ちを理解し、より良い特徴量の発見を進めていくことでモデリングの精度を高めていこうと思います。</p>
-</div>
 
-    </div>
+          </div>
 
-    
+          
 
 
 
@@ -1263,13 +1264,13 @@ shap.initjs()</code></pre>
       
       <li><a href="../../post/post20/">PytorchのPre-trainedモデルで馬体写真の背景を自動トリミングする</a></li>
       
-      <li><a href="../../post/post27/">【徹底比較】センチメントスコア算出手法！！ - 第1回</a></li>
+      <li><a href="../../post/post27/">【徹底比較】センチメントスコア算出手法！！ - 第2回</a></li>
+      
+      <li><a href="../../post/post25/">【徹底比較】センチメントスコア算出手法！！ - 第1回</a></li>
       
       <li><a href="../../post/post18/">CNNを使って馬体写真から順位予想してみた</a></li>
       
       <li><a href="../../post/post15/">Pythonのpandas_datareaderから色々なデータを取得してみる</a></li>
-      
-      <li><a href="../../post/post22/">OECD.orgからマクロパネルデータをAPIで取得する</a></li>
       
     </ul>
   </div>
@@ -1279,8 +1280,12 @@ shap.initjs()</code></pre>
 
 
 
+        </div>
+      </article>
+    </main>
+
   </div>
-</article>
+</div>
 
       
 
@@ -1394,11 +1399,9 @@ shap.initjs()</code></pre>
       
     
     
-      
     
     
-    
-    <script src="../../js/wowchemy.min.2a3f95be2bc4762ba1847fb5d7a28317.js"></script>
+    <script src="../../js/wowchemy.min.4c2bca31150ce93c5a5e43b8a50f22fd.js"></script>
 
     
 
@@ -1408,6 +1411,16 @@ shap.initjs()</code></pre>
   <div class="container">
     <footer class="site-footer">
   
+
+  
+   
+  <script>
+  $(document).ready(function () {
+    window.initializeCodeFolding("show" === "show");
+  });
+  </script>
+  <script src="../../js/codefolding.js"></script>
+
 
   <p class="powered-by">
     

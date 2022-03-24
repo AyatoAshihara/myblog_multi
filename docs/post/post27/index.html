@@ -86,8 +86,8 @@
     
       
       
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/xcode.min.css" crossorigin="anonymous" title="hl-light">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/xcode.min.css" crossorigin="anonymous" title="hl-dark" disabled>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/solarized-dark.min.css" crossorigin="anonymous" title="hl-light">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/solarized-dark.min.css" crossorigin="anonymous" title="hl-dark" disabled>
       
     
 
@@ -306,21 +306,20 @@
   
   
     
-    
   
   
-  <meta property="twitter:card" content="summary">
+  <meta property="twitter:card" content="summary_large_image">
   
   <meta property="og:site_name" content="京都の電子部品メーカーで働く社会人が研究に没頭するブログ">
   <meta property="og:url" content="/post/post27/">
-  <meta property="og:title" content="【徹底比較】センチメントスコア算出手法！！ - 第1回 | 京都の電子部品メーカーで働く社会人が研究に没頭するブログ">
-  <meta property="og:description" content="機械学習を用いたセンチメントスコアの算出方法の発展を簡単にさらっていきます。"><meta property="og:image" content="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png">
-  <meta property="twitter:image" content="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png"><meta property="og:locale" content="ja">
+  <meta property="og:title" content="【徹底比較】センチメントスコア算出手法！！ - 第2回 | 京都の電子部品メーカーで働く社会人が研究に没頭するブログ">
+  <meta property="og:description" content="機械学習を用いたセンチメントスコアの算出方法の発展を簡単にさらっていきます。"><meta property="og:image" content="/post/post27/featured.jpg">
+  <meta property="twitter:image" content="/post/post27/featured.jpg"><meta property="og:locale" content="ja">
   
     
-      <meta property="article:published_time" content="2022-03-21T00:00:00&#43;00:00">
+      <meta property="article:published_time" content="2022-03-24T00:00:00&#43;00:00">
     
-    <meta property="article:modified_time" content="2022-03-21T00:00:00&#43;00:00">
+    <meta property="article:modified_time" content="2022-03-24T00:00:00&#43;00:00">
   
 
   
@@ -346,10 +345,14 @@
     "@type": "WebPage",
     "@id": "/post/post27/"
   },
-  "headline": "【徹底比較】センチメントスコア算出手法！！ - 第1回",
+  "headline": "【徹底比較】センチメントスコア算出手法！！ - 第2回",
   
-  "datePublished": "2022-03-21T00:00:00Z",
-  "dateModified": "2022-03-21T00:00:00Z",
+  "image": [
+    "/post/post27/featured.jpg"
+  ],
+  
+  "datePublished": "2022-03-24T00:00:00Z",
+  "dateModified": "2022-03-24T00:00:00Z",
   
   "author": {
     "@type": "Person",
@@ -382,7 +385,7 @@
 
 
 
-  <title>【徹底比較】センチメントスコア算出手法！！ - 第1回 | 京都の電子部品メーカーで働く社会人が研究に没頭するブログ</title>
+  <title>【徹底比較】センチメントスコア算出手法！！ - 第2回 | 京都の電子部品メーカーで働く社会人が研究に没頭するブログ</title>
 
 </head>
 
@@ -652,33 +655,89 @@
 
 
 
-  <article class="article">
+  <div class="container-fluid docs">
+  <div class="row flex-xl-nowrap">
 
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <ul class="nav toc-top">
+        <li><a href="#" id="back_to_top" class="docs-toc-title">On this page</a></li>
+      </ul>
+      <nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#1-分析手法の説明">1. 分析手法の説明</a>
+          <ul>
+            <li><a href="#辞書ベース手法とは">辞書ベース手法とは</a></li>
+            <li><a href="#センチメントスコアを参照する辞書">センチメントスコアを参照する辞書</a></li>
+            <li><a href="#辞書ベース手法の利点欠点">辞書ベース手法の利点・欠点</a></li>
+          </ul>
+        </li>
+        <li><a href="#2-辞書ベース手法の実践">2. 辞書ベース手法の実践</a>
+          <ul>
+            <li><a href="#使用データ">使用データ</a></li>
+            <li><a href="#前処理">前処理</a></li>
+            <li><a href="#センチメントスコアの抽出">センチメントスコアの抽出</a></li>
+          </ul>
+        </li>
+        <li><a href="#3-終わりに">3. 終わりに</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+      
+    </div>
+
+    <main class="col-12 col-md-0 col-xl-10 py-md-3 pl-md-5 docs-content" role="main">
+      <article class="article">
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
   
 
 
-
-
-
-
-
-
-
-
-
-
-  
-
-  
-  
-  
 <div class="article-container pt-3">
-  <h1>【徹底比較】センチメントスコア算出手法！！ - 第1回</h1>
+  <h1>【徹底比較】センチメントスコア算出手法！！ - 第2回</h1>
 
   
 
   
-    
+
+
+<div id="code-folding-buttons" class="dropdown btn-group pull-right">
+  <a class="btn btn-light btn-sm dropdown-toggle" href="#" role="button" id="allCodeToggleButton"
+     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    Code
+  </a>
+  <div class="dropdown-menu" aria-labelledby="allCodeToggleButton">
+    <a id="rmd-show-all-code" class="dropdown-item small" href="#">Show all</a>
+    <a id="rmd-hide-all-code" class="dropdown-item small" href="#">Hide all</a>
+  </div>
+</div>
+
+
+
+  
 
 
 <div class="article-metadata">
@@ -692,7 +751,7 @@
     
       
     
-    Mar 21, 2022
+    Mar 24, 2022
   </span>
   
 
@@ -701,7 +760,7 @@
   
   <span class="middot-divider"></span>
   <span class="article-reading-time">
-    11 分で読める
+    13 分で読める
   </span>
   
 
@@ -721,93 +780,69 @@
 
 </div>
 
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+<div class="article-header container featured-image-wrapper mt-4 mb-4" style="max-width: 640px; max-height: 361px;">
+  <div style="position: relative">
+    <img src="../../post/post27/featured.jpg" alt="" class="featured-image">
+    
+  </div>
 </div>
 
 
 
-  <div class="article-container">
+        <div class="article-container">
 
-    <div class="article-style">
-      
-<script src="../../post/post27/index_files/header-attrs/header-attrs.js"></script>
-<script src="../../post/post27/index_files/kePrint/kePrint.js"></script>
+          <div class="article-style">
+            <script src="../../post/post27/index_files/kePrint/kePrint.js"></script>
 <link href="../../post/post27/index_files/lightable/lightable.css" rel="stylesheet" />
 <link href="../../post/post27/index_files/bsTable/bootstrapTable.min.css" rel="stylesheet" />
 <script src="../../post/post27/index_files/bsTable/bootstrapTable.js"></script>
-
-<div id="TOC">
-<ul>
-<li><a href="#解きたい問題">1. 解きたい問題</a>
-<ul>
-<li><a href="#景気ウオッチャー調査とは">1.1 景気ウオッチャー調査とは</a></li>
-<li><a href="#調査の対象範囲">1.1.1 調査の対象範囲</a></li>
-<li><a href="#調査期日および期間">1.1.2 調査期日および期間</a></li>
-<li><a href="#調査の実施方法">1.1.3 調査の実施方法</a></li>
-<li><a href="#問題設定">1.2 問題設定</a></li>
-</ul></li>
-<li><a href="#テキスト解析手法の進化の譜系">2. テキスト解析手法の進化の譜系</a></li>
-<li><a href="#サンプルデータ概観">3. サンプルデータ概観</a>
-<ul>
-<li><a href="#サンプルデータの読み込み">3.1 サンプルデータの読み込み</a></li>
-<li><a href="#サンプルサイズ">3.2 サンプルサイズ</a></li>
-<li><a href="#景気の現状判断の分布">3.3 <code>景気の現状判断</code>の分布</a></li>
-<li><a href="#回答者の属性">3.4 回答者の属性</a></li>
-<li><a href="#景気判断の理由の分布">3.5 <code>(景気)判断の理由</code>の分布</a></li>
-</ul></li>
-<li><a href="#終わりに">4. 終わりに</a></li>
-</ul>
-</div>
-
-<p>おはこんばんにちは。テキスト解析はデータ分析界隈ではもうかなり当たり前になってきています。テキストの感性情報(センチメント)を抽出する手法には、どのようなものがあるかあるのか調べたところかなり時代は進んでいると実感しました。今回は実際に<code>R</code>や<code>Python</code>で作成した機械学習モデルを用いて、それらの精度を比較してみたいと思います。 今回はその第１回目ということで、データセットや全体感のお話です。</p>
-<div id="解きたい問題" class="section level2">
-<h2>1. 解きたい問題</h2>
-<p>今回解きたい問題は「景況感を表す文書表現を学習し、実際の景気判断を予測する」というタスクです。 データセットには、内閣府が出している景気ウオッチャー調査を使用します。</p>
-<div id="景気ウオッチャー調査とは" class="section level3">
-<h3>1.1 景気ウオッチャー調査とは</h3>
-<p>景気ウオッチャー調査とは、内閣府が月次で公表している景気動向判断のための統計情報です。調査の目的は以下の通りです(<a href="https://www5.cao.go.jp/keizai3/watcher/watcher_mokuteki.html#mokuteki">内閣府Webサイト</a>より)。</p>
-<dl>
-<dt>&lt;調査の目的&gt;</dt>
-<dd><p>地域の景気に関連の深い動きを観察できる立場にある人々の協力を得て、地域ごとの景気動向を的確かつ迅速に把握し、景気動向判断の基礎資料とすることを目的とする。</p>
-</dd>
-</dl>
-<p>では、この「地域の景気に関連の深い動きを観察できる立場にある人々」、「地域ごとの景気動向」、「的確かつ迅速に」という部分について少し深掘ってみます。</p>
-</div>
-<div id="調査の対象範囲" class="section level3">
-<h3>1.1.1 調査の対象範囲</h3>
-<p>調査の対象範囲は47都道府県となっています。また、調査対象者は「家計動向、企業動向、雇用等、代表的な経済活動項目の動向を敏感に反映する現象を観察できる業種の適当な職種の中から選定した2,050人」となっており、例えば小売店や飲食店の店員・店長、タクシー運転手、製造業・非製造業企業の経営者・従業員、人材派遣会社社員などを対象に行われています。</p>
-</div>
-<div id="調査期日および期間" class="section level3">
-<h3>1.1.2 調査期日および期間</h3>
-<p>調査は月次で行われ、毎月25日から月末にかけて実施されます。当月の景況感について調査が行われ、翌月に公表されます。</p>
-</div>
-<div id="調査の実施方法" class="section level3">
-<h3>1.1.3 調査の実施方法</h3>
-<p>アンケート調査を電話・Webサイト・電子メールのいずれかで回答することになっています。質問項目は以下の通りです(<a href="https://www5.cao.go.jp/keizai3/watcher/chousahyo.pdf">調査票</a>)。</p>
-<ol style="list-style-type: decimal">
-<li><p>景気の現状に対する判断（方向性）</p></li>
-<li><p>1.の理由</p></li>
-<li><p>2.の追加説明及び具体的状況の説明(自由記述)</p></li>
-<li><p>景気の先行きに対する判断(方向性)</p></li>
-<li><p>(4)の理由</p></li>
-<li><p>(参考)景気の現状に対する判断(水準)</p></li>
-</ol>
-<p>ご参考までに2016年1月調査のサンプルデータをお見せします。</p>
+<p>おはこんばんにちは。センチメントスコア算出企画の第2弾です。
+今回は辞書ベースのセンチメントスコア算出方法を実践します。</p>
+<h2 id="1-分析手法の説明">1. 分析手法の説明</h2>
+<h3 id="辞書ベース手法とは">辞書ベース手法とは</h3>
+<p>辞書ベース手法はその名の通り、辞書を用いてセンチメントスコアを算出する手法です。各単語が持つ感情極性(ここでは、ポジティブな意味かネガティブな意味かを表す)をスコア化したものをあらかじめ辞書として保存し、文書内で出現した単語とそれぞれの辞書スコアを紐付け、(何らかの方法で)集計することで、その文書全体のセンチメントスコアを算出します。</p>
+<h3 id="センチメントスコアを参照する辞書">センチメントスコアを参照する辞書</h3>
+<p>上記においては、スコアをどのように算出するのかが重要になります。現在公開されている日本語辞書の中で有名な東京工業大学の高村研究室が作成した辞書(Takamura, Inui, and Okumura 2005)では以下のような方法で算出を行っているようです(<a href="http://lr-www.pi.titech.ac.jp/wp/?page_id=4" target="_blank" rel="noopener">原典はこちら</a>)。</p>
+<blockquote>
+<p>まず，辞書，シソーラス（類義語辞典），コーパスデータを用いて，極性が同じになりやすい単語ペアを抽出し，そしてそれらのペアを連結することにより巨大な語彙ネットワークを構築します．たとえば，「良い」と「良好」が類義語関係にあるので，この二単語を結ぶなどの作業を行います．ここで，単語の感情極性を電子スピンの方向とみなし，語彙ネットワークをスピン系とみなして，語彙ネットワークの状態（各スピンがどの方向を向いているか）を計算します．この計算結果を見ることにより，単語の感情極性がわかるのです．</p>
+</blockquote>
+<p>こちらの辞書はHPで公開されており、非営利目的であれば利用が可能のようです。ちょっと覗いてみましょう。</p>
+<pre><code>##       単語 読み仮名   品詞 感情極性スコア
+## 1   優れる すぐれる   動詞       1.000000
+## 2     良い     よい 形容詞       0.999995
+## 3     喜ぶ よろこぶ   動詞       0.999979
+## 4   褒める   ほめる   動詞       0.999979
+## 5 めでたい めでたい 形容詞       0.999645
+## 6     賢い かしこい 形容詞       0.999486
+</code></pre>
+<p>センチメントスコアは1から-1までを取り、1に近いほどポジティブを表します。最もポジティブな単語は「優れる」となっていることがわかります。</p>
+<h3 id="辞書ベース手法の利点欠点">辞書ベース手法の利点・欠点</h3>
+<p>&lt;利点&gt;手法のわかりやすさ/教師データが不要👍<br>
+辞書を利用する良い点は、手法のわかりやすさと教師データを必要としない点です。特に後者は辞書ベースならではの長所です。通常、文書分類器を作成するためには、その文書がポジティブ・ネガティブのどちらであるかという正解ラベルの付いた教師データが必要です。必要なデータは文脈にもよると思いますが、少なくとも100件は必要でしょう。これは分析者が少なくとも100件以上の文書を読んで、手作業でラベルを付与しなければならないことを意味します。</p>
+<p>&lt;欠点&gt;辞書の性能に結果が大きく依存する👎<br>
+短所としては、特殊な文脈におけるセンチメントスコアを参集する場合は専用の辞書が必要になるという点です。辞書ベースの分類法の場合、辞書に含まれない単語はセンチメントスコアへ影響を全く与えません。また、一般に公開されている辞書はwikipedia等のオールジャンルの文書を学習することによって開発されていることが多いため、感情極性が文脈に対してニュートラルになっています。よって、例えば金融等の文脈におけるセンチメントスコアを算出する場合、専門用語の感性極性が0となったり、文脈を考慮した感性極性が得られないことから、直感と異なる結果が出る可能性があります。</p>
+<h2 id="2-辞書ベース手法の実践">2. 辞書ベース手法の実践</h2>
+<h3 id="使用データ">使用データ</h3>
+<p>では、実際に辞書ベース手法を用いて、景気ウォッチャー調査の文章からセンチメントスコアの抽出を試みます。景気ウオッチャー調査では、タクシー運転手や小売店の店主、旅館の経営者など景気に敏感な方々(景気ウオッチャー)に対して、5段階の景況感とその理由を毎月アンケートしています。5段階は、「良い(◎)」、「やや良い(○)」、「変わらない(■)」、「やや悪い(▲)」、「悪い(×)」となっています。</p>
+<p>データを覗いてみると、以下のようになっています。</p>
 <table class="table table-striped" style="margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
@@ -954,837 +989,164 @@
 </tr>
 </tbody>
 </table>
+<p>「景気の現状判断」が景況感を表しており、その判断の理由が「追加説明及び具体的状況の説明」にある形です。よって、前者を教師データ、後者を説明データとする教師あり学習データとして利用することができます。</p>
+<h3 id="前処理">前処理</h3>
+<p>まず、各手法で共通の前処理を行います。以下では、使用するモジュールを呼び出し、学習データのうち有効回答のみを抽出します。
+なお、使用するモジュールの関係でPythonでの処理を紹介しますが、Rでも同じ処理ができます。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> sudachipy <span style="color:#f92672">import</span> tokenizer
+<span style="color:#f92672">from</span> sudachipy <span style="color:#f92672">import</span> dictionary
+<span style="color:#f92672">from</span> sklearn.preprocessing <span style="color:#f92672">import</span> LabelEncoder
+<span style="color:#f92672">import</span> pandas <span style="color:#f92672">as</span> pd
+
+sample <span style="color:#f92672">=</span> pd<span style="color:#f92672">.</span>read_csv(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;C:\Users\hogehoge\景気ウオッチャー\生データ\watcher_2016.csv&#34;</span>,encoding<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;shift-jis&#34;</span>)
+sample <span style="color:#f92672">=</span> sample[(sample<span style="color:#f92672">.</span><span style="color:#960050;background-color:#1e0010">追加説明及び具体的状況の説明</span><span style="color:#f92672">==</span><span style="color:#e6db74">&#39;−&#39;</span>)<span style="color:#f92672">|</span>(sample<span style="color:#f92672">.</span><span style="color:#960050;background-color:#1e0010">追加説明及び具体的状況の説明</span><span style="color:#f92672">==</span><span style="color:#e6db74">&#39;＊&#39;</span>)<span style="color:#f92672">==</span>False<span style="color:#f92672">|</span>(sample<span style="color:#f92672">.</span><span style="color:#960050;background-color:#1e0010">景気の現状判断</span><span style="color:#f92672">==</span><span style="color:#e6db74">&#39;□&#39;</span>)]
+</code></pre></div><p>次に、文書のトークン化を行います。日本語のような言語では英語などと異なり単語ごとの間にスペースがないため、別途区切りを入れてやる必要があります。区切られた各語は形態素と呼ばれ、言葉が意味を持つまとまりの単語の最小単位を指します。また、文章を形態素へ分割することを形態素解析と言います(英語のような場合単にTokenizationと言ったりします)。形態素解析を行うツールは以下のようなものが存在します。</p>
+<ul>
+<li>MeCab</li>
+<li>JUMAN</li>
+<li>JANOME</li>
+<li>Ginza</li>
+<li>Sudachi</li>
+</ul>
+<p>おそらく最も使用されているものはMecabではないかと思いますが、標準装備されている辞書(ipadic)の更新がストップしており、最近の新語に対応できないという問題があります。この点については新語に強いNEologd辞書を加えることで、対処可能であることを別記事で紹介していますが、今回はワークスアプリケーションズが提供しているSudachi(Takaoka et al. 2018)を使用することにしたいと思います。公式GithubからSudachiの特長を引用します。</p>
+<ul>
+<li>
+<p>複数の分割単位の併用</p>
+<ul>
+<li>必要に応じて切り替え</li>
+<li>形態素解析と固有表現抽出の融合</li>
+</ul>
+</li>
+<li>
+<p>多数の収録語彙</p>
+<ul>
+<li>UniDic と NEologd をベースに調整</li>
+</ul>
+</li>
+<li>
+<p>機能のプラグイン化</p>
+<ul>
+<li>文字正規化や未知語処理に機能追加が可能</li>
+</ul>
+</li>
+<li>
+<p>同義語辞書との連携</p>
+<ul>
+<li>後日公開予定</li>
+</ul>
+</li>
+</ul>
+<p>特質すべきは「複数の分割単位の併用」でしょう。Sudachiでは短い方から A, B, Cの3つの分割モードを提供しています。AはUniDic短単位相当、Cは固有表現相当、BはA, Cの中間的な単位となっており、以下のように同じ「選挙管理委員会」という単語でも形態素が異なることが確認できます。これはSudachi特有の特長になります。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">tokenizer_obj <span style="color:#f92672">=</span> dictionary<span style="color:#f92672">.</span>Dictionary()<span style="color:#f92672">.</span>create()
+
+mode <span style="color:#f92672">=</span> tokenizer<span style="color:#f92672">.</span>Tokenizer<span style="color:#f92672">.</span>SplitMode<span style="color:#f92672">.</span>A
+[m<span style="color:#f92672">.</span>normalized_form() <span style="color:#66d9ef">for</span> m <span style="color:#f92672">in</span> tokenizer_obj<span style="color:#f92672">.</span>tokenize(<span style="color:#e6db74">&#34;選挙管理委員会&#34;</span>, mode)]
+</code></pre></div><pre><code>## ['選挙', '管理', '委員', '会']
+</code></pre>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">mode <span style="color:#f92672">=</span> tokenizer<span style="color:#f92672">.</span>Tokenizer<span style="color:#f92672">.</span>SplitMode<span style="color:#f92672">.</span>B
+[m<span style="color:#f92672">.</span>normalized_form() <span style="color:#66d9ef">for</span> m <span style="color:#f92672">in</span> tokenizer_obj<span style="color:#f92672">.</span>tokenize(<span style="color:#e6db74">&#34;選挙管理委員会&#34;</span>, mode)]
+</code></pre></div><pre><code>## ['選挙', '管理', '委員会']
+</code></pre>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">mode <span style="color:#f92672">=</span> tokenizer<span style="color:#f92672">.</span>Tokenizer<span style="color:#f92672">.</span>SplitMode<span style="color:#f92672">.</span>C
+[m<span style="color:#f92672">.</span>normalized_form() <span style="color:#66d9ef">for</span> m <span style="color:#f92672">in</span> tokenizer_obj<span style="color:#f92672">.</span>tokenize(<span style="color:#e6db74">&#34;選挙管理委員会&#34;</span>, mode)]
+</code></pre></div><pre><code>## ['選挙管理委員会']
+</code></pre>
+<p>また、辞書についてもUniDicとNEologdをベースとして更新が続けられており、新語にも対応できます。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">mode <span style="color:#f92672">=</span> tokenizer<span style="color:#f92672">.</span>Tokenizer<span style="color:#f92672">.</span>SplitMode<span style="color:#f92672">.</span>C
+[m<span style="color:#f92672">.</span>normalized_form() <span style="color:#66d9ef">for</span> m <span style="color:#f92672">in</span> tokenizer_obj<span style="color:#f92672">.</span>tokenize(<span style="color:#e6db74">&#34;新型コロナウイルス&#34;</span>, mode)]
+</code></pre></div><pre><code>## ['新型コロナウイルス']
+</code></pre>
+<p>個人的に素晴らしいと思うポイントは表記正規化や文字正規化ができると言うことです。以下のように旧字等で同じ意味だが表記が異なる単語や英語/日本語、書き間違え等を正規化する機能があります。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">tokenizer_obj<span style="color:#f92672">.</span>tokenize(<span style="color:#e6db74">&#34;附属&#34;</span>, mode)[<span style="color:#ae81ff">0</span>]<span style="color:#f92672">.</span>normalized_form()
+</code></pre></div><pre><code>## '付属'
+</code></pre>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">tokenizer_obj<span style="color:#f92672">.</span>tokenize(<span style="color:#e6db74">&#34;SUMMER&#34;</span>, mode)[<span style="color:#ae81ff">0</span>]<span style="color:#f92672">.</span>normalized_form()
+</code></pre></div><pre><code>## 'サマー'
+</code></pre>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">tokenizer_obj<span style="color:#f92672">.</span>tokenize(<span style="color:#e6db74">&#34;シュミレーション&#34;</span>, mode)[<span style="color:#ae81ff">0</span>]<span style="color:#f92672">.</span>normalized_form()
+</code></pre></div><pre><code>## 'シミュレーション'
+</code></pre>
+<p>このような高性能な形態素解析ツールが無償でしかも商用利用も可というところに驚きを隠せません。後述しますが、このSudachiで形態素解析を行ったWord2vecモデルであるChiveもワークスアプリケーションズは提供をしています。</p>
+<p>説明が長くなりましたがSudachiでTokenizationを行いましょう。Sudachiは<code>Python</code>で使用することができます。説明が前後していますが、上記コードで行っているように<code>tokenizer</code>オブジェクトを作成し、<code>tokenize()</code>メソッドで文章をTokenizeします。Tokenizeされた結果は<code>MorphemeList</code>オブジェクトに格納されます。<code>MorphemeList</code>オブジェクトの各要素に対して<code>normalized_form()</code>メソッドを実行することで正規化された形態素を取得することができます。ここまでをやってみます。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">tokenizer_obj <span style="color:#f92672">=</span> dictionary<span style="color:#f92672">.</span>Dictionary()<span style="color:#f92672">.</span>create()
+mode <span style="color:#f92672">=</span> tokenizer<span style="color:#f92672">.</span>Tokenizer<span style="color:#f92672">.</span>SplitMode<span style="color:#f92672">.</span>C
+tokenizer_sudachi <span style="color:#f92672">=</span> <span style="color:#66d9ef">lambda</span> t: [m<span style="color:#f92672">.</span>normalized_form() <span style="color:#66d9ef">for</span> m <span style="color:#f92672">in</span> tokenizer_obj<span style="color:#f92672">.</span>tokenize(t, mode)]
+tokens <span style="color:#f92672">=</span> sample<span style="color:#f92672">.</span><span style="color:#960050;background-color:#1e0010">追加説明及び具体的状況の説明</span><span style="color:#f92672">.</span>map(tokenizer_sudachi)
+tokens<span style="color:#f92672">.</span>head()
+</code></pre></div><pre><code>## 0    [・, 店頭, の, 取り扱い, 額, が, 前年, 比, 約, 120, %, と, 好調...
+## 1    [・, 当, 施設, の, 利用, 乗降, 客数, は, 1, 月, 26, 日, 時点, ...
+## 2    [・, 年, 末, の, 消費, の, 反動, も, 有る, て, か, 、, 客, の, ...
+## 3    [・, 外国人, 観光客, に, よる, 売り上げ, が, 前年, 比, 152, %, と...
+## 4    [・, 積極的, だ, 景気, が, 上向き, に, 有る, と, まで, は, 言う, 辛...
+## Name: 追加説明及び具体的状況の説明, dtype: object
+</code></pre>
+<p>Tokenizeすることができました。次に5段階の景況判断をLabel Encodingに変換します。変換には<code>Scikit-Learn</code>の<code>LabelEncoder</code>を使用します。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">score_mapping <span style="color:#f92672">=</span> {<span style="color:#e6db74">&#39;◎&#39;</span>: <span style="color:#ae81ff">1</span>, <span style="color:#e6db74">&#39;○&#39;</span>: <span style="color:#ae81ff">1</span>, <span style="color:#e6db74">&#39;▲&#39;</span>: <span style="color:#ae81ff">0</span>, <span style="color:#e6db74">&#39;×&#39;</span>:<span style="color:#ae81ff">0</span>}
+label <span style="color:#f92672">=</span> sample<span style="color:#f92672">.</span><span style="color:#960050;background-color:#1e0010">景気の現状判断</span><span style="color:#f92672">.</span>map(score_mapping)
+</code></pre></div><p>これで前処理は完了です。</p>
+<h3 id="センチメントスコアの抽出">センチメントスコアの抽出</h3>
+<p>では、実践です。<code>quanteda</code>というパッケージを用いるため、<code>R</code>で行っていきます。前処理は<code>R</code>で実施済みで、<code>toks_sent</code>という変数に各文書の形態素が文書別に格納されています。</p>
+<p>この<code>toks_sent</code>から文書行列を生成します。文書行列とは、単語と文書の関係を表す行列で、各行が単語(token)、各列が文書を表し、各要素は文書中の単語の出現回数となっています。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># 文書行列の生成</span>
+dfmt_sent <span style="color:#f92672">&lt;-</span> toks_sent <span style="color:#f92672">%&gt;%</span> 
+              quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">dfm</span>(remove <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&#34;</span>) <span style="color:#f92672">%&gt;%</span> 
+              quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">dfm_trim</span>(min_termfreq <span style="color:#f92672">=</span> <span style="color:#ae81ff">10</span>)
+</code></pre></div><p>文書行列<code>dfmt_sent</code>と各単語のスコアベクトルの内積を取り、文書のセンチメントスコアを算出します。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># 単語感情極性対応表</span>
+PNdict <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">read.delim</span>(<span style="color:#e6db74">&#34;http://www.lr.pi.titech.ac.jp/~takamura/pubs/pn_ja.dic&#34;</span>,header<span style="color:#f92672">=</span><span style="color:#66d9ef">FALSE</span>,sep<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;:&#34;</span>)
+
+<span style="color:#75715e"># 辞書の並びに合わせて文書行列の列を入れ替える。</span>
+dfmt_sent_arranged <span style="color:#f92672">&lt;-</span> quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">dfm_match</span>(dfmt_sent, PNdict<span style="color:#f92672">$</span>V1)
+
+<span style="color:#75715e"># 文書のセンチメントスコア算出</span>
+n <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">unname</span>(quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">rowSums</span>(dfmt_sent_arranged))
+score_dict <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ifelse</span>(n<span style="color:#f92672">&gt;</span><span style="color:#ae81ff">0</span>, quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">rowSums</span>(dfmt_sent_arranged <span style="color:#f92672">%*%</span> PNdict<span style="color:#f92672">$</span>V4)<span style="color:#f92672">/</span>n, <span style="color:#66d9ef">NA</span>)
+sample_with_score_dict <span style="color:#f92672">&lt;-</span> sample <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">cbind</span>(score_dict) 
+sample_with_score_dict <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">head</span>()
+</code></pre></div><pre><code>##   基準年  基準日 景気の現状判断                 業種・職種   判断の理由
+## 1   2016 1月31日             ◎       旅行代理店（従業員） 販売量の動き
+## 2   2016 1月31日             ◎         観光名所（従業員） 来客数の動き
+## 3   2016 1月31日             ○ 一般小売店［酒］（経営者）   単価の動き
+## 4   2016 1月31日             ○         百貨店（売場主任） お客様の様子
+## 5   2016 1月31日             ○           百貨店（担当者） 来客数の動き
+## 6   2016 1月31日             ○     百貨店（販売促進担当）     それ以外
+##                                                                                                                                                                               追加説明及び具体的状況の説明
+## 1                                                                                                                                                            ・店頭の取扱額が前年比約120％と好調であった。
+## 2                                                            ・当施設の利用乗降客数は１月26日時点で前年比130.1％となっており、１月としては過去最高の利用乗降客数になることが確定したほどの入込状況にある。
+## 3                                                           ・年末の消費の反動もあってか、客の動きがやや鈍い。ただ、相変わらず高額商材が売れているということもあり、売上はそれなりの金額をキープしている。
+## 4 ・外国人観光客による売上が前年比152％と好調を継続しているほか、来客数が前年比102％と好調を維持している。月半ばに停滞した売上も下旬に入ってから回復傾向にあり、定価品、バーゲン品とも前年を上回っている。
+## 5                                                                                                                 ・積極的に景気が上向きにあるとまではいいづらいものの、３か月前との比較では改善している。
+## 6                                                                     ・気温が平年並みとなり、これまでの温暖、少雪の状態がみられなくなってきたことで、防寒衣料、雑貨商材を中心に多少改善の傾向がみられる。
+##     score_dict
+## 1 -0.348178400
+## 2 -0.565735877
+## 3 -0.612866000
+## 4 -0.325386370
+## 5  0.006678875
+## 6 -0.476283793
+</code></pre>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># 結果の可視化</span>
+<span style="color:#a6e22e">library</span>(ggplot2)
+<span style="color:#a6e22e">ggplot</span>(sample_with_score_dict, <span style="color:#a6e22e">aes</span>(x<span style="color:#f92672">=</span>景気の現状判断,y<span style="color:#f92672">=</span>score_dict)) <span style="color:#f92672">+</span> <span style="color:#a6e22e">geom_boxplot</span>()
+</code></pre></div><p><img src="../../post/post27/index_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+<p>「景気の現状判断」毎にboxplotを書いてみましたが、ぱっと見はあまり変わらない結果になりました。
+どの判断も-0.5くらいが平均で、ほんの少し緩やかに右肩上がりのような気もしますが、文書を分類できている言える結果ではないことがわかります。</p>
+<h2 id="3-終わりに">3. 終わりに</h2>
+<p>最も簡易な手法ということで予想はしていましたが、辞書ベース手法ではセンチメントスコアの抽出はできませんでした。もちろん、私のやり方が悪いのが理由で上手くやれば文書の分類は可能かもしれません。ただ、経済に特化した極性辞書を準備しなければ難しいのではないかというのが、私の感想です。
+次はナイーブベイズ分類器を用いた文書分類に取り組みます。
+ここまで、読み進めて頂きましてありがとうございました。次回の記事も期待していてください。</p>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-takamura2005" class="csl-entry">
+<p>Takamura, Hiroya, Takashi Inui, and Manabu Okumura. 2005. “The 43rd Annual Meeting.” In. Association for Computational Linguistics. <a href="https://doi.org/10.3115/1219840.1219857">https://doi.org/10.3115/1219840.1219857</a>.</p>
 </div>
-<div id="問題設定" class="section level3">
-<h3>1.2 問題設定</h3>
-<p>今回の問題設定は、「追加説明及び具体的状況の説明」に記載されているテキスト情報をもとに、「景気の現状判断」を予測するタスクになります。
-「景気の現状判断」は「良い」、「やや良い」、「どちらとも言えない」、「やや悪い」、「悪い」となっており、これを2値分類問題にして学習を行います(どちらとも言えないはネガティブに分類)。</p>
+<div id="ref-TAKAOKA18.8884" class="csl-entry">
+<p>Takaoka, Kazuma, Sorami Hisamoto, Noriko Kawahara, Miho Sakamoto, Yoshitaka Uchida, and Yuji Matsumoto. 2018. “Sudachi: A Japanese Tokenizer for Business.” In <em>Proceedings of the Eleventh International Conference on Language Resources and Evaluation (LREC 2018)</em>, edited by Nicoletta Calzolari (Conference chair), Khalid Choukri, Christopher Cieri, Thierry Declerck, Sara Goggi, Koiti Hasida, Hitoshi Isahara, et al. Paris, France: European Language Resources Association (ELRA).</p>
 </div>
-</div>
-<div id="テキスト解析手法の進化の譜系" class="section level2">
-<h2>2. テキスト解析手法の進化の譜系</h2>
-<p>上記問題設定を解くためには、テキスト情報から感性情報(センチメント)を抽出する必要があります。私が調べた浅い知識によると、感性情報の抽出方法には以下のような手法があります。</p>
-<ol style="list-style-type: decimal">
-<li>辞書ベース</li>
-<li>ナイーブベイズ分類器</li>
-<li>単語埋め込み(Word Embedding)を用いた方法</li>
-<li>Recurrent neural network(RNN)</li>
-<li>Transformer</li>
-</ol>
-<p>おそらく、下に行くにつれてより最新の手法になっており、精度も高いのではないかと推察されます。 また、1,2,3はやり方にもよるんでしょうが文章が与えられた際にその語順関係を考慮しません。 今後、各手法について解析結果の記事を投稿する予定ですので、詳しい中身についてはそれぞれの回で触れたいと思います。</p>
-</div>
-<div id="サンプルデータ概観" class="section level2">
-<h2>3. サンプルデータ概観</h2>
-<div id="サンプルデータの読み込み" class="section level3">
-<h3>3.1 サンプルデータの読み込み</h3>
-<p>今回使用する景気ウオッチャー調査のサンプルは2016年~2020年のものとなっています。現状判断の調査結果を格のしたcsvファイル(景気判断理由集)を月ごとに内閣府のWebページからダウンロードし、整形したものを年ごとに連結しています。</p>
-<pre class="r"><code>filepath = r&quot;(C:\Users\hogehoge\Watcher\RawData)&quot;</code></pre>
-<pre class="r"><code>files &lt;- stringr::str_c(filepath, &quot;\\&quot;,list.files(filepath, pattern = &quot;*.csv&quot;))
-sample &lt;- readr::read_csv(files, locale=readr::locale(encoding=&quot;SHIFT-JIS&quot;), show_col_types = FALSE)
-# 「－」は回答が存在しない、「＊」は主だった回答等が存在しないため、除外
-sample &lt;- sample[sample$追加説明及び具体的状況の説明 != &quot;－&quot;,]
-sample &lt;- sample[sample$追加説明及び具体的状況の説明 != &quot;＊&quot;,]</code></pre>
-<p>知らなかったんですが、<code>readr::read_csv</code>って2.0.0からファイルパスのリストを引数としてcsvを読み込み、その結果を連結してくれるようになったんですね。地味に便利です。</p>
-</div>
-<div id="サンプルサイズ" class="section level3">
-<h3>3.2 サンプルサイズ</h3>
-<p>サンプルサイズは76800でした。サンプルサイズとしては申し分ないかと思います。</p>
-<pre class="r"><code>NROW(sample)</code></pre>
-<pre><code>## [1] 76800</code></pre>
-<p>念のため、各年ごとにも見てみます。</p>
-<pre class="r"><code>library(magrittr)
-sample %&gt;% 
-  dplyr::group_by(基準年) %&gt;% 
-  dplyr::summarise(サンプルサイズ=dplyr::n()) %&gt;% 
-  dplyr::mutate(`割合(%)`=round(サンプルサイズ/sum(サンプルサイズ)*100, digits=1)) %&gt;% 
-  knitr::kable() %&gt;% 
-  kableExtra::kable_styling(bootstrap_options = c(&quot;striped&quot;))</code></pre>
-<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:right;">
-基準年
-</th>
-<th style="text-align:right;">
-サンプルサイズ
-</th>
-<th style="text-align:right;">
-割合(%)
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:right;">
-2016
-</td>
-<td style="text-align:right;">
-15168
-</td>
-<td style="text-align:right;">
-19.8
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-2017
-</td>
-<td style="text-align:right;">
-16724
-</td>
-<td style="text-align:right;">
-21.8
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-2018
-</td>
-<td style="text-align:right;">
-14756
-</td>
-<td style="text-align:right;">
-19.2
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-2019
-</td>
-<td style="text-align:right;">
-14588
-</td>
-<td style="text-align:right;">
-19.0
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-2020
-</td>
-<td style="text-align:right;">
-15564
-</td>
-<td style="text-align:right;">
-20.3
-</td>
-</tr>
-</tbody>
-</table>
-<p>各年およそ14,000~16,000サンプルほど存在するようです。大きなバラツキもありません。</p>
-</div>
-<div id="景気の現状判断の分布" class="section level3">
-<h3>3.3 <code>景気の現状判断</code>の分布</h3>
-<p>これから予測を行う<code>景気の現状判断</code>はどのような分布になっているでしょうか。</p>
-<pre class="r"><code>sample$景気の現状判断 &lt;- factor(sample$景気の現状判断, levels=c(&quot;◎&quot;,&quot;○&quot;,&quot;□&quot;,&quot;▲&quot;,&quot;×&quot;))
-sample %&gt;% 
-  dplyr::group_by(景気の現状判断) %&gt;%
-  dplyr::summarise(サンプルサイズ=dplyr::n()) %&gt;% 
-  dplyr::mutate(`割合(%)`=round(サンプルサイズ/sum(サンプルサイズ)*100, digits=1)) %&gt;% 
-  knitr::kable() %&gt;% 
-  kableExtra::kable_styling(bootstrap_options = c(&quot;striped&quot;))</code></pre>
-<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:left;">
-景気の現状判断
-</th>
-<th style="text-align:right;">
-サンプルサイズ
-</th>
-<th style="text-align:right;">
-割合(%)
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-◎
-</td>
-<td style="text-align:right;">
-1569
-</td>
-<td style="text-align:right;">
-2.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-○
-</td>
-<td style="text-align:right;">
-14370
-</td>
-<td style="text-align:right;">
-18.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-□
-</td>
-<td style="text-align:right;">
-34438
-</td>
-<td style="text-align:right;">
-44.8
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-▲
-</td>
-<td style="text-align:right;">
-18642
-</td>
-<td style="text-align:right;">
-24.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-×
-</td>
-<td style="text-align:right;">
-7781
-</td>
-<td style="text-align:right;">
-10.1
-</td>
-</tr>
-</tbody>
-</table>
-<p>思ったよりキレイな分布をしている印象です。このサンプル期間では、「どちらとも言えない」が最も多く、また、比較的「やや悪い」や「悪い」が多いことがわかります。このあたりは2019年度以降のコロナ禍の影響を反映している可能性があるので、新たに時間軸を追加し、クロス集計をしてみましょう。</p>
-<pre class="r"><code>sample %&gt;% 
-  dplyr::group_by(基準年, 景気の現状判断) %&gt;% 
-  dplyr::tally() %&gt;% 
-  tidyr::spread(景気の現状判断, n) %&gt;% 
-  knitr::kable() %&gt;% 
-  kableExtra::kable_styling(bootstrap_options = c(&quot;striped&quot;))</code></pre>
-<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:right;">
-基準年
-</th>
-<th style="text-align:right;">
-◎
-</th>
-<th style="text-align:right;">
-○
-</th>
-<th style="text-align:right;">
-□
-</th>
-<th style="text-align:right;">
-▲
-</th>
-<th style="text-align:right;">
-×
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:right;">
-2016
-</td>
-<td style="text-align:right;">
-235
-</td>
-<td style="text-align:right;">
-2455
-</td>
-<td style="text-align:right;">
-7546
-</td>
-<td style="text-align:right;">
-4129
-</td>
-<td style="text-align:right;">
-803
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-2017
-</td>
-<td style="text-align:right;">
-375
-</td>
-<td style="text-align:right;">
-4031
-</td>
-<td style="text-align:right;">
-8681
-</td>
-<td style="text-align:right;">
-3053
-</td>
-<td style="text-align:right;">
-584
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-2018
-</td>
-<td style="text-align:right;">
-349
-</td>
-<td style="text-align:right;">
-3105
-</td>
-<td style="text-align:right;">
-7340
-</td>
-<td style="text-align:right;">
-3336
-</td>
-<td style="text-align:right;">
-626
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-2019
-</td>
-<td style="text-align:right;">
-237
-</td>
-<td style="text-align:right;">
-2050
-</td>
-<td style="text-align:right;">
-6743
-</td>
-<td style="text-align:right;">
-4516
-</td>
-<td style="text-align:right;">
-1042
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-2020
-</td>
-<td style="text-align:right;">
-373
-</td>
-<td style="text-align:right;">
-2729
-</td>
-<td style="text-align:right;">
-4128
-</td>
-<td style="text-align:right;">
-3608
-</td>
-<td style="text-align:right;">
-4726
-</td>
-</tr>
-</tbody>
-</table>
-<p>やはり、2019年以降「悪い」が多く出現していることがわかります。一方で、「やや悪い」はそれ以前の年でも恒常的に多いようです。</p>
-</div>
-<div id="回答者の属性" class="section level3">
-<h3>3.4 回答者の属性</h3>
-<p>次に回答者の属性を確認しましょう。回答者の属性は<code>業種・職種</code>から取得できます。まず、どういった業種が多く回答しているのか確認してみます。回答数上位10番目までの業種を表示させます。</p>
-<pre class="r"><code>sample %&gt;% 
-  dplyr::mutate(業種 = stringr::str_remove(sample$`業種・職種`, &quot;（.+）&quot;) %&gt;% 
-stringr::str_remove(&quot;［.+］&quot;)) %&gt;% 
-  dplyr::group_by(業種) %&gt;% 
-  dplyr::summarise(サンプルサイズ=dplyr::n()) %&gt;% 
-  dplyr::arrange(desc(サンプルサイズ)) %&gt;% 
-  dplyr::top_n(10, サンプルサイズ) %&gt;% 
-  dplyr::mutate(`割合(%)`=round(サンプルサイズ/sum(サンプルサイズ)*100, digits=1)) %&gt;% 
-  knitr::kable() %&gt;% 
-  kableExtra::kable_styling(bootstrap_options = c(&quot;striped&quot;))</code></pre>
-<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:left;">
-業種
-</th>
-<th style="text-align:right;">
-サンプルサイズ
-</th>
-<th style="text-align:right;">
-割合(%)
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-百貨店
-</td>
-<td style="text-align:right;">
-4959
-</td>
-<td style="text-align:right;">
-15.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-スーパー
-</td>
-<td style="text-align:right;">
-4738
-</td>
-<td style="text-align:right;">
-14.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-一般小売店
-</td>
-<td style="text-align:right;">
-3851
-</td>
-<td style="text-align:right;">
-11.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-コンビニ
-</td>
-<td style="text-align:right;">
-3772
-</td>
-<td style="text-align:right;">
-11.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-乗用車販売店
-</td>
-<td style="text-align:right;">
-2967
-</td>
-<td style="text-align:right;">
-9.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-通信会社
-</td>
-<td style="text-align:right;">
-2866
-</td>
-<td style="text-align:right;">
-8.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-商店街
-</td>
-<td style="text-align:right;">
-2734
-</td>
-<td style="text-align:right;">
-8.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-人材派遣会社
-</td>
-<td style="text-align:right;">
-2700
-</td>
-<td style="text-align:right;">
-8.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-衣料品専門店
-</td>
-<td style="text-align:right;">
-2128
-</td>
-<td style="text-align:right;">
-6.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-職業安定所
-</td>
-<td style="text-align:right;">
-2088
-</td>
-<td style="text-align:right;">
-6.4
-</td>
-</tr>
-</tbody>
-</table>
-<p>回答数上位には、百貨店やスーパーなど小売店が目立ちます。また、車のディーラーの方や人材派遣会社など生産・雇用に関連する業種の回答者も多いようです。</p>
-<p>次に、経営者や職員など職種の分布を確認します。こちらも上位10位までを表示します。</p>
-<pre class="r"><code>sample %&gt;% 
-  dplyr::mutate(職種 = stringr::str_extract(sample$`業種・職種`, &quot;（.+）&quot;) %&gt;% 
-  stringr::str_remove(&quot;（&quot;) %&gt;%
-  stringr::str_remove(&quot;）&quot;)) %&gt;% 
-  dplyr::group_by(職種) %&gt;% 
-  dplyr::summarise(サンプルサイズ=dplyr::n()) %&gt;% 
-  dplyr::arrange(desc(サンプルサイズ)) %&gt;% 
-  dplyr::top_n(10, サンプルサイズ) %&gt;% 
-  dplyr::mutate(`割合(%)`=round(サンプルサイズ/sum(サンプルサイズ)*100, digits=1)) %&gt;% 
-  knitr::kable() %&gt;% 
-  kableExtra::kable_styling(bootstrap_options = c(&quot;striped&quot;))</code></pre>
-<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:left;">
-職種
-</th>
-<th style="text-align:right;">
-サンプルサイズ
-</th>
-<th style="text-align:right;">
-割合(%)
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-経営者
-</td>
-<td style="text-align:right;">
-20612
-</td>
-<td style="text-align:right;">
-40.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-営業担当
-</td>
-<td style="text-align:right;">
-7057
-</td>
-<td style="text-align:right;">
-13.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-従業員
-</td>
-<td style="text-align:right;">
-4371
-</td>
-<td style="text-align:right;">
-8.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-店長
-</td>
-<td style="text-align:right;">
-4343
-</td>
-<td style="text-align:right;">
-8.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:right;">
-3145
-</td>
-<td style="text-align:right;">
-6.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-職員
-</td>
-<td style="text-align:right;">
-3118
-</td>
-<td style="text-align:right;">
-6.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-総務担当
-</td>
-<td style="text-align:right;">
-2930
-</td>
-<td style="text-align:right;">
-5.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-代表者
-</td>
-<td style="text-align:right;">
-2615
-</td>
-<td style="text-align:right;">
-5.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-社員
-</td>
-<td style="text-align:right;">
-1796
-</td>
-<td style="text-align:right;">
-3.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-役員
-</td>
-<td style="text-align:right;">
-1518
-</td>
-<td style="text-align:right;">
-2.9
-</td>
-</tr>
-</tbody>
-</table>
-<p>職種別では経営者がダントツで多い結果となりました。代表者など表記揺れもありますので、実態はもう少し多いと思います。想像では、現場の職員の方の回答が多いと思っていましたが予想とは異なる結果となりました。</p>
-</div>
-<div id="景気判断の理由の分布" class="section level3">
-<h3>3.5 <code>(景気)判断の理由</code>の分布</h3>
-<p>次に<code>(景気)判断の理由</code>の分布を見ます。</p>
-<pre class="r"><code>results &lt;- sample %&gt;% 
-            dplyr::group_by(判断の理由) %&gt;% 
-            dplyr::summarise(サンプルサイズ=dplyr::n()) %&gt;% 
-            dplyr::arrange(desc(サンプルサイズ)) %&gt;% 
-            dplyr::mutate(`割合(%)`=round(サンプルサイズ/sum(サンプルサイズ)*100, digits=1))
-            
-results %&gt;% 
-  knitr::kable() %&gt;% 
-  kableExtra::kable_styling(bootstrap_options = c(&quot;striped&quot;))</code></pre>
-<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:left;">
-判断の理由
-</th>
-<th style="text-align:right;">
-サンプルサイズ
-</th>
-<th style="text-align:right;">
-割合(%)
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-来客数の動き
-</td>
-<td style="text-align:right;">
-17432
-</td>
-<td style="text-align:right;">
-22.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-販売量の動き
-</td>
-<td style="text-align:right;">
-16153
-</td>
-<td style="text-align:right;">
-21.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-お客様の様子
-</td>
-<td style="text-align:right;">
-11511
-</td>
-<td style="text-align:right;">
-15.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-受注量や販売量の動き
-</td>
-<td style="text-align:right;">
-9033
-</td>
-<td style="text-align:right;">
-11.8
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-取引先の様子
-</td>
-<td style="text-align:right;">
-5034
-</td>
-<td style="text-align:right;">
-6.6
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-求人数の動き
-</td>
-<td style="text-align:right;">
-4155
-</td>
-<td style="text-align:right;">
-5.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-それ以外
-</td>
-<td style="text-align:right;">
-4007
-</td>
-<td style="text-align:right;">
-5.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-単価の動き
-</td>
-<td style="text-align:right;">
-3654
-</td>
-<td style="text-align:right;">
-4.8
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-競争相手の様子
-</td>
-<td style="text-align:right;">
-1603
-</td>
-<td style="text-align:right;">
-2.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-周辺企業の様子
-</td>
-<td style="text-align:right;">
-1161
-</td>
-<td style="text-align:right;">
-1.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-受注価格や販売価格の動き
-</td>
-<td style="text-align:right;">
-1099
-</td>
-<td style="text-align:right;">
-1.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-求職者数の動き
-</td>
-<td style="text-align:right;">
-930
-</td>
-<td style="text-align:right;">
-1.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-採用者数の動き
-</td>
-<td style="text-align:right;">
-666
-</td>
-<td style="text-align:right;">
-0.9
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-雇用形態の様子
-</td>
-<td style="text-align:right;">
-361
-</td>
-<td style="text-align:right;">
-0.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-販売量の動き
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-</tbody>
-</table>
-<p>「来客数の動き」と「販売量の動き」が多く、「お客様の様子」や「受注量や販売量の動き」まで含めると7割を占めます。回答業種に小売店が多いことから、このような項目が上位にきているのだと推察されます。</p>
-</div>
-</div>
-<div id="終わりに" class="section level2">
-<h2>4. 終わりに</h2>
-<p>これから各回で以下の手法を用いた予測モデルの構築を行っていきます。次回は、辞書ベースに基づくセンチメントの抽出を行い、文書のポジネガ分類を行います。</p>
-<ol style="list-style-type: decimal">
-<li>辞書ベース</li>
-<li>ナイーブベイズ分類器</li>
-<li>単語埋め込み(Word Embedding)を用いた方法</li>
-<li>Recurrent neural network(RNN)</li>
-<li>Transformer</li>
-</ol>
-<p>実は、解析自体は全て完了しており、文書を書くだけのフェーズになっています。ちゃんと結果も出ていますので、乞うご期待です！</p>
 </div>
 
-    </div>
+          </div>
 
-    
+          
 
 
 
@@ -1816,7 +1178,7 @@ results %&gt;%
       
       
       <li>
-        <a href="https://twitter.com/intent/tweet?url=../../post/post27/&amp;text=%e3%80%90%e5%be%b9%e5%ba%95%e6%af%94%e8%bc%83%e3%80%91%e3%82%bb%e3%83%b3%e3%83%81%e3%83%a1%e3%83%b3%e3%83%88%e3%82%b9%e3%82%b3%e3%82%a2%e7%ae%97%e5%87%ba%e6%89%8b%e6%b3%95%ef%bc%81%ef%bc%81%20-%20%e7%ac%ac1%e5%9b%9e" target="_blank" rel="noopener" class="share-btn-twitter">
+        <a href="https://twitter.com/intent/tweet?url=../../post/post27/&amp;text=%e3%80%90%e5%be%b9%e5%ba%95%e6%af%94%e8%bc%83%e3%80%91%e3%82%bb%e3%83%b3%e3%83%81%e3%83%a1%e3%83%b3%e3%83%88%e3%82%b9%e3%82%b3%e3%82%a2%e7%ae%97%e5%87%ba%e6%89%8b%e6%b3%95%ef%bc%81%ef%bc%81%20-%20%e7%ac%ac2%e5%9b%9e" target="_blank" rel="noopener" class="share-btn-twitter">
           <i class="fab fa-twitter"></i>
         </a>
       </li>
@@ -1829,7 +1191,7 @@ results %&gt;%
       
       
       <li>
-        <a href="https://www.facebook.com/sharer.php?u=/post/post27/&amp;t=%e3%80%90%e5%be%b9%e5%ba%95%e6%af%94%e8%bc%83%e3%80%91%e3%82%bb%e3%83%b3%e3%83%81%e3%83%a1%e3%83%b3%e3%83%88%e3%82%b9%e3%82%b3%e3%82%a2%e7%ae%97%e5%87%ba%e6%89%8b%e6%b3%95%ef%bc%81%ef%bc%81%20-%20%e7%ac%ac1%e5%9b%9e" target="_blank" rel="noopener" class="share-btn-facebook">
+        <a href="https://www.facebook.com/sharer.php?u=/post/post27/&amp;t=%e3%80%90%e5%be%b9%e5%ba%95%e6%af%94%e8%bc%83%e3%80%91%e3%82%bb%e3%83%b3%e3%83%81%e3%83%a1%e3%83%b3%e3%83%88%e3%82%b9%e3%82%b3%e3%82%a2%e7%ae%97%e5%87%ba%e6%89%8b%e6%b3%95%ef%bc%81%ef%bc%81%20-%20%e7%ac%ac2%e5%9b%9e" target="_blank" rel="noopener" class="share-btn-facebook">
           <i class="fab fa-facebook"></i>
         </a>
       </li>
@@ -1842,7 +1204,7 @@ results %&gt;%
       
       
       <li>
-        <a href="mailto:?subject=%e3%80%90%e5%be%b9%e5%ba%95%e6%af%94%e8%bc%83%e3%80%91%e3%82%bb%e3%83%b3%e3%83%81%e3%83%a1%e3%83%b3%e3%83%88%e3%82%b9%e3%82%b3%e3%82%a2%e7%ae%97%e5%87%ba%e6%89%8b%e6%b3%95%ef%bc%81%ef%bc%81%20-%20%e7%ac%ac1%e5%9b%9e&amp;body=/post/post27/" target="_blank" rel="noopener" class="share-btn-email">
+        <a href="mailto:?subject=%e3%80%90%e5%be%b9%e5%ba%95%e6%af%94%e8%bc%83%e3%80%91%e3%82%bb%e3%83%b3%e3%83%81%e3%83%a1%e3%83%b3%e3%83%88%e3%82%b9%e3%82%b3%e3%82%a2%e7%ae%97%e5%87%ba%e6%89%8b%e6%b3%95%ef%bc%81%ef%bc%81%20-%20%e7%ac%ac2%e5%9b%9e&amp;body=/post/post27/" target="_blank" rel="noopener" class="share-btn-email">
           <i class="fas fa-envelope"></i>
         </a>
       </li>
@@ -1855,7 +1217,7 @@ results %&gt;%
       
       
       <li>
-        <a href="https://www.linkedin.com/shareArticle?url=../../post/post27/&amp;title=%e3%80%90%e5%be%b9%e5%ba%95%e6%af%94%e8%bc%83%e3%80%91%e3%82%bb%e3%83%b3%e3%83%81%e3%83%a1%e3%83%b3%e3%83%88%e3%82%b9%e3%82%b3%e3%82%a2%e7%ae%97%e5%87%ba%e6%89%8b%e6%b3%95%ef%bc%81%ef%bc%81%20-%20%e7%ac%ac1%e5%9b%9e" target="_blank" rel="noopener" class="share-btn-linkedin">
+        <a href="https://www.linkedin.com/shareArticle?url=../../post/post27/&amp;title=%e3%80%90%e5%be%b9%e5%ba%95%e6%af%94%e8%bc%83%e3%80%91%e3%82%bb%e3%83%b3%e3%83%81%e3%83%a1%e3%83%b3%e3%83%88%e3%82%b9%e3%82%b3%e3%82%a2%e7%ae%97%e5%87%ba%e6%89%8b%e6%b3%95%ef%bc%81%ef%bc%81%20-%20%e7%ac%ac2%e5%9b%9e" target="_blank" rel="noopener" class="share-btn-linkedin">
           <i class="fab fa-linkedin-in"></i>
         </a>
       </li>
@@ -1868,7 +1230,7 @@ results %&gt;%
       
       
       <li>
-        <a href="whatsapp://send?text=%e3%80%90%e5%be%b9%e5%ba%95%e6%af%94%e8%bc%83%e3%80%91%e3%82%bb%e3%83%b3%e3%83%81%e3%83%a1%e3%83%b3%e3%83%88%e3%82%b9%e3%82%b3%e3%82%a2%e7%ae%97%e5%87%ba%e6%89%8b%e6%b3%95%ef%bc%81%ef%bc%81%20-%20%e7%ac%ac1%e5%9b%9e%20/post/post27/" target="_blank" rel="noopener" class="share-btn-whatsapp">
+        <a href="whatsapp://send?text=%e3%80%90%e5%be%b9%e5%ba%95%e6%af%94%e8%bc%83%e3%80%91%e3%82%bb%e3%83%b3%e3%83%81%e3%83%a1%e3%83%b3%e3%83%88%e3%82%b9%e3%82%b3%e3%82%a2%e7%ae%97%e5%87%ba%e6%89%8b%e6%b3%95%ef%bc%81%ef%bc%81%20-%20%e7%ac%ac2%e5%9b%9e%20/post/post27/" target="_blank" rel="noopener" class="share-btn-whatsapp">
           <i class="fab fa-whatsapp"></i>
         </a>
       </li>
@@ -1881,7 +1243,7 @@ results %&gt;%
       
       
       <li>
-        <a href="https://service.weibo.com/share/share.php?url=../../post/post27/&amp;title=%e3%80%90%e5%be%b9%e5%ba%95%e6%af%94%e8%bc%83%e3%80%91%e3%82%bb%e3%83%b3%e3%83%81%e3%83%a1%e3%83%b3%e3%83%88%e3%82%b9%e3%82%b3%e3%82%a2%e7%ae%97%e5%87%ba%e6%89%8b%e6%b3%95%ef%bc%81%ef%bc%81%20-%20%e7%ac%ac1%e5%9b%9e" target="_blank" rel="noopener" class="share-btn-weibo">
+        <a href="https://service.weibo.com/share/share.php?url=../../post/post27/&amp;title=%e3%80%90%e5%be%b9%e5%ba%95%e6%af%94%e8%bc%83%e3%80%91%e3%82%bb%e3%83%b3%e3%83%81%e3%83%a1%e3%83%b3%e3%83%88%e3%82%b9%e3%82%b3%e3%82%a2%e7%ae%97%e5%87%ba%e6%89%8b%e6%b3%95%ef%bc%81%ef%bc%81%20-%20%e7%ac%ac2%e5%9b%9e" target="_blank" rel="noopener" class="share-btn-weibo">
           <i class="fab fa-weibo"></i>
         </a>
       </li>
@@ -2043,6 +1405,8 @@ results %&gt;%
     <h3>関連項目</h3>
     <ul>
       
+      <li><a href="../../post/post25/">【徹底比較】センチメントスコア算出手法！！ - 第1回</a></li>
+      
       <li><a href="../../post/post20/">PytorchのPre-trainedモデルで馬体写真の背景を自動トリミングする</a></li>
       
       <li><a href="../../post/post16/">LightGBMを使用して競馬結果を予想してみる</a></li>
@@ -2050,8 +1414,6 @@ results %&gt;%
       <li><a href="../../post/post15/">Pythonのpandas_datareaderから色々なデータを取得してみる</a></li>
       
       <li><a href="../../post/post22/">OECD.orgからマクロパネルデータをAPIで取得する</a></li>
-      
-      <li><a href="../../post/post18/">CNNを使って馬体写真から順位予想してみた</a></li>
       
     </ul>
   </div>
@@ -2061,8 +1423,12 @@ results %&gt;%
 
 
 
+        </div>
+      </article>
+    </main>
+
   </div>
-</article>
+</div>
 
       
 
@@ -2176,11 +1542,9 @@ results %&gt;%
       
     
     
-      
     
     
-    
-    <script src="../../js/wowchemy.min.2a3f95be2bc4762ba1847fb5d7a28317.js"></script>
+    <script src="../../js/wowchemy.min.4c2bca31150ce93c5a5e43b8a50f22fd.js"></script>
 
     
 
@@ -2190,6 +1554,16 @@ results %&gt;%
   <div class="container">
     <footer class="site-footer">
   
+
+  
+   
+  <script>
+  $(document).ready(function () {
+    window.initializeCodeFolding("show" === "hide");
+  });
+  </script>
+  <script src="../../js/codefolding.js"></script>
+
 
   <p class="powered-by">
     

@@ -86,8 +86,8 @@
     
       
       
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/xcode.min.css" crossorigin="anonymous" title="hl-light">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/xcode.min.css" crossorigin="anonymous" title="hl-dark" disabled>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/solarized-dark.min.css" crossorigin="anonymous" title="hl-light">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/solarized-dark.min.css" crossorigin="anonymous" title="hl-dark" disabled>
       
     
 
@@ -655,9 +655,30 @@
 
 
 
-  <article class="article">
+  <div class="container-fluid docs">
+  <div class="row flex-xl-nowrap">
 
-  
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <ul class="nav toc-top">
+        <li><a href="#" id="back_to_top" class="docs-toc-title">On this page</a></li>
+      </ul>
+      <nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#1-gianonne-et-al-2008版マルチファクターモデル">1. Gianonne et. al. (2008)版マルチファクターモデル</a></li>
+        <li><a href="#2-rで実装する">2. Rで実装する</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+      
+    </div>
+
+    <main class="col-12 col-md-0 col-xl-10 py-md-3 pl-md-5 docs-content" role="main">
+      <article class="article">
+
+        
 
 
 
@@ -688,6 +709,22 @@
   <h1>Gianonne et. al. (2008)のマルチファクターモデルで四半期GDPを予想してみた</h1>
 
   
+
+  
+
+
+<div id="code-folding-buttons" class="dropdown btn-group pull-right">
+  <a class="btn btn-light btn-sm dropdown-toggle" href="#" role="button" id="allCodeToggleButton"
+     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    Code
+  </a>
+  <div class="dropdown-menu" aria-labelledby="allCodeToggleButton">
+    <a id="rmd-show-all-code" class="dropdown-item small" href="#">Show all</a>
+    <a id="rmd-hide-all-code" class="dropdown-item small" href="#">Hide all</a>
+  </div>
+</div>
+
+
 
   
 
@@ -759,309 +796,293 @@
 
 
 
-  <div class="article-container">
+        <div class="article-container">
 
-    <div class="article-style">
-      
-<script src="index_files/header-attrs/header-attrs.js"></script>
-<link href="index_files/pagedtable/css/pagedtable.css" rel="stylesheet" />
-<script src="index_files/pagedtable/js/pagedtable.js"></script>
-
-<div id="TOC">
-<ul>
-<li><a href="#gianonne-et.-al.-2008版マルチファクターモデル">1. Gianonne et. al. (2008)版マルチファクターモデル</a></li>
-<li><a href="#rで実装する">2. Rで実装する</a></li>
-</ul>
-</div>
-
-<p>おはこんばんにちは。
+          <div class="article-style">
+            <p>おはこんばんにちは。
 前回、統計ダッシュボードからAPI接続で統計データを落とすという記事を投稿しました。
-今回はそのデータを、Gianonne et. al. (2008)のマルチファクターモデルにかけ、四半期GDPの予測を行いたいと思います。</p>
-<div id="gianonne-et.-al.-2008版マルチファクターモデル" class="section level2">
-<h2>1. Gianonne et. al. (2008)版マルチファクターモデル</h2>
-<p><a href="http://dept.ku.edu/~empirics/Courses/Econ844/papers/Nowcasting%20GDP.pdf">元論文</a></p>
+今回はそのデータを、Gianonne et. al. (2008)のマルチファクターモデルにかけ、四半期GDPの予測を行いたいと思います。</p>
+<h2 id="1-gianonne-et-al-2008版マルチファクターモデル">1. Gianonne et. al. (2008)版マルチファクターモデル</h2>
+<p><a href="http://dept.ku.edu/~empirics/Courses/Econ844/papers/Nowcasting%20GDP.pdf" target="_blank" rel="noopener">元論文</a></p>
 <p>前回の投稿でも書きましたが、この論文はGiannoneらが2008年にパブリッシュした論文です(JME)。彼らはアメリカの経済指標を用いて四半期GDPを日次で推計し、予測指標としての有用性を示しました。指標間の連動性(colinearity)を利用して、多数ある経済指標を2つのファクターに圧縮し、そのファクターを四半期GDPにフィッティングさせることによって高い予測性を実現しています。
-まず、このモデルについてご紹介します。このモデルでは2段階推計を行います。まず主成分分析により経済統計を統計間の相関が0となるファクターへ変換します（<a href="https://datachemeng.com/principalcomponentanalysis/">参考</a>）。そして、その後の状態空間モデルでの推計で必要になるパラメータを<code>OLS</code>推計し、そのパラメータを使用してカルマンフィルタ＆カルマンスムーザーを回し、ファクターを推計しています。では、具体的な説明に移ります。
-統計データを<span class="math inline">\(x_{i,t|v_j}\)</span>と定義します。ここで、<span class="math inline">\(i=1,...,n\)</span>は経済統計を表し（つまり<span class="math inline">\(n\)</span>が全統計数）、<span class="math inline">\(t=1,...,T_{iv_j}\)</span>は統計<span class="math inline">\(i\)</span>のサンプル期間の時点を表しています（つまり、<span class="math inline">\(T_{iv_j}\)</span>は統計<span class="math inline">\(i\)</span>のその時点での最新データ日付を表す）。また、<span class="math inline">\(v_j\)</span>はある時点<span class="math inline">\(j\)</span>（2005年など）で得られる情報集合（vintage）を表しています。統計データ<span class="math inline">\(x_{i,t|v_j}\)</span>は以下のようにファクター<span class="math inline">\(f_{r,t}\)</span>の線形結合で表すことができます（ここで<span class="math inline">\(r\)</span>はファクターの数を表す）。</p>
-<p><span class="math display">\[
-x_{i,t|v\_j} = \mu_i + \lambda_{i1}f_{1,t} + ... + \lambda_{ir}f_{r,t} + \xi_{i,t|v_j} \tag{1}
-\]</span></p>
-<p><span class="math inline">\(\mu\_i\)</span>は定数項、<span class="math inline">\(\lambda\_{ir}\)</span>はファクターローディング、<span class="math inline">\(\xi\_{i,t|v\_j}\)</span>はホワイトノイズの誤差項を表しています。これを行列形式で書くと以下のようになります。</p>
-<p><span class="math display">\[
+まず、このモデルについてご紹介します。このモデルでは2段階推計を行います。まず主成分分析により経済統計を統計間の相関が0となるファクターへ変換します（<a href="https://datachemeng.com/principalcomponentanalysis/" target="_blank" rel="noopener">参考</a>）。そして、その後の状態空間モデルでの推計で必要になるパラメータを<code>OLS</code>推計し、そのパラメータを使用してカルマンフィルタ＆カルマンスムーザーを回し、ファクターを推計しています。では、具体的な説明に移ります。
+統計データを$x_{i,t|v_j}$と定義します。ここで、$i=1,&hellip;,n$は経済統計を表し（つまり$n$が全統計数）、$t=1,&hellip;,T_{iv_j}$は統計$i$のサンプル期間の時点を表しています（つまり、$T_{iv_j}$は統計$i$のその時点での最新データ日付を表す）。また、$v_j$はある時点$j$（2005年など）で得られる情報集合（vintage）を表しています。統計データ$x_{i,t|v_j}$は以下のようにファクター$f_{r,t}$の線形結合で表すことができます（ここで$r$はファクターの数を表す）。</p>
+<p>$$
+x_{i,t|v_j} = \mu_i + \lambda_{i1}f_{1,t} + &hellip; + \lambda_{ir}f_{r,t} + \xi_{i,t|v_j} \tag{1}
+$$</p>
+<p><code>\(\mu\_i\)</code>は定数項、$\lambda_{ir}$はファクターローディング、$\xi_{i,t|v_j}$はホワイトノイズの誤差項を表しています。これを行列形式で書くと以下のようになります。</p>
+<p>$$
 x_{t|v_j}  = \mu + \Lambda F_t + \xi_{t|v_j} = \mu + \chi_t + \xi_{t|v_j} \tag{2}
-\]</span></p>
-<p>ここで、<span class="math inline">\(x_{t|v_j} = (x_{1,t|v_j}, ..., x_{n,t|v_j} )^{\mathrm{T}}\)</span>、<span class="math inline">\(\xi_{t|v_j}=(\xi_{1,t|v_j}, ..., \xi_{n,t|v_j})^{\mathrm{T}}\)</span>、<span class="math inline">\(F_t = (f_{1,t}, ..., f_{r,t})^{\mathrm{T}}\)</span>であり、<span class="math inline">\(\Lambda\)</span>は各要素が$ _{ij}<span class="math inline">\(の\)</span>nr<span class="math inline">\(行列のファクターローディングを表しています。また、\)</span><em>t = F_t<span class="math inline">\(です。よって、ファクター\)</span> F_t<span class="math inline">\(を推定するためには、データ\)</span>x</em>{i,t|v_j}$を以下のように基準化したうえで、分散共分散行列を計算し、その固有値問題を解けばよいという事になります。</p>
-<p><span class="math display">\[
+$$</p>
+<p>ここで、$x_{t|v_j} = (x_{1,t|v_j}, &hellip;, x_{n,t|v_j} )^{\mathrm{T}}$、$\xi_{t|v_j}=(\xi_{1,t|v_j}, &hellip;, \xi_{n,t|v_j})^{\mathrm{T}}$、$F_t = (f_{1,t}, &hellip;, f_{r,t})^{\mathrm{T}}$であり、$\Lambda$は各要素が$ \lambda_{ij}$の$n\times r$行列のファクターローディングを表しています。また、$\chi_t = \Lambda F_t$です。よって、ファクター$ F_t$を推定するためには、データ$x_{i,t|v_j}$を以下のように基準化したうえで、分散共分散行列を計算し、その固有値問題を解けばよいという事になります。</p>
+<p>$$
 \displaystyle z_{it} = \frac{1}{\hat{\sigma}_i}(x_{it} - \hat{\mu}_{it}) \tag{3}
-\]</span></p>
-<p>ここで、<span class="math inline">\(\displaystyle \hat{\mu}_{it} = 1/T \sum_{t=1}^T x_{it}\)</span>であり、<span class="math inline">\(\hat{\sigma}_i = \sqrt{1/T \sum_{t=1}^T (x_{it}-\hat{\mu_{it}})^2}\)</span>です（ここで<span class="math inline">\(T\)</span>はサンプル期間）。分散共分散行列<span class="math inline">\(S\)</span>を以下のように定義します。</p>
-<p><span class="math display">\[
+$$</p>
+<p>ここで、$\displaystyle \hat{\mu}<em>{it} = 1/T \sum</em>{t=1}^T x_{it}$であり、$\hat{\sigma}_i = \sqrt{1/T \sum_{t=1}^T (x_{it}-\hat{\mu_{it}})^2}$です（ここで$T$はサンプル期間）。分散共分散行列$S$を以下のように定義します。</p>
+<p>$$
 \displaystyle S = \frac{1}{T} \sum_{t=1}^T z_t z_t^{\mathrm{T}} \tag{4}
-\]</span>
-次に、<span class="math inline">\(S\)</span>のうち、固有値を大きい順に<span class="math inline">\(r\)</span>個取り出し、それを要素にした$ r r<span class="math inline">\(対角行列を\)</span> D<span class="math inline">\(、それに対応する固有ベクトルを\)</span>n r<span class="math inline">\(行列にしたものを\)</span> V<span class="math inline">\(と定義します。ファクター\)</span> _t$は以下のように推計できます。</p>
-<p><span class="math display">\[
+$$
+次に、$S$のうち、固有値を大きい順に$r$個取り出し、それを要素にした$ r \times r$対角行列を$ D$、それに対応する固有ベクトルを$n \times r$行列にしたものを$ V$と定義します。ファクター$ \tilde{F}_t$は以下のように推計できます。</p>
+<p>$$
 \tilde{F}_t = V^{\mathrm{T}} z_t \tag{5}
-\]</span>
-ファクターローディング<span class="math inline">\(\Lambda\)</span>と誤差項の共分散行列<span class="math inline">\(\Psi = \mathop{\mathbb{E}} [\xi_t\xi^{\mathrm{T}}_t]\)</span>は<span class="math inline">\(\tilde{F}_t\)</span>を<span class="math inline">\(z_t\)</span>に回帰することで推計します。</p>
-<p><span class="math display">\[
+$$
+ファクターローディング$\Lambda$と誤差項の共分散行列$\Psi = \mathop{\mathbb{E}} [\xi_t\xi^{\mathrm{T}}_t]$は$\tilde{F}_t$を$z_t$に回帰することで推計します。</p>
+<p>$$
 \displaystyle \hat{\Lambda} = \sum_{t=1}^T z_t \tilde{F}^{\mathrm{T}}_t (\sum_{t=1}^T\tilde{F}_t\tilde{F}^{\mathrm{T}}_t)^{-1} = V \tag{6}
-\]</span></p>
-<p><span class="math display">\[
+$$</p>
+<p>$$
 \hat{\Psi} = diag(S - VDV) \tag{7}
-\]</span></p>
-<p>注意して頂きたいのは、ここで推計した<span class="math inline">\(\tilde{F}_t\)</span>は、以下の状態空間モデルでの推計に必要なパラメータを計算するための一時的な推計値であるという事です（２段階推計の１段階目という事）。</p>
-<p><span class="math display">\[
-x_{t|v_j}  = \mu + \Lambda F\_t + \xi_{t|v_j} = \mu + \chi_t + \xi_{t|v_j} \tag{2}
-\]</span></p>
-<p><span class="math display">\[
-F\_t = AF\_{t-1} + u\_t \tag{8}
-\]</span>
-ここで、<span class="math inline">\(u_t\)</span>は平均0、分散<span class="math inline">\(H\)</span>のホワイトノイズです。再掲している(2)式が観測方程式、(8)式が遷移方程式となっています。推定すべきパラメータは<span class="math inline">\(\Lambda\)</span>、<span class="math inline">\(\Psi\)</span>以外に<span class="math inline">\(A\)</span>と<span class="math inline">\(H\)</span>があります（<span class="math inline">\(\mu=0\)</span>としています）。<span class="math inline">\(A\)</span>は主成分分析により計算した<span class="math inline">\(\tilde{F}_t\)</span>を<code>VAR(1)</code>にかけることで推定します。</p>
-<p><span class="math display">\[
+$$</p>
+<p>注意して頂きたいのは、ここで推計した$\tilde{F}_t$は、以下の状態空間モデルでの推計に必要なパラメータを計算するための一時的な推計値であるという事です（２段階推計の１段階目という事）。</p>
+<p>$$
+x_{t|v_j}  = \mu + \Lambda F_t + \xi_{t|v_j} = \mu + \chi_t + \xi_{t|v_j} \tag{2}
+$$</p>
+<p>$$
+F_t = AF_{t-1} + u_t \tag{8}
+$$
+ここで、$u_t$は平均0、分散$H$のホワイトノイズです。再掲している(2)式が観測方程式、(8)式が遷移方程式となっています。推定すべきパラメータは$\Lambda$、$\Psi$以外に$A$と$H$があります（$\mu=0$としています）。$A$は主成分分析により計算した$\tilde{F}_t$を<code>VAR(1)</code>にかけることで推定します。</p>
+<p>$$
 \hat{A} = \sum_{t=2}^T\tilde{F}_t\tilde{F}_{t-1}^{\mathrm{T}} (\sum_{t=2}^T\tilde{F}_{t-1}\tilde{F}_{t-1}^{\mathrm{T}})^{-1} \tag{9}
-\]</span>
-<span class="math inline">\(H\)</span>は今推計した<code>VAR(1)</code>の誤差項の共分散行列から計算します。これで必要なパラメータの推定が終わりました。次にカルマンフィルタを回します。カルマンフィルタに関しては<a href="https://qiita.com/MoriKen/items/0c80ef75749977767b43">こちら</a>を参考にしてください。わかりやすいです。これで最終的に<span class="math inline">\(\hat{F}_{t|v_j}\)</span>の推計ができるわけです。
+$$
+<code>\(H\)</code>は今推計した<code>VAR(1)</code>の誤差項の共分散行列から計算します。これで必要なパラメータの推定が終わりました。次にカルマンフィルタを回します。カルマンフィルタに関しては<a href="https://qiita.com/MoriKen/items/0c80ef75749977767b43" target="_blank" rel="noopener">こちら</a>を参考にしてください。わかりやすいです。これで最終的に$\hat{F}_{t|v_j}$の推計ができるわけです。
 GDPがこれらのファクターで説明可能であり（つまり固有の変動がない）、GDPと月次経済指標がjointly normalであれば以下のような単純なOLS推計でGDPを予測することができます。もちろん月次経済指標の方が早く公表されるので、内生性の問題はないと考えられます。</p>
-<p><span class="math display">\[
-\hat{y}_{3k|v_j} = \alpha + \beta^{\mathrm{T}} \hat{F}_{3k|v_j} \tag{10}
-\]</span></p>
-<p>ここで、<span class="math inline">\(3k\)</span>は四半期の最終月を示しています（3月、6月など）<span class="math inline">\(\hat{y}_{3k|v_j}\)</span>は<span class="math inline">\(j\)</span>時点で得られる情報集合<span class="math inline">\(v_j\)</span>での四半期GDPを表しており、<span class="math inline">\(\hat{F}_{3k|v_j}\)</span>はその時点で推定したファクターを表しています（四半期最終月の値だけを使用している点に注意）。これで推計方法の説明は終わりです。</p>
-</div>
-<div id="rで実装する" class="section level2">
-<h2>2. Rで実装する</h2>
+<p>$$
+\hat{y}<em>{3k|v_j} = \alpha + \beta^{\mathrm{T}} \hat{F}</em>{3k|v_j} \tag{10}
+$$</p>
+<p>ここで、$3k$は四半期の最終月を示しています（3月、6月など）$\hat{y}<em>{3k|v_j}$は$j$時点で得られる情報集合$v_j$での四半期GDPを表しており、$\hat{F}</em>{3k|v_j}$はその時点で推定したファクターを表しています（四半期最終月の値だけを使用している点に注意）。これで推計方法の説明は終わりです。</p>
+<h2 id="2-rで実装する">2. Rで実装する</h2>
 <p>では実装します。前回記事で得られたデータ（dataset）が読み込まれている状態からスタートします。まず、主成分分析でファクターを計算します。なお、前回の記事で3ファクターの累積寄与度が80%を超えたため、今回もファクター数は3にしています。</p>
-<pre class="r"><code>#------------------------
-# Giannone et. al. 2008 
-#------------------------
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e">#------------------------</span>
+<span style="color:#75715e"># Giannone et. al. 2008 </span>
+<span style="color:#75715e">#------------------------</span>
 
-library(xts)
-library(MASS)
-library(tidyverse)
+<span style="color:#a6e22e">library</span>(xts)
+<span style="color:#a6e22e">library</span>(MASS)
+<span style="color:#a6e22e">library</span>(tidyverse)
 
-# 主成分分析でファクターを計算
-f &lt;- 3 # ファクター数を定義
-a &lt;- which(dataset1$publication == &quot;2012-04-01&quot;) # サンプル開始期間を2012年に設定。
-dataset2 &lt;- dataset1[a:nrow(dataset1),]
-rownames(dataset2) &lt;- dataset2$publication
-dataset2 &lt;- dataset2[,-2]
-z &lt;- scale(dataset2) # zは基準化されたサンプルデータ
-for (i in 1:nrow(z)){
-  eval(parse(text = paste(&quot;S_i &lt;- z[i,]%*%t(z[i,])&quot;,sep = &quot;&quot;)))
-  if (i==1){
-    S &lt;- S_i
+<span style="color:#75715e"># 主成分分析でファクターを計算</span>
+f <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">3</span> <span style="color:#75715e"># ファクター数を定義</span>
+a <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">which</span>(dataset1<span style="color:#f92672">$</span>publication <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;2012-04-01&#34;</span>) <span style="color:#75715e"># サンプル開始期間を2012年に設定。</span>
+dataset2 <span style="color:#f92672">&lt;-</span> dataset1[a<span style="color:#f92672">:</span><span style="color:#a6e22e">nrow</span>(dataset1),]
+<span style="color:#a6e22e">rownames</span>(dataset2) <span style="color:#f92672">&lt;-</span> dataset2<span style="color:#f92672">$</span>publication
+dataset2 <span style="color:#f92672">&lt;-</span> dataset2[,<span style="color:#ae81ff">-2</span>]
+z <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">scale</span>(dataset2) <span style="color:#75715e"># zは基準化されたサンプルデータ</span>
+<span style="color:#a6e22e">for </span>(i in <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#a6e22e">nrow</span>(z)){
+  <span style="color:#a6e22e">eval</span>(<span style="color:#a6e22e">parse</span>(text <span style="color:#f92672">=</span> <span style="color:#a6e22e">paste</span>(<span style="color:#e6db74">&#34;S_i &lt;- z[i,]%*%t(z[i,])&#34;</span>,sep <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&#34;</span>)))
+  <span style="color:#a6e22e">if </span>(i<span style="color:#f92672">==</span><span style="color:#ae81ff">1</span>){
+    S <span style="color:#f92672">&lt;-</span> S_i
   }else{
-    S &lt;- S + S_i
+    S <span style="color:#f92672">&lt;-</span> S <span style="color:#f92672">+</span> S_i
   }
 }
-S &lt;- (1/nrow(z))*S # 分散共分散行列を計算 (4)式
-gamma &lt;- eigen(S) 
-D &lt;- diag(gamma$values[1:f])
-V &lt;- gamma$vectors[,1:f]
-F_t &lt;- matrix(0,nrow(z),f)
-for (i in 1:nrow(z)){
-  eval(parse(text = paste(&quot;F_t[&quot;,i,&quot;,]&lt;- z[&quot;,i,&quot;,]%*%V&quot;,sep = &quot;&quot;))) # (5)式を実行
+S <span style="color:#f92672">&lt;-</span> (<span style="color:#ae81ff">1</span><span style="color:#f92672">/</span><span style="color:#a6e22e">nrow</span>(z))<span style="color:#f92672">*</span>S <span style="color:#75715e"># 分散共分散行列を計算 (4)式</span>
+gamma <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">eigen</span>(S) 
+D <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">diag</span>(gamma<span style="color:#f92672">$</span>values[1<span style="color:#f92672">:</span>f])
+V <span style="color:#f92672">&lt;-</span> gamma<span style="color:#f92672">$</span>vectors[,<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>f]
+F_t <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#ae81ff">0</span>,<span style="color:#a6e22e">nrow</span>(z),f)
+<span style="color:#a6e22e">for </span>(i in <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#a6e22e">nrow</span>(z)){
+  <span style="color:#a6e22e">eval</span>(<span style="color:#a6e22e">parse</span>(text <span style="color:#f92672">=</span> <span style="color:#a6e22e">paste</span>(<span style="color:#e6db74">&#34;F_t[&#34;</span>,i,<span style="color:#e6db74">&#34;,]&lt;- z[&#34;</span>,i,<span style="color:#e6db74">&#34;,]%*%V&#34;</span>,sep <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&#34;</span>))) <span style="color:#75715e"># (5)式を実行</span>
 }
-F_t.xts &lt;- xts(F_t,order.by = as.Date(row.names(z)))
-plot.zoo(F_t.xts,col = c(&quot;red&quot;,&quot;blue&quot;,&quot;green&quot;,&quot;yellow&quot;,&quot;purple&quot;),plot.type = &quot;single&quot;) # 時系列プロット</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
-<pre class="r"><code>lambda_hat &lt;- V
-psi &lt;- diag(S-V%*%D%*%t(V)) # (7)式
-R &lt;- diag(diag(cov(z-z%*%V%*%t(V)))) </code></pre>
-<p>推計したファクター<span class="math inline">\(\tilde{F}\_t\)</span>の時系列プロットは以下のようになり、前回<code>princomp</code>関数で計算したファクターと完全一致します（じゃあ<code>princomp</code>でいいやんと思われるかもしれませんが実装しないと勉強になりませんので）。</p>
+F_t.xts <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">xts</span>(F_t,order.by <span style="color:#f92672">=</span> <span style="color:#a6e22e">as.Date</span>(<span style="color:#a6e22e">row.names</span>(z)))
+<span style="color:#a6e22e">plot.zoo</span>(F_t.xts,col <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;red&#34;</span>,<span style="color:#e6db74">&#34;blue&#34;</span>,<span style="color:#e6db74">&#34;green&#34;</span>,<span style="color:#e6db74">&#34;yellow&#34;</span>,<span style="color:#e6db74">&#34;purple&#34;</span>),plot.type <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;single&#34;</span>) <span style="color:#75715e"># 時系列プロット</span>
+</code></pre></div><p><img src="../../post/post6/index_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">lambda_hat <span style="color:#f92672">&lt;-</span> V
+psi <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">diag</span>(S<span style="color:#f92672">-</span>V<span style="color:#f92672">%*%</span>D<span style="color:#f92672">%*%</span><span style="color:#a6e22e">t</span>(V)) <span style="color:#75715e"># (7)式</span>
+R <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">diag</span>(<span style="color:#a6e22e">diag</span>(<span style="color:#a6e22e">cov</span>(z<span style="color:#f92672">-</span>z<span style="color:#f92672">%*%</span>V<span style="color:#f92672">%*%</span><span style="color:#a6e22e">t</span>(V)))) 
+</code></pre></div><p>推計したファクター$\tilde{F}_t$の時系列プロットは以下のようになり、前回<code>princomp</code>関数で計算したファクターと完全一致します（じゃあ<code>princomp</code>でいいやんと思われるかもしれませんが実装しないと勉強になりませんので）。</p>
 <p>次に、<code>VAR(1)</code>を推計し、パラメータを取り出します。</p>
-<pre class="r"><code># VAR(1)モデルを推計
-a &lt;- matrix(0,f,f)
-b &lt;- matrix(0,f,f)
-for(t in 2:nrow(z)){
-  a &lt;- a + F_t[t,]%*%t(F_t[t-1,])
-  b &lt;- b + F_t[t-1,]%*%t(F_t[t-1,])
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># VAR(1)モデルを推計</span>
+a <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#ae81ff">0</span>,f,f)
+b <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#ae81ff">0</span>,f,f)
+<span style="color:#a6e22e">for</span>(t in <span style="color:#ae81ff">2</span><span style="color:#f92672">:</span><span style="color:#a6e22e">nrow</span>(z)){
+  a <span style="color:#f92672">&lt;-</span> a <span style="color:#f92672">+</span> F_t[t,]<span style="color:#f92672">%*%</span><span style="color:#a6e22e">t</span>(F_t[t<span style="color:#ae81ff">-1</span>,])
+  b <span style="color:#f92672">&lt;-</span> b <span style="color:#f92672">+</span> F_t[t<span style="color:#ae81ff">-1</span>,]<span style="color:#f92672">%*%</span><span style="color:#a6e22e">t</span>(F_t[t<span style="color:#ae81ff">-1</span>,])
 }
-b_inv &lt;- solve(b)
-A_hat &lt;- a%*%b_inv # (9)式
+b_inv <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">solve</span>(b)
+A_hat <span style="color:#f92672">&lt;-</span> a<span style="color:#f92672">%*%</span>b_inv <span style="color:#75715e"># (9)式</span>
 
-e &lt;- numeric(f)
-for (t in 2:nrow(F_t)){
-  e &lt;- e + F_t[t,]-F_t[t-1,]%*%A_hat
+e <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">numeric</span>(f)
+<span style="color:#a6e22e">for </span>(t in <span style="color:#ae81ff">2</span><span style="color:#f92672">:</span><span style="color:#a6e22e">nrow</span>(F_t)){
+  e <span style="color:#f92672">&lt;-</span> e <span style="color:#f92672">+</span> F_t[t,]<span style="color:#f92672">-</span>F_t[t<span style="color:#ae81ff">-1</span>,]<span style="color:#f92672">%*%</span>A_hat
 }
-H &lt;- t(e)%*%e
-Q &lt;- diag(1,f,f)
-Q[1:f,1:f] &lt;- H</code></pre>
-<p><code>VAR(1)</code>に関しても<code>var</code>関数とパラメータの数値が一致することを確認済みです。いよいよカルマンフィルタを実行します。</p>
-<pre class="r"><code># カルマンフィルタを実行
-RR &lt;- array(0,dim = c(ncol(z),ncol(z),nrow(z))) # RRは観測値の分散行列（相関はないと仮定）
-for(i in 1:nrow(z)){
-  miss &lt;- is.na(z[i,])
-  R_temp &lt;- diag(R)
-  R_temp[miss] &lt;- 1e+32 # 欠損値の分散は無限大にする
-  RR[,,i] &lt;- diag(R_temp)
+H <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">t</span>(e)<span style="color:#f92672">%*%</span>e
+Q <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">diag</span>(<span style="color:#ae81ff">1</span>,f,f)
+Q[1<span style="color:#f92672">:</span>f,<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>f] <span style="color:#f92672">&lt;-</span> H
+</code></pre></div><p><code>VAR(1)</code>に関しても<code>var</code>関数とパラメータの数値が一致することを確認済みです。いよいよカルマンフィルタを実行します。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># カルマンフィルタを実行</span>
+RR <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">array</span>(<span style="color:#ae81ff">0</span>,dim <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">ncol</span>(z),<span style="color:#a6e22e">ncol</span>(z),<span style="color:#a6e22e">nrow</span>(z))) <span style="color:#75715e"># RRは観測値の分散行列（相関はないと仮定）</span>
+<span style="color:#a6e22e">for</span>(i in <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#a6e22e">nrow</span>(z)){
+  miss <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">is.na</span>(z[i,])
+  R_temp <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">diag</span>(R)
+  R_temp[miss] <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1e+32</span> <span style="color:#75715e"># 欠損値の分散は無限大にする</span>
+  RR[,,i] <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">diag</span>(R_temp)
 }
-zz &lt;- z; zz[is.na(z)] &lt;- 0 # 欠損値（NA）に0を代入（計算結果にはほとんど影響しない）。
-a_t &lt;- matrix(0,nrow(zz),f) # a_tは状態変数の予測値
-a_tt &lt;- matrix(0,nrow(zz),f) # a_ttは状態変数の更新後の値
-a_tt[1,] &lt;- F_t[1,] # 状態変数の初期値には主成分分析で推計したファクターを使用
-sigma_t &lt;- array(0,dim = c(f,f,nrow(zz))) # sigma_tは状態変数の分散の予測値
-sigma_tt &lt;- array(0,dim = c(f,f,nrow(zz))) # sigma_tは状態変数の分散の更新値
-p &lt;- ginv(diag(nrow(kronecker(A_hat,A_hat)))-kronecker(A_hat,A_hat))
-sigma_tt[,,1] &lt;- matrix(p,3,3) # 状態変数の分散の初期値はVAR(1)の推計値から計算
-y_t &lt;- matrix(0,nrow(zz),ncol(zz)) # y_tは観測値の予測値
-K_t &lt;- array(0,dim = c(f,ncol(zz),nrow(zz))) # K_tはカルマンゲイン
-data.m &lt;- as.matrix(dataset2)
-# カルマンフィルタを実行
-for (t in 2:nrow(zz)){
-  a_t[t,] &lt;- A_hat%*%a_tt[t-1,]
-  sigma_t[,,t] &lt;- A_hat%*%sigma_tt[,,t-1]%*%t(A_hat) + Q
-  y_t[t,] &lt;- as.vector(V%*%a_t[t,])
-  S_t &lt;- V%*%sigma_tt[,,t-1]%*%t(V)+RR[,,t]
-  GG &lt;- t(V)%*%diag(1/diag(RR[,,t]))%*%V
-  Sinv &lt;- diag(1/diag(RR[,,t])) - diag(1/diag(RR[,,t]))%*%V%*%ginv(diag(nrow(A_hat))+sigma_t[,,t]%*%GG)%*%sigma_t[,,t]%*%t(V)%*%diag(1/diag(RR[,,t]))
-  K_t[,,t] &lt;- sigma_t[,,t]%*%t(V)%*%Sinv
-  a_tt[t,] &lt;- a_t[t,] + K_t[,,t]%*%(zz[t,]-y_t[t,])
-  sigma_tt[,,t] &lt;- sigma_t[,,t] - K_t[,,t]%*%V%*%sigma_tt[,,t-1]%*%t(V)%*%t(K_t[,,t])
+zz <span style="color:#f92672">&lt;-</span> z; zz<span style="color:#a6e22e">[is.na</span>(z)] <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">0</span> <span style="color:#75715e"># 欠損値（NA）に0を代入（計算結果にはほとんど影響しない）。</span>
+a_t <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#ae81ff">0</span>,<span style="color:#a6e22e">nrow</span>(zz),f) <span style="color:#75715e"># a_tは状態変数の予測値</span>
+a_tt <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#ae81ff">0</span>,<span style="color:#a6e22e">nrow</span>(zz),f) <span style="color:#75715e"># a_ttは状態変数の更新後の値</span>
+a_tt[1,] <span style="color:#f92672">&lt;-</span> F_t[1,] <span style="color:#75715e"># 状態変数の初期値には主成分分析で推計したファクターを使用</span>
+sigma_t <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">array</span>(<span style="color:#ae81ff">0</span>,dim <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(f,f,<span style="color:#a6e22e">nrow</span>(zz))) <span style="color:#75715e"># sigma_tは状態変数の分散の予測値</span>
+sigma_tt <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">array</span>(<span style="color:#ae81ff">0</span>,dim <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(f,f,<span style="color:#a6e22e">nrow</span>(zz))) <span style="color:#75715e"># sigma_tは状態変数の分散の更新値</span>
+p <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ginv</span>(<span style="color:#a6e22e">diag</span>(<span style="color:#a6e22e">nrow</span>(<span style="color:#a6e22e">kronecker</span>(A_hat,A_hat)))<span style="color:#f92672">-</span><span style="color:#a6e22e">kronecker</span>(A_hat,A_hat))
+sigma_tt[,,<span style="color:#ae81ff">1</span>] <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(p,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>) <span style="color:#75715e"># 状態変数の分散の初期値はVAR(1)の推計値から計算</span>
+y_t <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#ae81ff">0</span>,<span style="color:#a6e22e">nrow</span>(zz),<span style="color:#a6e22e">ncol</span>(zz)) <span style="color:#75715e"># y_tは観測値の予測値</span>
+K_t <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">array</span>(<span style="color:#ae81ff">0</span>,dim <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(f,<span style="color:#a6e22e">ncol</span>(zz),<span style="color:#a6e22e">nrow</span>(zz))) <span style="color:#75715e"># K_tはカルマンゲイン</span>
+data.m <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.matrix</span>(dataset2)
+<span style="color:#75715e"># カルマンフィルタを実行</span>
+<span style="color:#a6e22e">for </span>(t in <span style="color:#ae81ff">2</span><span style="color:#f92672">:</span><span style="color:#a6e22e">nrow</span>(zz)){
+  a_t[t,] <span style="color:#f92672">&lt;-</span> A_hat<span style="color:#f92672">%*%</span>a_tt[t<span style="color:#ae81ff">-1</span>,]
+  sigma_t[,,t] <span style="color:#f92672">&lt;-</span> A_hat<span style="color:#f92672">%*%</span>sigma_tt[,,t<span style="color:#ae81ff">-1</span>]<span style="color:#f92672">%*%</span><span style="color:#a6e22e">t</span>(A_hat) <span style="color:#f92672">+</span> Q
+  y_t[t,] <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.vector</span>(V<span style="color:#f92672">%*%</span>a_t[t,])
+  S_t <span style="color:#f92672">&lt;-</span> V<span style="color:#f92672">%*%</span>sigma_tt[,,t<span style="color:#ae81ff">-1</span>]<span style="color:#f92672">%*%</span><span style="color:#a6e22e">t</span>(V)<span style="color:#f92672">+</span>RR[,,t]
+  GG <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">t</span>(V)<span style="color:#f92672">%*%</span><span style="color:#a6e22e">diag</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">/</span><span style="color:#a6e22e">diag</span>(RR[,,t]))<span style="color:#f92672">%*%</span>V
+  Sinv <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">diag</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">/</span><span style="color:#a6e22e">diag</span>(RR[,,t])) <span style="color:#f92672">-</span> <span style="color:#a6e22e">diag</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">/</span><span style="color:#a6e22e">diag</span>(RR[,,t]))<span style="color:#f92672">%*%</span>V<span style="color:#f92672">%*%</span><span style="color:#a6e22e">ginv</span>(<span style="color:#a6e22e">diag</span>(<span style="color:#a6e22e">nrow</span>(A_hat))<span style="color:#f92672">+</span>sigma_t[,,t]<span style="color:#f92672">%*%</span>GG)<span style="color:#f92672">%*%</span>sigma_t[,,t]<span style="color:#f92672">%*%</span><span style="color:#a6e22e">t</span>(V)<span style="color:#f92672">%*%</span><span style="color:#a6e22e">diag</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">/</span><span style="color:#a6e22e">diag</span>(RR[,,t]))
+  K_t[,,t] <span style="color:#f92672">&lt;-</span> sigma_t[,,t]<span style="color:#f92672">%*%</span><span style="color:#a6e22e">t</span>(V)<span style="color:#f92672">%*%</span>Sinv
+  a_tt[t,] <span style="color:#f92672">&lt;-</span> a_t[t,] <span style="color:#f92672">+</span> K_t[,,t]<span style="color:#f92672">%*%</span>(zz[t,]<span style="color:#f92672">-</span>y_t[t,])
+  sigma_tt[,,t] <span style="color:#f92672">&lt;-</span> sigma_t[,,t] <span style="color:#f92672">-</span> K_t[,,t]<span style="color:#f92672">%*%</span>V<span style="color:#f92672">%*%</span>sigma_tt[,,t<span style="color:#ae81ff">-1</span>]<span style="color:#f92672">%*%</span><span style="color:#a6e22e">t</span>(V)<span style="color:#f92672">%*%</span><span style="color:#a6e22e">t</span>(K_t[,,t])
   }
 
-F.xts &lt;- xts(a_tt,order.by = as.Date(rownames(data.m)))
-plot.zoo(F.xts, col = c(&quot;red&quot;,&quot;blue&quot;,&quot;green&quot;,&quot;yellow&quot;,&quot;purple&quot;),plot.type = &quot;single&quot;) # 得られた推計値を時系列プロット</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+F.xts <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">xts</span>(a_tt,order.by <span style="color:#f92672">=</span> <span style="color:#a6e22e">as.Date</span>(<span style="color:#a6e22e">rownames</span>(data.m)))
+<span style="color:#a6e22e">plot.zoo</span>(F.xts, col <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;red&#34;</span>,<span style="color:#e6db74">&#34;blue&#34;</span>,<span style="color:#e6db74">&#34;green&#34;</span>,<span style="color:#e6db74">&#34;yellow&#34;</span>,<span style="color:#e6db74">&#34;purple&#34;</span>),plot.type <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;single&#34;</span>) <span style="color:#75715e"># 得られた推計値を時系列プロット</span>
+</code></pre></div><p><img src="../../post/post6/index_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
 <p>カルマンフィルタにより推計したファクターの時系列プロットが以下です。遷移方程式がAR(1)だったからかかなり平準化された値となっています。</p>
 <p>では、この得られたファクターをOLSにかけます。</p>
-<pre class="r"><code># 得られたファクターとGDPをOLSにかける
-F_q &lt;- as.data.frame(a_tt[seq(3,nrow(a_tt),3),]) # 四半期の終わり月の値だけを引っ張ってくる 
-colnames(F_q) &lt;- c(&quot;factor1&quot;,&quot;factor2&quot;,&quot;factor3&quot;)
-colnames(GDP) &lt;- c(&quot;publication&quot;,&quot;GDP&quot;)
-t &lt;- which(GDP$publication==&quot;2012-04-01&quot;)
-t2 &lt;- which(GDP$publication==&quot;2015-01-01&quot;) # 2012-2q~2015-1qまでのデータが学習データ、それ以降がテストデータ
-GDP_q &lt;- GDP[t:nrow(GDP),]
-dataset.q &lt;- cbind(GDP_q[1:(t2-t),],F_q[1:(t2-t),])
-test &lt;- lm(GDP~factor1 + factor2 + factor3,data=dataset.q)
-summary(test)</code></pre>
-<pre><code>## 
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># 得られたファクターとGDPをOLSにかける</span>
+F_q <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.data.frame</span>(a_tt<span style="color:#a6e22e">[seq</span>(<span style="color:#ae81ff">3</span>,<span style="color:#a6e22e">nrow</span>(a_tt),<span style="color:#ae81ff">3</span>),]) <span style="color:#75715e"># 四半期の終わり月の値だけを引っ張ってくる </span>
+<span style="color:#a6e22e">colnames</span>(F_q) <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;factor1&#34;</span>,<span style="color:#e6db74">&#34;factor2&#34;</span>,<span style="color:#e6db74">&#34;factor3&#34;</span>)
+<span style="color:#a6e22e">colnames</span>(GDP) <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;publication&#34;</span>,<span style="color:#e6db74">&#34;GDP&#34;</span>)
+t <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">which</span>(GDP<span style="color:#f92672">$</span>publication<span style="color:#f92672">==</span><span style="color:#e6db74">&#34;2012-04-01&#34;</span>)
+t2 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">which</span>(GDP<span style="color:#f92672">$</span>publication<span style="color:#f92672">==</span><span style="color:#e6db74">&#34;2015-01-01&#34;</span>) <span style="color:#75715e"># 2012-2q~2015-1qまでのデータが学習データ、それ以降がテストデータ</span>
+GDP_q <span style="color:#f92672">&lt;-</span> GDP[t<span style="color:#f92672">:</span><span style="color:#a6e22e">nrow</span>(GDP),]
+dataset.q <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">cbind</span>(GDP_q[1<span style="color:#f92672">:</span>(t2<span style="color:#f92672">-</span>t),],F_q[1<span style="color:#f92672">:</span>(t2<span style="color:#f92672">-</span>t),])
+test <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">lm</span>(GDP<span style="color:#f92672">~</span>factor1 <span style="color:#f92672">+</span> factor2 <span style="color:#f92672">+</span> factor3,data<span style="color:#f92672">=</span>dataset.q)
+<span style="color:#a6e22e">summary</span>(test)
+</code></pre></div><pre><code>## 
 ## Call:
 ## lm(formula = GDP ~ factor1 + factor2 + factor3, data = dataset.q)
 ## 
 ## Residuals:
-##      Min       1Q   Median       3Q      Max 
-## -1350.34  -361.67   -31.63   375.61  1105.07 
+##     Min      1Q  Median      3Q     Max 
+## -1079.4  -779.4  -265.2   905.9  1280.0 
 ## 
 ## Coefficients:
 ##             Estimate Std. Error t value Pr(&gt;|t|)    
-## (Intercept) 125729.4     4134.2  30.412 1.07e-08 ***
-## factor1       -199.0     1651.3  -0.121    0.907    
-## factor2      -1699.7      960.2  -1.770    0.120    
-## factor3      -2097.6     3882.5  -0.540    0.606    
+## (Intercept) 129440.3     3784.8  34.200 4.74e-09 ***
+## factor1       -776.3      846.0  -0.918    0.389    
+## factor2       -699.0     2358.8  -0.296    0.776    
+## factor3        552.3     1588.2   0.348    0.738    
 ## ---
-## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
-## Residual standard error: 897.5 on 7 degrees of freedom
-## Multiple R-squared:  0.783,  Adjusted R-squared:   0.69 
-## F-statistic: 8.419 on 3 and 7 DF,  p-value: 0.0101</code></pre>
-<pre class="r"><code>out_of_sample &lt;- cbind(GDP_q[(t2-t+1):nrow(GDP_q),],F_q[(t2-t+1):nrow(GDP_q),]) # out of sampleのデータセットを作成
-test.pred &lt;-  predict(test, out_of_sample, interval=&quot;prediction&quot;)
-pred.GDP.xts &lt;- xts(cbind(test.pred[,1],out_of_sample$GDP),order.by = out_of_sample$publication)
-plot.zoo(pred.GDP.xts,col = c(&quot;red&quot;,&quot;blue&quot;),plot.type = &quot;single&quot;) # 予測値と実績値を時系列プロット</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+## Residual standard error: 1109 on 7 degrees of freedom
+## Multiple R-squared:  0.6667,	Adjusted R-squared:  0.5239 
+## F-statistic: 4.668 on 3 and 7 DF,  p-value: 0.04279
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">out_of_sample <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">cbind</span>(GDP_q<span style="color:#a6e22e">[</span>(t2<span style="color:#f92672">-</span>t<span style="color:#ae81ff">+1</span>)<span style="color:#f92672">:</span><span style="color:#a6e22e">nrow</span>(GDP_q),],F_q<span style="color:#a6e22e">[</span>(t2<span style="color:#f92672">-</span>t<span style="color:#ae81ff">+1</span>)<span style="color:#f92672">:</span><span style="color:#a6e22e">nrow</span>(GDP_q),]) <span style="color:#75715e"># out of sampleのデータセットを作成</span>
+test.pred <span style="color:#f92672">&lt;-</span>  <span style="color:#a6e22e">predict</span>(test, out_of_sample, interval<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;prediction&#34;</span>)
+pred.GDP.xts <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">xts</span>(<span style="color:#a6e22e">cbind</span>(test.pred[,<span style="color:#ae81ff">1</span>],out_of_sample<span style="color:#f92672">$</span>GDP),order.by <span style="color:#f92672">=</span> out_of_sample<span style="color:#f92672">$</span>publication)
+<span style="color:#a6e22e">plot.zoo</span>(pred.GDP.xts,col <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;red&#34;</span>,<span style="color:#e6db74">&#34;blue&#34;</span>),plot.type <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;single&#34;</span>) <span style="color:#75715e"># 予測値と実績値を時系列プロット</span>
+</code></pre></div><p><img src="../../post/post6/index_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
 <p>OLSの推計結果はfactor1（赤）とfactor2（青）が有意との結果。前回の投稿でも言及したように、factor1（赤）はリスクセンチメントを表していそうなので、係数の符号が負であることは頷ける。ただし、factor2（青）も符号が負なのではなぜなのか…。このファクターは生産年齢人口など経済の潜在能力を表していると思っていたのに。かなり謎。まあとりあえず予測に移りましょう。このモデルを使用したGDPの予測値と実績値の推移はいかのようになりました。直近の精度は悪くない？</p>
 <p>というか、これ完全に単位根の問題を無視してOLSしてしまっているな。ファクターもGDPも完全に単位根を持つけど念のため単位根検定をかけてみます。</p>
-<pre class="r"><code>library(tseries)
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">library</span>(tseries)
 
-adf.test(F_q$factor1)</code></pre>
-<pre><code>## 
-##  Augmented Dickey-Fuller Test
+<span style="color:#a6e22e">adf.test</span>(F_q<span style="color:#f92672">$</span>factor1)
+</code></pre></div><pre><code>## 
+## 	Augmented Dickey-Fuller Test
 ## 
 ## data:  F_q$factor1
-## Dickey-Fuller = -2.8191, Lag order = 2, p-value = 0.2603
-## alternative hypothesis: stationary</code></pre>
-<pre class="r"><code>adf.test(F_q$factor2)</code></pre>
-<pre><code>## 
-##  Augmented Dickey-Fuller Test
+## Dickey-Fuller = -2.832, Lag order = 2, p-value = 0.2554
+## alternative hypothesis: stationary
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">adf.test</span>(F_q<span style="color:#f92672">$</span>factor2)
+</code></pre></div><pre><code>## 
+## 	Augmented Dickey-Fuller Test
 ## 
 ## data:  F_q$factor2
-## Dickey-Fuller = -2.6749, Lag order = 2, p-value = 0.3153
-## alternative hypothesis: stationary</code></pre>
-<pre class="r"><code>adf.test(F_q$factor3)</code></pre>
-<pre><code>## 
-##  Augmented Dickey-Fuller Test
+## Dickey-Fuller = -2.5433, Lag order = 2, p-value = 0.3654
+## alternative hypothesis: stationary
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">adf.test</span>(F_q<span style="color:#f92672">$</span>factor3)
+</code></pre></div><pre><code>## 
+## 	Augmented Dickey-Fuller Test
 ## 
 ## data:  F_q$factor3
-## Dickey-Fuller = -2.8928, Lag order = 2, p-value = 0.2323
-## alternative hypothesis: stationary</code></pre>
-<pre class="r"><code>adf.test(GDP_q$GDP)</code></pre>
-<pre><code>## 
-##  Augmented Dickey-Fuller Test
+## Dickey-Fuller = -2.5795, Lag order = 2, p-value = 0.3516
+## alternative hypothesis: stationary
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">adf.test</span>(GDP_q<span style="color:#f92672">$</span>GDP)
+</code></pre></div><pre><code>## 
+## 	Augmented Dickey-Fuller Test
 ## 
 ## data:  GDP_q$GDP
-## Dickey-Fuller = 1.5034, Lag order = 3, p-value = 0.99
-## alternative hypothesis: stationary</code></pre>
-<p>はい。全部単位根もってました…。階差をとったのち、単位根検定を行います。</p>
-<pre class="r"><code>GDP_q &lt;- GDP_q %&gt;% mutate(growth.rate=(GDP/lag(GDP)-1)*100)
-F_q &lt;- F_q %&gt;% mutate(f1.growth.rate=(factor1/lag(factor1)-1)*100,
-                      f2.growth.rate=(factor2/lag(factor2)-1)*100,
-                      f3.growth.rate=(factor3/lag(factor3)-1)*100)
+## Dickey-Fuller = -0.25589, Lag order = 3, p-value = 0.9867
+## alternative hypothesis: stationary
+</code></pre><p>はい。全部単位根もってました…。階差をとったのち、単位根検定を行います。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">GDP_q <span style="color:#f92672">&lt;-</span> GDP_q <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">mutate</span>(growth.rate<span style="color:#f92672">=</span>(GDP<span style="color:#f92672">/</span><span style="color:#a6e22e">lag</span>(GDP)<span style="color:#ae81ff">-1</span>)<span style="color:#f92672">*</span><span style="color:#ae81ff">100</span>)
+F_q <span style="color:#f92672">&lt;-</span> F_q <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">mutate</span>(f1.growth.rate<span style="color:#f92672">=</span>(factor1<span style="color:#f92672">/</span><span style="color:#a6e22e">lag</span>(factor1)<span style="color:#ae81ff">-1</span>)<span style="color:#f92672">*</span><span style="color:#ae81ff">100</span>,
+                      f2.growth.rate<span style="color:#f92672">=</span>(factor2<span style="color:#f92672">/</span><span style="color:#a6e22e">lag</span>(factor2)<span style="color:#ae81ff">-1</span>)<span style="color:#f92672">*</span><span style="color:#ae81ff">100</span>,
+                      f3.growth.rate<span style="color:#f92672">=</span>(factor3<span style="color:#f92672">/</span><span style="color:#a6e22e">lag</span>(factor3)<span style="color:#ae81ff">-1</span>)<span style="color:#f92672">*</span><span style="color:#ae81ff">100</span>)
 
-adf.test(GDP_q$growth.rate[2:NROW(GDP_q$growth.rate)])</code></pre>
-<pre><code>## 
-##  Augmented Dickey-Fuller Test
+<span style="color:#a6e22e">adf.test</span>(GDP_q<span style="color:#f92672">$</span>growth.rate[2<span style="color:#f92672">:</span><span style="color:#a6e22e">NROW</span>(GDP_q<span style="color:#f92672">$</span>growth.rate)])
+</code></pre></div><pre><code>## 
+## 	Augmented Dickey-Fuller Test
 ## 
 ## data:  GDP_q$growth.rate[2:NROW(GDP_q$growth.rate)]
-## Dickey-Fuller = -0.31545, Lag order = 3, p-value = 0.9838
-## alternative hypothesis: stationary</code></pre>
-<pre class="r"><code>adf.test(F_q$f1.growth.rate[2:NROW(F_q$f1.growth.rate)])</code></pre>
-<pre><code>## 
-##  Augmented Dickey-Fuller Test
+## Dickey-Fuller = -2.5299, Lag order = 3, p-value = 0.368
+## alternative hypothesis: stationary
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">adf.test</span>(F_q<span style="color:#f92672">$</span>f1.growth.rate[2<span style="color:#f92672">:</span><span style="color:#a6e22e">NROW</span>(F_q<span style="color:#f92672">$</span>f1.growth.rate)])
+</code></pre></div><pre><code>## 
+## 	Augmented Dickey-Fuller Test
 ## 
 ## data:  F_q$f1.growth.rate[2:NROW(F_q$f1.growth.rate)]
-## Dickey-Fuller = -2.7762, Lag order = 2, p-value = 0.2767
-## alternative hypothesis: stationary</code></pre>
-<pre class="r"><code>adf.test(F_q$f2.growth.rate[2:NROW(F_q$f2.growth.rate)])</code></pre>
-<pre><code>## 
-##  Augmented Dickey-Fuller Test
+## Dickey-Fuller = -2.5185, Lag order = 2, p-value = 0.3748
+## alternative hypothesis: stationary
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">adf.test</span>(F_q<span style="color:#f92672">$</span>f2.growth.rate[2<span style="color:#f92672">:</span><span style="color:#a6e22e">NROW</span>(F_q<span style="color:#f92672">$</span>f2.growth.rate)])
+</code></pre></div><pre><code>## 
+## 	Augmented Dickey-Fuller Test
 ## 
 ## data:  F_q$f2.growth.rate[2:NROW(F_q$f2.growth.rate)]
-## Dickey-Fuller = -2.6156, Lag order = 2, p-value = 0.3379
-## alternative hypothesis: stationary</code></pre>
-<pre class="r"><code>adf.test(F_q$f3.growth.rate[2:NROW(F_q$f3.growth.rate)])</code></pre>
-<pre><code>## 
-##  Augmented Dickey-Fuller Test
+## Dickey-Fuller = -2.498, Lag order = 2, p-value = 0.3827
+## alternative hypothesis: stationary
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">adf.test</span>(F_q<span style="color:#f92672">$</span>f3.growth.rate[2<span style="color:#f92672">:</span><span style="color:#a6e22e">NROW</span>(F_q<span style="color:#f92672">$</span>f3.growth.rate)])
+</code></pre></div><pre><code>## 
+## 	Augmented Dickey-Fuller Test
 ## 
 ## data:  F_q$f3.growth.rate[2:NROW(F_q$f3.growth.rate)]
-## Dickey-Fuller = -2.9893, Lag order = 2, p-value = 0.1955
-## alternative hypothesis: stationary</code></pre>
-<p>factor1だけは5%有意水準で帰無仮説を棄却できない…。困りました。有意水準を10%ということにして、とりあえず階差で<code>OLS</code>してみます。</p>
-<pre class="r"><code>dataset.q &lt;- cbind(GDP_q[1:(t2-t),],F_q[1:(t2-t),])
-colnames(dataset.q) &lt;- c(&quot;publication&quot;,&quot;GDP&quot;,&quot;growth.rate&quot;,&quot;factor1&quot;,&quot;factor2&quot;,&quot;factor3&quot;,&quot;f1.growth.rate&quot;,&quot;f2.growth.rate&quot;,&quot;f3.growth.rate&quot;)
-test1 &lt;- lm(growth.rate~f1.growth.rate + f2.growth.rate + f3.growth.rate,data=dataset.q)
-summary(test1)</code></pre>
-<pre><code>## 
+## Dickey-Fuller = -3.3479, Lag order = 2, p-value = 0.08501
+## alternative hypothesis: stationary
+</code></pre><p>factor1だけは5%有意水準で帰無仮説を棄却できない…。困りました。有意水準を10%ということにして、とりあえず階差で<code>OLS</code>してみます。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">dataset.q <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">cbind</span>(GDP_q[1<span style="color:#f92672">:</span>(t2<span style="color:#f92672">-</span>t),],F_q[1<span style="color:#f92672">:</span>(t2<span style="color:#f92672">-</span>t),])
+<span style="color:#a6e22e">colnames</span>(dataset.q) <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;publication&#34;</span>,<span style="color:#e6db74">&#34;GDP&#34;</span>,<span style="color:#e6db74">&#34;growth.rate&#34;</span>,<span style="color:#e6db74">&#34;factor1&#34;</span>,<span style="color:#e6db74">&#34;factor2&#34;</span>,<span style="color:#e6db74">&#34;factor3&#34;</span>,<span style="color:#e6db74">&#34;f1.growth.rate&#34;</span>,<span style="color:#e6db74">&#34;f2.growth.rate&#34;</span>,<span style="color:#e6db74">&#34;f3.growth.rate&#34;</span>)
+test1 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">lm</span>(growth.rate<span style="color:#f92672">~</span>f1.growth.rate <span style="color:#f92672">+</span> f2.growth.rate <span style="color:#f92672">+</span> f3.growth.rate,data<span style="color:#f92672">=</span>dataset.q)
+<span style="color:#a6e22e">summary</span>(test1)
+</code></pre></div><pre><code>## 
 ## Call:
 ## lm(formula = growth.rate ~ f1.growth.rate + f2.growth.rate + 
 ##     f3.growth.rate, data = dataset.q)
 ## 
 ## Residuals:
 ##     Min      1Q  Median      3Q     Max 
-## -1.6940 -0.2411  0.2041  0.4274  1.0904 
+## -1.1822 -0.2944 -0.1403  0.3495  1.2200 
 ## 
 ## Coefficients:
 ##                  Estimate Std. Error t value Pr(&gt;|t|)
-## (Intercept)     8.978e-02  4.588e-01   0.196    0.851
-## f1.growth.rate -6.353e-03  1.375e-02  -0.462    0.660
-## f2.growth.rate  6.155e-04  6.026e-03   0.102    0.922
-## f3.growth.rate -9.249e-05  5.152e-04  -0.180    0.863
+## (Intercept)    -0.1900410  0.3956316  -0.480    0.648
+## f1.growth.rate -0.0138647  0.0122615  -1.131    0.301
+## f2.growth.rate -0.0044379  0.0036015  -1.232    0.264
+## f3.growth.rate -0.0007179  0.0006337  -1.133    0.300
 ## 
-## Residual standard error: 0.956 on 6 degrees of freedom
-##   (1 observation deleted due to missingness)
-## Multiple R-squared:  0.04055,    Adjusted R-squared:  -0.4392 
-## F-statistic: 0.08452 on 3 and 6 DF,  p-value: 0.966</code></pre>
-<p>推計結果がわるくなりました…。予測値を計算し、実績値とプロットしてみます。</p>
-<pre class="r"><code>out_of_sample1 &lt;- cbind(GDP_q[(t2-t+1):nrow(GDP_q),],F_q[(t2-t+1):nrow(GDP_q),]) # out of sampleのデータセットを作成
-test1.pred &lt;- predict(test1, out_of_sample1, interval=&quot;prediction&quot;)
-pred1.GDP.xts &lt;- xts(cbind(test1.pred[,1],out_of_sample1$growth.rate),order.by = out_of_sample1$publication)
-plot.zoo(pred1.GDP.xts,col = c(&quot;red&quot;,&quot;blue&quot;),plot.type = &quot;single&quot;) # 予測値と実績値を時系列プロット</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+## Residual standard error: 0.7832 on 6 degrees of freedom
+##   ( 1 個の観測値が欠損のため削除されました )
+## Multiple R-squared:  0.3447,	Adjusted R-squared:  0.01705 
+## F-statistic: 1.052 on 3 and 6 DF,  p-value: 0.4357
+</code></pre><p>推計結果がわるくなりました…。予測値を計算し、実績値とプロットしてみます。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">out_of_sample1 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">cbind</span>(GDP_q<span style="color:#a6e22e">[</span>(t2<span style="color:#f92672">-</span>t<span style="color:#ae81ff">+1</span>)<span style="color:#f92672">:</span><span style="color:#a6e22e">nrow</span>(GDP_q),],F_q<span style="color:#a6e22e">[</span>(t2<span style="color:#f92672">-</span>t<span style="color:#ae81ff">+1</span>)<span style="color:#f92672">:</span><span style="color:#a6e22e">nrow</span>(GDP_q),]) <span style="color:#75715e"># out of sampleのデータセットを作成</span>
+test1.pred <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">predict</span>(test1, out_of_sample1, interval<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;prediction&#34;</span>)
+pred1.GDP.xts <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">xts</span>(<span style="color:#a6e22e">cbind</span>(test1.pred[,<span style="color:#ae81ff">1</span>],out_of_sample1<span style="color:#f92672">$</span>growth.rate),order.by <span style="color:#f92672">=</span> out_of_sample1<span style="color:#f92672">$</span>publication)
+<span style="color:#a6e22e">plot.zoo</span>(pred1.GDP.xts,col <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;red&#34;</span>,<span style="color:#e6db74">&#34;blue&#34;</span>),plot.type <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;single&#34;</span>) <span style="color:#75715e"># 予測値と実績値を時系列プロット</span>
+</code></pre></div><p><img src="../../post/post6/index_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
 <p>ん～、これはやり直しですね。今日はここまでで勘弁してください…。</p>
-</div>
 
-    </div>
+          </div>
 
-    
+          
 
 
 
@@ -1334,8 +1355,12 @@ plot.zoo(pred1.GDP.xts,col = c(&quot;red&quot;,&quot;blue&quot;),plot.type = &qu
 
 
 
+        </div>
+      </article>
+    </main>
+
   </div>
-</article>
+</div>
 
       
 
@@ -1449,11 +1474,9 @@ plot.zoo(pred1.GDP.xts,col = c(&quot;red&quot;,&quot;blue&quot;),plot.type = &qu
       
     
     
-      
     
     
-    
-    <script src="../../js/wowchemy.min.2a3f95be2bc4762ba1847fb5d7a28317.js"></script>
+    <script src="../../js/wowchemy.min.4c2bca31150ce93c5a5e43b8a50f22fd.js"></script>
 
     
 
@@ -1463,6 +1486,16 @@ plot.zoo(pred1.GDP.xts,col = c(&quot;red&quot;,&quot;blue&quot;),plot.type = &qu
   <div class="container">
     <footer class="site-footer">
   
+
+  
+   
+  <script>
+  $(document).ready(function () {
+    window.initializeCodeFolding("show" === "show");
+  });
+  </script>
+  <script src="../../js/codefolding.js"></script>
+
 
   <p class="powered-by">
     

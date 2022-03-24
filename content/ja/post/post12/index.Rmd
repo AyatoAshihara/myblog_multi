@@ -90,7 +90,7 @@ https://developers.google.com/earth-engine/datasets/
 
 ではコーディングしていきます。まず、日本の地理情報の`FeatureCollection`オブジェクトを取得します。地理情報は`Fusion Tables`に格納されていますので、IDで引っ張りCountryがJapanのものを抽出します。`ee.FeatureCollection()`の引数にIDを入力すれば簡単に取得できます。
 
-```{python}
+```{python, eval=FALSE}
 import ee
 from dateutil.parser import parse
 
@@ -102,7 +102,7 @@ japan = ee.FeatureCollection('ft:1tdSwUL7MVpOauSgRzqVTOwdfy17KDbw-1d9omPw').filt
 
 次に夜間光の衛星画像を取得してみます。こちらも`ee.ImageCollection()`にデータセットのIDを渡すと取得できます。なお、ここでは`band`を月次の平均光量である`avg_rad`に抽出しています。
 
-```{python}
+```{python, eval=FALSE}
 # get night-light data from earth engine from 2014-01-01 to 2019-01-01
 dataset = ee.ImageCollection('NOAA/VIIRS/DNB/MONTHLY_V1/VCMSLCFG').filter(ee.Filter.date('2014-01-01','2019-01-01')).select('avg_rad')
 ```
@@ -129,7 +129,7 @@ dataset.mean().visualize(min=0.5).getDownloadURL(dict(name='thumbnail',region=[[
 
 先ほど取得した夜間光の`ImageCollection`のある1時点の衛星画像が左です。その中に日本という`Region`が存在し、それを`ee.Reducer`によって定量的に集約（aggregate）します。Earth Engine APIには`.reduceRegions()`メソッドが用意されていますのでそれを用いればいいです。引数は、`reducer`=集約方法（ここでは合計値）、`collection`=集約をかける`region`（`FeatureCollection`オブジェクト）、`scale`=解像度、です。以下では、`ImageCollection`（dataset）の中にある1番目の`Image`オブジェクトに`.reduceRegions()`メソッドをかけています。
 
-```{python}
+```{python, eval=FALSE}
 # initialize output box
 time0 = dataset.first().get('system:time_start');
 first = dataset.first().reduceRegions(reducer=ee.Reducer.sum(),collection=japan,scale=1000).set('time_start', time0)
@@ -156,23 +156,20 @@ CSVファイルのurlが取得できました。この時系列をプロット�
 
 ```{python, include=FALSE}
 import pandas as pd
+import os
 
 nightjp_csv = pd.read_csv('jpnightlight.csv')
-
+os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = 'C:/Users/aashi/Anaconda3/Library/plugins/platforms'
 ```
 
 ```{python}
 import pandas as pd
 import matplotlib.pyplot as plt
-import os
-
-os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = 'C:/Users/aashi/Anaconda3/Library/plugins/platforms'
 
 plt.style.use('ggplot')
 
 nightjp_csv.head()
 plt.plot(pd.to_datetime(nightjp_csv['system:index']),nightjp_csv['sum'])
-
 ```
 
 かなり季節性がありますね。冬場は日照時間が少ないこともあって光量が増えているみたいです。それにしても急激な増え方ですが。次回はこのデータと景況感の代理変数となる経済統計を元に統計解析を行いたいと思います。おたのしみに。

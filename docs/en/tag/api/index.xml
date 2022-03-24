@@ -17,111 +17,118 @@
       <link>/en/post/post22/</link>
       <pubDate>Mon, 19 Oct 2020 00:00:00 +0000</pubDate>
       <guid>/en/post/post22/</guid>
-      <description>
-&lt;script src=&#34;../../../en/post/post22/index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
-
-&lt;div id=&#34;TOC&#34;&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;#oecd.stat-web-api&#34;&gt;1.OECD.Stat Web API&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#pandasdmx&#34;&gt;2.pandasdmx&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#implementation&#34;&gt;3.implementation&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#another-matter&#34;&gt;4. Another matter…&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/div&gt;
-
-&lt;p&gt;Hi. There are several ways to collect macroeconomic data, but collecting data for each country can be a challenge. However, you can automate the tedious process of collecting data from the OECD via API. Today, I will introduce the method.&lt;/p&gt;
-&lt;div id=&#34;oecd.stat-web-api&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;1.OECD.Stat Web API&lt;/h2&gt;
-&lt;p&gt;&lt;code&gt;OECD.org&lt;/code&gt; offers a service called &lt;a href=&#34;https://stats.oecd.org/&#34;&gt;OECD.Stat&lt;/a&gt;, which provides a variety of economic data for OECD and certain non-member countries. You can also download the csv data manually by going to the website. However, you only need to use &lt;code&gt;Python&lt;/code&gt; or &lt;code&gt;R&lt;/code&gt; to do this since OECD provides a web API.&lt;/p&gt;
-&lt;p&gt;&lt;Specifics of the OECD implementation&gt;&lt;/p&gt;
+      <description>&lt;p&gt;Hi. There are several ways to collect macroeconomic data, but collecting data for each country can be a challenge. However, you can automate the tedious process of collecting data from the OECD via API. Today, I will introduce the method.&lt;/p&gt;
+&lt;h2 id=&#34;1oecdstat-web-api&#34;&gt;1.OECD.Stat Web API&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;OECD.org&lt;/code&gt; offers a service called &lt;a href=&#34;https://stats.oecd.org/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;OECD.Stat&lt;/a&gt;, which provides a variety of economic data for OECD and certain non-member countries. You can also download the csv data manually by going to the website. However, you only need to use &lt;code&gt;Python&lt;/code&gt; or &lt;code&gt;R&lt;/code&gt; to do this since OECD provides a web API.&lt;/p&gt;
+&lt;Specifics of the OECD implementation&gt;
 &lt;p&gt;Below is a list of implementation details for specific OECD REST SDMX interfaces at this time.&lt;/p&gt;
 &lt;ul&gt;
-&lt;li&gt;&lt;p&gt;Only anonymous queries are supported and there is no authentication.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Each response is limited to 1,000,000 observations.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;The maximum length of the request URL is 1000 characters.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Cross-origin requests are supported in the &lt;code&gt;CORS&lt;/code&gt; header (see &lt;a href=&#34;http://www.html5rocks.com/en/tutorials/cors/&#34;&gt;here&lt;/a&gt; for more information about &lt;code&gt;CORS&lt;/code&gt;).&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Errors are not returned in the results, but HTTP status codes and messages are set according to the Web Service Guidelines.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;If a nonexistent dataset is requested, &lt;code&gt;401 Unauthorized&lt;/code&gt; is returned.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;The source (or Agency ID) parameter of the &lt;code&gt;REST&lt;/code&gt; query is required, but the &lt;code&gt;ALL&lt;/code&gt; keyword is supported.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Versioning is not supported: the latest implementation version is always used.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Sorting of data is not supported.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;The &lt;code&gt;lastNObservations&lt;/code&gt; parameter is not supported.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Even when &lt;code&gt;dimensionAtObservation=AllDimensions&lt;/code&gt; is used, the observations follow a chronological (or import-specific) order.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Searching for reference metadata is not supported at this time.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Only anonymous queries are supported and there is no authentication.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Each response is limited to 1,000,000 observations.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;The maximum length of the request URL is 1000 characters.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Cross-origin requests are supported in the &lt;code&gt;CORS&lt;/code&gt; header (see &lt;a href=&#34;http://www.html5rocks.com/en/tutorials/cors/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;here&lt;/a&gt; for more information about &lt;code&gt;CORS&lt;/code&gt;).&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Errors are not returned in the results, but HTTP status codes and messages are set according to the Web Service Guidelines.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;If a nonexistent dataset is requested, &lt;code&gt;401 Unauthorized&lt;/code&gt; is returned.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;The source (or Agency ID) parameter of the &lt;code&gt;REST&lt;/code&gt; query is required, but the &lt;code&gt;ALL&lt;/code&gt; keyword is supported.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Versioning is not supported: the latest implementation version is always used.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Sorting of data is not supported.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;The &lt;code&gt;lastNObservations&lt;/code&gt; parameter is not supported.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Even when &lt;code&gt;dimensionAtObservation=AllDimensions&lt;/code&gt; is used, the observations follow a chronological (or import-specific) order.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Searching for reference metadata is not supported at this time.&lt;/p&gt;
+&lt;/li&gt;
 &lt;/ul&gt;
-&lt;/div&gt;
-&lt;div id=&#34;pandasdmx&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;2.pandasdmx&lt;/h2&gt;
-&lt;p&gt;The Web API is provided in the form of &lt;code&gt;sdmx-json&lt;/code&gt;. There is a useful package for using it in &lt;code&gt;Python&lt;/code&gt;, which is called &lt;code&gt;pandasdmx&lt;/code&gt;. Here’s how to download the data.&lt;/p&gt;
-&lt;ol style=&#34;list-style-type: decimal&#34;&gt;
+&lt;h2 id=&#34;2pandasdmx&#34;&gt;2.pandasdmx&lt;/h2&gt;
+&lt;p&gt;The Web API is provided in the form of &lt;code&gt;sdmx-json&lt;/code&gt;. There is a useful package for using it in &lt;code&gt;Python&lt;/code&gt;, which is called &lt;code&gt;pandasdmx&lt;/code&gt;. Here&amp;rsquo;s how to download the data.&lt;/p&gt;
+&lt;ol&gt;
 &lt;li&gt;Import &lt;code&gt;pandasdmx&lt;/code&gt;, pass &lt;code&gt;OECD&lt;/code&gt; to &lt;code&gt;Request&lt;/code&gt; method as an argument and create &lt;code&gt;api.Request&lt;/code&gt; object.&lt;/li&gt;
 &lt;li&gt;Pass the query condition to the data method of the &lt;code&gt;api.Request&lt;/code&gt; object, and download the data of &lt;code&gt;sdmx-json&lt;/code&gt; format from OECD.org.&lt;/li&gt;
 &lt;li&gt;Format the downloaded data into a &lt;code&gt;pandas&lt;/code&gt; data frame with the method &lt;code&gt;to_pandas()&lt;/code&gt;.&lt;/li&gt;
 &lt;/ol&gt;
-&lt;/div&gt;
-&lt;div id=&#34;implementation&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;3.implementation&lt;/h2&gt;
-&lt;p&gt;Let’s do this in practice. What we’ll get is the &lt;code&gt;Revisions Analysis Dataset -- Infra-annual Economic Indicators&lt;/code&gt;. We have access to all data, including revisions to the Monthly Ecnomic Indicator (MEI), one of the OECD datasets, so we can check key economic variables &lt;a href=&#34;#fn1&#34; class=&#34;footnote-ref&#34; id=&#34;fnref1&#34;&gt;&lt;sup&gt;1&lt;/sup&gt;&lt;/a&gt; from preliminary data at initial release to revised, finalized data. The dataset provides a snapshot of major economic indicators, at monthly intervals beginning in February 1999, that were previously available. In other words, the dataset allows us to build predictive models based on the data available at each point in time. The most recent data is useful, but it is preliminary and therefore subject to uncertainty. The problem is that this situation cannot be replicated when backtesting, and the analysis is often done under a better environment than the actual operation. This is the so-called &lt;code&gt;Jagged Edge&lt;/code&gt; problem. I think this dataset is very useful because it can reproduce the actual operation situation. This time, you will get the following data items.&lt;/p&gt;
+&lt;h2 id=&#34;3implementation&#34;&gt;3.implementation&lt;/h2&gt;
+&lt;p&gt;Let&amp;rsquo;s do this in practice. What we&amp;rsquo;ll get is the &lt;code&gt;Revisions Analysis Dataset -- Infra-annual Economic Indicators&lt;/code&gt;. We have access to all data, including revisions to the Monthly Ecnomic Indicator (MEI), one of the OECD datasets, so we can check key economic variables &lt;sup id=&#34;fnref:1&#34;&gt;&lt;a href=&#34;#fn:1&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;1&lt;/a&gt;&lt;/sup&gt; from preliminary data at initial release to revised, finalized data. The dataset provides a snapshot of major economic indicators, at monthly intervals beginning in February 1999, that were previously available. In other words, the dataset allows us to build predictive models based on the data available at each point in time. The most recent data is useful, but it is preliminary and therefore subject to uncertainty. The problem is that this situation cannot be replicated when backtesting, and the analysis is often done under a better environment than the actual operation. This is the so-called &lt;code&gt;Jagged Edge&lt;/code&gt; problem. I think this dataset is very useful because it can reproduce the actual operation situation. This time, you will get the following data items.&lt;/p&gt;
 &lt;table&gt;
 &lt;thead&gt;
-&lt;tr class=&#34;header&#34;&gt;
+&lt;tr&gt;
 &lt;th&gt;Indicators&lt;/th&gt;
 &lt;th&gt;Statistical ID&lt;/th&gt;
 &lt;th&gt;Frequency&lt;/th&gt;
 &lt;/tr&gt;
 &lt;/thead&gt;
 &lt;tbody&gt;
-&lt;tr class=&#34;odd&#34;&gt;
+&lt;tr&gt;
 &lt;td&gt;Gross Domestic Product&lt;/td&gt;
 &lt;td&gt;101&lt;/td&gt;
 &lt;td&gt;Quarterly&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr class=&#34;even&#34;&gt;
+&lt;tr&gt;
 &lt;td&gt;Index of Industrial Production&lt;/td&gt;
 &lt;td&gt;201&lt;/td&gt;
 &lt;td&gt;Monthly&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr class=&#34;odd&#34;&gt;
+&lt;tr&gt;
 &lt;td&gt;Retail Trade Volume&lt;/td&gt;
 &lt;td&gt;202&lt;/td&gt;
 &lt;td&gt;Monthly&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr class=&#34;even&#34;&gt;
+&lt;tr&gt;
 &lt;td&gt;Monetary Aggregates&lt;/td&gt;
 &lt;td&gt;601&lt;/td&gt;
 &lt;td&gt;Monthly&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr class=&#34;odd&#34;&gt;
+&lt;tr&gt;
 &lt;td&gt;International Trade in Goods&lt;/td&gt;
 &lt;td&gt;702+703&lt;/td&gt;
 &lt;td&gt;Monthly&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr class=&#34;even&#34;&gt;
+&lt;tr&gt;
 &lt;td&gt;Balance of Payments&lt;/td&gt;
 &lt;td&gt;701&lt;/td&gt;
 &lt;td&gt;Quarterly&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr class=&#34;odd&#34;&gt;
+&lt;tr&gt;
 &lt;td&gt;Employment&lt;/td&gt;
 &lt;td&gt;502&lt;/td&gt;
 &lt;td&gt;Monthly&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr class=&#34;even&#34;&gt;
+&lt;tr&gt;
 &lt;td&gt;Harmonised Unemployment Rates&lt;/td&gt;
 &lt;td&gt;501&lt;/td&gt;
 &lt;td&gt;Monthly&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr class=&#34;odd&#34;&gt;
+&lt;tr&gt;
 &lt;td&gt;Hourly Earnings in Manufacturing&lt;/td&gt;
 &lt;td&gt;503&lt;/td&gt;
 &lt;td&gt;Monthly&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr class=&#34;even&#34;&gt;
+&lt;tr&gt;
 &lt;td&gt;Early Estimates of Unit Labor Cost&lt;/td&gt;
 &lt;td&gt;504&lt;/td&gt;
 &lt;td&gt;Quarterly&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr class=&#34;odd&#34;&gt;
+&lt;tr&gt;
 &lt;td&gt;Production of Construction&lt;/td&gt;
 &lt;td&gt;203&lt;/td&gt;
 &lt;td&gt;Monthly&lt;/td&gt;
@@ -129,37 +136,37 @@
 &lt;/tbody&gt;
 &lt;/table&gt;
 &lt;p&gt;First, we define the functions. The arguments are database ID, other IDs (country IDs and statistical IDs), data acquisition start point and end point.&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import pandasdmx as sdmx&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## C:\Users\aashi\ANACON~1\lib\site-packages\pandasdmx\remote.py:13: RuntimeWarning: optional dependency requests_cache is not installed; cache options to Session() have no effect
-##   RuntimeWarning,&lt;/code&gt;&lt;/pre&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;oecd = sdmx.Request(&amp;#39;OECD&amp;#39;)
-def resp_OECD(dsname,dimensions,start,end):
-    dim_args = [&amp;#39;+&amp;#39;.join(d) for d in dimensions]
-    dim_str = &amp;#39;.&amp;#39;.join(dim_args)
-    resp = oecd.data(resource_id=dsname, key=dim_str + &amp;quot;/all?startTime=&amp;quot; + start + &amp;quot;&amp;amp;endTime=&amp;quot; + end)
-    df = resp.to_pandas().reset_index()
-    return(df)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Specify the dimension from which the data will be obtained. Below, (1) country, (2) statistical items, (3) time of acquisition, and (4) frequency are specified with a tuple.&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;dimensions = ((&amp;#39;USA&amp;#39;,&amp;#39;JPN&amp;#39;,&amp;#39;GBR&amp;#39;,&amp;#39;FRA&amp;#39;,&amp;#39;DEU&amp;#39;,&amp;#39;ITA&amp;#39;,&amp;#39;CAN&amp;#39;,&amp;#39;NLD&amp;#39;,&amp;#39;BEL&amp;#39;,&amp;#39;SWE&amp;#39;,&amp;#39;CHE&amp;#39;),(&amp;#39;201&amp;#39;,&amp;#39;202&amp;#39;,&amp;#39;601&amp;#39;,&amp;#39;702&amp;#39;,&amp;#39;703&amp;#39;,&amp;#39;701&amp;#39;,&amp;#39;502&amp;#39;,&amp;#39;503&amp;#39;,&amp;#39;504&amp;#39;,&amp;#39;203&amp;#39;),(&amp;quot;202001&amp;quot;,&amp;quot;202002&amp;quot;,&amp;quot;202003&amp;quot;,&amp;quot;202004&amp;quot;,&amp;quot;202005&amp;quot;,&amp;quot;202006&amp;quot;,&amp;quot;202007&amp;quot;,&amp;quot;202008&amp;quot;),(&amp;quot;M&amp;quot;,&amp;quot;Q&amp;quot;))&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Let’s execute the function.&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;result = resp_OECD(&amp;#39;MEI_ARCHIVE&amp;#39;,dimensions,&amp;#39;2019-Q1&amp;#39;,&amp;#39;2020-Q2&amp;#39;)
-result.count()&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## LOCATION       8266
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; pandasdmx &lt;span style=&#34;color:#f92672&#34;&gt;as&lt;/span&gt; sdmx
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## C:\Users\aashi\ANACON~1\lib\site-packages\pandasdmx\remote.py:13: RuntimeWarning: optional dependency requests_cache is not installed; cache options to Session() have no effect
+##   RuntimeWarning,
+&lt;/code&gt;&lt;/pre&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;oecd &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; sdmx&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Request(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;OECD&amp;#39;&lt;/span&gt;)
+&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;resp_OECD&lt;/span&gt;(dsname,dimensions,start,end):
+    dim_args &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;+&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;join(d) &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; d &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; dimensions]
+    dim_str &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;.&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;join(dim_args)
+    resp &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; oecd&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;data(resource_id&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;dsname, key&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;dim_str &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/all?startTime=&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; start &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;amp;endTime=&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; end)
+    df &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; resp&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;to_pandas()&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;reset_index()
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt;(df)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Specify the dimension from which the data will be obtained. Below, (1) country, (2) statistical items, (3) time of acquisition, and (4) frequency are specified with a tuple.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;dimensions &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ((&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;USA&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;JPN&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;GBR&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;FRA&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;DEU&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;ITA&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;CAN&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;NLD&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;BEL&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;SWE&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;CHE&amp;#39;&lt;/span&gt;),(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;201&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;202&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;601&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;702&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;703&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;701&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;502&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;503&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;504&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;203&amp;#39;&lt;/span&gt;),(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;202001&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;202002&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;202003&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;202004&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;202005&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;202006&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;202007&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;202008&amp;#34;&lt;/span&gt;),(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;M&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Q&amp;#34;&lt;/span&gt;))
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Let&amp;rsquo;s execute the function.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;result &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; resp_OECD(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;MEI_ARCHIVE&amp;#39;&lt;/span&gt;,dimensions,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;2019-Q1&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;2020-Q2&amp;#39;&lt;/span&gt;)
+result&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;count()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## LOCATION       8266
 ## VAR            8266
 ## EDI            8266
 ## FREQUENCY      8266
 ## TIME_PERIOD    8266
 ## value          8266
-## dtype: int64&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Let’s look at the first few cases of data.&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;result.head()&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;##   LOCATION  VAR     EDI FREQUENCY TIME_PERIOD  value
+## dtype: int64
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Let&amp;rsquo;s look at the first few cases of data.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;result&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;head()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;##   LOCATION  VAR     EDI FREQUENCY TIME_PERIOD  value
 ## 0      BEL  201  202001         M     2019-01  112.5
 ## 1      BEL  201  202001         M     2019-02  111.8
 ## 2      BEL  201  202001         M     2019-03  109.9
 ## 3      BEL  201  202001         M     2019-04  113.5
-## 4      BEL  201  202001         M     2019-05  112.1&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;You can see that the data is stored in tidy form (long type). The most right value is stored as a value, and the other indexes are&lt;/p&gt;
+## 4      BEL  201  202001         M     2019-05  112.1
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;You can see that the data is stored in tidy form (long type). The most right value is stored as a value, and the other indexes are&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;LOCATION - Country&lt;/li&gt;
 &lt;li&gt;VAR - Items&lt;/li&gt;
@@ -167,23 +174,21 @@ result.count()&lt;/code&gt;&lt;/pre&gt;
 &lt;li&gt;FREQUENCY - Frequency (monthly, quarterly, etc.)&lt;/li&gt;
 &lt;li&gt;TIME_PERIOD - Reference point for statistics&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;Therefore, the same `TIME_PERIOD` exists in rows with different EDIs. For example, above you can see the data for 2019-01~2019-05 available as of 2020/01 for the Belgian (BEL) Industrial Production Index (201). This is very much appreciated as it is provided in Long format, which is also easy to visualize and regress. Here’s a visualization of the industrial production index as it is updated.&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import seaborn as sns
-import matplotlib.pyplot as plt
-import pandas as pd
+&lt;p&gt;Therefore, the same `TIME_PERIOD` exists in rows with different EDIs. For example, above you can see the data for 2019-01~2019-05 available as of 2020/01 for the Belgian (BEL) Industrial Production Index (201). This is very much appreciated as it is provided in Long format, which is also easy to visualize and regress. Here&amp;rsquo;s a visualization of the industrial production index as it is updated.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; seaborn &lt;span style=&#34;color:#f92672&#34;&gt;as&lt;/span&gt; sns
+&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; matplotlib.pyplot &lt;span style=&#34;color:#f92672&#34;&gt;as&lt;/span&gt; plt
+&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; pandas &lt;span style=&#34;color:#f92672&#34;&gt;as&lt;/span&gt; pd
 
-result = result[result[&amp;#39;FREQUENCY&amp;#39;]==&amp;#39;M&amp;#39;]
-result[&amp;#39;TIME_PERIOD&amp;#39;] = pd.to_datetime(result[&amp;#39;TIME_PERIOD&amp;#39;],format=&amp;#39;%Y-%m&amp;#39;)
-sns.relplot(data=result[lambda df: (df.VAR==&amp;#39;201&amp;#39;) &amp;amp; (pd.to_numeric(df.EDI) &amp;gt; 202004)],x=&amp;#39;TIME_PERIOD&amp;#39;,y=&amp;#39;value&amp;#39;,hue=&amp;#39;LOCATION&amp;#39;,kind=&amp;#39;line&amp;#39;,col=&amp;#39;EDI&amp;#39;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;../../../en/post/post22/index_files/figure-html/unnamed-chunk-6-1.png&#34; width=&#34;1056&#34; /&gt;&lt;/p&gt;
-&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.show()&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;../../../en/post/post22/index_files/figure-html/unnamed-chunk-6-2.png&#34; width=&#34;2035&#34; /&gt;&lt;/p&gt;
+result &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; result[result[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;FREQUENCY&amp;#39;&lt;/span&gt;]&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;M&amp;#39;&lt;/span&gt;]
+result[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;TIME_PERIOD&amp;#39;&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; pd&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;to_datetime(result[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;TIME_PERIOD&amp;#39;&lt;/span&gt;],format&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;%Y-%m&amp;#39;&lt;/span&gt;)
+sns&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;relplot(data&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;result[&lt;span style=&#34;color:#66d9ef&#34;&gt;lambda&lt;/span&gt; df: (df&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;VAR&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;201&amp;#39;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; (pd&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;to_numeric(df&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;EDI) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;202004&lt;/span&gt;)],x&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;TIME_PERIOD&amp;#39;&lt;/span&gt;,y&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;value&amp;#39;&lt;/span&gt;,hue&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;LOCATION&amp;#39;&lt;/span&gt;,kind&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;line&amp;#39;&lt;/span&gt;,col&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;EDI&amp;#39;&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../../en/post/post22/index_files/figure-html/unnamed-chunk-6-1.png&#34; width=&#34;1056&#34; /&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;show()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../../en/post/post22/index_files/figure-html/unnamed-chunk-6-2.png&#34; width=&#34;2035&#34; /&gt;&lt;/p&gt;
 &lt;p&gt;While we can see that the line graphs are depressed as the economic damage from the corona increases, there have been subtle but significant revisions to the historical values from preliminary to confirmed. We can also see that there is a lag in the release of statistical data by country. Belgium seems to be the slowest to release the data. When I have time, I would like to add a simple analysis of the forecasting model using this data.&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;another-matter&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;4. Another matter…&lt;/h2&gt;
-&lt;p&gt;I passed the Python 3 Engineer Certification Data Analysis exam. It was pretty easy, with only a 70% pass rate, but it was a good opportunity to revisit the basics of &lt;code&gt;Python&lt;/code&gt;. I haven’t even had the opportunity to use &lt;code&gt;Python&lt;/code&gt; or &lt;code&gt;R&lt;/code&gt;, let alone data analysis, in the work I’m doing now, so I’m considering the possibility of a career change. In the meantime, I plan to get the following qualifications by the end of this year, and I’ll be looking for a post where I can use my skills without focusing on finance. Like a diet, I need to declare and push myself.&lt;/p&gt;
-&lt;ol style=&#34;list-style-type: decimal&#34;&gt;
+&lt;h2 id=&#34;4-another-matter&#34;&gt;4. Another matter&amp;hellip;&lt;/h2&gt;
+&lt;p&gt;I passed the Python 3 Engineer Certification Data Analysis exam. It was pretty easy, with only a 70% pass rate, but it was a good opportunity to revisit the basics of &lt;code&gt;Python&lt;/code&gt;. I haven&amp;rsquo;t even had the opportunity to use &lt;code&gt;Python&lt;/code&gt; or &lt;code&gt;R&lt;/code&gt;, let alone data analysis, in the work I&amp;rsquo;m doing now, so I&amp;rsquo;m considering the possibility of a career change. In the meantime, I plan to get the following qualifications by the end of this year, and I&amp;rsquo;ll be looking for a post where I can use my skills without focusing on finance. Like a diet, I need to declare and push myself.&lt;/p&gt;
+&lt;ol&gt;
 &lt;li&gt;G Test&lt;/li&gt;
 &lt;li&gt;Oracle Database Master Silver SQL&lt;/li&gt;
 &lt;li&gt;Linuc level 1&lt;/li&gt;
@@ -191,13 +196,14 @@ sns.relplot(data=result[lambda df: (df.VAR==&amp;#39;201&amp;#39;) &amp;amp; (pd
 &lt;li&gt;AWS Certified Solutions Architect - Associate&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;I will report on the status of my acceptance on my blog each time.&lt;/p&gt;
-&lt;/div&gt;
-&lt;div class=&#34;footnotes&#34;&gt;
-&lt;hr /&gt;
+&lt;section class=&#34;footnotes&#34; role=&#34;doc-endnotes&#34;&gt;
+&lt;hr&gt;
 &lt;ol&gt;
-&lt;li id=&#34;fn1&#34;&gt;&lt;p&gt;gross domestic product and its expenditure items, industrial production and construction output indices, balance of payments, composite leading indicators, consumer price index, retail turnover, unemployment rate, number of workers, hourly wages, money supply, trade statistics, etc.&lt;a href=&#34;#fnref1&#34; class=&#34;footnote-back&#34;&gt;↩︎&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;li id=&#34;fn:1&#34; role=&#34;doc-endnote&#34;&gt;
+&lt;p&gt;gross domestic product and its expenditure items, industrial production and construction output indices, balance of payments, composite leading indicators, consumer price index, retail turnover, unemployment rate, number of workers, hourly wages, money supply, trade statistics, etc. &lt;a href=&#34;#fnref:1&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
 &lt;/ol&gt;
-&lt;/div&gt;
+&lt;/section&gt;
 </description>
     </item>
     

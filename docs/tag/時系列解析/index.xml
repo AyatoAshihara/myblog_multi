@@ -17,253 +17,202 @@
       <link>/post/post19/</link>
       <pubDate>Wed, 08 Jul 2020 00:00:00 +0000</pubDate>
       <guid>/post/post19/</guid>
-      <description>
-&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
-
-&lt;div id=&#34;TOC&#34;&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;#今回のテーマバックテストとは&#34;&gt;1. 今回のテーマ「バックテスト」とは？&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#バックテストはオーバーフィットする&#34;&gt;2. バックテストはオーバーフィットする&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#シャープレシオが従う分布とは&#34;&gt;3. シャープレシオが従う分布とは&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#the-minimum-backtest-lengthを導出してみる&#34;&gt;4. &lt;code&gt;the minimum backtest length&lt;/code&gt;を導出してみる&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#終わりに&#34;&gt;4. 終わりに&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/div&gt;
-
-&lt;div id=&#34;今回のテーマバックテストとは&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;1. 今回のテーマ「バックテスト」とは？&lt;/h2&gt;
+      <description>&lt;h2 id=&#34;1-今回のテーマバックテストとは&#34;&gt;1. 今回のテーマ「バックテスト」とは？&lt;/h2&gt;
 &lt;p&gt;バックテストは、アルゴリズムによる投資戦略のヒストリカルシミュレーションです。バックテストは、立案した投資戦略がある期間にわたって実行されていた場合に発生したであろう利益と損失をアルゴリズムを用いて計算します。その際、シャープレシオやインフォメーションレシオなどの投資戦略のパフォーマンスを評価する一般的な統計量が使用されています。投資家は通常、これらのバックテストの統計量を調査し、最高のパフォーマンスを発揮する投資(運用)戦略に資産配分を決定するため、資産運用会社は良好なパフォーマンスを血のにじむような回数のバックテストを試行錯誤し、資料を作ってプレゼンしたりするわけです。&lt;/p&gt;
-&lt;div class=&#34;figure&#34;&gt;
-&lt;img src=&#34;https://stat.ameba.jp/user_images/20190212/22/nash210/51/5f/j/o0705061514355131242.jpg&#34; alt=&#34;&#34; /&gt;
-&lt;p class=&#34;caption&#34;&gt;3倍3分法のバックテスト&lt;/p&gt;
-&lt;/div&gt;
+&lt;p&gt;&lt;img src=&#34;https://stat.ameba.jp/user_images/20190212/22/nash210/51/5f/j/o0705061514355131242.jpg&#34; alt=&#34;3倍3分法のバックテスト&#34;&gt;&lt;/p&gt;
 &lt;p&gt;投資家の立場に立つなら、バックテストされた投資戦略のパフォーマンスについては、インサンプル(IS)とアウトオブサンプル(OOS)を区別することが重要です。ISのパフォーマンスは、投資戦略の設計に使用したサンプル（機械学習の文献では「学習期間」や「訓練セット」と呼ばれる物です）でシミュレートしたものです。一方、OOSパフォーマンスは、投資戦略の設計に使用されなかったサンプル（別名「テストセット」）でシミュレーションされたものです。バックテストは、そのパフォーマンスを持ってその投資戦略の有効性を占う物ですので、ISのパフォーマンスがOOSのパフォーマンスと一致している場合に再現性が担保され、現実的であるということができます。ただ、アウトサンプルの結果はこれからの結果であるので、バックテストを受け取った時点でそのバックテストが信頼に足るものか判断することは難しいです。hold-out法などで、以下のように学習データとテストデータを分け、OOSでのテストを行っているものもありますが、OOSの結果をフィードバックして戦略の改善ができる以上、純粋なアウトサンプルとは呼べません。&lt;/p&gt;
-&lt;p&gt;&lt;img src=&#34;http://www.triton.biz/blog1/wp-content/uploads/2018/04/pic001.png&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://www.triton.biz/blog1/wp-content/uploads/2018/04/pic001.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
 &lt;p&gt;ですので、ファンドマネージャーから良い結果のバックテストを受け取った場合、そのシミュレーションがどれだけ現実的であるかをなんとかして評価することが非常に重要となります。また、ファンドマネージャーも自身のバックテスト結果が持つ不確実性を理解しておくことが重要です。今回はバックテストのシミュレーションの現実性をどのようにして評価するのか、再現性のあるバックテストを行うためには何に注意すれば良いのかを調べてみたいと思います。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;バックテストはオーバーフィットする&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;2. バックテストはオーバーフィットする&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2308659&#34;&gt;Bailey, Borwein, López de Prado and Zhu(2015)&lt;/a&gt;は、どのような金融時系列でも、バックテストのシミュレーションをオーバーフィット(過学習)させることが(比較的)簡単にできると主張しています。ここで、オーバーフィットとは、機械学習の概念であり，モデルが一般的な構造よりも特定の観察データ(ISデータ)にフォーカスしてしまう状況を表します。&lt;/p&gt;
+&lt;h2 id=&#34;2-バックテストはオーバーフィットする&#34;&gt;2. バックテストはオーバーフィットする&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2308659&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Bailey, Borwein, López de Prado and Zhu(2015)&lt;/a&gt;は、どのような金融時系列でも、バックテストのシミュレーションをオーバーフィット(過学習)させることが(比較的)簡単にできると主張しています。ここで、オーバーフィットとは、機械学習の概念であり，モデルが一般的な構造よりも特定の観察データ(ISデータ)にフォーカスしてしまう状況を表します。&lt;/p&gt;
 &lt;p&gt;Bailey et. al.(2015)では、この主張の一例として株式戦略のバックテスト結果が芳しくない状況が挙げられています。バックテストではその名の通り過去データを使用しているので、具体的に損失が発生している銘柄を特定することが可能で、その銘柄の推奨を削除するためにいくつかのパラメータを追加し、取引システムを設計することで、パフォーマンスを向上させることができるというわけです（「データ・スヌーピング」として知られているテクニック）。数回シミュレーションを繰り返えせば、特定のサンプルに存在するが、母集団の中では稀であるかもしれない特徴から利益を得る「最適なパラメータ」を導くことができます。&lt;/p&gt;
 &lt;p&gt;機械学習の文献では、オーバーフィッティングの問題を対処するための膨大な研究の蓄積があります。ですが、Bailey et. al.(2015)は、機械学習の文脈で提案されている手法は一般的に複数の投資問題には適用できないと主張します。その理由は以下4点のようです。&lt;/p&gt;
-&lt;ol style=&#34;list-style-type: decimal&#34;&gt;
-&lt;li&gt;&lt;p&gt;機械学習でオーバーフィッティングを防ぐ手法は、予測の説明力や質を評価するために、その事象が定義される領域において明示的な点推定と信頼区間を必要としますが、このような明確な予測を行う投資戦略はほとんどないため。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;機械学習でオーバーフィッティングを防ぐ手法は、予測の説明力や質を評価するために、その事象が定義される領域において明示的な点推定と信頼区間を必要としますが、このような明確な予測を行う投資戦略はほとんどないため。&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;例えば、「E-mini S&amp;amp;P500は、金曜日の終値で1標準偏差5ポイントで1,600前後になると予測されています」とはあまり言われず、むしろ「買い」または「強い買い」といった定性的な推奨が提供されることが一般的です。しかも、この予想は予測の有効期限も明示されず、なにか予期せぬ事象が発生した際に変更がなされます。一方、定量予測では金曜日の終値と明記されています。&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;仮に特定の投資戦略が予測式に依存していたとしても、投資戦略の他の構成要素がオーバーフィットされている可能性がある。&lt;/p&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;仮に特定の投資戦略が予測式に依存していたとしても、投資戦略の他の構成要素がオーバーフィットされている可能性がある。&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;言い換えれば、単に予測式を調整する以外にも、投資戦略をオーバーフィットさせる方法はたくさんあるということです。&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;回帰のオーバーフィットの方法はパラメトリックであり、金融の場合観察不可能なデータに関する多くの仮定を含むため。&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;いくつかの手法は試行回数をコントロールしていないため。&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;回帰のオーバーフィットの方法はパラメトリックであり、金融の場合観察不可能なデータに関する多くの仮定を含むため。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;いくつかの手法は試行回数をコントロールしていないため。&lt;/p&gt;
+&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;Bailey et. al.(2015)では、バックテストのパフォーマンスが比較的低い投資戦略を特定するためには、&lt;strong&gt;比較的少ない試行回数&lt;/strong&gt;が必要であることを示しています。ここでの試行回数とは試行錯誤の回数だと思ってください。また、試行回数に応じて必要とされるバックテストの期間である&lt;code&gt;the minimum backtest length&lt;/code&gt;（MinBTL）を計算しています。この論文では、パフォーマンスを評価するために常にシャープレシオが使用されていますが、他のパフォーマンス指標にも応用できるそうです。その内容を見てみましょう。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;シャープレシオが従う分布とは&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;3. シャープレシオが従う分布とは&lt;/h2&gt;
+&lt;h2 id=&#34;3-シャープレシオが従う分布とは&#34;&gt;3. シャープレシオが従う分布とは&lt;/h2&gt;
 &lt;p&gt;MinBTLを導出するために、まずシャープレシオの(漸近)分布を導出します。そもそも、投資戦略の設計は、通常、特定のパターンが金融変数の将来値を予測するのに役立つかもしれないという事前知識または信念から始まります。例えば、さまざまな満期の債券の間にリードラグ効果を認識している場合は、イールドカーブが上昇した場合に均衡値への回帰に賭ける戦略を設計することができます。このモデルは、cointegration equation、ベクトル誤差補正モデル、確率微分方程式のシステムなどの形をとることが考えられます。&lt;/p&gt;
 &lt;p&gt;このようなモデル構成（または試行）の数は膨大であり、ファンドマネージャーは当然、戦略のパフォーマンスを最大化するものを選択したいと考え、そのためにヒストリカルシミュレーション（バックテスト）を行います(前述)。バックテストでは、最適なサンプルサイズ、シグナルの更新頻度、リスクサイジング、ストップロス、最大保有期間などなどを他の変数との兼ね合いの中で評価します。&lt;/p&gt;
-&lt;p&gt;この論文中でパフォーマンス評価の尺度として使用されるシャープレシオは、過去のリターンのサンプルに基づいて、戦略のパフォーマンスを評価する統計量で、BMに対する平均超過リターン/標準偏差(リスク)として定義されます。通常には、「リスク1標準偏差に対するリターン」と解釈され、資産クラスにもよりますが1を上回っていると非常に良い戦略であると見なせます。以下では、ある戦略の超過リターン&lt;span class=&#34;math inline&#34;&gt;\(r_t\)&lt;/span&gt;がi.i.d.の確率変数であり、正規分布に従うと仮定します。つまり、&lt;span class=&#34;math inline&#34;&gt;\(r_t\)&lt;/span&gt;の分布は&lt;span class=&#34;math inline&#34;&gt;\(r_s(t\neq s)\)&lt;/span&gt;と独立であることを仮定しています。あまり現実的な仮定ではありませんが。。。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+&lt;p&gt;この論文中でパフォーマンス評価の尺度として使用されるシャープレシオは、過去のリターンのサンプルに基づいて、戦略のパフォーマンスを評価する統計量で、BMに対する平均超過リターン/標準偏差(リスク)として定義されます。通常には、「リスク1標準偏差に対するリターン」と解釈され、資産クラスにもよりますが1を上回っていると非常に良い戦略であると見なせます。以下では、ある戦略の超過リターン$r_t$がi.i.d.の確率変数であり、正規分布に従うと仮定します。つまり、$r_t$の分布は$r_s(t\neq s)$と独立であることを仮定しています。あまり現実的な仮定ではありませんが。。。&lt;/p&gt;
+&lt;p&gt;$$
 r_t \sim \mathcal{N}(\mu,\sigma^2)
-\]&lt;/span&gt;
-ここで、&lt;span class=&#34;math inline&#34;&gt;\(\mathcal{N}\)&lt;/span&gt;は平均&lt;span class=&#34;math inline&#34;&gt;\(\mu\)&lt;/span&gt;、分散&lt;span class=&#34;math inline&#34;&gt;\(\sigma^2\)&lt;/span&gt;の正規分布を表しています。今、時点t~t-q+1の超過リターン&lt;span class=&#34;math inline&#34;&gt;\(r_{t}(q)\)&lt;/span&gt;を&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-r_{t}(q) \equiv r_{t} + r_{t-1} + ... + r_{t-q+1}
-\]&lt;/span&gt;
+$$
+ここで、$\mathcal{N}$は平均$\mu$、分散$\sigma^2$の正規分布を表しています。今、時点t~t-q+1の超過リターン$r_{t}(q)$を&lt;/p&gt;
+&lt;p&gt;$$
+r_{t}(q) \equiv r_{t} + r_{t-1} + &amp;hellip; + r_{t-q+1}
+$$
 と定義すると(複利部分を無視してます)、年率化されたシャープレシオは&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\begin{eqnarray}
-SR(q) &amp;amp;=&amp;amp; \frac{E[r_{t}(q)]}{\sqrt{Var(r_{t}(q))}}\\
-&amp;amp;=&amp;amp; \frac{q\mu}{\sqrt{q}\sigma}\\
-&amp;amp;=&amp;amp; \frac{\mu}{\sigma}\sqrt{q}
-\end{eqnarray}
-\]&lt;/span&gt;
-と表すことができます。ここで、&lt;span class=&#34;math inline&#34;&gt;\(q\)&lt;/span&gt;は年毎のリターンの数(頻度)です。例えば、日次リターンの場合&lt;span class=&#34;math inline&#34;&gt;\(q=365\)&lt;/span&gt;となります(閏年を除く)。
-&lt;span class=&#34;math inline&#34;&gt;\(\mu\)&lt;/span&gt;と&lt;span class=&#34;math inline&#34;&gt;\(\sigma\)&lt;/span&gt;は一般に未知ですので、&lt;span class=&#34;math inline&#34;&gt;\(SR\)&lt;/span&gt;の真値を知ることはできません。なので、&lt;span class=&#34;math inline&#34;&gt;\(R_t\)&lt;/span&gt;を標本リターン、リスクフリーレート&lt;span class=&#34;math inline&#34;&gt;\(R^f\)&lt;/span&gt;(定数)とすると、標本平均&lt;span class=&#34;math inline&#34;&gt;\(\hat{\mu}=1/T\sum_{t=1}^T R_{t}-R^f\)&lt;/span&gt;と標本標準偏差&lt;span class=&#34;math inline&#34;&gt;\(\hat{\sigma}=\sqrt{1/T\sum_{t=1}^{T}(R_{t}-\hat{\mu})}\)&lt;/span&gt;を用いてシャープレシオの推定値を計算することになります(&lt;span class=&#34;math inline&#34;&gt;\(T\)&lt;/span&gt;はバックテストを行うサンプルサイズ)。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+&lt;p&gt;$$
+&lt;code&gt;\begin{eqnarray} SR(q) &amp;amp;=&amp;amp; \frac{E[r_{t}(q)]}{\sqrt{Var(r_{t}(q))}}\\ &amp;amp;=&amp;amp; \frac{q\mu}{\sqrt{q}\sigma}\\ &amp;amp;=&amp;amp; \frac{\mu}{\sigma}\sqrt{q} \end{eqnarray}&lt;/code&gt;
+$$
+と表すことができます。ここで、$q$は年毎のリターンの数(頻度)です。例えば、日次リターンの場合$q=365$となります(閏年を除く)。
+&lt;code&gt;\(\mu\)&lt;/code&gt;と$\sigma$は一般に未知ですので、$SR$の真値を知ることはできません。なので、$R_t$を標本リターン、リスクフリーレート$R^f$(定数)とすると、標本平均$\hat{\mu}=1/T\sum_{t=1}^T R_{t}-R^f$と標本標準偏差$\hat{\sigma}=\sqrt{1/T\sum_{t=1}^{T}(R_{t}-\hat{\mu})}$を用いてシャープレシオの推定値を計算することになります($T$はバックテストを行うサンプルサイズ)。&lt;/p&gt;
+&lt;p&gt;$$
 \hat{SR}(q) = \frac{\hat{\mu}}{\hat{\sigma}}\sqrt{q}
-\]&lt;/span&gt;
-必然的な結果として、&lt;span class=&#34;math inline&#34;&gt;\(SR\)&lt;/span&gt;の計算はかなりの推定誤差が伴う可能性が高くなります。では、本節の本題、&lt;span class=&#34;math inline&#34;&gt;\(\hat{SR}\)&lt;/span&gt;の漸近分布を導出してみましょう。まず、&lt;span class=&#34;math inline&#34;&gt;\(\hat{\mu}\)&lt;/span&gt;と&lt;span class=&#34;math inline&#34;&gt;\(\hat{\sigma}^2\)&lt;/span&gt;の漸近分布はi.i.d.と&lt;span class=&#34;math inline&#34;&gt;\(\mu, \sigma\)&lt;/span&gt;が有限な値をとることから中心極限定理を適用することにより、&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\sqrt{T}\hat{\mu}\sim^{a}\mathcal{N}(\mu,\sigma^2), \\
+$$
+必然的な結果として、$SR$の計算はかなりの推定誤差が伴う可能性が高くなります。では、本節の本題、$\hat{SR}$の漸近分布を導出してみましょう。まず、$\hat{\mu}$と$\hat{\sigma}^2$の漸近分布はi.i.d.と$\mu, \sigma$が有限な値をとることから中心極限定理を適用することにより、&lt;/p&gt;
+&lt;p&gt;$$
+\sqrt{T}\hat{\mu}\sim^{a}\mathcal{N}(\mu,\sigma^2), \&lt;br&gt;
 \sqrt{T}\hat{\sigma}^2\sim^a\mathcal{N}(\sigma^2,2\sigma^4)
-\]&lt;/span&gt;
-となります。シャープレシオはこの&lt;span class=&#34;math inline&#34;&gt;\(\hat{\mu}\)&lt;/span&gt;と&lt;span class=&#34;math inline&#34;&gt;\(\hat{\sigma}^2\)&lt;/span&gt;から計算される確率変数であるので、この関数を&lt;span class=&#34;math inline&#34;&gt;\(g(\hat{{\boldsymbol \theta}})\)&lt;/span&gt;と表しましょう。ここで、&lt;span class=&#34;math inline&#34;&gt;\(\hat{{\boldsymbol \theta}}=(\hat{\mu},\hat{\sigma}^2)&amp;#39;\)&lt;/span&gt;です。今、i.i.d.であるので&lt;span class=&#34;math inline&#34;&gt;\(\hat{{\boldsymbol \theta}}\)&lt;/span&gt;は互いに独立となり、上記の議論から漸近同時分布は&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+$$
+となります。シャープレシオはこの$\hat{\mu}$と$\hat{\sigma}^2$から計算される確率変数であるので、この関数を$g(\hat{{\boldsymbol \theta}})$と表しましょう。ここで、$\hat{{\boldsymbol \theta}}=(\hat{\mu},\hat{\sigma}^2)&#39;$です。今、i.i.d.であるので$\hat{{\boldsymbol \theta}}$は互いに独立となり、上記の議論から漸近同時分布は&lt;/p&gt;
+&lt;p&gt;$$
 \sqrt{T}\hat{{\boldsymbol \theta}} \sim^a \mathcal{N}({\boldsymbol \theta},{\boldsymbol V_{\boldsymbol \theta}})
-\]&lt;/span&gt;
-と書けます。ここで、&lt;span class=&#34;math inline&#34;&gt;\({\boldsymbol V_{\boldsymbol \theta}}\)&lt;/span&gt;は&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+$$
+と書けます。ここで、${\boldsymbol V_{\boldsymbol \theta}}$は&lt;/p&gt;
+&lt;p&gt;$$
 {\boldsymbol V_{\boldsymbol \theta}} = \left( 
-    \begin{array}{cccc}
-      \sigma^2 &amp;amp; 0\\
-      0 &amp;amp; 2\sigma^4\\
-    \end{array}
-  \right)
-\]&lt;/span&gt;
-です。シャープレシオの推定値は今&lt;span class=&#34;math inline&#34;&gt;\(g(\hat{{\boldsymbol \theta}})\)&lt;/span&gt;と&lt;span class=&#34;math inline&#34;&gt;\(\hat{{\boldsymbol \theta}}\)&lt;/span&gt;だけの関数になっていますのでデルタ法より、&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\begin{array}{cccc}
+\sigma^2 &amp;amp; 0\&lt;br&gt;
+0 &amp;amp; 2\sigma^4\&lt;br&gt;
+\end{array}
+\right)
+$$
+です。シャープレシオの推定値は今$g(\hat{{\boldsymbol \theta}})$と$\hat{{\boldsymbol \theta}}$だけの関数になっていますのでデルタ法より、&lt;/p&gt;
+&lt;p&gt;$$
 \hat{SR} = g(\hat{{\boldsymbol \theta}}) \sim^a \mathcal{N}(g({\boldsymbol \theta}),\boldsymbol V_g)
-\]&lt;/span&gt;
-と漸近的に正規分布に従います。ここで、&lt;span class=&#34;math inline&#34;&gt;\(\boldsymbol V_g\)&lt;/span&gt;は&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\boldsymbol V_g=\frac{\partial g}{\partial{\boldsymbol \theta}}{\boldsymbol V_{\boldsymbol \theta}}\frac{\partial g}{\partial{\boldsymbol \theta}&amp;#39;}
-\]&lt;/span&gt;
-です。&lt;span class=&#34;math inline&#34;&gt;\(g({\boldsymbol \theta})=\mu/\sigma\)&lt;/span&gt;なので、&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\frac{\partial g}{\partial{\boldsymbol \theta}&amp;#39;} = \left[ 
-    \begin{array}{cccc}
-      \frac{\partial g}{\partial \mu}\\
-      \frac{\partial g}{\partial \sigma^2}\\
-    \end{array}
-  \right]
-  = \left[ 
-    \begin{array}{cccc}
-      \frac{1}{\sigma}\\
-      -\frac{\mu}{2\sigma^3}\\
-    \end{array}
-  \right]
-\]&lt;/span&gt;
+$$
+と漸近的に正規分布に従います。ここで、$\boldsymbol V_g$は&lt;/p&gt;
+&lt;p&gt;$$
+\boldsymbol V_g=\frac{\partial g}{\partial{\boldsymbol \theta}}{\boldsymbol V_{\boldsymbol \theta}}\frac{\partial g}{\partial{\boldsymbol \theta}&#39;}
+$$
+です。$g({\boldsymbol \theta})=\mu/\sigma$なので、&lt;/p&gt;
+&lt;p&gt;$$
+\frac{\partial g}{\partial{\boldsymbol \theta}&#39;} = \left[ 
+\begin{array}{cccc}
+\frac{\partial g}{\partial \mu}\&lt;br&gt;
+\frac{\partial g}{\partial \sigma^2}\&lt;br&gt;
+\end{array}
+\right]
+= \left[ 
+\begin{array}{cccc}
+\frac{1}{\sigma}\&lt;br&gt;
+-\frac{\mu}{2\sigma^3}\&lt;br&gt;
+\end{array}
+\right]
+$$
 よって、&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\begin{eqnarray}
-\boldsymbol V_g &amp;amp;=&amp;amp; \left(
-    \begin{array}{cccc}
-      \frac{\partial g}{\partial \mu}, \frac{\partial g}{\partial \sigma}\\
-    \end{array}
-  \right)
-  \left( 
-    \begin{array}{cccc}
-      \sigma^2 &amp;amp; 0\\
-      0 &amp;amp; 2\sigma^4\\
-    \end{array}
-  \right)
-  \left(
-    \begin{array}{cccc}
-      \frac{\partial g}{\partial \mu}\\
-      \frac{\partial g}{\partial \sigma}\\
-    \end{array}
-  \right) \\
-  &amp;amp;=&amp;amp; \left(
-    \begin{array}{cccc}
-      \frac{\partial g}{\partial \mu}\sigma^2, \frac{\partial g}{\partial \sigma}2\sigma^4\\
-    \end{array}
-  \right)
-    \left(
-    \begin{array}{cccc}
-      \frac{\partial g}{\partial \mu}\\
-      \frac{\partial g}{\partial \sigma}\\
-    \end{array}
-  \right) \\
-  &amp;amp;=&amp;amp; (\frac{\partial g}{\partial \mu})^2\sigma^2 + (\frac{\partial g}{\partial \sigma})^2\sigma^4 \\
-  &amp;amp;=&amp;amp; 1 + \frac{\mu^2}{2\sigma^2} \\
-  &amp;amp;=&amp;amp; 1 + \frac{1}{2}SR^2
-\end{eqnarray}
-\]&lt;/span&gt;
-と導出することができます。シャープレシオの絶対値が大きくなるほど指数的に分散が大きくなる傾向があるので良いパフォーマンスを見た時には注意が必要かもしれません。年率化されたシャープレシオの推定値&lt;span class=&#34;math inline&#34;&gt;\(\hat{SR}(q)\)&lt;/span&gt;が従う分布はここから&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\hat{SR}(q)\sim^a \mathcal{N}(\sqrt{q}SR,\frac{V(q)}{T}) \\
+&lt;p&gt;$$
+&lt;code&gt;\begin{eqnarray} \boldsymbol V_g &amp;amp;=&amp;amp; \left( \begin{array}{cccc} \frac{\partial g}{\partial \mu}, \frac{\partial g}{\partial \sigma}\\ \end{array} \right) \left(  \begin{array}{cccc} \sigma^2 &amp;amp; 0\\ 0 &amp;amp; 2\sigma^4\\ \end{array} \right) \left( \begin{array}{cccc} \frac{\partial g}{\partial \mu}\\ \frac{\partial g}{\partial \sigma}\\ \end{array} \right) \\ &amp;amp;=&amp;amp; \left( \begin{array}{cccc} \frac{\partial g}{\partial \mu}\sigma^2, \frac{\partial g}{\partial \sigma}2\sigma^4\\ \end{array} \right) \left( \begin{array}{cccc} \frac{\partial g}{\partial \mu}\\ \frac{\partial g}{\partial \sigma}\\ \end{array} \right) \\ &amp;amp;=&amp;amp; (\frac{\partial g}{\partial \mu})^2\sigma^2 + (\frac{\partial g}{\partial \sigma})^2\sigma^4 \\ &amp;amp;=&amp;amp; 1 + \frac{\mu^2}{2\sigma^2} \\ &amp;amp;=&amp;amp; 1 + \frac{1}{2}SR^2 \end{eqnarray}&lt;/code&gt;
+$$
+と導出することができます。シャープレシオの絶対値が大きくなるほど指数的に分散が大きくなる傾向があるので良いパフォーマンスを見た時には注意が必要かもしれません。年率化されたシャープレシオの推定値$\hat{SR}(q)$が従う分布はここから&lt;/p&gt;
+&lt;p&gt;$$
+\hat{SR}(q)\sim^a \mathcal{N}(\sqrt{q}SR,\frac{V(q)}{T}) \&lt;br&gt;
 V(q) = q{\boldsymbol V}_g = q(1 + \frac{1}{2}SR^2)
-\]&lt;/span&gt;
-となります。今、&lt;span class=&#34;math inline&#34;&gt;\(y\)&lt;/span&gt;をバックテストを行う年数とすると&lt;span class=&#34;math inline&#34;&gt;\(T=yq\)&lt;/span&gt;と書け、これを用いて上式を以下のように書き換えることができます(日次リターンで3年計測の場合、サンプルサイズ&lt;span class=&#34;math inline&#34;&gt;\(T\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(T=3×365=1095\)&lt;/span&gt;)。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+$$
+となります。今、$y$をバックテストを行う年数とすると$T=yq$と書け、これを用いて上式を以下のように書き換えることができます(日次リターンで3年計測の場合、サンプルサイズ$T$は$T=3×365=1095$)。&lt;/p&gt;
+&lt;p&gt;$$
 \hat{SR}(q)\sim^a \mathcal{N}(\sqrt{q}SR,\frac{1+\frac{1}{2}SR^2}{y}) \tag{1}
-\]&lt;/span&gt;
-頻度&lt;span class=&#34;math inline&#34;&gt;\(q\)&lt;/span&gt;はシャープレシオの平均には影響しますが分散には影響を及ぼしません。これでシャープレシオの推定値の漸近分布を導出することができました。さて、これを使ってなにをしたかったのかということですが、私たちは今バックテストの信頼性について考えていたのでした。つまり、FMが新商品を開発するために頭をひねって考え出した&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;個の投資戦略案のバックテストをした際に、それらのシャープレシオの真値がどれも0であるにも関わらず、非常に高い(良い)値が出る確率はいかほどなのかということです。Bailey et. al.(2015)では以下のように記述されていました。&lt;/p&gt;
+$$
+頻度$q$はシャープレシオの平均には影響しますが分散には影響を及ぼしません。これでシャープレシオの推定値の漸近分布を導出することができました。さて、これを使ってなにをしたかったのかということですが、私たちは今バックテストの信頼性について考えていたのでした。つまり、FMが新商品を開発するために頭をひねって考え出した$N$個の投資戦略案のバックテストをした際に、それらのシャープレシオの真値がどれも0であるにも関わらず、非常に高い(良い)値が出る確率はいかほどなのかということです。Bailey et. al.(2015)では以下のように記述されていました。&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;How high is the expected maximum Sharpe ratio IS among a set of strategy configurations where the true Sharpe ratio is zero?&lt;/em&gt;&lt;/p&gt;
 &lt;p&gt;また、期待最大シャープレシオの値を小さくするためには、いったいどれほどの期間バックテストをすべきなのかも知りたいわけです。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;the-minimum-backtest-lengthを導出してみる&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;4. &lt;code&gt;the minimum backtest length&lt;/code&gt;を導出してみる&lt;/h2&gt;
-&lt;p&gt;今考えている状況は、&lt;span class=&#34;math inline&#34;&gt;\(\mu=0\)&lt;/span&gt;で&lt;span class=&#34;math inline&#34;&gt;\(y\)&lt;/span&gt;を簡単化のために1年とすると(1)式より&lt;span class=&#34;math inline&#34;&gt;\(\hat{SR}(q)\)&lt;/span&gt;は標準正規分布&lt;span class=&#34;math inline&#34;&gt;\(\mathcal{N}(0,1)\)&lt;/span&gt;に従います。さて、今から私たちは&lt;span class=&#34;math inline&#34;&gt;\(\hat{SR}_n(n=1,2,...N)\)&lt;/span&gt;の最大値&lt;span class=&#34;math inline&#34;&gt;\(\max[\hat{SR}]_N\)&lt;/span&gt;の期待値について考えていくのですが、勘の良い人ならお気づきの通り、議論は極値統計の文脈に入っていくことになります。&lt;span class=&#34;math inline&#34;&gt;\(\hat{SR}_n\sim\mathcal{N}(0,1)\)&lt;/span&gt;はi.i.d.なので、その最大統計量の極値分布はFisher-Tippett-Gnedenko定理よりガンベル分布になります(証明追えてないです、ごめんなさい)。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+&lt;h2 id=&#34;4-the-minimum-backtest-lengthを導出してみる&#34;&gt;4. &lt;code&gt;the minimum backtest length&lt;/code&gt;を導出してみる&lt;/h2&gt;
+&lt;p&gt;今考えている状況は、$\mu=0$で$y$を簡単化のために1年とすると(1)式より$\hat{SR}(q)$は標準正規分布$\mathcal{N}(0,1)$に従います。さて、今から私たちは$\hat{SR}_n(n=1,2,&amp;hellip;N)$の最大値$\max[\hat{SR}]_N$の期待値について考えていくのですが、勘の良い人ならお気づきの通り、議論は極値統計の文脈に入っていくことになります。$\hat{SR}_n\sim\mathcal{N}(0,1)$はi.i.d.なので、その最大統計量の極値分布はFisher-Tippett-Gnedenko定理よりガンベル分布になります(証明追えてないです、ごめんなさい)。&lt;/p&gt;
+&lt;p&gt;$$
 \lim_{N\rightarrow\infty}prob[\frac{\max[\hat{SR}]_N-\alpha}{\beta}\leq x] = G(x) = e^{-e^{-x}}
-\]&lt;/span&gt;
-ここで、&lt;span class=&#34;math inline&#34;&gt;\(\alpha=Z(x)^{-1}[1-1/N], \beta=Z(x)^{-1}[1-1/Ne^{-1}]-\alpha\)&lt;/span&gt;で、&lt;span class=&#34;math inline&#34;&gt;\(Z(x)\)&lt;/span&gt;は標準正規分布の累積分布関数を表しています。ガンベル分布のモーメント母関数&lt;span class=&#34;math inline&#34;&gt;\(M_x(t)\)&lt;/span&gt;は&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\begin{eqnarray}
-M_x(t) &amp;amp;=&amp;amp; E[e^{tx}] = \int_{-\infty}^\infty e^{tx}e^{-x}e^{-e^{-x}}dx \\
-\end{eqnarray}
-\]&lt;/span&gt;
-と書け、&lt;span class=&#34;math inline&#34;&gt;\(x=-\log(y)\)&lt;/span&gt;と変数変換すると&lt;span class=&#34;math inline&#34;&gt;\(dx/dy=-1/y=-(e^{-x})^{-1}\)&lt;/span&gt;なので、&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\begin{eqnarray}
-M_x(t) &amp;amp;=&amp;amp; \int_{\infty}^0-e^{-t\log(y)}e^{-y}dy \\
-&amp;amp;=&amp;amp; \int_{0}^\infty y^{-t}e^{-y}dy \\
-&amp;amp;=&amp;amp; \Gamma(1-t)
-\end{eqnarray}
-\]&lt;/span&gt;
-となります。&lt;span class=&#34;math inline&#34;&gt;\(\Gamma(x)\)&lt;/span&gt;はガンマ関数です。ここから、標準化された最大統計量の期待値(平均)は&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
-\begin{eqnarray}
-\lim_{N\rightarrow\infty} E[\frac{\max[\hat{SR}]_N-\alpha}{\beta}] &amp;amp;=&amp;amp; M_x&amp;#39;(t)|_{t=0} \\
-&amp;amp;=&amp;amp; (-1)\Gamma&amp;#39;(1) \\
-&amp;amp;=&amp;amp; (-1)(-\gamma) = \gamma
-\end{eqnarray}
-\]&lt;/span&gt;
-となります。ここで、&lt;span class=&#34;math inline&#34;&gt;\(\gamma\approx0.5772156649...\)&lt;/span&gt;はEuler-Mascheroni定数です。よって、&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;が大きいとき、i.i.d.の標準正規分布の最大統計量の期待値は&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+$$
+ここで、$\alpha=Z(x)^{-1}[1-1/N], \beta=Z(x)^{-1}[1-1/Ne^{-1}]-\alpha$で、$Z(x)$は標準正規分布の累積分布関数を表しています。ガンベル分布のモーメント母関数$M_x(t)$は&lt;/p&gt;
+&lt;p&gt;$$
+&lt;code&gt;\begin{eqnarray} M_x(t) &amp;amp;=&amp;amp; E[e^{tx}] = \int_{-\infty}^\infty e^{tx}e^{-x}e^{-e^{-x}}dx \\ \end{eqnarray}&lt;/code&gt;
+$$
+と書け、$x=-\log(y)$と変数変換すると$dx/dy=-1/y=-(e^{-x})^{-1}$なので、&lt;/p&gt;
+&lt;p&gt;$$
+&lt;code&gt;\begin{eqnarray} M_x(t) &amp;amp;=&amp;amp; \int_{\infty}^0-e^{-t\log(y)}e^{-y}dy \\ &amp;amp;=&amp;amp; \int_{0}^\infty y^{-t}e^{-y}dy \\ &amp;amp;=&amp;amp; \Gamma(1-t) \end{eqnarray}&lt;/code&gt;
+$$
+となります。$\Gamma(x)$はガンマ関数です。ここから、標準化された最大統計量の期待値(平均)は&lt;/p&gt;
+&lt;p&gt;$$
+&lt;code&gt;\begin{eqnarray} \lim_{N\rightarrow\infty} E[\frac{\max[\hat{SR}]_N-\alpha}{\beta}] &amp;amp;=&amp;amp; M_x&#39;(t)|_{t=0} \\ &amp;amp;=&amp;amp; (-1)\Gamma&#39;(1) \\ &amp;amp;=&amp;amp; (-1)(-\gamma) = \gamma \end{eqnarray}&lt;/code&gt;
+$$
+となります。ここで、$\gamma\approx0.5772156649&amp;hellip;$はEuler-Mascheroni定数です。よって、$N$が大きいとき、i.i.d.の標準正規分布の最大統計量の期待値は&lt;/p&gt;
+&lt;p&gt;$$
 E[\max[\hat{SR}]] \approx \alpha + \gamma\beta = (1-\gamma)Z^{-1}[1-\frac{1}{N}]+\gamma Z^{-1}[1-\frac{1}{N}e^{-1}] \tag{2}
-\]&lt;/span&gt;
-と近似できます(&lt;span class=&#34;math inline&#34;&gt;\(N&amp;gt;1\)&lt;/span&gt;)。これがBailey et. al.(2015)のProposition 1.になります。&lt;span class=&#34;math inline&#34;&gt;\(E[\max[\hat{SR}]]\)&lt;/span&gt;を戦略数(試行錯誤数)&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;の関数としてプロットしたのが以下になります。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(ggplot2)
-ExMaxSR = function(N){
-  gamma_ct = -digamma(1)
-  Z = qnorm(0.99)
-  return((1-gamma_ct)*Z*(1-1/N) + gamma_ct*Z*(1-1/N*exp(1)^{-1}))
+$$
+と近似できます($N&amp;gt;1$)。これがBailey et. al.(2015)のProposition 1.になります。$E[\max[\hat{SR}]]$を戦略数(試行錯誤数)$N$の関数としてプロットしたのが以下になります。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(ggplot2)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## Warning: パッケージ &#39;ggplot2&#39; はバージョン 4.1.3 の R の下で造られました
+&lt;/code&gt;&lt;/pre&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;ExMaxSR &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(N){
+  gamma_ct &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;digamma&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)
+  Z &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;qnorm&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;0.99&lt;/span&gt;)
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;return&lt;/span&gt;((&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;gamma_ct)&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;Z&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1-1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;N) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; gamma_ct&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;Z&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1-1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;N&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;exp&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)^{&lt;span style=&#34;color:#ae81ff&#34;&gt;-1&lt;/span&gt;}))
 }
-N = list(0:100)
-result = purrr::map(N,ExMaxSR)
-ggplot2::ggplot(data.frame(ExpMaxSR = unlist(result),N = unlist(N)),aes(x=N,y=ExpMaxSR)) +
-  geom_line(size=1) + ylim(0,3)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-1-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
-&lt;p&gt;小さい&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;に対して急激に&lt;span class=&#34;math inline&#34;&gt;\(\max[\hat{SR}]\)&lt;/span&gt;の期待値が上昇していることがわかると思います。&lt;span class=&#34;math inline&#34;&gt;\(N=10\)&lt;/span&gt;の時、&lt;span class=&#34;math inline&#34;&gt;\(\max[\hat{SR}]=1.54\)&lt;/span&gt;となっており、全ての戦略のシャープレシオの真値が0にも拘わらず、少なくとも1つは見かけ上かなり良いパフォーマンスの戦略が見つかることが期待されます。金融ではhold-out法でのバックテストはしばしば使用されるかと思いますが、この方法は試行(錯誤)回数を考慮に入れていないため、&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;が大きいときには信頼に足る結果を返してくれないわけです。バックテストの結果を向上させるため、闇雲にあれやこれやとシミュレーションを行うことは非常に危険だと思いませんか？最終的にプレゼン資料に上がってくるのは&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;個の戦略のうち、最もパフォーマンスが良いもののみですから、今回の例のように10個戦略を考えただけでもどれかはシャープレシオが1.87付近に分布しているわけです。試行錯誤数なんてもちろん資料には記載しませんから、非常にミスリーディングなわけです。こういった資料を評価する際にはまず偽陽性を疑ってかかった方がいいかもしれません。&lt;/p&gt;
-&lt;p&gt;では、どうすれば良いのかという話ですが、Bailey et. al.(2015)では、Minimum Backtest Lengthを計算しています。要は試行(錯誤)数&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;を増やすにつれて、バックテストの年数&lt;span class=&#34;math inline&#34;&gt;\(y\)&lt;/span&gt;も伸ばしていけよと戒めているわけです。&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;とMinimum Backtest Lengthの関係性を示していきましょう。先ほどと同じく&lt;span class=&#34;math inline&#34;&gt;\(\mu=0\)&lt;/span&gt;を仮定しますが、&lt;span class=&#34;math inline&#34;&gt;\(y\neq 1\)&lt;/span&gt;であるケースを考えます。年率化シャープレシオの最大統計量の期待値は(2)式より、&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+N &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;list&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt;)
+result &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; purrr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;map&lt;/span&gt;(N,ExMaxSR)
+ggplot2&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;ggplot&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;data.frame&lt;/span&gt;(ExpMaxSR &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;unlist&lt;/span&gt;(result),N &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;unlist&lt;/span&gt;(N)),&lt;span style=&#34;color:#a6e22e&#34;&gt;aes&lt;/span&gt;(x&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;N,y&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;ExpMaxSR)) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;geom_line&lt;/span&gt;(size&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ylim&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../post/post19/index_files/figure-html/unnamed-chunk-1-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;小さい$N$に対して急激に$\max[\hat{SR}]$の期待値が上昇していることがわかると思います。$N=10$の時、$\max[\hat{SR}]=1.54$となっており、全ての戦略のシャープレシオの真値が0にも拘わらず、少なくとも1つは見かけ上かなり良いパフォーマンスの戦略が見つかることが期待されます。金融ではhold-out法でのバックテストはしばしば使用されるかと思いますが、この方法は試行(錯誤)回数を考慮に入れていないため、$N$が大きいときには信頼に足る結果を返してくれないわけです。バックテストの結果を向上させるため、闇雲にあれやこれやとシミュレーションを行うことは非常に危険だと思いませんか？最終的にプレゼン資料に上がってくるのは$N$個の戦略のうち、最もパフォーマンスが良いもののみですから、今回の例のように10個戦略を考えただけでもどれかはシャープレシオが1.87付近に分布しているわけです。試行錯誤数なんてもちろん資料には記載しませんから、非常にミスリーディングなわけです。こういった資料を評価する際にはまず偽陽性を疑ってかかった方がいいかもしれません。&lt;/p&gt;
+&lt;p&gt;では、どうすれば良いのかという話ですが、Bailey et. al.(2015)では、Minimum Backtest Lengthを計算しています。要は試行(錯誤)数$N$を増やすにつれて、バックテストの年数$y$も伸ばしていけよと戒めているわけです。$N$とMinimum Backtest Lengthの関係性を示していきましょう。先ほどと同じく$\mu=0$を仮定しますが、$y\neq 1$であるケースを考えます。年率化シャープレシオの最大統計量の期待値は(2)式より、&lt;/p&gt;
+&lt;p&gt;$$
 E[\max[\hat{SR}(q)]_N] \approx y^{-1/2}((1-\gamma)Z^{-1}[1-\frac{1}{N}]+\gamma Z^{-1}[1-\frac{1}{N}e^{-1}])
-\]&lt;/span&gt;
-となります。これを&lt;span class=&#34;math inline&#34;&gt;\(y\)&lt;/span&gt;に対して解いてやることでMinBTLが求まります。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+$$
+となります。これを$y$に対して解いてやることでMinBTLが求まります。&lt;/p&gt;
+&lt;p&gt;$$
 MinBTL \approx (\frac{(1-\gamma)Z^{-1}[1-\frac{1}{N}]+\gamma Z^{-1}[1-\frac{1}{N}e^{-1}]}{\bar{E[\max[\hat{SR}(q)]_N]}})^2
-\]&lt;/span&gt;
-ここで、&lt;span class=&#34;math inline&#34;&gt;\(\bar{E[\max[\hat{SR}(q)]_N]}\)&lt;/span&gt;は&lt;span class=&#34;math inline&#34;&gt;\(E[\max[\hat{SR}(q)]_N]\)&lt;/span&gt;の上限値で、シャープレシオの真値が0である&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;戦略でシャープレシオの最大統計量が取りうる値を抑えます。その際に、必要なバックテスト年数&lt;span class=&#34;math inline&#34;&gt;\(y\)&lt;/span&gt;がMinBTLとして導出されるのです。&lt;span class=&#34;math inline&#34;&gt;\(\bar{E[\max[\hat{SR}(q)]_N]}=1\)&lt;/span&gt;として、MinBTLを&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;の関数としてプロットしたものが以下です。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;MinBTL &amp;lt;- function(N,MaxSR){
-  return((ExMaxSR(N)/MaxSR)^2)
+$$
+ここで、$\bar{E[\max[\hat{SR}(q)]_N]}$は$E[\max[\hat{SR}(q)]_N]$の上限値で、シャープレシオの真値が0である$N$戦略でシャープレシオの最大統計量が取りうる値を抑えます。その際に、必要なバックテスト年数$y$がMinBTLとして導出されるのです。$\bar{E[\max[\hat{SR}(q)]_N]}=1$として、MinBTLを$N$の関数としてプロットしたものが以下です。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;MinBTL &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(N,MaxSR){
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;return&lt;/span&gt;((&lt;span style=&#34;color:#a6e22e&#34;&gt;ExMaxSR&lt;/span&gt;(N)&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;MaxSR)^2)
 }
-N = list(1:100)
-result = purrr::map2(N,1,MinBTL)
-ggplot2::ggplot(data.frame(MinBTL = unlist(result),N = unlist(N)),aes(x=N,y=MinBTL)) +
-  geom_line(size=1) + ylim(0,6)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-2-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;simSR &amp;lt;- function(T1){
-    r = rnorm(T1)
-    return(mean(r)/sd(r))
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;仮にバックテスト年数が3年以内しかできない場合は試行(錯誤)回数&lt;span class=&#34;math inline&#34;&gt;\(N\)&lt;/span&gt;はほぼ1回に抑えないといけないことになります。3年以内の場合は一発で当ててねという厳しめの制約です。注意しないといけないのは、MinBTLの範囲内でバックテストを行っていたとしてもオーバーフィットすることは考えられるということです。つまり、MinBTLは必要条件であって十分条件でないというわけです。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;終わりに&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;4. 終わりに&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3257497&#34;&gt;López de Prado(2018)&lt;/a&gt;では、オーバーフィッティングを防ぐ汎用的な手段として以下が挙げられています。&lt;/p&gt;
-&lt;ol style=&#34;list-style-type: decimal&#34;&gt;
-&lt;li&gt;&lt;p&gt;Develop models for entire asset classes or investment universes, rather than for specific securities. Investors diversify, hence they do not make mistake X only on security Y. If you find mistake X only on security Y, no matter how apparently profitable, it is likely a false discovery.
-(拙訳：特定の有価証券ではなく、アセットクラス全体またはユニバース全体のモデルを開発すること。投資家はリスクを分散させているので、彼らはある証券Yだけに対してミスXをすることはありません。あなたが証券YだけにミスXを見つけた場合は、それがどんなに明らかに有益であっても、誤発見である可能性が高い。)&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Apply bagging as a means to both prevent overfitting and reduce the variance of the forecasting error. If bagging deteriorates the performance of a strategy, it was likely overfit to a small number of observations or outliers.
-(拙訳：オーバーフィットを防ぎ、予測誤差の分散を減らすための手段として、バギングを適用すること。バギングが戦略のパフォーマンスを悪化させる場合、それは少数の観測値または外れ値にオーバーフィットした可能性が高い。)&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;&lt;strong&gt;Do not backtest until all your research is complete.&lt;/strong&gt;
-(拙訳：&lt;strong&gt;すべてのリサーチが完了するまでバックテストをしないこと。&lt;/strong&gt;)&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Record every backtest conducted on a dataset so that the probability of backtest overfitting may be estimated on the final selected result (see &lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2326253&#34;&gt;Bailey, Borwein, López de Prado and Zhu(2017)&lt;/a&gt;), and the Sharpe ratio may be properly deflated by the number of trials carried out (&lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2465675&#34;&gt;Bailey and López de Prado(2014.b)&lt;/a&gt;).
-(拙訳：研究者が最終的に選択したバックテスト結果がオーバーフィットしている確率を推定できるように、単一の(同じ)データセットで実施されたバックテストをすべて記録すること（Bailey, Borwein, López de Prado and Zhu [2017]）、また、実施された試行数によってシャープレシオを適切にデフレーションできるようにすること（Bailey and López de Prado [2014]）。)&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Simulate scenarios rather than history. A standard backtest is a historical simulation, which can be easily overfit. History is just the random path that was realized, and it could have been entirely different. Your strategy should be profitable under a wide range of scenarios, not just the anecdotal historical path. It is harder to overfit the outcome of thousands of “what if” scenarios.
-(拙訳：ヒストリカルではなくシナリオをシミュレーションすること。標準的なバックテストはヒストリカルシミュレーションであり、オーバーフィットしやすい。歴史(これまでの実績)はランダムなパスの実現値に過ぎず、全く違ったものになっていた可能性があります。あなたの戦略は、逸話的なヒストリカルパスではなく、様々なシナリオの下で利益を得ることができるものであるべきです。何千もの「もしも」のシナリオ結果をオーバーフィットさせるのは(ヒストリカルシミュレーションで過学習するよりも)より難しいことです。)&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Do not research under the influence of a backtest. If the backtest fails to identify a profitable strategy,
+N &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;list&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt;)
+result &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; purrr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;map2&lt;/span&gt;(N,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,MinBTL)
+ggplot2&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;ggplot&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;data.frame&lt;/span&gt;(MinBTL &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;unlist&lt;/span&gt;(result),N &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;unlist&lt;/span&gt;(N)),&lt;span style=&#34;color:#a6e22e&#34;&gt;aes&lt;/span&gt;(x&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;N,y&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;MinBTL)) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;geom_line&lt;/span&gt;(size&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ylim&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../post/post19/index_files/figure-html/unnamed-chunk-2-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;simSR &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(T1){
+    r &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;rnorm&lt;/span&gt;(T1)
+    &lt;span style=&#34;color:#a6e22e&#34;&gt;return&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;mean&lt;/span&gt;(r)&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;sd&lt;/span&gt;(r))
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;仮にバックテスト年数が3年以内しかできない場合は試行(錯誤)回数$N$はほぼ1回に抑えないといけないことになります。3年以内の場合は一発で当ててねという厳しめの制約です。注意しないといけないのは、MinBTLの範囲内でバックテストを行っていたとしてもオーバーフィットすることは考えられるということです。つまり、MinBTLは必要条件であって十分条件でないというわけです。&lt;/p&gt;
+&lt;h2 id=&#34;4-終わりに&#34;&gt;4. 終わりに&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3257497&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;López de Prado(2018)&lt;/a&gt;では、オーバーフィッティングを防ぐ汎用的な手段として以下が挙げられています。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;Develop models for entire asset classes or investment universes, rather than for specific securities. Investors diversify, hence they do not make mistake X only on security Y. If you find mistake X only on security Y, no matter how apparently profitable, it is likely a false discovery.
+(拙訳：特定の有価証券ではなく、アセットクラス全体またはユニバース全体のモデルを開発すること。投資家はリスクを分散させているので、彼らはある証券Yだけに対してミスXをすることはありません。あなたが証券YだけにミスXを見つけた場合は、それがどんなに明らかに有益であっても、誤発見である可能性が高い。)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Apply bagging as a means to both prevent overfitting and reduce the variance of the forecasting error. If bagging deteriorates the performance of a strategy, it was likely overfit to a small number of observations or outliers.
+(拙訳：オーバーフィットを防ぎ、予測誤差の分散を減らすための手段として、バギングを適用すること。バギングが戦略のパフォーマンスを悪化させる場合、それは少数の観測値または外れ値にオーバーフィットした可能性が高い。)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Do not backtest until all your research is complete.&lt;/strong&gt;
+(拙訳：&lt;strong&gt;すべてのリサーチが完了するまでバックテストをしないこと。&lt;/strong&gt;)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Record every backtest conducted on a dataset so that the probability of backtest overfitting may be estimated on the final selected result (see &lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2326253&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Bailey, Borwein, López de Prado and Zhu(2017)&lt;/a&gt;), and the Sharpe ratio may be properly deflated by the number of trials carried out (&lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2465675&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Bailey and López de Prado(2014.b)&lt;/a&gt;).
+(拙訳：研究者が最終的に選択したバックテスト結果がオーバーフィットしている確率を推定できるように、単一の(同じ)データセットで実施されたバックテストをすべて記録すること（Bailey, Borwein, López de Prado and Zhu [2017]）、また、実施された試行数によってシャープレシオを適切にデフレーションできるようにすること（Bailey and López de Prado [2014]）。)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Simulate scenarios rather than history. A standard backtest is a historical simulation, which can be easily overfit. History is just the random path that was realized, and it could have been entirely different. Your strategy should be profitable under a wide range of scenarios, not just the anecdotal historical path. It is harder to overfit the outcome of thousands of “what if” scenarios.
+(拙訳：ヒストリカルではなくシナリオをシミュレーションすること。標準的なバックテストはヒストリカルシミュレーションであり、オーバーフィットしやすい。歴史(これまでの実績)はランダムなパスの実現値に過ぎず、全く違ったものになっていた可能性があります。あなたの戦略は、逸話的なヒストリカルパスではなく、様々なシナリオの下で利益を得ることができるものであるべきです。何千もの「もしも」のシナリオ結果をオーバーフィットさせるのは(ヒストリカルシミュレーションで過学習するよりも)より難しいことです。)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Do not research under the influence of a backtest. If the backtest fails to identify a profitable strategy,
 start from scratch. Resist the temptation of reusing those results.
-(拙訳：バックテストのフィードバックを受けてリサーチしないこと。バックテストが有益な戦略を見つけ出すことに失敗した場合は、ゼロからリサーチを再始動してください。それらの結果を再利用する誘惑に抗ってください。)&lt;/p&gt;&lt;/li&gt;
+(拙訳：バックテストのフィードバックを受けてリサーチしないこと。バックテストが有益な戦略を見つけ出すことに失敗した場合は、ゼロからリサーチを再始動してください。それらの結果を再利用する誘惑に抗ってください。)&lt;/p&gt;
+&lt;/li&gt;
 &lt;/ol&gt;
-&lt;p&gt;3と6は本日の論文と関係のある文脈だと思います。この分野は他にも研究の蓄積があるので、業務でバックテストを行うという人は運用手法の勉強もいいですが、そもそものお作法としてバックテストの正しい運用方法について学ぶことをお勧めします。&lt;br /&gt;
+&lt;p&gt;3と6は本日の論文と関係のある文脈だと思います。この分野は他にも研究の蓄積があるので、業務でバックテストを行うという人は運用手法の勉強もいいですが、そもそものお作法としてバックテストの正しい運用方法について学ぶことをお勧めします。&lt;br&gt;
 さて、いつもとは違う観点で、少しメタ的なトピックに取り組んでみました。自分自身仕事柄バックテスト結果などを見ることも多いですし、このブログでもしばしばhold-out法でのバックテストをしています。得られた結果の不確実性を理解して、評価できるよう今後もこのトピックの研究を追っていきたいと思います。&lt;/p&gt;
-&lt;/div&gt;
 </description>
     </item>
     
@@ -272,107 +221,93 @@ start from scratch. Resist the temptation of reusing those results.
       <link>/post/post14/</link>
       <pubDate>Tue, 16 Jul 2019 00:00:00 +0000</pubDate>
       <guid>/post/post14/</guid>
-      <description>
-&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+      <description>&lt;p&gt;おはこんばんにちは。とある理由で10年物長期金利のフィッティングを行いたいと思いました。というわけで、USデータを用いて解析していきます。まず、データを収集しましょう。&lt;code&gt;quantmod&lt;/code&gt;パッケージを用いて、FREDからデータを落とします。&lt;code&gt;getsymbols(キー,from=開始日,src=&amp;quot;FRED&amp;quot;, auto.assign=TRUE)&lt;/code&gt;で簡単にできちゃいます。ちなみにキーはFREDのHPで確認できます。&lt;/p&gt;
+&lt;h2 id=&#34;1-データ収集&#34;&gt;1. データ収集&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(quantmod)
 
-&lt;div id=&#34;TOC&#34;&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;#データ収集&#34;&gt;1. データ収集&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#月次解析パート&#34;&gt;2. 月次解析パート&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#日次解析パート&#34;&gt;3. 日次解析パート&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/div&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# data name collected&lt;/span&gt;
+symbols.name &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;10-Year Treasury Constant Maturity Rate&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Effective Federal Funds Rate&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;Consumer Price Index for All Urban Consumers: All Items&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Civilian Unemployment Rate&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;3-Month Treasury Bill: Secondary Market Rate&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Industrial Production Index&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;10-Year Breakeven Inflation Rate&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Trade Weighted U.S. Dollar Index: Broad, Goods&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;Smoothed U.S. Recession Probabilities&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Moody&amp;#39;s Seasoned Baa Corporate Bond Yield&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;5-Year, 5-Year Forward Inflation Expectation Rate&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Personal Consumption Expenditures&amp;#34;&lt;/span&gt;)
 
-&lt;p&gt;おはこんばんにちは。とある理由で10年物長期金利のフィッティングを行いたいと思いました。というわけで、USデータを用いて解析していきます。まず、データを収集しましょう。&lt;code&gt;quantmod&lt;/code&gt;パッケージを用いて、FREDからデータを落とします。&lt;code&gt;getsymbols(キー,from=開始日,src=&#34;FRED&#34;, auto.assign=TRUE)&lt;/code&gt;で簡単にできちゃいます。ちなみにキーはFREDのHPで確認できます。&lt;/p&gt;
-&lt;div id=&#34;データ収集&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;1. データ収集&lt;/h2&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(quantmod)
-
-# data name collected
-symbols.name &amp;lt;- c(&amp;quot;10-Year Treasury Constant Maturity Rate&amp;quot;,&amp;quot;Effective Federal Funds Rate&amp;quot;,&amp;quot;
-Consumer Price Index for All Urban Consumers: All Items&amp;quot;,&amp;quot;Civilian Unemployment Rate&amp;quot;,&amp;quot;3-Month Treasury Bill: Secondary Market Rate&amp;quot;,&amp;quot;Industrial Production Index&amp;quot;,&amp;quot;
-10-Year Breakeven Inflation Rate&amp;quot;,&amp;quot;Trade Weighted U.S. Dollar Index: Broad, Goods&amp;quot;,&amp;quot;
-Smoothed U.S. Recession Probabilities&amp;quot;,&amp;quot;Moody&amp;#39;s Seasoned Baa Corporate Bond Yield&amp;quot;,&amp;quot;5-Year, 5-Year Forward Inflation Expectation Rate&amp;quot;,&amp;quot;Personal Consumption Expenditures&amp;quot;)
-
-# Collect economic data
-symbols &amp;lt;- c(&amp;quot;GS10&amp;quot;,&amp;quot;FEDFUNDS&amp;quot;,&amp;quot;CPIAUCSL&amp;quot;,&amp;quot;UNRATE&amp;quot;,&amp;quot;TB3MS&amp;quot;,&amp;quot;INDPRO&amp;quot;,&amp;quot;T10YIEM&amp;quot;,&amp;quot;TWEXBMTH&amp;quot;,&amp;quot;RECPROUSM156N&amp;quot;,&amp;quot;BAA&amp;quot;,&amp;quot;T5YIFRM&amp;quot;,&amp;quot;PCE&amp;quot;)
-getSymbols(symbols, from = &amp;#39;1980-01-01&amp;#39;, src = &amp;quot;FRED&amp;quot;, auto.assign = TRUE)&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;##  [1] &amp;quot;GS10&amp;quot;          &amp;quot;FEDFUNDS&amp;quot;      &amp;quot;CPIAUCSL&amp;quot;      &amp;quot;UNRATE&amp;quot;       
+&lt;span style=&#34;color:#75715e&#34;&gt;# Collect economic data&lt;/span&gt;
+symbols &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;GS10&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;FEDFUNDS&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;CPIAUCSL&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;UNRATE&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;TB3MS&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;INDPRO&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;T10YIEM&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;TWEXBMTH&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;RECPROUSM156N&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;BAA&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;T5YIFRM&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;PCE&amp;#34;&lt;/span&gt;)
+&lt;span style=&#34;color:#a6e22e&#34;&gt;getSymbols&lt;/span&gt;(symbols, from &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;1980-01-01&amp;#39;&lt;/span&gt;, src &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;FRED&amp;#34;&lt;/span&gt;, auto.assign &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TRUE&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;##  [1] &amp;quot;GS10&amp;quot;          &amp;quot;FEDFUNDS&amp;quot;      &amp;quot;CPIAUCSL&amp;quot;      &amp;quot;UNRATE&amp;quot;       
 ##  [5] &amp;quot;TB3MS&amp;quot;         &amp;quot;INDPRO&amp;quot;        &amp;quot;T10YIEM&amp;quot;       &amp;quot;TWEXBMTH&amp;quot;     
-##  [9] &amp;quot;RECPROUSM156N&amp;quot; &amp;quot;BAA&amp;quot;           &amp;quot;T5YIFRM&amp;quot;       &amp;quot;PCE&amp;quot;&lt;/code&gt;&lt;/pre&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;macro_indicator &amp;lt;- merge(GS10,FEDFUNDS,CPIAUCSL,UNRATE,TB3MS,INDPRO,T10YIEM,TWEXBMTH,RECPROUSM156N,BAA,T5YIFRM,PCE)
-rm(GS10,FEDFUNDS,CPIAUCSL,UNRATE,TB3MS,INDPRO,T10YIEM,TWEXBMTH,RECPROUSM156N,BAA,T5YIFRM,PCE,USEPUINDXD)&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-&lt;div id=&#34;月次解析パート&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;2. 月次解析パート&lt;/h2&gt;
+##  [9] &amp;quot;RECPROUSM156N&amp;quot; &amp;quot;BAA&amp;quot;           &amp;quot;T5YIFRM&amp;quot;       &amp;quot;PCE&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;macro_indicator &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;merge&lt;/span&gt;(GS10,FEDFUNDS,CPIAUCSL,UNRATE,TB3MS,INDPRO,T10YIEM,TWEXBMTH,RECPROUSM156N,BAA,T5YIFRM,PCE)
+&lt;span style=&#34;color:#a6e22e&#34;&gt;rm&lt;/span&gt;(GS10,FEDFUNDS,CPIAUCSL,UNRATE,TB3MS,INDPRO,T10YIEM,TWEXBMTH,RECPROUSM156N,BAA,T5YIFRM,PCE,USEPUINDXD)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;2-月次解析パート&#34;&gt;2. 月次解析パート&lt;/h2&gt;
 &lt;p&gt;データは
 &lt;a href=&#34;htmlwidget/macro_indicator.html&#34;&gt;こちら&lt;/a&gt;
 から参照できます。では、推計用のデータセットを作成していきます。被説明変数は&lt;code&gt;10-Year Treasury Constant Maturity Rate(GS10)&lt;/code&gt;です。説明変数は以下の通りです。&lt;/p&gt;
 &lt;table&gt;
 &lt;thead&gt;
-&lt;tr class=&#34;header&#34;&gt;
+&lt;tr&gt;
 &lt;th&gt;説明変数名&lt;/th&gt;
 &lt;th&gt;キー&lt;/th&gt;
 &lt;th&gt;代理変数&lt;/th&gt;
 &lt;/tr&gt;
 &lt;/thead&gt;
 &lt;tbody&gt;
-&lt;tr class=&#34;odd&#34;&gt;
+&lt;tr&gt;
 &lt;td&gt;Federal Funds Rate&lt;/td&gt;
 &lt;td&gt;FEDFUNDS&lt;/td&gt;
 &lt;td&gt;短期金利&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr class=&#34;even&#34;&gt;
+&lt;tr&gt;
 &lt;td&gt;Consumer Price Index&lt;/td&gt;
 &lt;td&gt;CPIAUCSL&lt;/td&gt;
 &lt;td&gt;物価&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr class=&#34;odd&#34;&gt;
+&lt;tr&gt;
 &lt;td&gt;Unemployment Rate&lt;/td&gt;
 &lt;td&gt;UNRATE&lt;/td&gt;
 &lt;td&gt;雇用関連&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr class=&#34;even&#34;&gt;
+&lt;tr&gt;
 &lt;td&gt;3-Month Treasury Bill&lt;/td&gt;
 &lt;td&gt;TB3MS&lt;/td&gt;
 &lt;td&gt;短期金利&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr class=&#34;odd&#34;&gt;
+&lt;tr&gt;
 &lt;td&gt;Industrial Production Index&lt;/td&gt;
 &lt;td&gt;INDPRO&lt;/td&gt;
 &lt;td&gt;景気&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr class=&#34;even&#34;&gt;
+&lt;tr&gt;
 &lt;td&gt;Breakeven Inflation Rate&lt;/td&gt;
 &lt;td&gt;T10YIEM&lt;/td&gt;
 &lt;td&gt;物価&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr class=&#34;odd&#34;&gt;
+&lt;tr&gt;
 &lt;td&gt;Trade Weighted Dollar Index&lt;/td&gt;
 &lt;td&gt;TWEXBMTH&lt;/td&gt;
 &lt;td&gt;為替&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr class=&#34;even&#34;&gt;
+&lt;tr&gt;
 &lt;td&gt;Recession Probabilities&lt;/td&gt;
 &lt;td&gt;RECPROUSM156N&lt;/td&gt;
 &lt;td&gt;景気&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr class=&#34;odd&#34;&gt;
-&lt;td&gt;Moody’s Seasoned Baa Corporate Bond Yield&lt;/td&gt;
+&lt;tr&gt;
+&lt;td&gt;Moody&amp;rsquo;s Seasoned Baa Corporate Bond Yield&lt;/td&gt;
 &lt;td&gt;BAA&lt;/td&gt;
 &lt;td&gt;リスクプレミアム&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr class=&#34;even&#34;&gt;
+&lt;tr&gt;
 &lt;td&gt;Inflation Expectation Rate&lt;/td&gt;
 &lt;td&gt;T5YIFRM&lt;/td&gt;
 &lt;td&gt;物価&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr class=&#34;odd&#34;&gt;
+&lt;tr&gt;
 &lt;td&gt;Personal Consumption Expenditures&lt;/td&gt;
 &lt;td&gt;PCE&lt;/td&gt;
 &lt;td&gt;景気&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr class=&#34;even&#34;&gt;
+&lt;tr&gt;
 &lt;td&gt;Economic Policy Uncertainty Index&lt;/td&gt;
 &lt;td&gt;USEPUINDXD&lt;/td&gt;
 &lt;td&gt;政治&lt;/td&gt;
@@ -380,180 +315,174 @@ rm(GS10,FEDFUNDS,CPIAUCSL,UNRATE,TB3MS,INDPRO,T10YIEM,TWEXBMTH,RECPROUSM156N,BAA
 &lt;/tbody&gt;
 &lt;/table&gt;
 &lt;p&gt;かなり適当な変数選択ではあるんですが、マクロモデリング的に長期金利ってどうやってモデル化するかというとちゃんとやってない場合が多いです。DSGEでは効率市場仮説に従って10年先までの短期金利のパスをリンクしたものと長期金利が等しくなると定式化するのが院生時代のモデリングでした（マクロファイナンスの界隈ではちゃんとやってそう）。そういうわけで、短期金利を説明変数に加えています。そして、短期金利に影響を与えるであろう物価にかかる指標も3つ追加しました。加えて、景気との相関が強いことはよく知られているので景気に関するデータも追加しました。これらはそもそもマクロモデルでは短期金利は以下のようなテイラールールに従うとモデリングすることが一般的であることが背景にあります。&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+&lt;p&gt;$$
 r_t = \rho r_{t-1} + \alpha \pi_{t} + \beta y_{t}
-\]&lt;/span&gt;
-ここで、&lt;span class=&#34;math inline&#34;&gt;\(r_t\)&lt;/span&gt;は政策金利（短期金利）、&lt;span class=&#34;math inline&#34;&gt;\(\pi_t\)&lt;/span&gt;はインフレ率、&lt;span class=&#34;math inline&#34;&gt;\(y_t\)&lt;/span&gt;はoutputです。&lt;span class=&#34;math inline&#34;&gt;\(\rho, \alpha, \beta\)&lt;/span&gt;はdeep parameterと呼ばれるもので、それぞれ慣性、インフレ率への金利の感応度、outputに対する感応度を表しています。&lt;span class=&#34;math inline&#34;&gt;\(\rho=0,\beta=0\)&lt;/span&gt;の時、&lt;span class=&#34;math inline&#34;&gt;\(\alpha&amp;gt;=1\)&lt;/span&gt;でなければ合理的期待均衡解が得られないことは「テイラーの原理」として有名です。
+$$
+ここで、$r_t$は政策金利（短期金利）、$\pi_t$はインフレ率、$y_t$はoutputです。$\rho, \alpha, \beta$はdeep parameterと呼ばれるもので、それぞれ慣性、インフレ率への金利の感応度、outputに対する感応度を表しています。$\rho=0,\beta=0$の時、$\alpha&amp;gt;=1$でなければ合理的期待均衡解が得られないことは「テイラーの原理」として有名です。
 その他、Corporate bondとの裁定関係も存在しそうな&lt;code&gt;Moody&#39;s Seasoned Baa Corporate Bond Yield&lt;/code&gt;も説明変数に追加しています。また、欲を言えば&lt;code&gt;VIX&lt;/code&gt;指数と財政に関する指標を追加したいところです。財政に関する指数はQuateryかAnnualyなので今回のようなmonthlyの推計には使用することができません。この部分は最もネックなところです。なにか考え付いたら再推計します。&lt;/p&gt;
 &lt;p&gt;では、推計に入ります。今回は説明変数が多いので&lt;code&gt;lasso&lt;/code&gt;回帰を行い、有効な変数を絞り込みたいと思います。また、比較のために&lt;code&gt;OLS&lt;/code&gt;もやります。説明変数は被説明変数の1期前の値を使用します。おそらく、1期前でもデータの公表時期によっては翌月の推計に間に合わない可能性もありますが、とりあえずこれでやってみます。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# make dataset
-traindata &amp;lt;- na.omit(merge(macro_indicator[&amp;quot;2003-01-01::2015-12-31&amp;quot;][,1],stats::lag(macro_indicator[&amp;quot;2003-01-01::2015-12-31&amp;quot;][,-1],1)))
-testdata  &amp;lt;- na.omit(merge(macro_indicator[&amp;quot;2016-01-01::&amp;quot;][,1],stats::lag(macro_indicator[&amp;quot;2016-01-01::&amp;quot;][,-1],1)))
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# make dataset&lt;/span&gt;
+traindata &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;na.omit&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;merge&lt;/span&gt;(macro_indicator[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;2003-01-01::2015-12-31&amp;#34;&lt;/span&gt;][,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;],stats&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;lag&lt;/span&gt;(macro_indicator[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;2003-01-01::2015-12-31&amp;#34;&lt;/span&gt;][,&lt;span style=&#34;color:#ae81ff&#34;&gt;-1&lt;/span&gt;],&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)))
+testdata  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;na.omit&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;merge&lt;/span&gt;(macro_indicator[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;2016-01-01::&amp;#34;&lt;/span&gt;][,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;],stats&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;lag&lt;/span&gt;(macro_indicator[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;2016-01-01::&amp;#34;&lt;/span&gt;][,&lt;span style=&#34;color:#ae81ff&#34;&gt;-1&lt;/span&gt;],&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)))
 
-# fitting OLS
-trial1 &amp;lt;- lm(GS10~.,data = traindata)
-summary(trial1)&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## 
+&lt;span style=&#34;color:#75715e&#34;&gt;# fitting OLS&lt;/span&gt;
+trial1 &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;lm&lt;/span&gt;(GS10&lt;span style=&#34;color:#f92672&#34;&gt;~&lt;/span&gt;.,data &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; traindata)
+&lt;span style=&#34;color:#a6e22e&#34;&gt;summary&lt;/span&gt;(trial1)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## 
 ## Call:
 ## lm(formula = GS10 ~ ., data = traindata)
 ## 
 ## Residuals:
-##      Min       1Q   Median       3Q      Max 
-## -0.76208 -0.21234  0.00187  0.21595  0.70493 
+##     Min      1Q  Median      3Q     Max 
+## -0.7593 -0.2182  0.0041  0.2143  0.7051 
 ## 
 ## Coefficients:
 ##                 Estimate Std. Error t value Pr(&amp;gt;|t|)    
-## (Intercept)   14.3578405  4.3524691   3.299 0.001226 ** 
-## FEDFUNDS      -0.2011132  0.1438774  -1.398 0.164335    
-## CPIAUCSL      -0.0702011  0.0207761  -3.379 0.000938 ***
-## UNRATE        -0.2093502  0.0796052  -2.630 0.009477 ** 
-## TB3MS          0.2970160  0.1413796   2.101 0.037410 *  
-## INDPRO        -0.0645376  0.0260343  -2.479 0.014339 *  
-## T10YIEM        1.1484487  0.1769925   6.489 1.32e-09 ***
-## TWEXBMTH      -0.0317345  0.0118155  -2.686 0.008091 ** 
-## RECPROUSM156N -0.0099083  0.0021021  -4.713 5.72e-06 ***
-## BAA            0.7793520  0.0868628   8.972 1.49e-15 ***
-## T5YIFRM       -0.4551318  0.1897695  -2.398 0.017759 *  
-## PCE            0.0009087  0.0002475   3.672 0.000339 ***
+## (Intercept)   15.0576773  4.3419245   3.468 0.000693 ***
+## FEDFUNDS      -0.2075752  0.1413832  -1.468 0.144253    
+## CPIAUCSL      -0.0750111  0.0204871  -3.661 0.000352 ***
+## UNRATE        -0.2183796  0.0784608  -2.783 0.006109 ** 
+## TB3MS          0.3031085  0.1393904   2.175 0.031310 *  
+## INDPRO        -0.0705997  0.0263855  -2.676 0.008328 ** 
+## T10YIEM        1.1476564  0.1758964   6.525 1.10e-09 ***
+## TWEXBMTH      -0.0313911  0.0117338  -2.675 0.008338 ** 
+## RECPROUSM156N -0.0103854  0.0021233  -4.891 2.66e-06 ***
+## BAA            0.7802368  0.0858538   9.088 7.60e-16 ***
+## T5YIFRM       -0.4529529  0.1881510  -2.407 0.017342 *  
+## PCE            0.0009815  0.0002477   3.963 0.000116 ***
 ## ---
-## Signif. codes:  0 &amp;#39;***&amp;#39; 0.001 &amp;#39;**&amp;#39; 0.01 &amp;#39;*&amp;#39; 0.05 &amp;#39;.&amp;#39; 0.1 &amp;#39; &amp;#39; 1
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
-## Residual standard error: 0.2981 on 143 degrees of freedom
-## Multiple R-squared:  0.9203, Adjusted R-squared:  0.9142 
-## F-statistic: 150.1 on 11 and 143 DF,  p-value: &amp;lt; 2.2e-16&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;自由度修正済み決定係数高めですね。2015/12/31までのモデルを使って、アウトサンプルのデータ(2016/01/01~)を予測し、平均二乗誤差を計算します。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;est.OLS.Y &amp;lt;- predict(trial1,testdata[,-1])
-Y &amp;lt;- as.matrix(testdata[,1])
-mse.OLS &amp;lt;- sum((Y - est.OLS.Y)^2) / length(Y)
-mse.OLS&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## [1] 0.1431734&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;次に&lt;code&gt;lasso&lt;/code&gt;回帰です。Cross Validationを行い、&lt;span class=&#34;math inline&#34;&gt;\(\lambda\)&lt;/span&gt;を決める&lt;code&gt;glmnet&lt;/code&gt;パッケージの&lt;code&gt;cv.glmnet&lt;/code&gt;関数を使用します。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# fitting lasso regression
-library(glmnet)
-trial2 &amp;lt;- cv.glmnet(as.matrix(traindata[,-1]),as.matrix(traindata[,1]),family=&amp;quot;gaussian&amp;quot;,alpha=1)
-plot(trial2)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-4-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;trial2$lambda.min&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## [1] 0.000436523&lt;/code&gt;&lt;/pre&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;coef(trial2,s=trial2$lambda.min)&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## 12 x 1 sparse Matrix of class &amp;quot;dgCMatrix&amp;quot;
-##                           1
-## (Intercept)   12.0180676188
-## FEDFUNDS      -0.1041665345
-## CPIAUCSL      -0.0574470880
-## UNRATE        -0.1919723880
-## TB3MS          0.2110222475
-## INDPRO        -0.0610115260
-## T10YIEM        1.1688912397
-## TWEXBMTH      -0.0242324285
-## RECPROUSM156N -0.0095154487
-## BAA            0.7600115062
-## T5YIFRM       -0.4575241038
-## PCE            0.0007486169&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;code&gt;Unemployment Rate&lt;/code&gt;、&lt;code&gt;3-Month Treasury Bill&lt;/code&gt;、&lt;code&gt;Breakeven Inflation Rate、Moody&#39;s Seasoned Baa Corporate Bond Yield&lt;/code&gt;、&lt;code&gt;Inflation Expectation Rate&lt;/code&gt;の回帰係数が大きくなるという結果ですね。失業率以外は想定内の結果です。ただ、今回の結果を見る限り景気との相関は低そうです（逆向きにしか効かない？）。MSEを計算します。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;est.lasso.Y &amp;lt;- predict(trial2, newx = as.matrix(testdata[,-1]), s = trial2$lambda.min, type = &amp;#39;response&amp;#39;)
-mse.lasso &amp;lt;- sum((Y - est.lasso.Y)^2) / length(Y)
-mse.lasso&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## [1] 0.1318541&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;code&gt;lasso&lt;/code&gt;回帰のほうが良い結果になりました。&lt;code&gt;lasso&lt;/code&gt;回帰で計算した予測値と実績値を時系列プロットしてみます。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(tidyverse)
+## Residual standard error: 0.2953 on 143 degrees of freedom
+## Multiple R-squared:  0.9218,	Adjusted R-squared:  0.9158 
+## F-statistic: 153.2 on 11 and 143 DF,  p-value: &amp;lt; 2.2e-16
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;自由度修正済み決定係数高めですね。2015/12/31までのモデルを使って、アウトサンプルのデータ(2016/01/01~)を予測し、平均二乗誤差を計算します。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;est.OLS.Y &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;predict&lt;/span&gt;(trial1,testdata[,&lt;span style=&#34;color:#ae81ff&#34;&gt;-1&lt;/span&gt;])
+Y &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;as.matrix&lt;/span&gt;(testdata[,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;])
+mse.OLS &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;sum&lt;/span&gt;((Y &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; est.OLS.Y)^2) &lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;length&lt;/span&gt;(Y)
+mse.OLS
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## [1] 0.2422673
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;次に&lt;code&gt;lasso&lt;/code&gt;回帰です。Cross Validationを行い、$\lambda$を決める&lt;code&gt;glmnet&lt;/code&gt;パッケージの&lt;code&gt;cv.glmnet&lt;/code&gt;関数を使用します。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# fitting lasso regression&lt;/span&gt;
+&lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(glmnet)
+trial2 &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;cv.glmnet&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;as.matrix&lt;/span&gt;(traindata[,&lt;span style=&#34;color:#ae81ff&#34;&gt;-1&lt;/span&gt;]),&lt;span style=&#34;color:#a6e22e&#34;&gt;as.matrix&lt;/span&gt;(traindata[,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;]),family&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;gaussian&amp;#34;&lt;/span&gt;,alpha&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)
+&lt;span style=&#34;color:#a6e22e&#34;&gt;plot&lt;/span&gt;(trial2)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../post/post14/index_files/figure-html/unnamed-chunk-4-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;trial2&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;lambda.min
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## [1] 0.000436523
+&lt;/code&gt;&lt;/pre&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;coef&lt;/span&gt;(trial2,s&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;trial2&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;lambda.min)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## 12 x 1 sparse Matrix of class &amp;quot;dgCMatrix&amp;quot;
+##                          s1
+## (Intercept)   12.6534378623
+## FEDFUNDS      -0.1102828579
+## CPIAUCSL      -0.0620847662
+## UNRATE        -0.1986570797
+## TB3MS          0.2163014268
+## INDPRO        -0.0660285269
+## T10YIEM        1.1674773831
+## TWEXBMTH      -0.0241845518
+## RECPROUSM156N -0.0099694305
+## BAA            0.7626872357
+## T5YIFRM       -0.4561364454
+## PCE            0.0008164901
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;Unemployment Rate&lt;/code&gt;、&lt;code&gt;3-Month Treasury Bill&lt;/code&gt;、&lt;code&gt;Breakeven Inflation Rate、Moody&#39;s Seasoned Baa Corporate Bond Yield&lt;/code&gt;、&lt;code&gt;Inflation Expectation Rate&lt;/code&gt;の回帰係数が大きくなるという結果ですね。失業率以外は想定内の結果です。ただ、今回の結果を見る限り景気との相関は低そうです（逆向きにしか効かない？）。MSEを計算します。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;est.lasso.Y &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;predict&lt;/span&gt;(trial2, newx &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;as.matrix&lt;/span&gt;(testdata[,&lt;span style=&#34;color:#ae81ff&#34;&gt;-1&lt;/span&gt;]), s &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; trial2&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;lambda.min, type &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;response&amp;#39;&lt;/span&gt;)
+mse.lasso &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;sum&lt;/span&gt;((Y &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; est.lasso.Y)^2) &lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;length&lt;/span&gt;(Y)
+mse.lasso
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## [1] 0.2171154
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;lasso&lt;/code&gt;回帰のほうが良い結果になりました。&lt;code&gt;lasso&lt;/code&gt;回帰で計算した予測値と実績値を時系列プロットしてみます。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(tidyverse)
 
-ggplot(gather(data.frame(actual=Y[,1],lasso_prediction=est.lasso.Y[,1],OLS_prediction=est.OLS.Y,date=as.POSIXct(rownames(Y))),key=data,value=rate,-date),aes(x=date,y=rate, colour=data)) +
-  geom_line(size=1.5) +
-  scale_x_datetime(breaks = &amp;quot;6 month&amp;quot;,date_labels = &amp;quot;%Y-%m&amp;quot;) +
-  scale_y_continuous(breaks=c(1,1.5,2,2.5,3,3.5),limits = c(1.25,3.5))&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-6-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;span style=&#34;color:#a6e22e&#34;&gt;ggplot&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;gather&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;data.frame&lt;/span&gt;(actual&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;Y[,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;],lasso_prediction&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;est.lasso.Y[,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;],OLS_prediction&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;est.OLS.Y,date&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;as.POSIXct&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;rownames&lt;/span&gt;(Y))),key&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;data,value&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;rate,&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;date),&lt;span style=&#34;color:#a6e22e&#34;&gt;aes&lt;/span&gt;(x&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;date,y&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;rate, colour&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;data)) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;geom_line&lt;/span&gt;(size&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1.5&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;scale_x_datetime&lt;/span&gt;(breaks &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;6 month&amp;#34;&lt;/span&gt;,date_labels &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%Y-%m&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;scale_y_continuous&lt;/span&gt;(breaks&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;1.5&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;2.5&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;3.5&lt;/span&gt;),limits &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1.25&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;3.5&lt;/span&gt;))
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../post/post14/index_files/figure-html/unnamed-chunk-6-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
 &lt;p&gt;方向感はいい感じです。一方で、2016年1月からや2018年12月以降の急激な金利低下は予測できていません。この部分については何か変数を考えるorローリング推計を実施する、のいずれかをやってみないと精度が上がらなそうです。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div id=&#34;日次解析パート&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;3. 日次解析パート&lt;/h2&gt;
+&lt;h2 id=&#34;3-日次解析パート&#34;&gt;3. 日次解析パート&lt;/h2&gt;
 &lt;p&gt;月次での解析に加えて日次での解析もやりたいとおもいます。日次データであればデータの公表は市場が閉まり次第の場合が多いので、いわゆる&lt;code&gt;jagged edge&lt;/code&gt;の問題が起こりにくいと思います。まずは日次データの収集から始めます。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# data name collected
-symbols.name &amp;lt;- c(&amp;quot;10-Year Treasury Constant Maturity Rate&amp;quot;,&amp;quot;Effective Federal Funds Rate&amp;quot;,&amp;quot;
-6-Month London Interbank Offered Rate (LIBOR), based on U.S. Dollar&amp;quot;,&amp;quot;NASDAQ Composite Index&amp;quot;,&amp;quot;3-Month Treasury Bill: Secondary Market Rate&amp;quot;,&amp;quot;Economic Policy Uncertainty Index for United States&amp;quot;,&amp;quot;
-10-Year Breakeven Inflation Rate&amp;quot;,&amp;quot;Trade Weighted U.S. Dollar Index: Broad, Goods&amp;quot;,&amp;quot;Moody&amp;#39;s Seasoned Baa Corporate Bond Yield&amp;quot;,&amp;quot;5-Year, 5-Year Forward Inflation Expectation Rate&amp;quot;)
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# data name collected&lt;/span&gt;
+symbols.name &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;10-Year Treasury Constant Maturity Rate&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Effective Federal Funds Rate&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;NASDAQ Composite Index&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;3-Month Treasury Bill: Secondary Market Rate&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Economic Policy Uncertainty Index for United States&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;10-Year Breakeven Inflation Rate&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Trade Weighted U.S. Dollar Index: Broad, Goods&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Moody&amp;#39;s Seasoned Baa Corporate Bond Yield&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;5-Year, 5-Year Forward Inflation Expectation Rate&amp;#34;&lt;/span&gt;)
 
-# Collect economic data
-symbols &amp;lt;- c(&amp;quot;DGS10&amp;quot;,&amp;quot;DFF&amp;quot;,&amp;quot;USD6MTD156N&amp;quot;,&amp;quot;NASDAQCOM&amp;quot;,&amp;quot;DTB3&amp;quot;,&amp;quot;USEPUINDXD&amp;quot;,&amp;quot;T10YIE&amp;quot;,&amp;quot;DTWEXB&amp;quot;,&amp;quot;DBAA&amp;quot;,&amp;quot;T5YIFR&amp;quot;)
-getSymbols(symbols, from = &amp;#39;1980-01-01&amp;#39;, src = &amp;quot;FRED&amp;quot;, auto.assign = TRUE)&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;##  [1] &amp;quot;DGS10&amp;quot;       &amp;quot;DFF&amp;quot;         &amp;quot;USD6MTD156N&amp;quot; &amp;quot;NASDAQCOM&amp;quot;   &amp;quot;DTB3&amp;quot;       
-##  [6] &amp;quot;USEPUINDXD&amp;quot;  &amp;quot;T10YIE&amp;quot;      &amp;quot;DTWEXB&amp;quot;      &amp;quot;DBAA&amp;quot;        &amp;quot;T5YIFR&amp;quot;&lt;/code&gt;&lt;/pre&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;NASDAQCOM.r &amp;lt;- ROC(na.omit(NASDAQCOM))
-macro_indicator.d &amp;lt;- merge(DGS10,DFF,USD6MTD156N,NASDAQCOM.r,DTB3,USEPUINDXD,T10YIE,DTWEXB,DBAA,T5YIFR)
-rm(DGS10,DFF,USD6MTD156N,NASDAQCOM,NASDAQCOM.r,DTB3,USEPUINDXD,T10YIE,DTWEXB,DBAA,T5YIFR)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;次にデータセットを構築します。学習用と訓練用にデータを分けます。実際の予測プロセスを考え、2営業日前のデータを説明変数に用いています。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# make dataset
-traindata.d &amp;lt;- na.omit(merge(macro_indicator.d[&amp;quot;1980-01-01::2010-12-31&amp;quot;][,1],stats::lag(macro_indicator.d[&amp;quot;1980-01-01::2010-12-31&amp;quot;][,-1],2)))
-testdata.d  &amp;lt;- na.omit(merge(macro_indicator.d[&amp;quot;2010-01-01::&amp;quot;][,1],stats::lag(macro_indicator.d[&amp;quot;2010-01-01::&amp;quot;][,-1],2)))
+&lt;span style=&#34;color:#75715e&#34;&gt;# Collect economic data&lt;/span&gt;
+symbols &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;DGS10&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;DFF&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;NASDAQCOM&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;DTB3&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;USEPUINDXD&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;T10YIE&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;DTWEXB&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;DBAA&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;T5YIFR&amp;#34;&lt;/span&gt;)
+&lt;span style=&#34;color:#a6e22e&#34;&gt;getSymbols&lt;/span&gt;(symbols, from &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;1980-01-01&amp;#39;&lt;/span&gt;, src &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;FRED&amp;#34;&lt;/span&gt;, auto.assign &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TRUE&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;DGS10&amp;quot;      &amp;quot;DFF&amp;quot;        &amp;quot;NASDAQCOM&amp;quot;  &amp;quot;DTB3&amp;quot;       &amp;quot;USEPUINDXD&amp;quot;
+## [6] &amp;quot;T10YIE&amp;quot;     &amp;quot;DTWEXB&amp;quot;     &amp;quot;DBAA&amp;quot;       &amp;quot;T5YIFR&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;NASDAQCOM.r &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ROC&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;na.omit&lt;/span&gt;(NASDAQCOM))
+macro_indicator.d &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;merge&lt;/span&gt;(DGS10,DFF,NASDAQCOM.r,DTB3,USEPUINDXD,T10YIE,DTWEXB,DBAA,T5YIFR)
+&lt;span style=&#34;color:#a6e22e&#34;&gt;rm&lt;/span&gt;(DGS10,DFF,NASDAQCOM,NASDAQCOM.r,DTB3,USEPUINDXD,T10YIE,DTWEXB,DBAA,T5YIFR)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;次にデータセットを構築します。学習用と訓練用にデータを分けます。実際の予測プロセスを考え、2営業日前のデータを説明変数に用いています。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# make dataset&lt;/span&gt;
+traindata.d &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;na.omit&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;merge&lt;/span&gt;(macro_indicator.d[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;1980-01-01::2010-12-31&amp;#34;&lt;/span&gt;][,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;],stats&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;lag&lt;/span&gt;(macro_indicator.d[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;1980-01-01::2010-12-31&amp;#34;&lt;/span&gt;][,&lt;span style=&#34;color:#ae81ff&#34;&gt;-1&lt;/span&gt;],&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;)))
+testdata.d  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;na.omit&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;merge&lt;/span&gt;(macro_indicator.d[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;2010-01-01::&amp;#34;&lt;/span&gt;][,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;],stats&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;lag&lt;/span&gt;(macro_indicator.d[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;2010-01-01::&amp;#34;&lt;/span&gt;][,&lt;span style=&#34;color:#ae81ff&#34;&gt;-1&lt;/span&gt;],&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;)))
 
-# fitting OLS
-trial1.d &amp;lt;- lm(DGS10~.,data = traindata.d)
-summary(trial1.d)&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## 
+&lt;span style=&#34;color:#75715e&#34;&gt;# fitting OLS&lt;/span&gt;
+trial1.d &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;lm&lt;/span&gt;(DGS10&lt;span style=&#34;color:#f92672&#34;&gt;~&lt;/span&gt;.,data &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; traindata.d)
+&lt;span style=&#34;color:#a6e22e&#34;&gt;summary&lt;/span&gt;(trial1.d)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## 
 ## Call:
 ## lm(formula = DGS10 ~ ., data = traindata.d)
 ## 
 ## Residuals:
 ##      Min       1Q   Median       3Q      Max 
-## -0.82445 -0.12285  0.00469  0.14332  0.73789 
+## -0.81961 -0.12380  0.00509  0.14514  0.72712 
 ## 
 ## Coefficients:
 ##               Estimate Std. Error t value Pr(&amp;gt;|t|)    
-## (Intercept) -3.5051208  0.1690503 -20.734  &amp;lt; 2e-16 ***
-## DFF          0.0818269  0.0239371   3.418 0.000653 ***
-## USD6MTD156N -0.0135771  0.0233948  -0.580 0.561799    
-## NASDAQCOM   -0.3880217  0.4367334  -0.888 0.374483    
-## DTB3         0.1227984  0.0280283   4.381 1.29e-05 ***
-## USEPUINDXD  -0.0006611  0.0001086  -6.087 1.58e-09 ***
-## T10YIE       0.6980971  0.0355734  19.624  &amp;lt; 2e-16 ***
-## DTWEXB       0.0270128  0.0012781  21.135  &amp;lt; 2e-16 ***
-## DBAA         0.2988122  0.0182590  16.365  &amp;lt; 2e-16 ***
-## T5YIFR       0.3374944  0.0381111   8.856  &amp;lt; 2e-16 ***
+## (Intercept) -3.5168438  0.1664198 -21.132  &amp;lt; 2e-16 ***
+## DFF          0.0770736  0.0217208   3.548 0.000403 ***
+## NASDAQCOM   -0.4301865  0.4280568  -1.005 0.315121    
+## DTB3         0.1137128  0.0238678   4.764 2.14e-06 ***
+## USEPUINDXD  -0.0006591  0.0001073  -6.144 1.11e-09 ***
+## T10YIE       0.6957403  0.0351666  19.784  &amp;lt; 2e-16 ***
+## DTWEXB       0.0276208  0.0010896  25.350  &amp;lt; 2e-16 ***
+## DBAA         0.2879946  0.0131335  21.928  &amp;lt; 2e-16 ***
+## T5YIFR       0.3433321  0.0376058   9.130  &amp;lt; 2e-16 ***
 ## ---
-## Signif. codes:  0 &amp;#39;***&amp;#39; 0.001 &amp;#39;**&amp;#39; 0.01 &amp;#39;*&amp;#39; 0.05 &amp;#39;.&amp;#39; 0.1 &amp;#39; &amp;#39; 1
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
-## Residual standard error: 0.2173 on 1114 degrees of freedom
-## Multiple R-squared:  0.8901, Adjusted R-squared:  0.8892 
-## F-statistic:  1002 on 9 and 1114 DF,  p-value: &amp;lt; 2.2e-16&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;依然決定係数は高めです。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;est.OLS.Y.d &amp;lt;- predict(trial1.d,testdata.d[,-1])
-Y.d &amp;lt;- as.matrix(testdata.d[,1])
-mse.OLS.d &amp;lt;- sum((Y.d - est.OLS.Y.d)^2) / length(Y.d)
-mse.OLS.d&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## [1] 0.8003042&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;次に&lt;code&gt;lasso&lt;/code&gt;回帰です。&lt;code&gt;CV&lt;/code&gt;で&lt;span class=&#34;math inline&#34;&gt;\(\lambda\)&lt;/span&gt;を決定。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# fitting lasso regression
-trial2.d &amp;lt;- cv.glmnet(as.matrix(traindata.d[,-1]),as.matrix(traindata.d[,1]),family=&amp;quot;gaussian&amp;quot;,alpha=1)
-plot(trial2.d)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-10-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;trial2.d$lambda.min&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## [1] 0.001472377&lt;/code&gt;&lt;/pre&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;coef(trial2.d,s=trial2.d$lambda.min)&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## 10 x 1 sparse Matrix of class &amp;quot;dgCMatrix&amp;quot;
-##                         1
-## (Intercept) -3.4186530904
-## DFF          0.0707022021
-## USD6MTD156N  .           
-## NASDAQCOM   -0.2675513858
-## DTB3         0.1204092358
-## USEPUINDXD  -0.0006506183
-## T10YIE       0.6915446819
-## DTWEXB       0.0270389569
-## DBAA         0.2861031504
-## T5YIFR       0.3376304446&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;code&gt;libor&lt;/code&gt;の係数値が0になりました。MSEは&lt;code&gt;OLS&lt;/code&gt;の方が高い結果に。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;est.lasso.Y.d &amp;lt;- predict(trial2.d, newx = as.matrix(testdata.d[,-1]), s = trial2.d$lambda.min, type = &amp;#39;response&amp;#39;)
-mse.lasso.d &amp;lt;- sum((Y.d - est.lasso.Y.d)^2) / length(Y.d)
-mse.lasso.d&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## [1] 0.8378427&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;予測値をプロットします。&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggplot(gather(data.frame(actual=Y.d[,1],lasso_prediction=est.lasso.Y.d[,1],OLS_prediction=est.OLS.Y.d,date=as.POSIXct(rownames(Y.d))),key=data,value=rate,-date),aes(x=date,y=rate, colour=data)) +
-  geom_line(size=1.5) +
-  scale_x_datetime(breaks = &amp;quot;2 year&amp;quot;,date_labels = &amp;quot;%Y-%m&amp;quot;) +
-  scale_y_continuous(breaks=c(1,1.5,2,2.5,3,3.5),limits = c(1.25,5))&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-12-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+## Residual standard error: 0.2167 on 1148 degrees of freedom
+## Multiple R-squared:  0.8902,	Adjusted R-squared:  0.8894 
+## F-statistic:  1163 on 8 and 1148 DF,  p-value: &amp;lt; 2.2e-16
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;依然決定係数は高めです。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;est.OLS.Y.d &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;predict&lt;/span&gt;(trial1.d,testdata.d[,&lt;span style=&#34;color:#ae81ff&#34;&gt;-1&lt;/span&gt;])
+Y.d &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;as.matrix&lt;/span&gt;(testdata.d[,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;])
+mse.OLS.d &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;sum&lt;/span&gt;((Y.d &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; est.OLS.Y.d)^2) &lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;length&lt;/span&gt;(Y.d)
+mse.OLS.d
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## [1] 0.8350614
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;次に&lt;code&gt;lasso&lt;/code&gt;回帰です。&lt;code&gt;CV&lt;/code&gt;で$\lambda$を決定。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# fitting lasso regression&lt;/span&gt;
+trial2.d &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;cv.glmnet&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;as.matrix&lt;/span&gt;(traindata.d[,&lt;span style=&#34;color:#ae81ff&#34;&gt;-1&lt;/span&gt;]),&lt;span style=&#34;color:#a6e22e&#34;&gt;as.matrix&lt;/span&gt;(traindata.d[,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;]),family&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;gaussian&amp;#34;&lt;/span&gt;,alpha&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)
+&lt;span style=&#34;color:#a6e22e&#34;&gt;plot&lt;/span&gt;(trial2.d)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../post/post14/index_files/figure-html/unnamed-chunk-10-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;trial2.d&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;lambda.min
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## [1] 0.001339007
+&lt;/code&gt;&lt;/pre&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;coef&lt;/span&gt;(trial2.d,s&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;trial2.d&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;lambda.min)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## 9 x 1 sparse Matrix of class &amp;quot;dgCMatrix&amp;quot;
+##                        s1
+## (Intercept) -3.4297225594
+## DFF          0.0707532975
+## NASDAQCOM   -0.3512778327
+## DTB3         0.1204390843
+## USEPUINDXD  -0.0006453775
+## T10YIE       0.6894098221
+## DTWEXB       0.0272773903
+## DBAA         0.2831306290
+## T5YIFR       0.3411269206
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;libor&lt;/code&gt;の係数値が0になりました。MSEは&lt;code&gt;OLS&lt;/code&gt;の方が高い結果に。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;est.lasso.Y.d &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;predict&lt;/span&gt;(trial2.d, newx &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;as.matrix&lt;/span&gt;(testdata.d[,&lt;span style=&#34;color:#ae81ff&#34;&gt;-1&lt;/span&gt;]), s &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; trial2.d&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;lambda.min, type &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;response&amp;#39;&lt;/span&gt;)
+mse.lasso.d &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;sum&lt;/span&gt;((Y.d &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; est.lasso.Y.d)^2) &lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;length&lt;/span&gt;(Y.d)
+mse.lasso.d
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## [1] 0.8492769
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;予測値をプロットします。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;ggplot&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;gather&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;data.frame&lt;/span&gt;(actual&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;Y.d[,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;],lasso_prediction&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;est.lasso.Y.d[,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;],OLS_prediction&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;est.OLS.Y.d,date&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;as.POSIXct&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;rownames&lt;/span&gt;(Y.d))),key&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;data,value&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;rate,&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;date),&lt;span style=&#34;color:#a6e22e&#34;&gt;aes&lt;/span&gt;(x&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;date,y&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;rate, colour&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;data)) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;geom_line&lt;/span&gt;(size&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1.5&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;scale_x_datetime&lt;/span&gt;(breaks &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;2 year&amp;#34;&lt;/span&gt;,date_labels &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%Y-%m&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;scale_y_continuous&lt;/span&gt;(breaks&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;1.5&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;2.5&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;3.5&lt;/span&gt;),limits &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1.25&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;))
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../post/post14/index_files/figure-html/unnamed-chunk-12-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
 &lt;p&gt;月次と同じく、&lt;code&gt;OLS&lt;/code&gt;と&lt;code&gt;lasso&lt;/code&gt;で予測値に差はほとんどありません。なかなかいい感じに変動を捉えることができていますが、2011年の&lt;code&gt;United States federal government credit-rating downgrades&lt;/code&gt;による金利低下や2013年の景気回復に伴う金利上昇は捉えることができていません。日次の景気指標はPOSデータくらいしかないんですが、強いて言うなら最近使用した夜間光の衛星画像データなんかは使えるかもしれません。時間があればやってみます。とりあえず、いったんこれでこの記事は終わりたいと思います。ここまで読み進めていただき、ありがとうございました。&lt;/p&gt;
-&lt;/div&gt;
 </description>
     </item>
     

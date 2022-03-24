@@ -138,16 +138,15 @@ ggplot(gather(data.frame(actual=Y[,1],lasso_prediction=est.lasso.Y[,1],OLS_predi
 ```{r}
 
 # data name collected
-symbols.name <- c("10-Year Treasury Constant Maturity Rate","Effective Federal Funds Rate","
-6-Month London Interbank Offered Rate (LIBOR), based on U.S. Dollar","NASDAQ Composite Index","3-Month Treasury Bill: Secondary Market Rate","Economic Policy Uncertainty Index for United States","
+symbols.name <- c("10-Year Treasury Constant Maturity Rate","Effective Federal Funds Rate","NASDAQ Composite Index","3-Month Treasury Bill: Secondary Market Rate","Economic Policy Uncertainty Index for United States","
 10-Year Breakeven Inflation Rate","Trade Weighted U.S. Dollar Index: Broad, Goods","Moody's Seasoned Baa Corporate Bond Yield","5-Year, 5-Year Forward Inflation Expectation Rate")
 
 # Collect economic data
-symbols <- c("DGS10","DFF","USD6MTD156N","NASDAQCOM","DTB3","USEPUINDXD","T10YIE","DTWEXB","DBAA","T5YIFR")
+symbols <- c("DGS10","DFF","NASDAQCOM","DTB3","USEPUINDXD","T10YIE","DTWEXB","DBAA","T5YIFR")
 getSymbols(symbols, from = '1980-01-01', src = "FRED", auto.assign = TRUE)
 NASDAQCOM.r <- ROC(na.omit(NASDAQCOM))
-macro_indicator.d <- merge(DGS10,DFF,USD6MTD156N,NASDAQCOM.r,DTB3,USEPUINDXD,T10YIE,DTWEXB,DBAA,T5YIFR)
-rm(DGS10,DFF,USD6MTD156N,NASDAQCOM,NASDAQCOM.r,DTB3,USEPUINDXD,T10YIE,DTWEXB,DBAA,T5YIFR)
+macro_indicator.d <- merge(DGS10,DFF,NASDAQCOM.r,DTB3,USEPUINDXD,T10YIE,DTWEXB,DBAA,T5YIFR)
+rm(DGS10,DFF,NASDAQCOM,NASDAQCOM.r,DTB3,USEPUINDXD,T10YIE,DTWEXB,DBAA,T5YIFR)
   
 ```
 
@@ -181,7 +180,6 @@ trial2.d <- cv.glmnet(as.matrix(traindata.d[,-1]),as.matrix(traindata.d[,1]),fam
 plot(trial2.d)
 trial2.d$lambda.min
 coef(trial2.d,s=trial2.d$lambda.min)
-
 ```
 
 `libor`の係数値が0になりました。MSEは`OLS`の方が高い結果に。
@@ -195,14 +193,10 @@ mse.lasso.d
 予測値をプロットします。
 
 ```{r}
-
 ggplot(gather(data.frame(actual=Y.d[,1],lasso_prediction=est.lasso.Y.d[,1],OLS_prediction=est.OLS.Y.d,date=as.POSIXct(rownames(Y.d))),key=data,value=rate,-date),aes(x=date,y=rate, colour=data)) +
   geom_line(size=1.5) +
   scale_x_datetime(breaks = "2 year",date_labels = "%Y-%m") +
   scale_y_continuous(breaks=c(1,1.5,2,2.5,3,3.5),limits = c(1.25,5))
-
 ```
 
 月次と同じく、`OLS`と`lasso`で予測値に差はほとんどありません。なかなかいい感じに変動を捉えることができていますが、2011年の`United States federal government credit-rating downgrades`による金利低下や2013年の景気回復に伴う金利上昇は捉えることができていません。日次の景気指標はPOSデータくらいしかないんですが、強いて言うなら最近使用した夜間光の衛星画像データなんかは使えるかもしれません。時間があればやってみます。とりあえず、いったんこれでこの記事は終わりたいと思います。ここまで読み進めていただき、ありがとうございました。
-
-

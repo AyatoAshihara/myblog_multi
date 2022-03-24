@@ -17,7 +17,6 @@ projects: []
 summary: I did an analysis using alternative data.
 output: 
   blogdown::html_page:
-    number_sections: false
     toc: true
 ---
 
@@ -91,7 +90,7 @@ The `GeoJSON Feature`. It contains `Geometry` objects for geographic information
 
 Let's start with the coding. The first step is to get the `FeatureCollection` object for Japan. Geographical information is stored in the `Fusion Tables` and we extract the data whose country is Japan by ID. `FeatureCollection()`, we can get it easily by passing the ID as an argument to `ee`.
 
-```{python}
+```{python, eval=FALSE}
 import ee
 from dateutil.parser import parse
 
@@ -103,7 +102,7 @@ japan = ee.FeatureCollection('ft:1tdSwUL7MVpOauSgRzqVTOwdfy17KDbw-1d9omPw').filt
 
 Next, let's get a nighttime satellite image. `ImageCollection()` is also used to obtain a nighttime satellite image. `ImageCollection()`. Here, `band` is extracted to `avg_rad`, which is monthly average light intensity.
 
-```{python}
+```{python, eval=FALSE}
 # get night-light data from earth engine from 2014-01-01 to 2019-01-01
 dataset = ee.ImageCollection('NOAA/VIIRS/DNB/MONTHLY_V1/VCMSLCFG').filter(ee.Filter.date('2014-01-01','2019-01-01')).select('avg_rad')
 ```
@@ -130,7 +129,7 @@ Now that we have the image, we can't analyze it at this point. We will try to ge
 
 The left image is a satellite image at one point in time of the `ImageCollection` acquired earlier. The Earth Engine API provides the method `.reduceRegions()`, so you can use it. The arguments are: `reducer`=aggregation method (here, the total value), `collection`=region (a `FeatureCollection` object), and `scale`=resolution. Here, the first `Image` object in an `ImageCollection` (dataset) is called with the `.reduceRegions()` method.
 
-```{python}
+```{python, eval=FALSE}
 # initialize output box
 time0 = dataset.first().get('system:time_start');
 first = dataset.first().reduceRegions(reducer=ee.Reducer.sum(),collection=japan,scale=1000).set('time_start', time0)

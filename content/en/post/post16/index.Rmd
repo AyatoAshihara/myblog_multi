@@ -34,7 +34,7 @@ knitr::opts_chunk$set(message = FALSE)
 
 ```{python,include=FALSE}
 import os
-os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = 'C:/Users/aashi/Anaconda3/envs/umanalytics/Library/plugins/platforms'
+os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = r'C:\Users\aashi\Anaconda3\Library\plugins\platforms'
 ```
 
 ```{python,include=FALSE}
@@ -135,13 +135,6 @@ for column in cat_list:
     le.fit(target_column)
     label_encoded_column = le.transform(target_column)
     df[column] = pd.Series(label_encoded_column).astype('category')
-
-```
-
-```{python,eval=FALSE}
-import pandas_profiling as pdq
-profile = pdq.ProfileReport(df)
-profile
 ```
 
 ## 2. Creating a Model
@@ -159,7 +152,7 @@ x = df.drop(['order','passing_rank','time','odds','popularity','owner','farm','l
 X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.5, random_state=0)
 
 sampler = RandomUnderSampler(sampling_strategy={0: y_train.sum(), 1: y_train.sum()}, random_state=42)
-X_train_sampled, y_train_sampled = sampler.fit_sample(X_train, y_train)
+X_train_sampled, y_train_sampled = sampler.fit_resample(X_train, y_train)
 
 X_train_sampled, x_val, y_train_sampled, y_val = train_test_split(X_train_sampled, y_train_sampled, test_size=0.5, random_state=68)
 
@@ -172,9 +165,7 @@ lgbm_params = {
         'boost_from_average': False
     }
 
-best_params, history = {}, []
-model = lgb.train(lgbm_params, lgb_train, categorical_feature = cat_list,valid_sets = lgb_eval, num_boost_round=100,early_stopping_rounds=20,best_params=best_params,tuning_history=history, verbose_eval=False)
-best_params
+model = lgb.train(lgbm_params, lgb_train, categorical_feature = cat_list, valid_sets = lgb_eval, num_boost_round=100, early_stopping_rounds=20, verbose_eval=False)
 
 def calibration(y_proba, beta):
     return y_proba / (y_proba + (1 - y_proba) / beta)
@@ -184,7 +175,6 @@ y_proba = model.predict(X_test, num_iteration=model.best_iteration)
 y_proba_calib = calibration(y_proba, sampling_rate)
 
 y_pred = np.vectorize(lambda x: 1 if x > 0.49 else 0)(y_proba_calib)
-
 ```
 
 ```{python,eval=FALSE}
@@ -206,9 +196,7 @@ lgbm_params = {
         'boost_from_average': False
     }
 
-best_params, history = {}, []
-model = lgb.train(lgbm_params, lgb_train, categorical_feature = cat_list,valid_sets = lgb_eval, num_boost_round=100,early_stopping_rounds=20,best_params=best_params,tuning_history=history, verbose_eval=False)
-best_params
+model = lgb.train(lgbm_params, lgb_train, categorical_feature = cat_list, valid_sets = lgb_eval,  num_boost_round=100, early_stopping_rounds=20, verbose_eval=False)
 
 def calibration(y_proba, beta):
     return y_proba / (y_proba + (1 - y_proba) / beta)
@@ -218,38 +206,15 @@ y_proba = model.predict(X_test, num_iteration=model.best_iteration)
 y_proba_calib = calibration(y_proba, sampling_rate)
 
 y_pred = np.vectorize(lambda x: 1 if x > 0.49 else 0)(y_proba_calib)
-
 ```
 
 Visualization part.
 
 ```{python}
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, accuracy_score, precision_score, recall_score, f1_score, roc_curve, auc
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-# Calculating the AUC (Area Under the Curve)
-fpr, tpr, thresholds = roc_curve(y_test, y_pred)
-auc = auc(fpr, tpr)
-
-# Plot the ROC curve
-plt.plot(fpr, tpr, label='ROC curve (area = %.2f)'%auc)
-plt.legend()
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-plt.grid(True)
-plt.show()
-plt.close()
-
-# Generate a Confusion Matrix
-ConfusionMatrixDisplay(confusion_matrix(y_test, y_pred)).plot()
-plt.show()
-plt.close()
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
 accuracy_score(y_test, y_pred)
 precision_score(y_test, y_pred)
-
 ```
 
 The `accuracy_score` (prediction accuracy) is over 90% and the `precision_Score` (the percentage of data correct that predicted positive = 1) is good.

@@ -88,8 +88,8 @@
     
       
       
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/xcode.min.css" crossorigin="anonymous" title="hl-light">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/xcode.min.css" crossorigin="anonymous" title="hl-dark" disabled>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/solarized-dark.min.css" crossorigin="anonymous" title="hl-light">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/solarized-dark.min.css" crossorigin="anonymous" title="hl-dark" disabled>
       
     
 
@@ -698,10 +698,14 @@
 
       <nav id="TableOfContents">
   <ul>
-    <li><a href="#flexibility">Flexibility</a></li>
-    <li><a href="#delete-tutorials">Delete tutorials</a></li>
-    <li><a href="#update-site-menu">Update site menu</a></li>
-    <li><a href="#update-the-docs-menu">Update the docs menu</a></li>
+    <li>
+      <ul>
+        <li><a href="#flexibility">Flexibility</a></li>
+        <li><a href="#delete-tutorials">Delete tutorials</a></li>
+        <li><a href="#update-site-menu">Update site menu</a></li>
+        <li><a href="#update-the-docs-menu">Update the docs menu</a></li>
+      </ul>
+    </li>
   </ul>
 </nav>
 
@@ -827,6 +831,16 @@
 
       <footer class="site-footer">
   
+
+  
+   
+  <script>
+  $(document).ready(function () {
+    window.initializeCodeFolding("show" === "show");
+  });
+  </script>
+  <script src="../../../js/codefolding.js"></script>
+
 
   <p class="powered-by">
     
@@ -975,11 +989,9 @@
       
     
     
-      
     
     
-    
-    <script src="../../../js/wowchemy.min.2a3f95be2bc4762ba1847fb5d7a28317.js"></script>
+    <script src="../../../js/wowchemy.min.4c2bca31150ce93c5a5e43b8a50f22fd.js"></script>
 
     
 

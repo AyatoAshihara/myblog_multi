@@ -88,8 +88,8 @@
     
       
       
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/xcode.min.css" crossorigin="anonymous" title="hl-light">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/xcode.min.css" crossorigin="anonymous" title="hl-dark" disabled>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/solarized-dark.min.css" crossorigin="anonymous" title="hl-light">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/solarized-dark.min.css" crossorigin="anonymous" title="hl-dark" disabled>
       
     
 
@@ -672,9 +672,31 @@
 
 
 
-  <article class="article">
+  <div class="container-fluid docs">
+  <div class="row flex-xl-nowrap">
 
-  
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <ul class="nav toc-top">
+        <li><a href="#" id="back_to_top" class="docs-toc-title">Contents</a></li>
+      </ul>
+      <nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#1-data-collection">1. Data collection</a></li>
+        <li><a href="#2-monthly-analysis-part">2. Monthly Analysis Part</a></li>
+        <li><a href="#3-daily-analysis-part">3. Daily Analysis Part</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+      
+    </div>
+
+    <main class="col-12 col-md-0 col-xl-10 py-md-3 pl-md-5 docs-content" role="main">
+      <article class="article">
+
+        
 
 
 
@@ -703,6 +725,22 @@
   <h1>Fitting the 10-year long-term interest rate</h1>
 
   
+
+  
+
+
+<div id="code-folding-buttons" class="dropdown btn-group pull-right">
+  <a class="btn btn-light btn-sm dropdown-toggle" href="#" role="button" id="allCodeToggleButton"
+     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    Code
+  </a>
+  <div class="dropdown-menu" aria-labelledby="allCodeToggleButton">
+    <a id="rmd-show-all-code" class="dropdown-item small" href="#">Show all</a>
+    <a id="rmd-hide-all-code" class="dropdown-item small" href="#">Hide all</a>
+  </div>
+</div>
+
+
 
   
 
@@ -774,292 +812,272 @@
 
 
 
-  <div class="article-container">
+        <div class="article-container">
 
-    <div class="article-style">
-      
-<script src="index_files/header-attrs/header-attrs.js"></script>
+          <div class="article-style">
+            <p>Hi. I wanted to do a fitting of the 10 year long term interest rate for a certain reason. So, we will use US data to analyze the results. First, let&rsquo;s collect the data. We will use the <code>quantmod</code> package to drop the data from FRED. The command <code>getsymbols(key,from=start date,src=&quot;FRED&quot;, auto.assign=TRUE)</code> is easy to use. You can find the key on the FRED website.</p>
+<h2 id="1-data-collection">1. Data collection</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">library</span>(quantmod)
 
-<div id="TOC">
-<ul>
-<li><a href="#data-collection">1. Data collection</a></li>
-<li><a href="#monthly-analysis-part">2. Monthly Analysis Part</a></li>
-<li><a href="#daily-analysis-part">3. Daily Analysis Part</a></li>
-</ul>
-</div>
+<span style="color:#75715e"># data name collected</span>
+symbols.name <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;10-Year Treasury Constant Maturity Rate&#34;</span>,<span style="color:#e6db74">&#34;Effective Federal Funds Rate&#34;</span>,<span style="color:#e6db74">&#34;
+</span><span style="color:#e6db74">Consumer Price Index for All Urban Consumers: All Items&#34;</span>,<span style="color:#e6db74">&#34;Civilian Unemployment Rate&#34;</span>,<span style="color:#e6db74">&#34;3-Month Treasury Bill: Secondary Market Rate&#34;</span>,<span style="color:#e6db74">&#34;Industrial Production Index&#34;</span>,<span style="color:#e6db74">&#34;
+</span><span style="color:#e6db74">10-Year Breakeven Inflation Rate&#34;</span>,<span style="color:#e6db74">&#34;Trade Weighted U.S. Dollar Index: Broad, Goods&#34;</span>,<span style="color:#e6db74">&#34;
+</span><span style="color:#e6db74">Smoothed U.S. Recession Probabilities&#34;</span>,<span style="color:#e6db74">&#34;Moody&#39;s Seasoned Baa Corporate Bond Yield&#34;</span>,<span style="color:#e6db74">&#34;5-Year, 5-Year Forward Inflation Expectation Rate&#34;</span>,<span style="color:#e6db74">&#34;Personal Consumption Expenditures&#34;</span>)
 
-<p>Hi. I wanted to do a fitting of the 10 year long term interest rate for a certain reason. So, we will use US data to analyze the results. First, let’s collect the data. We will use the <code>quantmod</code> package to drop the data from FRED. The command <code>getsymbols(key,from=start date,src="FRED", auto.assign=TRUE)</code> is easy to use. You can find the key on the FRED website.</p>
-<div id="data-collection" class="section level2">
-<h2>1. Data collection</h2>
-<pre class="r"><code>library(quantmod)
-
-# data name collected
-symbols.name &lt;- c(&quot;10-Year Treasury Constant Maturity Rate&quot;,&quot;Effective Federal Funds Rate&quot;,&quot;
-Consumer Price Index for All Urban Consumers: All Items&quot;,&quot;Civilian Unemployment Rate&quot;,&quot;3-Month Treasury Bill: Secondary Market Rate&quot;,&quot;Industrial Production Index&quot;,&quot;
-10-Year Breakeven Inflation Rate&quot;,&quot;Trade Weighted U.S. Dollar Index: Broad, Goods&quot;,&quot;
-Smoothed U.S. Recession Probabilities&quot;,&quot;Moody&#39;s Seasoned Baa Corporate Bond Yield&quot;,&quot;5-Year, 5-Year Forward Inflation Expectation Rate&quot;,&quot;Personal Consumption Expenditures&quot;)
-
-# Collect economic data
-symbols &lt;- c(&quot;GS10&quot;,&quot;FEDFUNDS&quot;,&quot;CPIAUCSL&quot;,&quot;UNRATE&quot;,&quot;TB3MS&quot;,&quot;INDPRO&quot;,&quot;T10YIEM&quot;,&quot;TWEXBMTH&quot;,&quot;RECPROUSM156N&quot;,&quot;BAA&quot;,&quot;T5YIFRM&quot;,&quot;PCE&quot;)
-getSymbols(symbols, from = &#39;1980-01-01&#39;, src = &quot;FRED&quot;, auto.assign = TRUE)</code></pre>
-<pre><code>##  [1] &quot;GS10&quot;          &quot;FEDFUNDS&quot;      &quot;CPIAUCSL&quot;      &quot;UNRATE&quot;       
+<span style="color:#75715e"># Collect economic data</span>
+symbols <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;GS10&#34;</span>,<span style="color:#e6db74">&#34;FEDFUNDS&#34;</span>,<span style="color:#e6db74">&#34;CPIAUCSL&#34;</span>,<span style="color:#e6db74">&#34;UNRATE&#34;</span>,<span style="color:#e6db74">&#34;TB3MS&#34;</span>,<span style="color:#e6db74">&#34;INDPRO&#34;</span>,<span style="color:#e6db74">&#34;T10YIEM&#34;</span>,<span style="color:#e6db74">&#34;TWEXBMTH&#34;</span>,<span style="color:#e6db74">&#34;RECPROUSM156N&#34;</span>,<span style="color:#e6db74">&#34;BAA&#34;</span>,<span style="color:#e6db74">&#34;T5YIFRM&#34;</span>,<span style="color:#e6db74">&#34;PCE&#34;</span>)
+<span style="color:#a6e22e">getSymbols</span>(symbols, from <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;1980-01-01&#39;</span>, src <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;FRED&#34;</span>, auto.assign <span style="color:#f92672">=</span> <span style="color:#66d9ef">TRUE</span>)
+</code></pre></div><pre><code>##  [1] &quot;GS10&quot;          &quot;FEDFUNDS&quot;      &quot;CPIAUCSL&quot;      &quot;UNRATE&quot;       
 ##  [5] &quot;TB3MS&quot;         &quot;INDPRO&quot;        &quot;T10YIEM&quot;       &quot;TWEXBMTH&quot;     
-##  [9] &quot;RECPROUSM156N&quot; &quot;BAA&quot;           &quot;T5YIFRM&quot;       &quot;PCE&quot;</code></pre>
-<pre class="r"><code>macro_indicator &lt;- merge(GS10,FEDFUNDS,CPIAUCSL,UNRATE,TB3MS,INDPRO,T10YIEM,TWEXBMTH,RECPROUSM156N,BAA,T5YIFRM,PCE)
-rm(GS10,FEDFUNDS,CPIAUCSL,UNRATE,TB3MS,INDPRO,T10YIEM,TWEXBMTH,RECPROUSM156N,BAA,T5YIFRM,PCE,USEPUINDXD)</code></pre>
-</div>
-<div id="monthly-analysis-part" class="section level2">
-<h2>2. Monthly Analysis Part</h2>
+##  [9] &quot;RECPROUSM156N&quot; &quot;BAA&quot;           &quot;T5YIFRM&quot;       &quot;PCE&quot;
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">macro_indicator <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">merge</span>(GS10,FEDFUNDS,CPIAUCSL,UNRATE,TB3MS,INDPRO,T10YIEM,TWEXBMTH,RECPROUSM156N,BAA,T5YIFRM,PCE)
+<span style="color:#a6e22e">rm</span>(GS10,FEDFUNDS,CPIAUCSL,UNRATE,TB3MS,INDPRO,T10YIEM,TWEXBMTH,RECPROUSM156N,BAA,T5YIFRM,PCE,USEPUINDXD)
+</code></pre></div><h2 id="2-monthly-analysis-part">2. Monthly Analysis Part</h2>
 <p>The data are <a href="htmlwidget/macro_indicator.html">here</a>. We will create a dataset for the estimation. The dependent variable is the <code>10-Year Treasury Constant Maturity Rate(GS10)</code>. The explanatory variables are as follows</p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>explanatory variable</th>
 <th>key</th>
 <th>proxy variable</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Federal Funds Rate</td>
 <td>FEDFUNDS</td>
 <td>Short term rate</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Consumer Price Index</td>
 <td>CPIAUCSL</td>
 <td>Price</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Unemployment Rate</td>
 <td>UNRATE</td>
 <td>Employment</td>
 </tr>
-<tr class="even">
+<tr>
 <td>3-Month Treasury Bill</td>
 <td>TB3MS</td>
 <td>Short term rate</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Industrial Production Index</td>
 <td>INDPRO</td>
 <td>Business conditions</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Breakeven Inflation Rate</td>
 <td>T10YIEM</td>
 <td>Price</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Trade Weighted Dollar Index</td>
 <td>TWEXBMTH</td>
 <td>Exchange rates</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Recession Probabilities</td>
 <td>RECPROUSM156N</td>
 <td>Business condition</td>
 </tr>
-<tr class="odd">
-<td>Moody’s Seasoned Baa Corporate Bond Yield</td>
+<tr>
+<td>Moody&rsquo;s Seasoned Baa Corporate Bond Yield</td>
 <td>BAA</td>
 <td>Risk premium</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Inflation Expectation Rate</td>
 <td>T5YIFRM</td>
 <td>Price</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Personal Consumption Expenditures</td>
 <td>PCE</td>
 <td>Business condition</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Economic Policy Uncertainty Index</td>
 <td>USEPUINDXD</td>
 <td>Politics</td>
 </tr>
 </tbody>
 </table>
-<p>It’s a pretty appropriate choice of variables, but in many cases, we haven’t done it properly in terms of how to model long-term interest rates from a macro modeling perspective… In DSGE, we formulate the path of short-term interest rates linked to the path of short-term interest rates up to 10 years into the future according to the efficient market hypothesis and long-term interest rates equal to the path of short-term interest rates when I was a graduate student It was modeling (which seems to be done properly in macro finance circles). That’s why I’ve added short-term interest rates as an explanatory variable. And I also added three indicators for prices that would have an impact on the short-term interest rate. In addition, I added data on the economy because it is well known that it is highly correlated with the economy. This is due to the fact that in the first place, it is common in macro models to model short-term interest rates as following the Taylor rule.</p>
-<p><span class="math display">\[
+<p>It&rsquo;s a pretty appropriate choice of variables, but in many cases, we haven&rsquo;t done it properly in terms of how to model long-term interest rates from a macro modeling perspective&hellip; In DSGE, we formulate the path of short-term interest rates linked to the path of short-term interest rates up to 10 years into the future according to the efficient market hypothesis and long-term interest rates equal to the path of short-term interest rates when I was a graduate student It was modeling (which seems to be done properly in macro finance circles). That&rsquo;s why I&rsquo;ve added short-term interest rates as an explanatory variable. And I also added three indicators for prices that would have an impact on the short-term interest rate. In addition, I added data on the economy because it is well known that it is highly correlated with the economy. This is due to the fact that in the first place, it is common in macro models to model short-term interest rates as following the Taylor rule.</p>
+<p>$$
 r_t = \rho r_{t-1} + \alpha \pi_{t} + \beta y_{t}
-\]</span></p>
-<p>where <span class="math inline">\(r_t\)</span> is the policy interest rate (short-term interest rate), <span class="math inline">\(\pi_t\)</span> is the inflation rate, and <span class="math inline">\(y_t\)</span> is the output. The $R_rho, \\alpha, and <span class="math inline">\(y_t\)</span> are called deep parameters, which represent inertia, the sensitivity of the interest rate to inflation, and the sensitivity of the interest rate to output, respectively. It is well known as the “Taylor’s Principle” that when $, <span class="math inline">\(\beta=0\)</span>, a reasonably expected equilibrium solution can only be obtained when <span class="math inline">\(\alpha&gt;=1\)</span>. Other explanatory variables include <code>Moody's Seasoned Baa Corporate Bond Yield</code>, which may also have an arbitrage relationship with corporate bonds. Also, we would like to add the <code>VIX</code> index and an index related to finances if we wanted to. The fiscal index is either Quatery or Annualy and cannot be used for monthly estimation. This is the most difficult part. I will re-estimate if I come up with something.</p>
-<p>Now, let’s get into the estimation. Since there are many explanatory variables in this case, we want to do a <code>lasso</code> regression to narrow down the valid variables. We will also do an <code>OLS</code> for comparison. The explanatory variables will be the values of the dependent variable one period ago. Probably, even one period ago, depending on when the data are published, it may not be in time for the next month’s estimates, but I’ll do this anyway.</p>
-<pre class="r"><code># make dataset
-traindata &lt;- na.omit(merge(macro_indicator[&quot;2003-01-01::2015-12-31&quot;][,1],stats::lag(macro_indicator[&quot;2003-01-01::2015-12-31&quot;][,-1],1)))
-testdata  &lt;- na.omit(merge(macro_indicator[&quot;2016-01-01::&quot;][,1],stats::lag(macro_indicator[&quot;2016-01-01::&quot;][,-1],1)))
+$$</p>
+<p>where <code>\(r_t\)</code> is the policy interest rate (short-term interest rate), <code>\(\pi_t\)</code> is the inflation rate, and <code>\(y_t\)</code> is the output. The $R_rho, \\alpha, and <code>\(y_t\)</code> are called deep parameters, which represent inertia, the sensitivity of the interest rate to inflation, and the sensitivity of the interest rate to output, respectively. It is well known as the &ldquo;Taylor&rsquo;s Principle&rdquo; that when $\rho=0, <code>\(\beta=0\)</code>, a reasonably expected equilibrium solution can only be obtained when <code>\(\alpha&gt;=1\)</code>. Other explanatory variables include <code>Moody's Seasoned Baa Corporate Bond Yield</code>, which may also have an arbitrage relationship with corporate bonds. Also, we would like to add the <code>VIX</code> index and an index related to finances if we wanted to. The fiscal index is either Quatery or Annualy and cannot be used for monthly estimation. This is the most difficult part. I will re-estimate if I come up with something.</p>
+<p>Now, let&rsquo;s get into the estimation. Since there are many explanatory variables in this case, we want to do a <code>lasso</code> regression to narrow down the valid variables. We will also do an <code>OLS</code> for comparison. The explanatory variables will be the values of the dependent variable one period ago. Probably, even one period ago, depending on when the data are published, it may not be in time for the next month&rsquo;s estimates, but I&rsquo;ll do this anyway.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># make dataset</span>
+traindata <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">na.omit</span>(<span style="color:#a6e22e">merge</span>(macro_indicator[<span style="color:#e6db74">&#34;2003-01-01::2015-12-31&#34;</span>][,<span style="color:#ae81ff">1</span>],stats<span style="color:#f92672">::</span><span style="color:#a6e22e">lag</span>(macro_indicator[<span style="color:#e6db74">&#34;2003-01-01::2015-12-31&#34;</span>][,<span style="color:#ae81ff">-1</span>],<span style="color:#ae81ff">1</span>)))
+testdata  <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">na.omit</span>(<span style="color:#a6e22e">merge</span>(macro_indicator[<span style="color:#e6db74">&#34;2016-01-01::&#34;</span>][,<span style="color:#ae81ff">1</span>],stats<span style="color:#f92672">::</span><span style="color:#a6e22e">lag</span>(macro_indicator[<span style="color:#e6db74">&#34;2016-01-01::&#34;</span>][,<span style="color:#ae81ff">-1</span>],<span style="color:#ae81ff">1</span>)))
 
-# fitting OLS
-trial1 &lt;- lm(GS10~.,data = traindata)
-summary(trial1)</code></pre>
-<pre><code>## 
+<span style="color:#75715e"># fitting OLS</span>
+trial1 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">lm</span>(GS10<span style="color:#f92672">~</span>.,data <span style="color:#f92672">=</span> traindata)
+<span style="color:#a6e22e">summary</span>(trial1)
+</code></pre></div><pre><code>## 
 ## Call:
 ## lm(formula = GS10 ~ ., data = traindata)
 ## 
 ## Residuals:
-##      Min       1Q   Median       3Q      Max 
-## -0.76208 -0.21234  0.00187  0.21595  0.70493 
+##     Min      1Q  Median      3Q     Max 
+## -0.7593 -0.2182  0.0041  0.2143  0.7051 
 ## 
 ## Coefficients:
 ##                 Estimate Std. Error t value Pr(&gt;|t|)    
-## (Intercept)   14.3578405  4.3524691   3.299 0.001226 ** 
-## FEDFUNDS      -0.2011132  0.1438774  -1.398 0.164335    
-## CPIAUCSL      -0.0702011  0.0207761  -3.379 0.000938 ***
-## UNRATE        -0.2093502  0.0796052  -2.630 0.009477 ** 
-## TB3MS          0.2970160  0.1413796   2.101 0.037410 *  
-## INDPRO        -0.0645376  0.0260343  -2.479 0.014339 *  
-## T10YIEM        1.1484487  0.1769925   6.489 1.32e-09 ***
-## TWEXBMTH      -0.0317345  0.0118155  -2.686 0.008091 ** 
-## RECPROUSM156N -0.0099083  0.0021021  -4.713 5.72e-06 ***
-## BAA            0.7793520  0.0868628   8.972 1.49e-15 ***
-## T5YIFRM       -0.4551318  0.1897695  -2.398 0.017759 *  
-## PCE            0.0009087  0.0002475   3.672 0.000339 ***
+## (Intercept)   15.0576773  4.3419245   3.468 0.000693 ***
+## FEDFUNDS      -0.2075752  0.1413832  -1.468 0.144253    
+## CPIAUCSL      -0.0750111  0.0204871  -3.661 0.000352 ***
+## UNRATE        -0.2183796  0.0784608  -2.783 0.006109 ** 
+## TB3MS          0.3031085  0.1393904   2.175 0.031310 *  
+## INDPRO        -0.0705997  0.0263855  -2.676 0.008328 ** 
+## T10YIEM        1.1476564  0.1758964   6.525 1.10e-09 ***
+## TWEXBMTH      -0.0313911  0.0117338  -2.675 0.008338 ** 
+## RECPROUSM156N -0.0103854  0.0021233  -4.891 2.66e-06 ***
+## BAA            0.7802368  0.0858538   9.088 7.60e-16 ***
+## T5YIFRM       -0.4529529  0.1881510  -2.407 0.017342 *  
+## PCE            0.0009815  0.0002477   3.963 0.000116 ***
 ## ---
-## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
-## Residual standard error: 0.2981 on 143 degrees of freedom
-## Multiple R-squared:  0.9203, Adjusted R-squared:  0.9142 
-## F-statistic: 150.1 on 11 and 143 DF,  p-value: &lt; 2.2e-16</code></pre>
-<p>It’s a higher degree of freedom-adjusted coefficient of determination; we use the model through 12/31/2015 to predict the out-sample data (01/01/2016~) and calculate the mean squared error.</p>
-<pre class="r"><code>est.OLS.Y &lt;- predict(trial1,testdata[,-1])
-Y &lt;- as.matrix(testdata[,1])
-mse.OLS &lt;- sum((Y - est.OLS.Y)^2) / length(Y)
-mse.OLS</code></pre>
-<pre><code>## [1] 0.1431734</code></pre>
-<p>The next step is the <code>lasso</code> regression, using the <code>cv.glmnet</code> function of the <code>glmnet</code> package to perform Cross Validation and determine <span class="math inline">\(\lambda\)</span>.</p>
-<pre class="r"><code># fitting lasso regression
-library(glmnet)
-trial2 &lt;- cv.glmnet(as.matrix(traindata[,-1]),as.matrix(traindata[,1]),family=&quot;gaussian&quot;,alpha=1)
-plot(trial2)</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
-<pre class="r"><code>trial2$lambda.min</code></pre>
-<pre><code>## [1] 0.001214651</code></pre>
-<pre class="r"><code>coef(trial2,s=trial2$lambda.min)</code></pre>
-<pre><code>## 12 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
-##                           1
-## (Intercept)    8.4885375862
-## FEDFUNDS       .           
-## CPIAUCSL      -0.0378778837
-## UNRATE        -0.1693313660
-## TB3MS          0.1224641351
-## INDPRO        -0.0545965007
-## T10YIEM        1.1926554061
-## TWEXBMTH      -0.0140144490
-## RECPROUSM156N -0.0090706154
-## BAA            0.7389283529
-## T5YIFRM       -0.4638923964
-## PCE            0.0005014518</code></pre>
-<p><code>Unemployment Rate</code>, <code>3-Month Treasury Bill</code>, <code>Breakeven Inflation Rate</code>, <code>Moody's Seasoned Baa Corporate Bond Yield</code> and <code>Inflation Expectation Rate</code>. That’s the result of a larger regression coefficient. Other than the unemployment rate, the results are within expectations. However, the correlation with the economy seems to be low as far as this result is concerned (does it only work in the opposite direction?). Calculate the MSE.</p>
-<pre class="r"><code>est.lasso.Y &lt;- predict(trial2, newx = as.matrix(testdata[,-1]), s = trial2$lambda.min, type = &#39;response&#39;)
-mse.lasso &lt;- sum((Y - est.lasso.Y)^2) / length(Y)
-mse.lasso</code></pre>
-<pre><code>## [1] 0.1125487</code></pre>
-<p>The <code>lasso</code> regression gives better results. Let’s plot the predicted and actual values from the <code>lasso</code> regression as a time series.</p>
-<pre class="r"><code>library(tidyverse)
+## Residual standard error: 0.2953 on 143 degrees of freedom
+## Multiple R-squared:  0.9218,	Adjusted R-squared:  0.9158 
+## F-statistic: 153.2 on 11 and 143 DF,  p-value: &lt; 2.2e-16
+</code></pre><p>It&rsquo;s a higher degree of freedom-adjusted coefficient of determination; we use the model through 12/31/2015 to predict the out-sample data (01/01/2016~) and calculate the mean squared error.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">est.OLS.Y <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">predict</span>(trial1,testdata[,<span style="color:#ae81ff">-1</span>])
+Y <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.matrix</span>(testdata[,<span style="color:#ae81ff">1</span>])
+mse.OLS <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">sum</span>((Y <span style="color:#f92672">-</span> est.OLS.Y)^2) <span style="color:#f92672">/</span> <span style="color:#a6e22e">length</span>(Y)
+mse.OLS
+</code></pre></div><pre><code>## [1] 0.2422673
+</code></pre><p>The next step is the <code>lasso</code> regression, using the <code>cv.glmnet</code> function of the <code>glmnet</code> package to perform Cross Validation and determine <code>\(\lambda\)</code>.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># fitting lasso regression</span>
+<span style="color:#a6e22e">library</span>(glmnet)
+trial2 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">cv.glmnet</span>(<span style="color:#a6e22e">as.matrix</span>(traindata[,<span style="color:#ae81ff">-1</span>]),<span style="color:#a6e22e">as.matrix</span>(traindata[,<span style="color:#ae81ff">1</span>]),family<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;gaussian&#34;</span>,alpha<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>)
+<span style="color:#a6e22e">plot</span>(trial2)
+</code></pre></div><p><img src="../../../en/post/post14/index_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">trial2<span style="color:#f92672">$</span>lambda.min
+</code></pre></div><pre><code>## [1] 0.001106745
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">coef</span>(trial2,s<span style="color:#f92672">=</span>trial2<span style="color:#f92672">$</span>lambda.min)
+</code></pre></div><pre><code>## 12 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
+##                         s1
+## (Intercept)    9.560938684
+## FEDFUNDS      -0.007306457
+## CPIAUCSL      -0.045386980
+## UNRATE        -0.174775320
+## TB3MS          0.126669996
+## INDPRO        -0.059539752
+## T10YIEM        1.188103243
+## TWEXBMTH      -0.015425929
+## RECPROUSM156N -0.009488571
+## BAA            0.743677181
+## T5YIFRM       -0.459542956
+## PCE            0.000602374
+</code></pre><p><code>Unemployment Rate</code>, <code>3-Month Treasury Bill</code>, <code>Breakeven Inflation Rate</code>, <code>Moody's Seasoned Baa Corporate Bond Yield</code> and <code>Inflation Expectation Rate</code>. That&rsquo;s the result of a larger regression coefficient. Other than the unemployment rate, the results are within expectations. However, the correlation with the economy seems to be low as far as this result is concerned (does it only work in the opposite direction?). Calculate the MSE.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">est.lasso.Y <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">predict</span>(trial2, newx <span style="color:#f92672">=</span> <span style="color:#a6e22e">as.matrix</span>(testdata[,<span style="color:#ae81ff">-1</span>]), s <span style="color:#f92672">=</span> trial2<span style="color:#f92672">$</span>lambda.min, type <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;response&#39;</span>)
+mse.lasso <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">sum</span>((Y <span style="color:#f92672">-</span> est.lasso.Y)^2) <span style="color:#f92672">/</span> <span style="color:#a6e22e">length</span>(Y)
+mse.lasso
+</code></pre></div><pre><code>## [1] 0.1842137
+</code></pre><p>The <code>lasso</code> regression gives better results. Let&rsquo;s plot the predicted and actual values from the <code>lasso</code> regression as a time series.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">library</span>(tidyverse)
 
-ggplot(gather(data.frame(actual=Y[,1],lasso_prediction=est.lasso.Y[,1],OLS_prediction=est.OLS.Y,date=as.POSIXct(rownames(Y))),key=data,value=rate,-date),aes(x=date,y=rate, colour=data)) +
-  geom_line(size=1.5) +
-  scale_x_datetime(breaks = &quot;6 month&quot;,date_labels = &quot;%Y-%m&quot;) +
-  scale_y_continuous(breaks=c(1,1.5,2,2.5,3,3.5),limits = c(1.25,3.5))</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
-<p>The sense of direction is good. On the other hand, I am not predicting a sharp decline in interest rates from January 2016 or after December 2018. It looks like we’ll have to try to do one of the following to improve the accuracy of this part of the projections: consider some variables OR run a rolling estimate.</p>
-</div>
-<div id="daily-analysis-part" class="section level2">
-<h2>3. Daily Analysis Part</h2>
+<span style="color:#a6e22e">ggplot</span>(<span style="color:#a6e22e">gather</span>(<span style="color:#a6e22e">data.frame</span>(actual<span style="color:#f92672">=</span>Y[,<span style="color:#ae81ff">1</span>],lasso_prediction<span style="color:#f92672">=</span>est.lasso.Y[,<span style="color:#ae81ff">1</span>],OLS_prediction<span style="color:#f92672">=</span>est.OLS.Y,date<span style="color:#f92672">=</span><span style="color:#a6e22e">as.POSIXct</span>(<span style="color:#a6e22e">rownames</span>(Y))),key<span style="color:#f92672">=</span>data,value<span style="color:#f92672">=</span>rate,<span style="color:#f92672">-</span>date),<span style="color:#a6e22e">aes</span>(x<span style="color:#f92672">=</span>date,y<span style="color:#f92672">=</span>rate, colour<span style="color:#f92672">=</span>data)) <span style="color:#f92672">+</span>
+  <span style="color:#a6e22e">geom_line</span>(size<span style="color:#f92672">=</span><span style="color:#ae81ff">1.5</span>) <span style="color:#f92672">+</span>
+  <span style="color:#a6e22e">scale_x_datetime</span>(breaks <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;6 month&#34;</span>,date_labels <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;%Y-%m&#34;</span>) <span style="color:#f92672">+</span>
+  <span style="color:#a6e22e">scale_y_continuous</span>(breaks<span style="color:#f92672">=</span><span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">1.5</span>,<span style="color:#ae81ff">2</span>,<span style="color:#ae81ff">2.5</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3.5</span>),limits <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1.25</span>,<span style="color:#ae81ff">3.5</span>))
+</code></pre></div><p><img src="../../../en/post/post14/index_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p>The sense of direction is good. On the other hand, I am not predicting a sharp decline in interest rates from January 2016 or after December 2018. It looks like we&rsquo;ll have to try to do one of the following to improve the accuracy of this part of the projections: consider some variables OR run a rolling estimate.</p>
+<h2 id="3-daily-analysis-part">3. Daily Analysis Part</h2>
 <p>In addition to monthly analysis, I would like to do daily analysis. In the case of daily data, the <code>jagged edge</code> problem is unlikely to occur because the data is often released after the market closes. We will start by collecting daily data.</p>
-<pre class="r"><code># data name collected
-symbols.name &lt;- c(&quot;10-Year Treasury Constant Maturity Rate&quot;,&quot;Effective Federal Funds Rate&quot;,&quot;
-6-Month London Interbank Offered Rate (LIBOR), based on U.S. Dollar&quot;,&quot;NASDAQ Composite Index&quot;,&quot;3-Month Treasury Bill: Secondary Market Rate&quot;,&quot;Economic Policy Uncertainty Index for United States&quot;,&quot;
-10-Year Breakeven Inflation Rate&quot;,&quot;Trade Weighted U.S. Dollar Index: Broad, Goods&quot;,&quot;Moody&#39;s Seasoned Baa Corporate Bond Yield&quot;,&quot;5-Year, 5-Year Forward Inflation Expectation Rate&quot;)
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># data name collected</span>
+symbols.name <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;10-Year Treasury Constant Maturity Rate&#34;</span>,<span style="color:#e6db74">&#34;Effective Federal Funds Rate&#34;</span>, <span style="color:#e6db74">&#34;based on U.S. Dollar&#34;</span>,<span style="color:#e6db74">&#34;NASDAQ Composite Index&#34;</span>,<span style="color:#e6db74">&#34;3-Month Treasury Bill: Secondary Market Rate&#34;</span>,<span style="color:#e6db74">&#34;Economic Policy Uncertainty Index for United States&#34;</span>,<span style="color:#e6db74">&#34;
+</span><span style="color:#e6db74">10-Year Breakeven Inflation Rate&#34;</span>,<span style="color:#e6db74">&#34;Trade Weighted U.S. Dollar Index: Broad, Goods&#34;</span>,<span style="color:#e6db74">&#34;Moody&#39;s Seasoned Baa Corporate Bond Yield&#34;</span>,<span style="color:#e6db74">&#34;5-Year, 5-Year Forward Inflation Expectation Rate&#34;</span>)
 
-# Collect economic data
-symbols &lt;- c(&quot;DGS10&quot;,&quot;DFF&quot;,&quot;USD6MTD156N&quot;,&quot;NASDAQCOM&quot;,&quot;DTB3&quot;,&quot;USEPUINDXD&quot;,&quot;T10YIE&quot;,&quot;DTWEXB&quot;,&quot;DBAA&quot;,&quot;T5YIFR&quot;)
-getSymbols(symbols, from = &#39;1980-01-01&#39;, src = &quot;FRED&quot;, auto.assign = TRUE)</code></pre>
-<pre><code>##  [1] &quot;DGS10&quot;       &quot;DFF&quot;         &quot;USD6MTD156N&quot; &quot;NASDAQCOM&quot;   &quot;DTB3&quot;       
-##  [6] &quot;USEPUINDXD&quot;  &quot;T10YIE&quot;      &quot;DTWEXB&quot;      &quot;DBAA&quot;        &quot;T5YIFR&quot;</code></pre>
-<pre class="r"><code>NASDAQCOM.r &lt;- ROC(na.omit(NASDAQCOM))
-macro_indicator.d &lt;- merge(DGS10,DFF,USD6MTD156N,NASDAQCOM.r,DTB3,USEPUINDXD,T10YIE,DTWEXB,DBAA,T5YIFR)
-rm(DGS10,DFF,USD6MTD156N,NASDAQCOM,NASDAQCOM.r,DTB3,USEPUINDXD,T10YIE,DTWEXB,DBAA,T5YIFR)</code></pre>
-<p>The next step is to build the data set. We separate the data for training and for training. Considering the actual prediction process, we use data from two business days ago as the explanatory variables.</p>
-<pre class="r"><code># make dataset
-traindata.d &lt;- na.omit(merge(macro_indicator.d[&quot;1980-01-01::2010-12-31&quot;][,1],stats::lag(macro_indicator.d[&quot;1980-01-01::2010-12-31&quot;][,-1],2)))
-testdata.d  &lt;- na.omit(merge(macro_indicator.d[&quot;2010-01-01::&quot;][,1],stats::lag(macro_indicator.d[&quot;2010-01-01::&quot;][,-1],2)))
+<span style="color:#75715e"># Collect economic data</span>
+symbols <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;DGS10&#34;</span>,<span style="color:#e6db74">&#34;DFF&#34;</span>,<span style="color:#e6db74">&#34;NASDAQCOM&#34;</span>,<span style="color:#e6db74">&#34;DTB3&#34;</span>,<span style="color:#e6db74">&#34;USEPUINDXD&#34;</span>,<span style="color:#e6db74">&#34;T10YIE&#34;</span>,<span style="color:#e6db74">&#34;DTWEXB&#34;</span>,<span style="color:#e6db74">&#34;DBAA&#34;</span>,<span style="color:#e6db74">&#34;T5YIFR&#34;</span>)
+<span style="color:#a6e22e">getSymbols</span>(symbols, from <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;1980-01-01&#39;</span>, src <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;FRED&#34;</span>, auto.assign <span style="color:#f92672">=</span> <span style="color:#66d9ef">TRUE</span>)
+</code></pre></div><pre><code>## [1] &quot;DGS10&quot;      &quot;DFF&quot;        &quot;NASDAQCOM&quot;  &quot;DTB3&quot;       &quot;USEPUINDXD&quot;
+## [6] &quot;T10YIE&quot;     &quot;DTWEXB&quot;     &quot;DBAA&quot;       &quot;T5YIFR&quot;
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">NASDAQCOM.r <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ROC</span>(<span style="color:#a6e22e">na.omit</span>(NASDAQCOM))
+macro_indicator.d <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">merge</span>(DGS10,DFF,NASDAQCOM.r,DTB3,USEPUINDXD,T10YIE,DTWEXB,DBAA,T5YIFR)
+<span style="color:#a6e22e">rm</span>(DGS10,DFF,NASDAQCOM,NASDAQCOM.r,DTB3,USEPUINDXD,T10YIE,DTWEXB,DBAA,T5YIFR)
+</code></pre></div><p>The next step is to build the data set. We separate the data for training and for training. Considering the actual prediction process, we use data from two business days ago as the explanatory variables.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># make dataset</span>
+traindata.d <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">na.omit</span>(<span style="color:#a6e22e">merge</span>(macro_indicator.d[<span style="color:#e6db74">&#34;1980-01-01::2010-12-31&#34;</span>][,<span style="color:#ae81ff">1</span>],stats<span style="color:#f92672">::</span><span style="color:#a6e22e">lag</span>(macro_indicator.d[<span style="color:#e6db74">&#34;1980-01-01::2010-12-31&#34;</span>][,<span style="color:#ae81ff">-1</span>],<span style="color:#ae81ff">2</span>)))
+testdata.d  <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">na.omit</span>(<span style="color:#a6e22e">merge</span>(macro_indicator.d[<span style="color:#e6db74">&#34;2010-01-01::&#34;</span>][,<span style="color:#ae81ff">1</span>],stats<span style="color:#f92672">::</span><span style="color:#a6e22e">lag</span>(macro_indicator.d[<span style="color:#e6db74">&#34;2010-01-01::&#34;</span>][,<span style="color:#ae81ff">-1</span>],<span style="color:#ae81ff">2</span>)))
 
-# fitting OLS
-trial1.d &lt;- lm(DGS10~.,data = traindata.d)
-summary(trial1.d)</code></pre>
-<pre><code>## 
+<span style="color:#75715e"># fitting OLS</span>
+trial1.d <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">lm</span>(DGS10<span style="color:#f92672">~</span>.,data <span style="color:#f92672">=</span> traindata.d)
+<span style="color:#a6e22e">summary</span>(trial1.d)
+</code></pre></div><pre><code>## 
 ## Call:
 ## lm(formula = DGS10 ~ ., data = traindata.d)
 ## 
 ## Residuals:
 ##      Min       1Q   Median       3Q      Max 
-## -0.82445 -0.12285  0.00469  0.14332  0.73789 
+## -0.81961 -0.12380  0.00509  0.14514  0.72712 
 ## 
 ## Coefficients:
 ##               Estimate Std. Error t value Pr(&gt;|t|)    
-## (Intercept) -3.5051208  0.1690503 -20.734  &lt; 2e-16 ***
-## DFF          0.0818269  0.0239371   3.418 0.000653 ***
-## USD6MTD156N -0.0135771  0.0233948  -0.580 0.561799    
-## NASDAQCOM   -0.3880217  0.4367334  -0.888 0.374483    
-## DTB3         0.1227984  0.0280283   4.381 1.29e-05 ***
-## USEPUINDXD  -0.0006611  0.0001086  -6.087 1.58e-09 ***
-## T10YIE       0.6980971  0.0355734  19.624  &lt; 2e-16 ***
-## DTWEXB       0.0270128  0.0012781  21.135  &lt; 2e-16 ***
-## DBAA         0.2988122  0.0182590  16.365  &lt; 2e-16 ***
-## T5YIFR       0.3374944  0.0381111   8.856  &lt; 2e-16 ***
+## (Intercept) -3.5168438  0.1664198 -21.132  &lt; 2e-16 ***
+## DFF          0.0770736  0.0217208   3.548 0.000403 ***
+## NASDAQCOM   -0.4301865  0.4280568  -1.005 0.315121    
+## DTB3         0.1137128  0.0238678   4.764 2.14e-06 ***
+## USEPUINDXD  -0.0006591  0.0001073  -6.144 1.11e-09 ***
+## T10YIE       0.6957403  0.0351666  19.784  &lt; 2e-16 ***
+## DTWEXB       0.0276208  0.0010896  25.350  &lt; 2e-16 ***
+## DBAA         0.2879946  0.0131335  21.928  &lt; 2e-16 ***
+## T5YIFR       0.3433321  0.0376058   9.130  &lt; 2e-16 ***
 ## ---
-## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
-## Residual standard error: 0.2173 on 1114 degrees of freedom
-## Multiple R-squared:  0.8901, Adjusted R-squared:  0.8892 
-## F-statistic:  1002 on 9 and 1114 DF,  p-value: &lt; 2.2e-16</code></pre>
-<p>The coefficient of determination remains high.</p>
-<pre class="r"><code>est.OLS.Y.d &lt;- predict(trial1.d,testdata.d[,-1])
-Y.d &lt;- as.matrix(testdata.d[,1])
-mse.OLS.d &lt;- sum((Y.d - est.OLS.Y.d)^2) / length(Y.d)
-mse.OLS.d</code></pre>
-<pre><code>## [1] 0.8003042</code></pre>
-<p>Next is the <code>lasso</code> regression. Determine <span class="math inline">\(lambda\)</span> in <code>CV</code>.</p>
-<pre class="r"><code># fitting lasso regression
-trial2.d &lt;- cv.glmnet(as.matrix(traindata.d[,-1]),as.matrix(traindata.d[,1]),family=&quot;gaussian&quot;,alpha=1)
-plot(trial2.d)</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
-<pre class="r"><code>trial2.d$lambda.min</code></pre>
-<pre><code>## [1] 0.001472377</code></pre>
-<pre class="r"><code>coef(trial2.d,s=trial2.d$lambda.min)</code></pre>
-<pre><code>## 10 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
-##                         1
-## (Intercept) -3.4186530904
-## DFF          0.0707022021
-## USD6MTD156N  .           
-## NASDAQCOM   -0.2675513858
-## DTB3         0.1204092358
-## USEPUINDXD  -0.0006506183
-## T10YIE       0.6915446819
-## DTWEXB       0.0270389569
-## DBAA         0.2861031504
-## T5YIFR       0.3376304446</code></pre>
-<p>The coefficient of <code>libor</code> became zero, and the MSE of <code>OLS</code> was higher than that of <code>libor</code>.</p>
-<pre class="r"><code>est.lasso.Y.d &lt;- predict(trial2.d, newx = as.matrix(testdata.d[,-1]), s = trial2.d$lambda.min, type = &#39;response&#39;)
-mse.lasso.d &lt;- sum((Y.d - est.lasso.Y.d)^2) / length(Y.d)
-mse.lasso.d</code></pre>
-<pre><code>## [1] 0.8378427</code></pre>
-<p>Plot the predictions.</p>
-<pre class="r"><code>ggplot(gather(data.frame(actual=Y.d[,1],lasso_prediction=est.lasso.Y.d[,1],OLS_prediction=est.OLS.Y.d,date=as.POSIXct(rownames(Y.d))),key=data,value=rate,-date),aes(x=date,y=rate, colour=data)) +
-  geom_line(size=1.5) +
-  scale_x_datetime(breaks = &quot;2 year&quot;,date_labels = &quot;%Y-%m&quot;) +
-  scale_y_continuous(breaks=c(1,1.5,2,2.5,3,3.5),limits = c(1.25,5))</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
-<p>As with the monthly, there is very little difference between the predicted values for <code>OLS</code> and <code>lasso</code>. We have been able to capture the fluctuations quite nicely, but we have not been able to capture the interest rate decline caused by the <code>United States federal government credit-rating downgrades</code> in 2011 or the interest rate increase associated with the economic recovery in 2013. The only daily economic indicator I have is POS data, but I might be able to use the recently used nightlight satellite imagery data, if I had to say so. I’ll try it if I have time. For now, I’d like to end this article for now. Thank you for reading this article.</p>
-</div>
+## Residual standard error: 0.2167 on 1148 degrees of freedom
+## Multiple R-squared:  0.8902,	Adjusted R-squared:  0.8894 
+## F-statistic:  1163 on 8 and 1148 DF,  p-value: &lt; 2.2e-16
+</code></pre><p>The coefficient of determination remains high.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">est.OLS.Y.d <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">predict</span>(trial1.d,testdata.d[,<span style="color:#ae81ff">-1</span>])
+Y.d <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.matrix</span>(testdata.d[,<span style="color:#ae81ff">1</span>])
+mse.OLS.d <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">sum</span>((Y.d <span style="color:#f92672">-</span> est.OLS.Y.d)^2) <span style="color:#f92672">/</span> <span style="color:#a6e22e">length</span>(Y.d)
+mse.OLS.d
+</code></pre></div><pre><code>## [1] 0.8350614
+</code></pre><p>Next is the <code>lasso</code> regression. Determine <code>\(lambda\)</code> in <code>CV</code>.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># fitting lasso regression</span>
+trial2.d <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">cv.glmnet</span>(<span style="color:#a6e22e">as.matrix</span>(traindata.d[,<span style="color:#ae81ff">-1</span>]),<span style="color:#a6e22e">as.matrix</span>(traindata.d[,<span style="color:#ae81ff">1</span>]),family<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;gaussian&#34;</span>,alpha<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>)
+<span style="color:#a6e22e">plot</span>(trial2.d)
+</code></pre></div><p><img src="../../../en/post/post14/index_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">trial2.d<span style="color:#f92672">$</span>lambda.min
+</code></pre></div><pre><code>## [1] 0.001339007
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">coef</span>(trial2.d,s<span style="color:#f92672">=</span>trial2.d<span style="color:#f92672">$</span>lambda.min)
+</code></pre></div><pre><code>## 9 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
+##                        s1
+## (Intercept) -3.4297225594
+## DFF          0.0707532975
+## NASDAQCOM   -0.3512778327
+## DTB3         0.1204390843
+## USEPUINDXD  -0.0006453775
+## T10YIE       0.6894098221
+## DTWEXB       0.0272773903
+## DBAA         0.2831306290
+## T5YIFR       0.3411269206
+</code></pre><p>The coefficient of <code>libor</code> became zero, and the MSE of <code>OLS</code> was higher than that of <code>libor</code>.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">est.lasso.Y.d <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">predict</span>(trial2.d, newx <span style="color:#f92672">=</span> <span style="color:#a6e22e">as.matrix</span>(testdata.d[,<span style="color:#ae81ff">-1</span>]), s <span style="color:#f92672">=</span> trial2.d<span style="color:#f92672">$</span>lambda.min, type <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;response&#39;</span>)
+mse.lasso.d <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">sum</span>((Y.d <span style="color:#f92672">-</span> est.lasso.Y.d)^2) <span style="color:#f92672">/</span> <span style="color:#a6e22e">length</span>(Y.d)
+mse.lasso.d
+</code></pre></div><pre><code>## [1] 0.8492769
+</code></pre><p>Plot the predictions.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">ggplot</span>(<span style="color:#a6e22e">gather</span>(<span style="color:#a6e22e">data.frame</span>(actual<span style="color:#f92672">=</span>Y.d[,<span style="color:#ae81ff">1</span>],lasso_prediction<span style="color:#f92672">=</span>est.lasso.Y.d[,<span style="color:#ae81ff">1</span>],OLS_prediction<span style="color:#f92672">=</span>est.OLS.Y.d,date<span style="color:#f92672">=</span><span style="color:#a6e22e">as.POSIXct</span>(<span style="color:#a6e22e">rownames</span>(Y.d))),key<span style="color:#f92672">=</span>data,value<span style="color:#f92672">=</span>rate,<span style="color:#f92672">-</span>date),<span style="color:#a6e22e">aes</span>(x<span style="color:#f92672">=</span>date,y<span style="color:#f92672">=</span>rate, colour<span style="color:#f92672">=</span>data)) <span style="color:#f92672">+</span>
+  <span style="color:#a6e22e">geom_line</span>(size<span style="color:#f92672">=</span><span style="color:#ae81ff">1.5</span>) <span style="color:#f92672">+</span>
+  <span style="color:#a6e22e">scale_x_datetime</span>(breaks <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;2 year&#34;</span>,date_labels <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;%Y-%m&#34;</span>) <span style="color:#f92672">+</span>
+  <span style="color:#a6e22e">scale_y_continuous</span>(breaks<span style="color:#f92672">=</span><span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">1.5</span>,<span style="color:#ae81ff">2</span>,<span style="color:#ae81ff">2.5</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3.5</span>),limits <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1.25</span>,<span style="color:#ae81ff">5</span>))
+</code></pre></div><p><img src="../../../en/post/post14/index_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p>As with the monthly, there is very little difference between the predicted values for <code>OLS</code> and <code>lasso</code>. We have been able to capture the fluctuations quite nicely, but we have not been able to capture the interest rate decline caused by the <code>United States federal government credit-rating downgrades</code> in 2011 or the interest rate increase associated with the economic recovery in 2013. The only daily economic indicator I have is POS data, but I might be able to use the recently used nightlight satellite imagery data, if I had to say so. I&rsquo;ll try it if I have time. For now, I&rsquo;d like to end this article for now. Thank you for reading this article.</p>
 
-    </div>
+          </div>
 
-    
+          
 
 
 
@@ -1334,8 +1352,12 @@ mse.lasso.d</code></pre>
 
 
 
+        </div>
+      </article>
+    </main>
+
   </div>
-</article>
+</div>
 
       
 
@@ -1449,11 +1471,9 @@ mse.lasso.d</code></pre>
       
     
     
-      
     
     
-    
-    <script src="../../../js/wowchemy.min.2a3f95be2bc4762ba1847fb5d7a28317.js"></script>
+    <script src="../../../js/wowchemy.min.4c2bca31150ce93c5a5e43b8a50f22fd.js"></script>
 
     
 
@@ -1463,6 +1483,16 @@ mse.lasso.d</code></pre>
   <div class="container">
     <footer class="site-footer">
   
+
+  
+   
+  <script>
+  $(document).ready(function () {
+    window.initializeCodeFolding("show" === "show");
+  });
+  </script>
+  <script src="../../../js/codefolding.js"></script>
+
 
   <p class="powered-by">
     
