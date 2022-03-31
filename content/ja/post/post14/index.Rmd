@@ -123,7 +123,7 @@ mse.lasso
 library(tidyverse)
 
 ggplot(gather(data.frame(actual=Y[,1],lasso_prediction=est.lasso.Y[,1],OLS_prediction=est.OLS.Y,date=as.POSIXct(rownames(Y))),key=data,value=rate,-date),aes(x=date,y=rate, colour=data)) +
-  geom_line(size=1.5) +
+  geom_line() +
   scale_x_datetime(breaks = "6 month",date_labels = "%Y-%m") +
   scale_y_continuous(breaks=c(1,1.5,2,2.5,3,3.5),limits = c(1.25,3.5))
 
@@ -194,7 +194,7 @@ mse.lasso.d
 
 ```{r}
 ggplot(gather(data.frame(actual=Y.d[,1],lasso_prediction=est.lasso.Y.d[,1],OLS_prediction=est.OLS.Y.d,date=as.POSIXct(rownames(Y.d))),key=data,value=rate,-date),aes(x=date,y=rate, colour=data)) +
-  geom_line(size=1.5) +
+  geom_line() +
   scale_x_datetime(breaks = "2 year",date_labels = "%Y-%m") +
   scale_y_continuous(breaks=c(1,1.5,2,2.5,3,3.5),limits = c(1.25,5))
 ```

@@ -14,7 +14,7 @@ image:
   preview_only: false
 lastmod: ""
 projects: []
-summary: 機械学習を用いたセンチメントスコアの算出方法の発展を簡単にさらっていきます。
+summary: テキストからセンチメント情報を抽出する手法を数回にわたって紹介します。
 output: 
   blogdown::html_page:
     toc: true
@@ -49,7 +49,7 @@ codefolding_show: "hide"
 <link href="{{< blogdown/postref >}}index_files/bsTable/bootstrapTable.min.css" rel="stylesheet" />
 <script src="{{< blogdown/postref >}}index_files/bsTable/bootstrapTable.js"></script>
 
-おはこんばんにちは。テキスト解析はデータ分析界隈ではもうかなり当たり前になってきています。テキストの感性情報(センチメント)を抽出する手法には、どのようなものがあるかあるのか調べたところかなり時代は進んでいると実感しました。今回は実際に`R`や`Python`で作成した機械学習モデルを用いて、それらの精度を比較してみたいと思います。 今回はその第１回目ということで、データセットや全体感のお話です。
+おはこんばんにちは。テキスト解析はデータ分析界隈ではもうかなり当たり前になってきています。テキストの感性情報(センチメント)を抽出する手法には、どのようなものがあるかあるのか調べたところかなり時代は進んでいると実感しました。これら数回にわたって、実際に`R`や`Python`で作成した機械学習モデルの精度を比較してみたいと思います。 今回はその第１回目ということで、データセットや全体感のお話です。
 
 
 
@@ -662,6 +662,205 @@ results %>%
 </table>
 
 「来客数の動き」と「販売量の動き」が多く、「お客様の様子」や「受注量や販売量の動き」まで含めると7割を占めます。回答業種に小売店が多いことから、このような項目が上位にきているのだと推察されます。
+
+### 景気判断の理由に関するテキストマイニング
+
+景気の現状判断に対する理由の追加説明及び具体的状況の説明を解析し、どのような単語が頻繁に使用されているかをWordCloudを用いて確認します。
+
+まず、文書のトークン化を行います。日本語のような言語では英語などと異なり単語ごとの間にスペースがないため、別途区切りを入れてやる必要があります。区切られた各語は形態素と呼ばれ、言葉が意味を持つまとまりの単語の最小単位を指します。また、文章を形態素へ分割することを形態素解析と言います(英語のような場合単にTokenizationと言ったりします)。  
+形態素解析を行うツールは以下のようなものが存在します。
+
+-   MeCab
+-   JUMAN
+-   JANOME
+-   Ginza
+-   Sudachi
+
+おそらく最も使用されているものはMecabではないかと思いますが、標準装備されている辞書(ipadic)の更新がストップしており、最近の新語に対応できないという問題があります。この点については新語に強いNEologd辞書を加えることで、対処可能であることを別記事で紹介していますが、今回はワークスアプリケーションズが提供しているSudachi[@TAKAOKA18.8884]を使用することにしたいと思います。公式GithubからSudachiの特長を引用します。
+
+-   複数の分割単位の併用
+
+    -   必要に応じて切り替え
+    -   形態素解析と固有表現抽出の融合
+
+-   多数の収録語彙
+
+    -   UniDic と NEologd をベースに調整
+
+-   機能のプラグイン化
+
+    -   文字正規化や未知語処理に機能追加が可能
+
+-   同義語辞書との連携
+
+    -   後日公開予定
+
+特質すべきは「複数の分割単位の併用」でしょう。Sudachiでは短い方から A, B, Cの3つの分割モードを提供しています。AはUniDic短単位相当、Cは固有表現相当、BはA, Cの中間的な単位となっており、以下のように同じ「選挙管理委員会」という単語でも形態素が異なることが確認できます。これはSudachi特有の特長になります。
+
+
+```python
+from sudachipy import tokenizer
+from sudachipy import dictionary
+
+tokenizer_obj = dictionary.Dictionary().create()
+
+mode = tokenizer.Tokenizer.SplitMode.A
+[m.normalized_form() for m in tokenizer_obj.tokenize("選挙管理委員会", mode)]
+```
+
+```
+## ['選挙', '管理', '委員', '会']
+```
+
+```python
+mode = tokenizer.Tokenizer.SplitMode.B
+[m.normalized_form() for m in tokenizer_obj.tokenize("選挙管理委員会", mode)]
+```
+
+```
+## ['選挙', '管理', '委員会']
+```
+
+```python
+mode = tokenizer.Tokenizer.SplitMode.C
+[m.normalized_form() for m in tokenizer_obj.tokenize("選挙管理委員会", mode)]
+```
+
+```
+## ['選挙管理委員会']
+```
+
+また、辞書についてもUniDicとNEologdをベースとして更新が続けられており、新語にも対応できます。
+
+
+```python
+mode = tokenizer.Tokenizer.SplitMode.C
+[m.normalized_form() for m in tokenizer_obj.tokenize("新型コロナウイルス", mode)]
+```
+
+```
+## ['新型コロナウイルス']
+```
+
+個人的に素晴らしいと思うポイントは表記正規化や文字正規化ができると言うことです。以下のように旧字等で同じ意味だが表記が異なる単語や英語/日本語、書き間違え等を正規化する機能があります。
+
+
+```python
+tokenizer_obj.tokenize("附属", mode)[0].normalized_form()
+```
+
+```
+## '付属'
+```
+
+```python
+tokenizer_obj.tokenize("SUMMER", mode)[0].normalized_form()
+```
+
+```
+## 'サマー'
+```
+
+```python
+tokenizer_obj.tokenize("シュミレーション", mode)[0].normalized_form()
+```
+
+```
+## 'シミュレーション'
+```
+
+このような高性能な形態素解析ツールが無償でしかも商用利用も可というところに驚きを隠せません。次回以降で説明しますが、このSudachiで形態素解析を行ったWord2vecモデルであるChiveも提供されています。
+
+説明が長くなりましたがSudachiでTokenizationを行いましょう。Sudachiは`Python`で使用することができます。説明が前後していますが、上記コードで行っているように`tokenizer`オブジェクトを作成し、`tokenize()`メソッドで文章をTokenizeします。Tokenizeされた結果は`MorphemeList`オブジェクトに格納されます。`MorphemeList`オブジェクトの各要素に対して`normalized_form()`メソッドを実行することで正規化された形態素を取得することができます。ここまでをやってみます。
+
+
+
+まず、サンプルデータを読み込みます。
+
+
+```python
+from sudachipy import tokenizer
+from sudachipy import dictionary
+from sklearn.preprocessing import LabelEncoder
+import pandas as pd
+
+sample = pd.read_csv(r"C:\Users\hogehoge\景気ウオッチャー\生データ\watcher_2016.csv",encoding="shift-jis")
+sample = sample[(sample.追加説明及び具体的状況の説明=='−')|(sample.追加説明及び具体的状況の説明=='＊')==False|(sample.景気の現状判断=='□')]
+```
+
+読み込んだ`sample`をtokenizerでToken化していきます。
+
+
+```python
+tokenizer_obj = dictionary.Dictionary().create()
+mode = tokenizer.Tokenizer.SplitMode.C
+tokenizer_sudachi = lambda t: [m.normalized_form() for m in tokenizer_obj.tokenize(t, mode)]
+tokens = sample.追加説明及び具体的状況の説明.map(tokenizer_sudachi)
+tokens.head()
+```
+
+```
+## 0    [・, 店頭, の, 取り扱い, 額, が, 前年, 比, 約, 120, %, と, 好調...
+## 1    [・, 当, 施設, の, 利用, 乗降, 客数, は, 1, 月, 26, 日, 時点, ...
+## 2    [・, 年, 末, の, 消費, の, 反動, も, 有る, て, か, 、, 客, の, ...
+## 3    [・, 外国人, 観光客, に, よる, 売り上げ, が, 前年, 比, 152, %, と...
+## 4    [・, 積極的, だ, 景気, が, 上向き, に, 有る, と, まで, は, 言う, 辛...
+## Name: 追加説明及び具体的状況の説明, dtype: object
+```
+
+Tokenizeすることができました。
+WordCloudを作成するために`Python`の`wordcloud`を用います。これは引数にTokenをスペースで区切った文字列を与える必要があるため、その整形を行います。
+
+
+```python
+word_lists = []
+for token in tokens:
+  for word in token:
+    word_lists.append(word)
+word_chain = ' '.join(word_lists)
+```
+
+では、wordcloudを作成していきます。日本語表示では文字化けが発生するため、[こちら](https://moji.or.jp/ipafont/ipaex00401/)でフォント「IPAexゴシック」を予めダウンロードし、フォルダに保存したものを読み込んでいます。
+
+
+
+
+```python
+font_path = r'C:\Users\hogehoge\Watcher\ipaexg.ttf'
+```
+
+`wordcloud.WordCloud.genetate()`でWordCloudを作成します。
+
+
+```python
+from wordcloud import WordCloud
+import matplotlib.pyplot as plt
+wc = WordCloud(background_color="white", font_path=font_path, max_words=100, max_font_size=100, contour_width=1, contour_color='steelblue')
+wc.generate(word_chain)
+plt.figure(figsize=(12,10))
+plt.imshow(wc, cmap=plt.cm.gray, interpolation="bilinear")
+plt.axis("off")
+plt.show()
+```
+
+![alt text](/wordcloud.png)
+
+助詞や「為る」、「有る」、「居る」、「成る」など特徴のない語句が頻出しており、意味のある可視化になっていません。これらを`word_chain`から除き、もう一度実行してみます。
+
+
+```python
+stopwords = ["見る","為る","有る","居る","成る","は","に","よる","た","が","て","だ","など","と","も","の","や","で","から","を","おる","より","等"]
+for stopword in stopwords:
+  word_chain = word_chain.replace(stopword, "")
+wc.generate(word_chain)
+plt.figure(figsize=(12,10))
+plt.imshow(wc, cmap=plt.cm.gray, interpolation="bilinear")
+plt.axis("off")
+plt.show()
+```
+![alt text](/wordcloud2.png)
+
+先ほどよりは意味のある可視化になっています。「来客数」、「売り上げ」、「販売量」などやはり小売店関連のワードが頻出しているようです。これは回答者属性とも整合的です。
 
 ## 4. 終わりに
 

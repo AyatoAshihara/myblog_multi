@@ -21,14 +21,6 @@ output:
     toc: true
 ---
 
-
-
-
-
-
-
-
-
 おはこんばんにちは。かなり久しぶりではありますが、Pythonの勉強をかねて以前yahoo.keibaで収集した競馬のレース結果データから、レース結果を予想するモデルを作成したいと思います。
 
 ## 1.データインポート
@@ -182,26 +174,6 @@ for column in cat_list:
     df[column] = pd.Series(label_encoded_column).astype('category')
 ```
 
-```
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-```
-
-
 ```python
 import pandas_profiling as pdq
 profile = pdq.ProfileReport(df)
@@ -211,9 +183,6 @@ profile
 ## 2. 予測モデルの作成
 
 では`LightGBM`で予測モデルを作ってみます。`optuna`の`LightGBM`を使用して、ハイパーパラメータチューニングを行い、学習したモデルを用いて計算したテストデータの予測値と実績値の`confusion matrix`ならびに正解率を算出します。
-
-
-
 
 ```python
 import optuna.integration.lightgbm as lgb

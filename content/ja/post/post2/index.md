@@ -35,13 +35,13 @@ output:
 
 >this paper focusses on minimum-variance portfolios requiring only estimates of asset covariance, hence bypassing the well-known problem of estimation error in forecasting expected asset returns.
 
-と記載されており、現状でも期待リターンの推計は難しく、それを必要としない最小分散ポートフォリオは有益で実践的な手法であるといえます。最小分散ポートフォリオの目的関数は、その名の通り「分散を最小化すること」です。今、各資産のリターンを集めたベクトルを[tex:r]、各資産の保有ウェイトを$\theta$、ポートフォリオリターンを$R_{p}$で表すことにすると、ポートフォリオ全体の分散$var(R_{p})$は以下のように記述できます。
+と記載されており、現状でも期待リターンの推計は難しく、それを必要としない最小分散ポートフォリオは有益で実践的な手法であるといえます。最小分散ポートフォリオの目的関数は、その名の通り「分散を最小化すること」です。今、各資産のリターンを集めたベクトルを$r$、各資産の保有ウェイトを$\theta$、ポートフォリオリターンを$R_{p}$で表すことにすると、ポートフォリオ全体の分散$var(R_{p})$は以下のように記述できます。
 
 $$
 var(R_{p}) = var(r^{T}\theta) = E( (r^{T}\theta)(r^{T}\theta)^{T}) = \theta^{T}\Sigma\theta
 $$
 
-ここで$Sigma$は$r$の分散共分散行列です。よって、最小化問題は以下になります。
+ここで$\Sigma$は$r$の分散共分散行列です。よって、最小化問題は以下になります。
 
 $$
 \min_{\theta}(\theta^{T}\Sigma\theta) \\
@@ -67,14 +67,20 @@ $$
 \theta = \Sigma^{-1}1\lambda^{*}
 $$
 
+<div>
 となります。ここで、$\lambda^{*}=-1/2\lambda$です。これを2本目の式に代入し、$\lambda^{*}$について解きます。
+</div>
 
+<div>
 $$
 1^{T}\Sigma1\lambda^{*} = 1 \\
 \displaystyle \lambda^{*} = \frac{1}{1^{T}\Sigma^{-1}1}
 $$
+</div>
 
-`\(\theta = \Sigma^{-1}1\lambda^{*}\)`だったので、$\lambda^{*}$を消去すると、
+<div>
+$\theta = \Sigma^{-1}1\lambda^{*}$だったので、$\lambda^{*}$を消去すると、
+</div>
 
 $$
 \displaystyle \theta_{gmv} = \frac{\Sigma^{-1}1}{1^{T}\Sigma^{-1}1}
@@ -143,7 +149,7 @@ $$
 
 元論文は[こちら](http://www.cass.city.ac.uk/__data/assets/pdf_file/0003/78960/Week7Engle_2002.pdf)。
 
-こちらのモデルでは、$D_{t}$を求めるところまでは①と同じですが、[$R_{t}$の求め方が異なっており、ARMA(1,1)を用いて推計します。相関行列はやはり定数ではないということで、$tex:t$期までに利用可能なリターンを用いて推計をかけようということになっています。このモデルの相関行列$R_{t}$は、
+こちらのモデルでは、$D_{t}$を求めるところまでは①と同じですが、[$R_{t}$の求め方が異なっており、ARMA(1,1)を用いて推計します。相関行列はやはり定数ではないということで、$t$期までに利用可能なリターンを用いて推計をかけようということになっています。このモデルの相関行列$R_{t}$は、
 
 $$
 R_{t} = diag(Q_{t})^{-1/2}Q_{t}diag(Q_{t})^{-1/2}

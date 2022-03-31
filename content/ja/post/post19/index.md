@@ -71,15 +71,18 @@ r_{t}(q) \equiv r_{t} + r_{t-1} + ... + r_{t-q+1}
 $$
 と定義すると(複利部分を無視してます)、年率化されたシャープレシオは
 
+<div>
 $$
-`\begin{eqnarray}
+\begin{eqnarray}
 SR(q) &=& \frac{E[r_{t}(q)]}{\sqrt{Var(r_{t}(q))}}\\
 &=& \frac{q\mu}{\sqrt{q}\sigma}\\
 &=& \frac{\mu}{\sigma}\sqrt{q}
-\end{eqnarray}`
+\end{eqnarray}
 $$
+</div>
+
 と表すことができます。ここで、$q$は年毎のリターンの数(頻度)です。例えば、日次リターンの場合$q=365$となります(閏年を除く)。
-`\(\mu\)`と$\sigma$は一般に未知ですので、$SR$の真値を知ることはできません。なので、$R_t$を標本リターン、リスクフリーレート$R^f$(定数)とすると、標本平均$\hat{\mu}=1/T\sum_{t=1}^T R_{t}-R^f$と標本標準偏差$\hat{\sigma}=\sqrt{1/T\sum_{t=1}^{T}(R_{t}-\hat{\mu})}$を用いてシャープレシオの推定値を計算することになります($T$はバックテストを行うサンプルサイズ)。
+$\mu$と$\sigma$は一般に未知ですので、$SR$の真値を知ることはできません。なので、$R_t$を標本リターン、リスクフリーレート$R^f$(定数)とすると、標本平均$\hat{\mu}=1/T\sum_{t=1}^T R_{t}-R^f$と標本標準偏差$\hat{\sigma}=\sqrt{1/T\sum_{t=1}^{T}(R_{t}-\hat{\mu})}$を用いてシャープレシオの推定値を計算することになります($T$はバックテストを行うサンプルサイズ)。
 
 $$
 \hat{SR}(q) = \frac{\hat{\mu}}{\hat{\sigma}}\sqrt{q}
@@ -133,8 +136,9 @@ $$
 $$
 よって、
 
+<div>
 $$
-`\begin{eqnarray}
+\begin{eqnarray}
 \boldsymbol V_g &=& \left(
     \begin{array}{cccc}
       \frac{\partial g}{\partial \mu}, \frac{\partial g}{\partial \sigma}\\
@@ -166,8 +170,10 @@ $$
   &=& (\frac{\partial g}{\partial \mu})^2\sigma^2 + (\frac{\partial g}{\partial \sigma})^2\sigma^4 \\
   &=& 1 + \frac{\mu^2}{2\sigma^2} \\
   &=& 1 + \frac{1}{2}SR^2
-\end{eqnarray}`
+\end{eqnarray}
 $$
+</div>
+
 と導出することができます。シャープレシオの絶対値が大きくなるほど指数的に分散が大きくなる傾向があるので良いパフォーマンスを見た時には注意が必要かもしれません。年率化されたシャープレシオの推定値$\hat{SR}(q)$が従う分布はここから
 
 $$
@@ -194,29 +200,38 @@ $$
 $$
 ここで、$\alpha=Z(x)^{-1}[1-1/N], \beta=Z(x)^{-1}[1-1/Ne^{-1}]-\alpha$で、$Z(x)$は標準正規分布の累積分布関数を表しています。ガンベル分布のモーメント母関数$M_x(t)$は
 
+<div>
 $$
-`\begin{eqnarray}
+\begin{eqnarray}
 M_x(t) &=& E[e^{tx}] = \int_{-\infty}^\infty e^{tx}e^{-x}e^{-e^{-x}}dx \\
-\end{eqnarray}`
+\end{eqnarray}
 $$
+</div>
+
 と書け、$x=-\log(y)$と変数変換すると$dx/dy=-1/y=-(e^{-x})^{-1}$なので、
 
+<div>
 $$
-`\begin{eqnarray}
+\begin{eqnarray}
 M_x(t) &=& \int_{\infty}^0-e^{-t\log(y)}e^{-y}dy \\
 &=& \int_{0}^\infty y^{-t}e^{-y}dy \\
 &=& \Gamma(1-t)
-\end{eqnarray}`
+\end{eqnarray}
 $$
+<\div>
+
 となります。$\Gamma(x)$はガンマ関数です。ここから、標準化された最大統計量の期待値(平均)は
 
+<div>
 $$
-`\begin{eqnarray}
+\begin{eqnarray}
 \lim_{N\rightarrow\infty} E[\frac{\max[\hat{SR}]_N-\alpha}{\beta}] &=& M_x'(t)|_{t=0} \\
 &=& (-1)\Gamma'(1) \\
 &=& (-1)(-\gamma) = \gamma
-\end{eqnarray}`
+\end{eqnarray}
 $$
+</div>
+
 となります。ここで、$\gamma\approx0.5772156649...$はEuler-Mascheroni定数です。よって、$N$が大きいとき、i.i.d.の標準正規分布の最大統計量の期待値は
 
 $$

@@ -23,8 +23,6 @@ output:
     keep_md: true
 ---
 
-
-
 　おはこんばんにちは。昨日、`Bayesian Vector Autoregression`の記事を書きました。  
 　その中でハイパーパラメータのチューニングの話が出てきて、なにか効率的にチューニングを行う方法はないかと探していた際に`Bayesian Optimization`を発見しました。日次GDPでも機械学習の手法を利用しようと思っているので、`Bayesian Optimization`はかなり使える手法ではないかと思い、昨日徹夜で理解しました。  
 　その内容をここで実装しようとは思うのですが、`Bayesian Optimization`ではガウス回帰（`Gaussian Pocess Regression`,以下`GPR`）を使用しており、まずその実装を行おうと持ったのがこのエントリを書いた動機です。`Bayesian Optimization`の実装はこのエントリの後にでも書こうかなと思っています。
@@ -44,7 +42,7 @@ $$
 \displaystyle y_{i}  = \textbf{w}^{T}\phi(x_{i})
 $$
 
-ここで、$x_{i}$はi番目の入力データベクトル、$\phi(・)$は非線形関数、 $\textbf{w}^{T}$は各入力データに対する重み係数（回帰係数）ベクトルです。非線形関数としては、$\phi(x_{i}) = (x_{1,i}, x_{1,i}^{2},...,x_{1,i}x_{2,i},...)$を想定しています（$x_{1,i}$は$i$番目の入力データ$x_{i}$の１番目の変数）。教師データの確率モデルから、$i$番目の出力データ$y_{i}$が得られたうえで$t_{i}$が得られる条件付確率は、
+ここで、$x_{i}$はi番目の入力データベクトル、$\phi(・)$は非線形関数、$\(\textbf{w}^{T}\)$は各入力データに対する重み係数（回帰係数）ベクトルです。非線形関数としては、$\phi(x_{i}) = (x_{1,i}, x_{1,i}^{2},...,x_{1,i}x_{2,i},...)$を想定しています（$x_{1,i}$は$i$番目の入力データ$x_{i}$の１番目の変数）。教師データの確率モデルから、$i$番目の出力データ$y_{i}$が得られたうえで$t_{i}$が得られる条件付確率は、
 
 $$
  p(t_{i}|y_{i}) = N(t_{i}|y_{i},\beta^{-1})
@@ -57,8 +55,6 @@ $$
 $$
 
 と書けます。また、事前分布として$\textbf{w}$の期待値は0、分散は全て$\alpha$と仮定します。$\displaystyle \textbf{y}$はガウス過程に従うと仮定します。ガウス過程とは、$\displaystyle \textbf{y}$の同時分布が多変量ガウス分布に従うもののことです。コードで書くと以下のようになります。
-
-\normalsize
 
 ```r
 # Define Kernel function
@@ -92,21 +88,21 @@ for(i in 1:P){
 matplot(x=X,y=Y,type = "l",lwd = 2)
 ```
 
-
-
- \normalsize<img src="index_files/figure-html/unnamed-chunk-1-1.png" width="672" />
+<img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-1-1.png" width="672" />
 
 　Kernel_Matについては後述しますが、$\displaystyle \textbf{y}$の各要素$\displaystyle y_{i}  = \textbf{w}^{T}\phi(x_{i})$の間の共分散行列$K$を入力$x$からカーネル法を用いて計算しています。そして、この$K$と平均0から、多変量正規乱数を6系列生成し、それをプロットしています。
 
 　これらの系列は共分散行列から計算されるので、**各要素の共分散が正に大きくなればなるほど同じ値をとりやすくなる**ようモデリングされていることになります。また、グラフを見ればわかるように非常になめらかなグラフが生成されており、かつ非常に柔軟な関数を表現できていることがわかります。コードでは計算コストの関係上、入力を0から10に限定して1000個の入力点をサンプルし、作図を行っていますが、原理的には$x$は実数空間で定義されるものであるので、$p(\textbf{y})$は無限次元の多変量正規分布に従います。
 以上のように、$\displaystyle \textbf{y}$はガウス過程に従うと仮定するので同時確率$p(\textbf{y})$は平均0、分散共分散行列が$K$の多変量正規分布$N(\textbf{y}|0,K)$に従います。ここで、$K$の各要素$K_{i,j}$は、
 
+<div>
 $$
 \begin{eqnarray}
 K_{i,j} &=& cov[y_{i},y_{j}] = cov[\textbf{w}\phi(x_{i}),\textbf{w}\phi(x_{j})] \\
 &=&\phi(x_{i})\phi(x_{j})cov[\textbf{w},\textbf{w}]=\phi(x_{i})\phi(x_{j})\alpha
 \end{eqnarray}
 $$
+</div>
 
 です。ここで、$\phi(x_{i})\phi(x_{j})\alpha$は$\phi(x_{i})$の**次元が大きくなればなるほど計算量が多く**なります（つまり、非線形変換をかければかけるほど計算が終わらない）。しかし、カーネル関数$k(x,x')$を用いると、計算量は高々入力データ$x_{i},x_{j}$のサンプルサイズの次元になるので、計算がしやすくなります。カーネル関数を用いて$K_{i,j} = k(x_{i},x_{j})$となります。カーネル関数としてはいくつか種類がありますが、以下のガウスカーネルがよく使用されます。
 
@@ -114,8 +110,9 @@ $$
 k(x,x') = a \exp(-b(x-x')^{2})
 $$
 
-$\displaystyle \textbf{y}$の同時確率が定義できたので、$\displaystyle \textbf{t}$の同時確率を求めることができます。
+$\(\displaystyle \textbf{y}\)$の同時確率が定義できたので、$\displaystyle \textbf{t}$の同時確率を求めることができます。
 
+<div>
 $$
 \begin{eqnarray}
 \displaystyle p(\textbf{t}) &=& \int p(\textbf{t}|\textbf{y})p(\textbf{y}) d\textbf{y} \\
@@ -123,8 +120,9 @@ $$
  &=& N(\textbf{y}|0,\textbf{C}_{N})
 \end{eqnarray}
 $$
+</div>
 
-ここで、$\textbf{C}_{N} = K + \beta^{-1}\textbf{I}_{N}$です。なお、最後の式展開は正規分布の再生性を利用しています（証明は正規分布の積率母関数から容易に導けます）。要は、両者は独立なので共分散は2つの分布の共分散の和となると言っているだけです。個人的には、$p(\textbf{y})$が先ほど説明したガウス過程の事前分布であり、$p(\textbf{t}|\textbf{y})$が尤度関数で、$p(\textbf{t})$は事後分布をというようなイメージです。事前分布$p(\textbf{y})$は制約の緩い分布でなめらかであることのみが唯一の制約です。
+ここで、$\textbf{C}_{N} = K +\beta^{-1}\textbf{I}_{N}$です。なお、最後の式展開は正規分布の再生性を利用しています（証明は正規分布の積率母関数から容易に導けます）。要は、両者は独立なので共分散は2つの分布の共分散の和となると言っているだけです。個人的には、$p(\textbf{y})$が先ほど説明したガウス過程の事前分布であり、$p(\textbf{t}|\textbf{y})$が尤度関数で、$p(\textbf{t})$は事後分布をというようなイメージです。事前分布$p(\textbf{y})$は制約の緩い分布でなめらかであることのみが唯一の制約です。
 $N$個の観測可能な教師データ$\textbf{t}$と$t_{N+1}$の同時確率は、
 
 $$
@@ -133,6 +131,7 @@ $$
 
 ここで、$\textbf{C}_{N+1}$は、
 
+<div>
 $$
  \textbf{C}_{N+1} = \left(
     \begin{array}{cccc}
@@ -141,6 +140,7 @@ $$
     \end{array}
   \right)
 $$
+</div>
 
 です。ここで、$\textbf{k} = (k(x_{1},x_{N+1}),...,k(x_{N},x_{N+1}))$、$c = k(x_{N+1},x_{N+1})$です。$\textbf{t}$と$t_{N+1}$の同時分布から条件付分布$p(t_{N+1}|\textbf{t})$を求めることができます。
 
@@ -152,8 +152,6 @@ $$
 
 ## 2. `GPR`の実装
 　とりあえずここまでを`R`で実装してみましょう。PRMLのテストデータで実装しているものがあったので、それをベースにいじってみました。
-
-\normalsize
 
 ```r
 library(ggplot2)
@@ -190,13 +188,9 @@ print(f(25,0.30,0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row
 print(f(25,0.030,0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=2, layout.pos.col=2)) 
 ```
 
+<img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-2-1.png" width="672" />
 
-
- \normalsize<img src="index_files/figure-html/unnamed-chunk-2-1.png" width="672" />
-
-$\beta^{-1}$は測定誤差を表しています。**$\beta$が大きい（つまり、測定誤差が小さい）とすでに得られているデータとの誤差が少なくなるように予測値をはじき出すので、over fitting しやすくなります。**上図の左上がそうなっています。左上は$\beta=400$で、現時点で得られているデータに過度にfitしていることがわかります。逆に$\beta$が小さいと教師データとの誤差を無視するように予測値をはじき出しますが、汎化性能は向上するかもしれません。右上の図がそれです。$\beta=4$で、得られているデータ点を平均はほとんど通っていません。$b$は現時点で得られているデータが周りに及ぼす影響の広さを表しています。$b$が小さいと、隣接する点が互いに強く影響を及ぼし合うため、精度は下がるが汎化性能は上がるかもしれません。逆に、$b$が大きいと、個々の点にのみフィットする不自然な結果になります。これは右下の図になります（$b=\frac{1}{0.03},\beta=25$）。御覧の通り、$\beta$が大きいのでoverfitting気味であり、なおかつ$b$も大きいので個々の点のみにfitし、無茶苦茶なグラフになっています。左下のグラフが最もよさそうです。$b=\frac{1}{0.3},\beta=2$となっています。試しに、このグラフのx区間を[0,2]へ伸ばしてみましょう。すると、以下のようなグラフがかけます。
-
-\normalsize
+$\(\beta^{-1}\)$は測定誤差を表しています。$\beta$が大きい（つまり、測定誤差が小さい）とすでに得られているデータとの誤差が少なくなるように予測値をはじき出すので、over fitting しやすくなります。 上図の左上がそうなっています。左上は$\beta=400$で、現時点で得られているデータに過度にfitしていることがわかります。逆に$\beta$が小さいと教師データとの誤差を無視するように予測値をはじき出しますが、汎化性能は向上するかもしれません。右上の図がそれです。$\beta=4$で、得られているデータ点を平均はほとんど通っていません。$b$は現時点で得られているデータが周りに及ぼす影響の広さを表しています。$b$が小さいと、隣接する点が互いに強く影響を及ぼし合うため、精度は下がるが汎化性能は上がるかもしれません。逆に、$b$が大きいと、個々の点にのみフィットする不自然な結果になります。これは右下の図になります（$b=\frac{1}{0.03},\beta=25$）。御覧の通り、$\beta$が大きいのでoverfitting気味であり、なおかつ$b$も大きいので個々の点のみにfitし、無茶苦茶なグラフになっています。左下のグラフが最もよさそうです。$b=\frac{1}{0.3},\beta=2$となっています。試しに、このグラフのx区間を[0,2]へ伸ばしてみましょう。すると、以下のようなグラフがかけます。
 
 ```r
 grid.newpage() # make a palet
@@ -206,18 +200,16 @@ print(f(4,0.10,0,2,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=
 print(f(25,0.30,0,2,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=2, layout.pos.col=1))
 print(f(25,0.030,0,2,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=2, layout.pos.col=2)) 
 ```
-
-
-
- \normalsize<img src="index_files/figure-html/unnamed-chunk-3-1.png" width="672" />
-
+<img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-3-1.png" width="672" />
 
 これを見ればわかるように、左下以外のグラフはすぐに95%信頼区間のバンドが広がり、データ点がないところではまったく使い物にならないことがわかります。一方、左下のグラフは1.3~1.4ぐらいまではそこそこのバンドがかけており、我々が直感的に理解する関数とも整合的な点を平均値が通っているように思えます。また、観測可能なデータ点から離れすぎるとパラメータに何を与えようと平均０、分散１の正規分布になることもわかるがわかります。
 さて、このようにパラメータの値に応じて、アウトサンプルの予測精度が異なることを示したわけですが、ここで問題となるのはこれらハイパーパラメータをどのようにして推計するかです。これは対数尤度関数$\ln p(\textbf{t}|a,b)$を最大にするハイパーパラメータを勾配法により求めます(($\beta$は少しタイプが異なるようで、発展的な議論では他のチューニング方法をとる模様。まだ、そのレベルにはいけていないのでここではカリブレートすることにします。))。$p(\textbf{t}) = N(\textbf{y}|0,\textbf{C}_{N})$なので、対数尤度関数は
 
+<div>
 $$
 \displaystyle \ln p(\textbf{t}|a,b,\beta) = -\frac{1}{2}\ln|\textbf{C}_{N}| - \frac{N}{2}\ln(2\pi) - \frac{1}{2}\textbf{t}^{T}\textbf{C}_{N}^{-1}\textbf{k}
 $$
+</div>
 
 となります。あとは、これをパラメータで微分し、得られた連立方程式を解くことで最尤推定量が得られます。ではまず導関数を導出してみます。
 
@@ -234,8 +226,6 @@ $$
 $$
 
 を上式に代入すれば良いだけです。ただ、今回は勾配法により最適なパラメータを求めます。以下、実装のコードです（かなり迷走しています）。
-
-\normalsize
 
 ```r
 g <- function(xmin, xmax, input, train){
@@ -305,9 +295,7 @@ g <- function(xmin, xmax, input, train){
 print(g(0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=1, layout.pos.col=1))
 ```
 
-
-
- \normalsize<img src="index_files/figure-html/unnamed-chunk-4-1.png" width="672" />
+<img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-4-1.png" width="672" />
 
 たしかに、良さそうな感じがします（笑）
 とりあえず、今日はここまで。

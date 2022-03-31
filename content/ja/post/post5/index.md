@@ -4,7 +4,7 @@ author: admin
 date: 2018-12-01T00:00:00Z
 categories: ["統計学"]
 tags: ["BVAR"]
-draft: false
+draft: true
 featured: false
 slug: ["BVAR"]
 image:

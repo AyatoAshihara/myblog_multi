@@ -157,7 +157,7 @@ trial2$lambda.min
 ```
 
 ```
-## [1] 0.000436523
+## [1] 0.001463052
 ```
 
 ```r
@@ -167,18 +167,18 @@ coef(trial2,s=trial2$lambda.min)
 ```
 ## 12 x 1 sparse Matrix of class "dgCMatrix"
 ##                          s1
-## (Intercept)   12.6534378623
-## FEDFUNDS      -0.1102828579
-## CPIAUCSL      -0.0620847662
-## UNRATE        -0.1986570797
-## TB3MS          0.2163014268
-## INDPRO        -0.0660285269
-## T10YIEM        1.1674773831
-## TWEXBMTH      -0.0241845518
-## RECPROUSM156N -0.0099694305
-## BAA            0.7626872357
-## T5YIFRM       -0.4561364454
-## PCE            0.0008164901
+## (Intercept)    8.1170282595
+## FEDFUNDS       .           
+## CPIAUCSL      -0.0370371311
+## UNRATE        -0.1675017594
+## TB3MS          0.1244417351
+## INDPRO        -0.0554153857
+## T10YIEM        1.1916137480
+## TWEXBMTH      -0.0124760531
+## RECPROUSM156N -0.0094119322
+## BAA            0.7423502867
+## T5YIFRM       -0.4664569086
+## PCE            0.0004936828
 ```
 
 `Unemployment Rate`、`3-Month Treasury Bill`、`Breakeven Inflation Rate、Moody's Seasoned Baa Corporate Bond Yield`、`Inflation Expectation Rate`の回帰係数が大きくなるという結果ですね。失業率以外は想定内の結果です。ただ、今回の結果を見る限り景気との相関は低そうです（逆向きにしか効かない？）。MSEを計算します。
@@ -191,7 +191,7 @@ mse.lasso
 ```
 
 ```
-## [1] 0.2171154
+## [1] 0.1590115
 ```
 
 `lasso`回帰のほうが良い結果になりました。`lasso`回帰で計算した予測値と実績値を時系列プロットしてみます。
@@ -201,7 +201,7 @@ mse.lasso
 library(tidyverse)
 
 ggplot(gather(data.frame(actual=Y[,1],lasso_prediction=est.lasso.Y[,1],OLS_prediction=est.OLS.Y,date=as.POSIXct(rownames(Y))),key=data,value=rate,-date),aes(x=date,y=rate, colour=data)) +
-  geom_line(size=1.5) +
+  geom_line() +
   scale_x_datetime(breaks = "6 month",date_labels = "%Y-%m") +
   scale_y_continuous(breaks=c(1,1.5,2,2.5,3,3.5),limits = c(1.25,3.5))
 ```
@@ -346,7 +346,7 @@ mse.lasso.d
 
 ```r
 ggplot(gather(data.frame(actual=Y.d[,1],lasso_prediction=est.lasso.Y.d[,1],OLS_prediction=est.OLS.Y.d,date=as.POSIXct(rownames(Y.d))),key=data,value=rate,-date),aes(x=date,y=rate, colour=data)) +
-  geom_line(size=1.5) +
+  geom_line() +
   scale_x_datetime(breaks = "2 year",date_labels = "%Y-%m") +
   scale_y_continuous(breaks=c(1,1.5,2,2.5,3,3.5),limits = c(1.25,5))
 ```

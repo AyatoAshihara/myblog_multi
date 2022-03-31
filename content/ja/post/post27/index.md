@@ -14,7 +14,7 @@ image:
   preview_only: false
 lastmod: ""
 projects: []
-summary: 機械学習を用いたセンチメントスコアの算出方法の発展を簡単にさらっていきます。
+summary: 辞書ベース手法を用いたセンチメントスコアの算出を実践します。
 output: 
   blogdown::html_page:
     toc: true
@@ -22,6 +22,14 @@ codefolding_show: "hide"
 bibliography: references.bib
 ---
 
+<script src="{{< blogdown/postref >}}index_files/kePrint/kePrint.js"></script>
+<link href="{{< blogdown/postref >}}index_files/lightable/lightable.css" rel="stylesheet" />
+<link href="{{< blogdown/postref >}}index_files/bsTable/bootstrapTable.min.css" rel="stylesheet" />
+<script src="{{< blogdown/postref >}}index_files/bsTable/bootstrapTable.js"></script>
+<script src="{{< blogdown/postref >}}index_files/kePrint/kePrint.js"></script>
+<link href="{{< blogdown/postref >}}index_files/lightable/lightable.css" rel="stylesheet" />
+<link href="{{< blogdown/postref >}}index_files/bsTable/bootstrapTable.min.css" rel="stylesheet" />
+<script src="{{< blogdown/postref >}}index_files/bsTable/bootstrapTable.js"></script>
 <script src="{{< blogdown/postref >}}index_files/kePrint/kePrint.js"></script>
 <link href="{{< blogdown/postref >}}index_files/lightable/lightable.css" rel="stylesheet" />
 <link href="{{< blogdown/postref >}}index_files/bsTable/bootstrapTable.min.css" rel="stylesheet" />
@@ -219,140 +227,74 @@ bibliography: references.bib
 
 「景気の現状判断」が景況感を表しており、その判断の理由が「追加説明及び具体的状況の説明」にある形です。よって、前者を教師データ、後者を説明データとする教師あり学習データとして利用することができます。
 
-### 前処理
-
-まず、各手法で共通の前処理を行います。以下では、使用するモジュールを呼び出し、学習データのうち有効回答のみを抽出します。
-なお、使用するモジュールの関係でPythonでの処理を紹介しますが、Rでも同じ処理ができます。
-
-``` python
-from sudachipy import tokenizer
-from sudachipy import dictionary
-from sklearn.preprocessing import LabelEncoder
-import pandas as pd
-
-sample = pd.read_csv(r"C:\Users\hogehoge\景気ウオッチャー\生データ\watcher_2016.csv",encoding="shift-jis")
-sample = sample[(sample.追加説明及び具体的状況の説明=='−')|(sample.追加説明及び具体的状況の説明=='＊')==False|(sample.景気の現状判断=='□')]
-```
-
-次に、文書のトークン化を行います。日本語のような言語では英語などと異なり単語ごとの間にスペースがないため、別途区切りを入れてやる必要があります。区切られた各語は形態素と呼ばれ、言葉が意味を持つまとまりの単語の最小単位を指します。また、文章を形態素へ分割することを形態素解析と言います(英語のような場合単にTokenizationと言ったりします)。形態素解析を行うツールは以下のようなものが存在します。
-
--   MeCab
--   JUMAN
--   JANOME
--   Ginza
--   Sudachi
-
-おそらく最も使用されているものはMecabではないかと思いますが、標準装備されている辞書(ipadic)の更新がストップしており、最近の新語に対応できないという問題があります。この点については新語に強いNEologd辞書を加えることで、対処可能であることを別記事で紹介していますが、今回はワークスアプリケーションズが提供しているSudachi(Takaoka et al. 2018)を使用することにしたいと思います。公式GithubからSudachiの特長を引用します。
-
--   複数の分割単位の併用
-
-    -   必要に応じて切り替え
-    -   形態素解析と固有表現抽出の融合
-
--   多数の収録語彙
-
-    -   UniDic と NEologd をベースに調整
-
--   機能のプラグイン化
-
-    -   文字正規化や未知語処理に機能追加が可能
-
--   同義語辞書との連携
-
-    -   後日公開予定
-
-特質すべきは「複数の分割単位の併用」でしょう。Sudachiでは短い方から A, B, Cの3つの分割モードを提供しています。AはUniDic短単位相当、Cは固有表現相当、BはA, Cの中間的な単位となっており、以下のように同じ「選挙管理委員会」という単語でも形態素が異なることが確認できます。これはSudachi特有の特長になります。
-
-``` python
-tokenizer_obj = dictionary.Dictionary().create()
-
-mode = tokenizer.Tokenizer.SplitMode.A
-[m.normalized_form() for m in tokenizer_obj.tokenize("選挙管理委員会", mode)]
-```
-
-    ## ['選挙', '管理', '委員', '会']
-
-``` python
-mode = tokenizer.Tokenizer.SplitMode.B
-[m.normalized_form() for m in tokenizer_obj.tokenize("選挙管理委員会", mode)]
-```
-
-    ## ['選挙', '管理', '委員会']
-
-``` python
-mode = tokenizer.Tokenizer.SplitMode.C
-[m.normalized_form() for m in tokenizer_obj.tokenize("選挙管理委員会", mode)]
-```
-
-    ## ['選挙管理委員会']
-
-また、辞書についてもUniDicとNEologdをベースとして更新が続けられており、新語にも対応できます。
-
-``` python
-mode = tokenizer.Tokenizer.SplitMode.C
-[m.normalized_form() for m in tokenizer_obj.tokenize("新型コロナウイルス", mode)]
-```
-
-    ## ['新型コロナウイルス']
-
-個人的に素晴らしいと思うポイントは表記正規化や文字正規化ができると言うことです。以下のように旧字等で同じ意味だが表記が異なる単語や英語/日本語、書き間違え等を正規化する機能があります。
-
-``` python
-tokenizer_obj.tokenize("附属", mode)[0].normalized_form()
-```
-
-    ## '付属'
-
-``` python
-tokenizer_obj.tokenize("SUMMER", mode)[0].normalized_form()
-```
-
-    ## 'サマー'
-
-``` python
-tokenizer_obj.tokenize("シュミレーション", mode)[0].normalized_form()
-```
-
-    ## 'シミュレーション'
-
-このような高性能な形態素解析ツールが無償でしかも商用利用も可というところに驚きを隠せません。後述しますが、このSudachiで形態素解析を行ったWord2vecモデルであるChiveもワークスアプリケーションズは提供をしています。
-
-説明が長くなりましたがSudachiでTokenizationを行いましょう。Sudachiは`Python`で使用することができます。説明が前後していますが、上記コードで行っているように`tokenizer`オブジェクトを作成し、`tokenize()`メソッドで文章をTokenizeします。Tokenizeされた結果は`MorphemeList`オブジェクトに格納されます。`MorphemeList`オブジェクトの各要素に対して`normalized_form()`メソッドを実行することで正規化された形態素を取得することができます。ここまでをやってみます。
-
-``` python
-tokenizer_obj = dictionary.Dictionary().create()
-mode = tokenizer.Tokenizer.SplitMode.C
-tokenizer_sudachi = lambda t: [m.normalized_form() for m in tokenizer_obj.tokenize(t, mode)]
-tokens = sample.追加説明及び具体的状況の説明.map(tokenizer_sudachi)
-tokens.head()
-```
-
-    ## 0    [・, 店頭, の, 取り扱い, 額, が, 前年, 比, 約, 120, %, と, 好調...
-    ## 1    [・, 当, 施設, の, 利用, 乗降, 客数, は, 1, 月, 26, 日, 時点, ...
-    ## 2    [・, 年, 末, の, 消費, の, 反動, も, 有る, て, か, 、, 客, の, ...
-    ## 3    [・, 外国人, 観光客, に, よる, 売り上げ, が, 前年, 比, 152, %, と...
-    ## 4    [・, 積極的, だ, 景気, が, 上向き, に, 有る, と, まで, は, 言う, 辛...
-    ## Name: 追加説明及び具体的状況の説明, dtype: object
-
-Tokenizeすることができました。次に5段階の景況判断をLabel Encodingに変換します。変換には`Scikit-Learn`の`LabelEncoder`を使用します。
-
-``` python
-score_mapping = {'◎': 1, '○': 1, '▲': 0, '×':0}
-label = sample.景気の現状判断.map(score_mapping)
-```
-
-これで前処理は完了です。
-
 ### センチメントスコアの抽出
 
-では、実践です。`quanteda`というパッケージを用いるため、`R`で行っていきます。前処理は`R`で実施済みで、`toks_sent`という変数に各文書の形態素が文書別に格納されています。
+では、実践です。`quanteda`というパッケージを用いるため、`R`で行っていきます。  
+まず、前処理です。サンプルデータを読み込みます。
+
+``` r
+filepath <- r"(C:\Users\hogehoge\Watcher\RawData)"
+```
+
+``` r
+library(magrittr)
+files <- stringr::str_c(filepath, list.files(filepath, pattern = "*.csv"))
+sample <- readr::read_csv(files,locale=readr::locale(encoding="Shift-JIS"),show_col_types = FALSE)
+sample <- sample[sample$追加説明及び具体的状況の説明!="-"|sample$追加説明及び具体的状況の説明!="*",]
+sample$景気の現状判断 <- factor(sample$景気の現状判断, levels=c("◎","○","□","▲","×"))
+```
+
+次に、`sudachi`を用いてテキストデータのToken化を行います。`R`には`sudachi`を使えるパッケージが存在しないので、Pythonパッケージの`sudachipy`を`reticulate`で呼び出して使用します。
+
+``` r
+stopwords_path <- r"(C:\Users\hogehoge\Watcher\marimo-master\yaml\stopwords_ja.yml)"
+```
+
+``` r
+# sudachiによる形態素解析→Token化
+# stopwordsはmarimoを使用
+ja_stopwords <- quanteda::dictionary(yaml::read_yaml(stopwords_path))
+# コーパス生成
+corp <- quanteda::corpus(sample,text_field="追加説明及び具体的状況の説明")
+# sudachipy呼び出し→インスタンス化
+sudachipy <- reticulate::import("sudachipy")
+# 正規化関数定義
+sudachi_normalize <- function(tokens){
+  res <- c()
+  for(i in 0:(length(tokens)-1)){
+    res <- append(res,tokens[i]$normalized_form())
+  }
+  return(res)
+}
+# tokenize関数定義
+sudachi_tokenize <- function(sentence, mode = "A"){
+  tokenizer_obj <- sudachipy$dictionary$Dictionary()$create()
+  mode <- switch(mode, 
+                 "A" = sudachipy$tokenizer$Tokenizer$SplitMode$A,
+                 "B" = sudachipy$tokenizer$Tokenizer$SplitMode$B,
+                 "C" = sudachipy$tokenizer$Tokenizer$SplitMode$C,
+                 stop("Only Can Use A, B, C"))
+  res <- purrr::map(sentence, ~sudachi_normalize(tokenizer_obj$tokenize(., mode)))
+  return(res)
+}
+
+# Token化実行
+toks_sent <- corp %>%
+              sudachi_tokenize() %>% 
+              quanteda::as.tokens() %>% 
+              quanteda::tokens_remove(ja_stopwords, padding = TRUE)
+
+# メタデータをTokenに再付与
+quanteda::docvars(toks_sent) <- quanteda::docvars(corp)
+```
 
 この`toks_sent`から文書行列を生成します。文書行列とは、単語と文書の関係を表す行列で、各行が単語(token)、各列が文書を表し、各要素は文書中の単語の出現回数となっています。
 
 ``` r
 # 文書行列の生成
 dfmt_sent <- toks_sent %>% 
-              quanteda::dfm(remove = "") %>% 
+              quanteda::dfm() %>% 
+              quanteda::dfm_remove(pattern="") %>% 
               quanteda::dfm_trim(min_termfreq = 10)
 ```
 
@@ -367,32 +309,188 @@ dfmt_sent_arranged <- quanteda::dfm_match(dfmt_sent, PNdict$V1)
 
 # 文書のセンチメントスコア算出
 n <- unname(quanteda::rowSums(dfmt_sent_arranged))
-score_dict <- ifelse(n>0, quanteda::rowSums(dfmt_sent_arranged %*% PNdict$V4)/n, NA)
+score_dict <- scale(ifelse(n>0, quanteda::rowSums(dfmt_sent_arranged %*% PNdict$V4)/n, NA))
 sample_with_score_dict <- sample %>% cbind(score_dict) 
-sample_with_score_dict %>% head()
 ```
 
-    ##   基準年  基準日 景気の現状判断                 業種・職種   判断の理由
-    ## 1   2016 1月31日             ◎       旅行代理店（従業員） 販売量の動き
-    ## 2   2016 1月31日             ◎         観光名所（従業員） 来客数の動き
-    ## 3   2016 1月31日             ○ 一般小売店［酒］（経営者）   単価の動き
-    ## 4   2016 1月31日             ○         百貨店（売場主任） お客様の様子
-    ## 5   2016 1月31日             ○           百貨店（担当者） 来客数の動き
-    ## 6   2016 1月31日             ○     百貨店（販売促進担当）     それ以外
-    ##                                                                                                                                                                               追加説明及び具体的状況の説明
-    ## 1                                                                                                                                                            ・店頭の取扱額が前年比約120％と好調であった。
-    ## 2                                                            ・当施設の利用乗降客数は１月26日時点で前年比130.1％となっており、１月としては過去最高の利用乗降客数になることが確定したほどの入込状況にある。
-    ## 3                                                           ・年末の消費の反動もあってか、客の動きがやや鈍い。ただ、相変わらず高額商材が売れているということもあり、売上はそれなりの金額をキープしている。
-    ## 4 ・外国人観光客による売上が前年比152％と好調を継続しているほか、来客数が前年比102％と好調を維持している。月半ばに停滞した売上も下旬に入ってから回復傾向にあり、定価品、バーゲン品とも前年を上回っている。
-    ## 5                                                                                                                 ・積極的に景気が上向きにあるとまではいいづらいものの、３か月前との比較では改善している。
-    ## 6                                                                     ・気温が平年並みとなり、これまでの温暖、少雪の状態がみられなくなってきたことで、防寒衣料、雑貨商材を中心に多少改善の傾向がみられる。
-    ##     score_dict
-    ## 1 -0.348178400
-    ## 2 -0.565735877
-    ## 3 -0.612866000
-    ## 4 -0.325386370
-    ## 5  0.006678875
-    ## 6 -0.476283793
+サンプルデータを抜き出して、センチメントスコアを観察してみましょう。
+
+``` r
+sample_with_score_dict %>% 
+  head() %>% 
+  knitr::kable() %>% 
+  kableExtra::kable_styling(bootstrap_options = c("striped"))
+```
+
+<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:right;">
+基準年
+</th>
+<th style="text-align:left;">
+基準日
+</th>
+<th style="text-align:left;">
+景気の現状判断
+</th>
+<th style="text-align:left;">
+業種・職種
+</th>
+<th style="text-align:left;">
+判断の理由
+</th>
+<th style="text-align:left;">
+追加説明及び具体的状況の説明
+</th>
+<th style="text-align:right;">
+score_dict
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+2016
+</td>
+<td style="text-align:left;">
+1月31日
+</td>
+<td style="text-align:left;">
+◎
+</td>
+<td style="text-align:left;">
+旅行代理店（従業員）
+</td>
+<td style="text-align:left;">
+販売量の動き
+</td>
+<td style="text-align:left;">
+・店頭の取扱額が前年比約120％と好調であった。
+</td>
+<td style="text-align:right;">
+1.0918056
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2016
+</td>
+<td style="text-align:left;">
+1月31日
+</td>
+<td style="text-align:left;">
+◎
+</td>
+<td style="text-align:left;">
+観光名所（従業員）
+</td>
+<td style="text-align:left;">
+来客数の動き
+</td>
+<td style="text-align:left;">
+・当施設の利用乗降客数は１月26日時点で前年比130.1％となっており、１月としては過去最高の利用乗降客数になることが確定したほどの入込状況にある。
+</td>
+<td style="text-align:right;">
+-0.7191220
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2016
+</td>
+<td style="text-align:left;">
+1月31日
+</td>
+<td style="text-align:left;">
+○
+</td>
+<td style="text-align:left;">
+一般小売店［酒］（経営者）
+</td>
+<td style="text-align:left;">
+単価の動き
+</td>
+<td style="text-align:left;">
+・年末の消費の反動もあってか、客の動きがやや鈍い。ただ、相変わらず高額商材が売れているということもあり、売上はそれなりの金額をキープしている。
+</td>
+<td style="text-align:right;">
+-0.9872586
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2016
+</td>
+<td style="text-align:left;">
+1月31日
+</td>
+<td style="text-align:left;">
+○
+</td>
+<td style="text-align:left;">
+百貨店（売場主任）
+</td>
+<td style="text-align:left;">
+お客様の様子
+</td>
+<td style="text-align:left;">
+・外国人観光客による売上が前年比152％と好調を継続しているほか、来客数が前年比102％と好調を維持している。月半ばに停滞した売上も下旬に入ってから回復傾向にあり、定価品、バーゲン品とも前年を上回っている。
+</td>
+<td style="text-align:right;">
+1.0711102
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2016
+</td>
+<td style="text-align:left;">
+1月31日
+</td>
+<td style="text-align:left;">
+○
+</td>
+<td style="text-align:left;">
+百貨店（担当者）
+</td>
+<td style="text-align:left;">
+来客数の動き
+</td>
+<td style="text-align:left;">
+・積極的に景気が上向きにあるとまではいいづらいものの、３か月前との比較では改善している。
+</td>
+<td style="text-align:right;">
+3.1257848
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2016
+</td>
+<td style="text-align:left;">
+1月31日
+</td>
+<td style="text-align:left;">
+○
+</td>
+<td style="text-align:left;">
+百貨店（販売促進担当）
+</td>
+<td style="text-align:left;">
+それ以外
+</td>
+<td style="text-align:left;">
+・気温が平年並みとなり、これまでの温暖、少雪の状態がみられなくなってきたことで、防寒衣料、雑貨商材を中心に多少改善の傾向がみられる。
+</td>
+<td style="text-align:right;">
+0.0254686
+</td>
+</tr>
+</tbody>
+</table>
+
+2行目の文章は明らかにポジティブですが、なにが影響したのかネガティブ寄りの判定になっていますね。また、顕著なのが3行目で「鈍い」という単語に引っ張られ、ネガティブなセンチメントを抽出しやすくなっています。この文章の本意は「ただ・・・」という逆接以降の文章ですが、文脈や語順が捉えられないために正しい情報を引き出すことができていません。5行目は「積極的」、「上向き」、「改善」といった単語を検知し、かなりポジティブなセンチメントがあるという判定をしていますが、「積極的に景気が上向きとは**いいづらい**\*」というネガティブな文脈を捉え切れておらず、過大評価となっています。
 
 ``` r
 # 結果の可視化
@@ -403,7 +501,232 @@ ggplot(sample_with_score_dict, aes(x=景気の現状判断,y=score_dict)) + geom
 <img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-13-1.png" width="672" />
 
 「景気の現状判断」毎にboxplotを書いてみましたが、ぱっと見はあまり変わらない結果になりました。
-どの判断も-0.5くらいが平均で、ほんの少し緩やかに右肩上がりのような気もしますが、文書を分類できている言える結果ではないことがわかります。
+ほんの少し緩やかに右下がりのような気もしますが、文書分類可能な結果ではないことがわかります。
+
+### (追加検証)tf-idfを用いた算出
+
+上記の分析では単語の出現回数を利用していましたが、tf-idfを用いた分析も行うことにします。tf-idfとは、term frequency-inverse document frequencyの略で、情報検索やテキストマイニングでよく使われる重みのことです。この重みは、ある単語がコーパス[^1]の中の文書にとってどれだけ重要かを評価するために使われる統計的尺度で、その特徴量は文書中の単語の出現回数が増加するほど上昇しますが、コーパス中の単語の頻度によって相殺されます。例えば、迷惑メールを分類することを意図した電子メールのコーパスにおいて、「お知らせ」や「ニュース」などは出現頻度が高い一方でどの文書にも出現するため、迷惑メールを特定するという点においては重要度は高くありません。一方で、「当選」や「今だけ！」などはコーパス上にはそこまで出現頻度が高くない単語であるものの、迷惑メールの文章中には頻度が高く出現すると考えられます。tf-idfでは後者の単語の特徴量が高くなるように定義されています。
+
+tf-idfの計算方法はtfとidfに分かれます。
+
+-   tf: Term frequency
+    単語が文書中にどれだけ頻繁に出現しているかを測定するもの。文書の長さはそれぞれ異なるため、長い文書では短い文書よりはるかに多くの用語が出現する可能性があります。そのため、正規化の方法として、単語頻度を文書の長さ（文書内の単語総数）で割ることがよくあります。
+
+$$
+tf(t) = \frac{文章内の単語tの出現回数}{文章内の単語総数}
+$$
+
+-idf: Inverse Document Frequency
+ある単語がコーパス内でどの程度希少であるかを測定するもの。「です」、「は」、「が」などの頻出語を減らして、希少語を増やす意図があります。
+
+$$
+idf(t) = \log(\frac{コーパス内の文書総数}{単語tを含む文書数})
+$$
+
+`r`で実装してみます。tf-idfは`quanteda::dfm_tfidf()`で計算できます。引数には、文書行列を渡します。そのほかは上記の分析と同じです。
+
+``` r
+# tf-idf版文書行列の生成
+dfmt_tfidf_sent <- dfmt_sent %>% quanteda::dfm_tfidf()
+
+# 辞書の並びに合わせて文書行列の列を入れ替える。
+dfmt_tfidf_sent_arranged <- quanteda::dfm_match(dfmt_tfidf_sent, PNdict$V1)
+
+# 文書のセンチメントスコア算出
+n <- unname(quanteda::rowSums(dfmt_tfidf_sent_arranged))
+score_dict <- scale(ifelse(n>0, quanteda::rowSums(dfmt_tfidf_sent_arranged %*% PNdict$V4)/n, NA))
+sample_with_score_dict <- sample %>% cbind(score_dict)
+```
+
+先ほどと同じようにサンプルを抜き出してみます。
+
+``` r
+sample_with_score_dict %>% 
+  head() %>% 
+  knitr::kable() %>% 
+  kableExtra::kable_styling(bootstrap_options = c("striped"))
+```
+
+<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:right;">
+基準年
+</th>
+<th style="text-align:left;">
+基準日
+</th>
+<th style="text-align:left;">
+景気の現状判断
+</th>
+<th style="text-align:left;">
+業種・職種
+</th>
+<th style="text-align:left;">
+判断の理由
+</th>
+<th style="text-align:left;">
+追加説明及び具体的状況の説明
+</th>
+<th style="text-align:right;">
+score_dict
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+2016
+</td>
+<td style="text-align:left;">
+1月31日
+</td>
+<td style="text-align:left;">
+◎
+</td>
+<td style="text-align:left;">
+旅行代理店（従業員）
+</td>
+<td style="text-align:left;">
+販売量の動き
+</td>
+<td style="text-align:left;">
+・店頭の取扱額が前年比約120％と好調であった。
+</td>
+<td style="text-align:right;">
+0.1052126
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2016
+</td>
+<td style="text-align:left;">
+1月31日
+</td>
+<td style="text-align:left;">
+◎
+</td>
+<td style="text-align:left;">
+観光名所（従業員）
+</td>
+<td style="text-align:left;">
+来客数の動き
+</td>
+<td style="text-align:left;">
+・当施設の利用乗降客数は１月26日時点で前年比130.1％となっており、１月としては過去最高の利用乗降客数になることが確定したほどの入込状況にある。
+</td>
+<td style="text-align:right;">
+-0.1025889
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2016
+</td>
+<td style="text-align:left;">
+1月31日
+</td>
+<td style="text-align:left;">
+○
+</td>
+<td style="text-align:left;">
+一般小売店［酒］（経営者）
+</td>
+<td style="text-align:left;">
+単価の動き
+</td>
+<td style="text-align:left;">
+・年末の消費の反動もあってか、客の動きがやや鈍い。ただ、相変わらず高額商材が売れているということもあり、売上はそれなりの金額をキープしている。
+</td>
+<td style="text-align:right;">
+-0.8938789
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2016
+</td>
+<td style="text-align:left;">
+1月31日
+</td>
+<td style="text-align:left;">
+○
+</td>
+<td style="text-align:left;">
+百貨店（売場主任）
+</td>
+<td style="text-align:left;">
+お客様の様子
+</td>
+<td style="text-align:left;">
+・外国人観光客による売上が前年比152％と好調を継続しているほか、来客数が前年比102％と好調を維持している。月半ばに停滞した売上も下旬に入ってから回復傾向にあり、定価品、バーゲン品とも前年を上回っている。
+</td>
+<td style="text-align:right;">
+1.0201638
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2016
+</td>
+<td style="text-align:left;">
+1月31日
+</td>
+<td style="text-align:left;">
+○
+</td>
+<td style="text-align:left;">
+百貨店（担当者）
+</td>
+<td style="text-align:left;">
+来客数の動き
+</td>
+<td style="text-align:left;">
+・積極的に景気が上向きにあるとまではいいづらいものの、３か月前との比較では改善している。
+</td>
+<td style="text-align:right;">
+2.4385447
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2016
+</td>
+<td style="text-align:left;">
+1月31日
+</td>
+<td style="text-align:left;">
+○
+</td>
+<td style="text-align:left;">
+百貨店（販売促進担当）
+</td>
+<td style="text-align:left;">
+それ以外
+</td>
+<td style="text-align:left;">
+・気温が平年並みとなり、これまでの温暖、少雪の状態がみられなくなってきたことで、防寒衣料、雑貨商材を中心に多少改善の傾向がみられる。
+</td>
+<td style="text-align:right;">
+0.7675009
+</td>
+</tr>
+</tbody>
+</table>
+
+傾向は先ほどの分析とさほど変わらないように見受けられます。
+boxplotの結果も見てみましょう。
+
+``` r
+# 結果の可視化
+library(ggplot2)
+ggplot(sample_with_score_dict, aes(x=景気の現状判断,y=score_dict)) + geom_boxplot()
+```
+
+<img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-16-1.png" width="672" />
+
+右下がりの傾向が強くなったかもしれません。ただ、依然として景気判断別に見たスコアの分布は差がなく、文書分類ができる精度ではないことがわかります。
 
 ## 3. 終わりに
 
@@ -419,10 +742,6 @@ Takamura, Hiroya, Takashi Inui, and Manabu Okumura. 2005. “The 43rd Annual Mee
 
 </div>
 
-<div id="ref-TAKAOKA18.8884" class="csl-entry">
-
-Takaoka, Kazuma, Sorami Hisamoto, Noriko Kawahara, Miho Sakamoto, Yoshitaka Uchida, and Yuji Matsumoto. 2018. “Sudachi: A Japanese Tokenizer for Business.” In *Proceedings of the Eleventh International Conference on Language Resources and Evaluation (LREC 2018)*, edited by Nicoletta Calzolari (Conference chair), Khalid Choukri, Christopher Cieri, Thierry Declerck, Sara Goggi, Koiti Hasida, Hitoshi Isahara, et al. Paris, France: European Language Resources Association (ELRA).
-
 </div>
 
-</div>
+[^1]: 文章を構造化し大規模に集積したもの
