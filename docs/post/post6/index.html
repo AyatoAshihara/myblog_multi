@@ -810,7 +810,7 @@
 <p>$$
 x_{i,t|v_j} = \mu_i + \lambda_{i1}f_{1,t} + &hellip; + \lambda_{ir}f_{r,t} + \xi_{i,t|v_j} \tag{1}
 $$</p>
-<p><code>\(\mu\_i\)</code>は定数項、$\lambda_{ir}$はファクターローディング、$\xi_{i,t|v_j}$はホワイトノイズの誤差項を表しています。これを行列形式で書くと以下のようになります。</p>
+<p>$(\mu_i)$は定数項、$\lambda_{ir}$はファクターローディング、$\xi_{i,t|v_j}$はホワイトノイズの誤差項を表しています。これを行列形式で書くと以下のようになります。</p>
 <p>$$
 x_{t|v_j}  = \mu + \Lambda F_t + \xi_{t|v_j} = \mu + \chi_t + \xi_{t|v_j} \tag{2}
 $$</p>
@@ -818,7 +818,9 @@ $$</p>
 <p>$$
 \displaystyle z_{it} = \frac{1}{\hat{\sigma}_i}(x_{it} - \hat{\mu}_{it}) \tag{3}
 $$</p>
-<p>ここで、$\displaystyle \hat{\mu}<em>{it} = 1/T \sum</em>{t=1}^T x_{it}$であり、$\hat{\sigma}_i = \sqrt{1/T \sum_{t=1}^T (x_{it}-\hat{\mu_{it}})^2}$です（ここで$T$はサンプル期間）。分散共分散行列$S$を以下のように定義します。</p>
+<div>
+ここで、$\displaystyle \hat{\mu}_{it} = 1/T \sum_{t=1}^T x_{it}$であり、$\hat{\sigma}_i = \sqrt{1/T \sum_{t=1}^T (x_{it}-\hat{\mu_{it}})^2}$です（ここで$T$はサンプル期間）。分散共分散行列$S$を以下のように定義します。
+</div>
 <p>$$
 \displaystyle S = \frac{1}{T} \sum_{t=1}^T z_t z_t^{\mathrm{T}} \tag{4}
 $$
@@ -840,16 +842,20 @@ $$</p>
 <p>$$
 F_t = AF_{t-1} + u_t \tag{8}
 $$
-ここで、$u_t$は平均0、分散$H$のホワイトノイズです。再掲している(2)式が観測方程式、(8)式が遷移方程式となっています。推定すべきパラメータは$\Lambda$、$\Psi$以外に$A$と$H$があります（$\mu=0$としています）。$A$は主成分分析により計算した$\tilde{F}_t$を<code>VAR(1)</code>にかけることで推定します。</p>
+ここで、$u_t$は平均0、分散$H$のホワイトノイズです。再掲している(2)式が観測方程式、(8)式が遷移方程式となっています。推定すべきパラメータは$\Lambda$、$\Psi$以外に$A$と$H$があります（$\mu=0$としています）。$A$は主成分分析により計算した$\tilde{F}_t$を$VAR(1)$にかけることで推定します。</p>
 <p>$$
 \hat{A} = \sum_{t=2}^T\tilde{F}_t\tilde{F}_{t-1}^{\mathrm{T}} (\sum_{t=2}^T\tilde{F}_{t-1}\tilde{F}_{t-1}^{\mathrm{T}})^{-1} \tag{9}
 $$
-<code>\(H\)</code>は今推計した<code>VAR(1)</code>の誤差項の共分散行列から計算します。これで必要なパラメータの推定が終わりました。次にカルマンフィルタを回します。カルマンフィルタに関しては<a href="https://qiita.com/MoriKen/items/0c80ef75749977767b43" target="_blank" rel="noopener">こちら</a>を参考にしてください。わかりやすいです。これで最終的に$\hat{F}_{t|v_j}$の推計ができるわけです。
+$H$は今推計した$VAR(1)$の誤差項の共分散行列から計算します。これで必要なパラメータの推定が終わりました。次にカルマンフィルタを回します。カルマンフィルタに関しては<a href="https://qiita.com/MoriKen/items/0c80ef75749977767b43" target="_blank" rel="noopener">こちら</a>を参考にしてください。わかりやすいです。これで最終的に$\hat{F}_{t|v_j}$の推計ができるわけです。
 GDPがこれらのファクターで説明可能であり（つまり固有の変動がない）、GDPと月次経済指標がjointly normalであれば以下のような単純なOLS推計でGDPを予測することができます。もちろん月次経済指標の方が早く公表されるので、内生性の問題はないと考えられます。</p>
-<p>$$
-\hat{y}<em>{3k|v_j} = \alpha + \beta^{\mathrm{T}} \hat{F}</em>{3k|v_j} \tag{10}
-$$</p>
-<p>ここで、$3k$は四半期の最終月を示しています（3月、6月など）$\hat{y}<em>{3k|v_j}$は$j$時点で得られる情報集合$v_j$での四半期GDPを表しており、$\hat{F}</em>{3k|v_j}$はその時点で推定したファクターを表しています（四半期最終月の値だけを使用している点に注意）。これで推計方法の説明は終わりです。</p>
+<div>
+$$
+\hat{y}_{3k|v_j} = \alpha + \beta^{\mathrm{T}} \hat{F}_{3k|v_j} \tag{10}
+$$
+</div>
+<div>
+ここで、$3k$は四半期の最終月を示しています（3月、6月など）$\hat{y}_{3k|v_j}$は$j$時点で得られる情報集合$v_j$での四半期GDPを表しており、$\hat{F}_{3k|v_j}$はその時点で推定したファクターを表しています（四半期最終月の値だけを使用している点に注意）。これで推計方法の説明は終わりです。
+</div>
 <h2 id="2-rで実装する">2. Rで実装する</h2>
 <p>では実装します。前回記事で得られたデータ（dataset）が読み込まれている状態からスタートします。まず、主成分分析でファクターを計算します。なお、前回の記事で3ファクターの累積寄与度が80%を超えたため、今回もファクター数は3にしています。</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e">#------------------------</span>
@@ -890,7 +896,7 @@ F_t.xts <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">xts
 psi <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">diag</span>(S<span style="color:#f92672">-</span>V<span style="color:#f92672">%*%</span>D<span style="color:#f92672">%*%</span><span style="color:#a6e22e">t</span>(V)) <span style="color:#75715e"># (7)式</span>
 R <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">diag</span>(<span style="color:#a6e22e">diag</span>(<span style="color:#a6e22e">cov</span>(z<span style="color:#f92672">-</span>z<span style="color:#f92672">%*%</span>V<span style="color:#f92672">%*%</span><span style="color:#a6e22e">t</span>(V)))) 
 </code></pre></div><p>推計したファクター$\tilde{F}_t$の時系列プロットは以下のようになり、前回<code>princomp</code>関数で計算したファクターと完全一致します（じゃあ<code>princomp</code>でいいやんと思われるかもしれませんが実装しないと勉強になりませんので）。</p>
-<p>次に、<code>VAR(1)</code>を推計し、パラメータを取り出します。</p>
+<p>次に、$VAR(1)$を推計し、パラメータを取り出します。</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># VAR(1)モデルを推計</span>
 a <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#ae81ff">0</span>,f,f)
 b <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#ae81ff">0</span>,f,f)
@@ -908,7 +914,7 @@ e <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">numeric</
 H <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">t</span>(e)<span style="color:#f92672">%*%</span>e
 Q <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">diag</span>(<span style="color:#ae81ff">1</span>,f,f)
 Q[1<span style="color:#f92672">:</span>f,<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>f] <span style="color:#f92672">&lt;-</span> H
-</code></pre></div><p><code>VAR(1)</code>に関しても<code>var</code>関数とパラメータの数値が一致することを確認済みです。いよいよカルマンフィルタを実行します。</p>
+</code></pre></div><p>$VAR(1)$に関しても<code>var</code>関数とパラメータの数値が一致することを確認済みです。いよいよカルマンフィルタを実行します。</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># カルマンフィルタを実行</span>
 RR <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">array</span>(<span style="color:#ae81ff">0</span>,dim <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">ncol</span>(z),<span style="color:#a6e22e">ncol</span>(z),<span style="color:#a6e22e">nrow</span>(z))) <span style="color:#75715e"># RRは観測値の分散行列（相関はないと仮定）</span>
 <span style="color:#a6e22e">for</span>(i in <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#a6e22e">nrow</span>(z)){

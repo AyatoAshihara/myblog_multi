@@ -1077,7 +1077,7 @@ score <span style="color:#f92672">=</span> accuracy_score(y_test, y_pred)
 </code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">plt<span style="color:#f92672">.</span>show()
 </code></pre></div><p><img src="../../post/post18/index_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">plt<span style="color:#f92672">.</span>close()
-</code></pre></div><p>不均衡データのバイアス修正はしたんですが、それでもなお負値を予測しやすいモデルとなっています。これでは使えないですね。</p>
+</code></pre></div><p>不均衡データのバイアス修正はしたんですが、それでもなお正値を予測しやすいモデルとなっています。これでは使えないですね。</p>
 <h2 id="3-shap値を用いた結果解釈">3. Shap値を用いた結果解釈</h2>
 <p>今学習したモデルの<code>shap</code>値を考え、結果の解釈をしたいと思います。<code>shap</code>値については時間があれば、説明を追記したいと思います。簡単に言えば、CNNが画像のどの部分に特徴を捉え、馬が上位に入るかを予想したかを可視化で捉えることができます。この馬の解析をすることにします。</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">plt<span style="color:#f92672">.</span>imshow(X_test[<span style="color:#ae81ff">0</span>])
@@ -1360,11 +1360,11 @@ Youtubeからパドック動画を取得して、<code>Encoder-Decoder</code>モ
       
       <li><a href="../../post/post16/">LightGBMを使用して競馬結果を予想してみる</a></li>
       
+      <li><a href="../../post/post28/">【徹底比較】センチメントスコア算出手法！！ - 第3回</a></li>
+      
       <li><a href="../../post/post27/">【徹底比較】センチメントスコア算出手法！！ - 第2回</a></li>
       
       <li><a href="../../post/post25/">【徹底比較】センチメントスコア算出手法！！ - 第1回</a></li>
-      
-      <li><a href="../../post/post22/">OECD.orgからマクロパネルデータをAPIで取得する</a></li>
       
     </ul>
   </div>

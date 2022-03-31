@@ -417,11 +417,17 @@ $$
 r_{t}(q) \equiv r_{t} + r_{t-1} + &amp;hellip; + r_{t-q+1}
 $$
 と定義すると(複利部分を無視してます)、年率化されたシャープレシオは&lt;/p&gt;
-&lt;p&gt;$$
-&lt;code&gt;\begin{eqnarray} SR(q) &amp;amp;=&amp;amp; \frac{E[r_{t}(q)]}{\sqrt{Var(r_{t}(q))}}\\ &amp;amp;=&amp;amp; \frac{q\mu}{\sqrt{q}\sigma}\\ &amp;amp;=&amp;amp; \frac{\mu}{\sigma}\sqrt{q} \end{eqnarray}&lt;/code&gt;
+&lt;div&gt;
 $$
-と表すことができます。ここで、$q$は年毎のリターンの数(頻度)です。例えば、日次リターンの場合$q=365$となります(閏年を除く)。
-&lt;code&gt;\(\mu\)&lt;/code&gt;と$\sigma$は一般に未知ですので、$SR$の真値を知ることはできません。なので、$R_t$を標本リターン、リスクフリーレート$R^f$(定数)とすると、標本平均$\hat{\mu}=1/T\sum_{t=1}^T R_{t}-R^f$と標本標準偏差$\hat{\sigma}=\sqrt{1/T\sum_{t=1}^{T}(R_{t}-\hat{\mu})}$を用いてシャープレシオの推定値を計算することになります($T$はバックテストを行うサンプルサイズ)。&lt;/p&gt;
+\begin{eqnarray}
+SR(q) &amp;=&amp; \frac{E[r_{t}(q)]}{\sqrt{Var(r_{t}(q))}}\\
+&amp;=&amp; \frac{q\mu}{\sqrt{q}\sigma}\\
+&amp;=&amp; \frac{\mu}{\sigma}\sqrt{q}
+\end{eqnarray}
+$$
+&lt;/div&gt;
+&lt;p&gt;と表すことができます。ここで、$q$は年毎のリターンの数(頻度)です。例えば、日次リターンの場合$q=365$となります(閏年を除く)。
+$\mu$と$\sigma$は一般に未知ですので、$SR$の真値を知ることはできません。なので、$R_t$を標本リターン、リスクフリーレート$R^f$(定数)とすると、標本平均$\hat{\mu}=1/T\sum_{t=1}^T R_{t}-R^f$と標本標準偏差$\hat{\sigma}=\sqrt{1/T\sum_{t=1}^{T}(R_{t}-\hat{\mu})}$を用いてシャープレシオの推定値を計算することになります($T$はバックテストを行うサンプルサイズ)。&lt;/p&gt;
 &lt;p&gt;$$
 \hat{SR}(q) = \frac{\hat{\mu}}{\hat{\sigma}}\sqrt{q}
 $$
@@ -467,10 +473,44 @@ $$
 \right]
 $$
 よって、&lt;/p&gt;
-&lt;p&gt;$$
-&lt;code&gt;\begin{eqnarray} \boldsymbol V_g &amp;amp;=&amp;amp; \left( \begin{array}{cccc} \frac{\partial g}{\partial \mu}, \frac{\partial g}{\partial \sigma}\\ \end{array} \right) \left(  \begin{array}{cccc} \sigma^2 &amp;amp; 0\\ 0 &amp;amp; 2\sigma^4\\ \end{array} \right) \left( \begin{array}{cccc} \frac{\partial g}{\partial \mu}\\ \frac{\partial g}{\partial \sigma}\\ \end{array} \right) \\ &amp;amp;=&amp;amp; \left( \begin{array}{cccc} \frac{\partial g}{\partial \mu}\sigma^2, \frac{\partial g}{\partial \sigma}2\sigma^4\\ \end{array} \right) \left( \begin{array}{cccc} \frac{\partial g}{\partial \mu}\\ \frac{\partial g}{\partial \sigma}\\ \end{array} \right) \\ &amp;amp;=&amp;amp; (\frac{\partial g}{\partial \mu})^2\sigma^2 + (\frac{\partial g}{\partial \sigma})^2\sigma^4 \\ &amp;amp;=&amp;amp; 1 + \frac{\mu^2}{2\sigma^2} \\ &amp;amp;=&amp;amp; 1 + \frac{1}{2}SR^2 \end{eqnarray}&lt;/code&gt;
+&lt;div&gt;
 $$
-と導出することができます。シャープレシオの絶対値が大きくなるほど指数的に分散が大きくなる傾向があるので良いパフォーマンスを見た時には注意が必要かもしれません。年率化されたシャープレシオの推定値$\hat{SR}(q)$が従う分布はここから&lt;/p&gt;
+\begin{eqnarray}
+\boldsymbol V_g &amp;=&amp; \left(
+    \begin{array}{cccc}
+      \frac{\partial g}{\partial \mu}, \frac{\partial g}{\partial \sigma}\\
+    \end{array}
+  \right)
+  \left( 
+    \begin{array}{cccc}
+      \sigma^2 &amp; 0\\
+      0 &amp; 2\sigma^4\\
+    \end{array}
+  \right)
+  \left(
+    \begin{array}{cccc}
+      \frac{\partial g}{\partial \mu}\\
+      \frac{\partial g}{\partial \sigma}\\
+    \end{array}
+  \right) \\
+  &amp;=&amp; \left(
+    \begin{array}{cccc}
+      \frac{\partial g}{\partial \mu}\sigma^2, \frac{\partial g}{\partial \sigma}2\sigma^4\\
+    \end{array}
+  \right)
+    \left(
+    \begin{array}{cccc}
+      \frac{\partial g}{\partial \mu}\\
+      \frac{\partial g}{\partial \sigma}\\
+    \end{array}
+  \right) \\
+  &amp;=&amp; (\frac{\partial g}{\partial \mu})^2\sigma^2 + (\frac{\partial g}{\partial \sigma})^2\sigma^4 \\
+  &amp;=&amp; 1 + \frac{\mu^2}{2\sigma^2} \\
+  &amp;=&amp; 1 + \frac{1}{2}SR^2
+\end{eqnarray}
+$$
+&lt;/div&gt;
+&lt;p&gt;と導出することができます。シャープレシオの絶対値が大きくなるほど指数的に分散が大きくなる傾向があるので良いパフォーマンスを見た時には注意が必要かもしれません。年率化されたシャープレシオの推定値$\hat{SR}(q)$が従う分布はここから&lt;/p&gt;
 &lt;p&gt;$$
 \hat{SR}(q)\sim^a \mathcal{N}(\sqrt{q}SR,\frac{V(q)}{T}) \&lt;br&gt;
 V(q) = q{\boldsymbol V}_g = q(1 + \frac{1}{2}SR^2)
@@ -488,18 +528,34 @@ $$
 \lim_{N\rightarrow\infty}prob[\frac{\max[\hat{SR}]_N-\alpha}{\beta}\leq x] = G(x) = e^{-e^{-x}}
 $$
 ここで、$\alpha=Z(x)^{-1}[1-1/N], \beta=Z(x)^{-1}[1-1/Ne^{-1}]-\alpha$で、$Z(x)$は標準正規分布の累積分布関数を表しています。ガンベル分布のモーメント母関数$M_x(t)$は&lt;/p&gt;
-&lt;p&gt;$$
-&lt;code&gt;\begin{eqnarray} M_x(t) &amp;amp;=&amp;amp; E[e^{tx}] = \int_{-\infty}^\infty e^{tx}e^{-x}e^{-e^{-x}}dx \\ \end{eqnarray}&lt;/code&gt;
+&lt;div&gt;
 $$
-と書け、$x=-\log(y)$と変数変換すると$dx/dy=-1/y=-(e^{-x})^{-1}$なので、&lt;/p&gt;
-&lt;p&gt;$$
-&lt;code&gt;\begin{eqnarray} M_x(t) &amp;amp;=&amp;amp; \int_{\infty}^0-e^{-t\log(y)}e^{-y}dy \\ &amp;amp;=&amp;amp; \int_{0}^\infty y^{-t}e^{-y}dy \\ &amp;amp;=&amp;amp; \Gamma(1-t) \end{eqnarray}&lt;/code&gt;
+\begin{eqnarray}
+M_x(t) &amp;=&amp; E[e^{tx}] = \int_{-\infty}^\infty e^{tx}e^{-x}e^{-e^{-x}}dx \\
+\end{eqnarray}
 $$
-となります。$\Gamma(x)$はガンマ関数です。ここから、標準化された最大統計量の期待値(平均)は&lt;/p&gt;
-&lt;p&gt;$$
-&lt;code&gt;\begin{eqnarray} \lim_{N\rightarrow\infty} E[\frac{\max[\hat{SR}]_N-\alpha}{\beta}] &amp;amp;=&amp;amp; M_x&#39;(t)|_{t=0} \\ &amp;amp;=&amp;amp; (-1)\Gamma&#39;(1) \\ &amp;amp;=&amp;amp; (-1)(-\gamma) = \gamma \end{eqnarray}&lt;/code&gt;
+&lt;/div&gt;
+&lt;p&gt;と書け、$x=-\log(y)$と変数変換すると$dx/dy=-1/y=-(e^{-x})^{-1}$なので、&lt;/p&gt;
+&lt;div&gt;
 $$
-となります。ここで、$\gamma\approx0.5772156649&amp;hellip;$はEuler-Mascheroni定数です。よって、$N$が大きいとき、i.i.d.の標準正規分布の最大統計量の期待値は&lt;/p&gt;
+\begin{eqnarray}
+M_x(t) &amp;=&amp; \int_{\infty}^0-e^{-t\log(y)}e^{-y}dy \\
+&amp;=&amp; \int_{0}^\infty y^{-t}e^{-y}dy \\
+&amp;=&amp; \Gamma(1-t)
+\end{eqnarray}
+$$
+&lt;\div&gt;
+&lt;p&gt;となります。$\Gamma(x)$はガンマ関数です。ここから、標準化された最大統計量の期待値(平均)は&lt;/p&gt;
+&lt;div&gt;
+$$
+\begin{eqnarray}
+\lim_{N\rightarrow\infty} E[\frac{\max[\hat{SR}]_N-\alpha}{\beta}] &amp;=&amp; M_x&#39;(t)|_{t=0} \\
+&amp;=&amp; (-1)\Gamma&#39;(1) \\
+&amp;=&amp; (-1)(-\gamma) = \gamma
+\end{eqnarray}
+$$
+&lt;/div&gt;
+&lt;p&gt;となります。ここで、$\gamma\approx0.5772156649&amp;hellip;$はEuler-Mascheroni定数です。よって、$N$が大きいとき、i.i.d.の標準正規分布の最大統計量の期待値は&lt;/p&gt;
 &lt;p&gt;$$
 E[\max[\hat{SR}]] \approx \alpha + \gamma\beta = (1-\gamma)Z^{-1}[1-\frac{1}{N}]+\gamma Z^{-1}[1-\frac{1}{N}e^{-1}] \tag{2}
 $$

@@ -834,11 +834,11 @@
 <blockquote>
 <p>this paper focusses on minimum-variance portfolios requiring only estimates of asset covariance, hence bypassing the well-known problem of estimation error in forecasting expected asset returns.</p>
 </blockquote>
-<p>と記載されており、現状でも期待リターンの推計は難しく、それを必要としない最小分散ポートフォリオは有益で実践的な手法であるといえます。最小分散ポートフォリオの目的関数は、その名の通り「分散を最小化すること」です。今、各資産のリターンを集めたベクトルを[tex:r]、各資産の保有ウェイトを$\theta$、ポートフォリオリターンを$R_{p}$で表すことにすると、ポートフォリオ全体の分散$var(R_{p})$は以下のように記述できます。</p>
+<p>と記載されており、現状でも期待リターンの推計は難しく、それを必要としない最小分散ポートフォリオは有益で実践的な手法であるといえます。最小分散ポートフォリオの目的関数は、その名の通り「分散を最小化すること」です。今、各資産のリターンを集めたベクトルを$r$、各資産の保有ウェイトを$\theta$、ポートフォリオリターンを$R_{p}$で表すことにすると、ポートフォリオ全体の分散$var(R_{p})$は以下のように記述できます。</p>
 <p>$$
 var(R_{p}) = var(r^{T}\theta) = E( (r^{T}\theta)(r^{T}\theta)^{T}) = \theta^{T}\Sigma\theta
 $$</p>
-<p>ここで$Sigma$は$r$の分散共分散行列です。よって、最小化問題は以下になります。</p>
+<p>ここで$\Sigma$は$r$の分散共分散行列です。よって、最小化問題は以下になります。</p>
 <p>$$
 \min_{\theta}(\theta^{T}\Sigma\theta) \<br>
 s.t 1^{T}\theta = 1
@@ -856,12 +856,18 @@ $$</p>
 <p>$$
 \theta = \Sigma^{-1}1\lambda^{*}
 $$</p>
-<p>となります。ここで、$\lambda^{<em>}=-1/2\lambda$です。これを2本目の式に代入し、$\lambda^{</em>}$について解きます。</p>
-<p>$$
-1^{T}\Sigma1\lambda^{<em>} = 1 \<br>
-\displaystyle \lambda^{</em>} = \frac{1}{1^{T}\Sigma^{-1}1}
-$$</p>
-<p><code>\(\theta = \Sigma^{-1}1\lambda^{*}\)</code>だったので、$\lambda^{*}$を消去すると、</p>
+<div>
+となります。ここで、$\lambda^{*}=-1/2\lambda$です。これを2本目の式に代入し、$\lambda^{*}$について解きます。
+</div>
+<div>
+$$
+1^{T}\Sigma1\lambda^{*} = 1 \\
+\displaystyle \lambda^{*} = \frac{1}{1^{T}\Sigma^{-1}1}
+$$
+</div>
+<div>
+$\theta = \Sigma^{-1}1\lambda^{*}$だったので、$\lambda^{*}$を消去すると、
+</div>
 <p>$$
 \displaystyle \theta_{gmv} = \frac{\Sigma^{-1}1}{1^{T}\Sigma^{-1}1}
 $$</p>
@@ -911,7 +917,7 @@ $$</p>
 <p>ここで、$\mu$はリターンの標本平均です。$\alpha_{i}$は推定すべきパラメータ。$D_{t}$をGARCHで推計しているので、リターンの分布が正規分布より裾野の厚い分布に従い、またリターンの変化は一定ではなく前日の分散に依存する関係をモデル化しているといえるのではないでしょうか。とりあえずこれで$D_{t}$の推計はできたということにします。次に$R_{t}$の推計ですが、このモデルではリターンを標本として求めるヒストリカルなアプローチを取ります。つまり、$R_{t}$は定数です。よって、リターン変動の大きさは時間によって変化するが、各資産の相対的な関係性は不変であるという仮定を置いていることになります。</p>
 <h3 id="b-dynamic-conditional-correlation-dcc-model">B. Dynamic Conditional Correlation (DCC) model</h3>
 <p>元論文は<a href="http://www.cass.city.ac.uk/__data/assets/pdf_file/0003/78960/Week7Engle_2002.pdf" target="_blank" rel="noopener">こちら</a>。</p>
-<p>こちらのモデルでは、$D_{t}$を求めるところまでは①と同じですが、[$R_{t}$の求め方が異なっており、ARMA(1,1)を用いて推計します。相関行列はやはり定数ではないということで、$tex:t$期までに利用可能なリターンを用いて推計をかけようということになっています。このモデルの相関行列$R_{t}$は、</p>
+<p>こちらのモデルでは、$D_{t}$を求めるところまでは①と同じですが、[$R_{t}$の求め方が異なっており、ARMA(1,1)を用いて推計します。相関行列はやはり定数ではないということで、$t$期までに利用可能なリターンを用いて推計をかけようということになっています。このモデルの相関行列$R_{t}$は、</p>
 <p>$$
 R_{t} = diag(Q_{t})^{-1/2}Q_{t}diag(Q_{t})^{-1/2}
 $$</p>

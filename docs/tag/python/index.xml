@@ -5,7 +5,7 @@
     <link>/tag/python/</link>
       <atom:link href="/tag/python/index.xml" rel="self" type="application/rss+xml" />
     <description>Python</description>
-    <generator>Wowchemy (https://wowchemy.com)</generator><language>ja</language><lastBuildDate>Thu, 24 Mar 2022 00:00:00 +0000</lastBuildDate>
+    <generator>Wowchemy (https://wowchemy.com)</generator><language>ja</language><lastBuildDate>Fri, 25 Mar 2022 00:00:00 +0000</lastBuildDate>
     <image>
       <url>/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
       <title>Python</title>
@@ -13,11 +13,140 @@
     </image>
     
     <item>
+      <title>【徹底比較】センチメントスコア算出手法！！ - 第3回</title>
+      <link>/post/post28/</link>
+      <pubDate>Fri, 25 Mar 2022 00:00:00 +0000</pubDate>
+      <guid>/post/post28/</guid>
+      <description>&lt;p&gt;おはこんばんにちは。センチメントスコア算出企画の第3弾です。
+今回はナイーブベイズ分類器のセンチメントスコア算出方法を実践します。&lt;/p&gt;
+&lt;h2 id=&#34;1-分析手法の説明&#34;&gt;1. 分析手法の説明&lt;/h2&gt;
+&lt;h3 id=&#34;ナイーブベイズ分類器とは&#34;&gt;ナイーブベイズ分類器とは&lt;/h3&gt;
+&lt;p&gt;ナイーブベイズ分類器、または単純ベイズ分類器と呼ばれる手法です。分類問題をベイズの定理を用いて解く手法を指します。まず、ベイズの定理から説明します。入力情報$X$が与えられた時に、出力$Y$が得られる確率は以下で表すことができます。&lt;/p&gt;
+&lt;p&gt;$$
+P(Y|X) = \frac{P(X|Y)P(Y)}{P(X)}
+$$&lt;/p&gt;
+&lt;p&gt;これがベイズの定理で、$P(Y)$は事前確率、$P(Y|X)$は事後確率、$P(X|Y)$は尤度と呼ばれます。ナイーブベイズ分類器が利用される典型的な問題に迷惑メールの分類問題があります。この問題だと、$X$は受信メールに含まれている単語、$Y$は迷惑メールかどうかを表す2値(0,1)のデータとなります。受信メールに$\hat{X}$という単語が含まれている際に、そのメールが迷惑メール($Y=1$)である確率は$P(Y=1|X=\hat{X})$であり、それは以下の3つで求められます。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;迷惑メールが発生する確率$P(Y=1)$&lt;/li&gt;
+&lt;li&gt;そのメールが迷惑メールだった際に単語$\hat{X}$が含まれている確率$P(X=\hat{X}|Y=1)$&lt;/li&gt;
+&lt;li&gt;単語$\hat{X}$が発生する確率$P(X=\hat{X})$&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;ただし、事後確率によって文書分類を行う際には、上式の確率を計算する必要はありません。知りたいのは確率の値ではなく、ある$X$が与えられた時に$P(Y=1|X)$と$P(Y=0|X)$のどちらが大きいかですので、共通している分母は計算から除外することができ、分子$P(X|Y)P(Y)$をそれぞれ計算し、その大小関係によって迷惑メールかどうかを割り振ればよいことになります。&lt;br&gt;
+また、上記は迷惑メールの分類に限らず、今回行おうとしているセンチメント情報、つまりその文書内容がポジティブかネガティブかを分類する問題に対しても使えることがわかると思います。&lt;/p&gt;
+&lt;h3 id=&#34;事後確率の推定方法&#34;&gt;事後確率の推定方法&lt;/h3&gt;
+&lt;p&gt;求めたい事後確率の分子を求める方法について説明します。その計算のためには事前確率$P(Y)$と尤度$P(Y|X)$を求める必要がありますが、基本的にそれぞれにパラメトリックな確率分布を仮定するため、確率分布のパラメータを推定する必要があります。なお、事前確率が従う確率分布を事前分布と呼びます。&lt;br&gt;
+入力単語ベクトルを$X={x_1,x_2,&amp;hellip;,x_N}$とします。ここで、各$x_n$は$n$番目の単語を表します。各$x_n$が生起する条件付確率は語順や周辺の単語に依存しないと仮定すると、$P(X|Y)$は以下のように書き替えることができます。&lt;/p&gt;
+&lt;p&gt;$$
+P(X|Y) = \Pi_{i=1}^N P(x_i|Y)
+$$&lt;/p&gt;
+&lt;p&gt;では、上記の条件付確率をどのように求めるかに話を移しましょう。今、学習データセットとして、&lt;/p&gt;
+&lt;p&gt;$$
+{(S,T)} = (Y=S_1,X=T_1), (Y=S_2,X=T_2), &amp;hellip;,(Y=S_D,X=T_D)
+$$&lt;/p&gt;
+&lt;p&gt;が得られているとします。ここで、$D$はサンプルサイズです。また、$Y$は$1$の時にポジティブ、$0$の時にネガティブとし、独立を仮定します(つまり$S$は0,1の2値を取る)。今、$P(・)$にとある確率分布を仮定すると、${(S,T)}$が得られたもとでの事後分布は&lt;/p&gt;
+&lt;p&gt;$$
+M(\Theta,\Phi) = \Pi_{j=1}^{D}P(T_j;\Phi,\Theta|S_j)P(S_j;\Theta)
+$$&lt;/p&gt;
+&lt;p&gt;に比例します(ベイズの定理の分子を取り出した)。ここで、$\Theta={\theta_1,\theta2,&amp;hellip;,\theta_M}, \Phi={\phi_1,\phi_2,&amp;hellip;,\phi_L}$は事前分布と尤度の確率分布のパラメータです。$M(\Theta,\Phi)$はパラメータによってさまざまな値を取り、最も望ましいパラメータの値を特定してやる必要があります。ここでは、$\Phi$は学習データセットの事後分布を最大にするパラメータを推定値として選択することにし、$\Theta$は事前にわかっている知識を用いて何らかの値を定めます。$M(\Theta,\Phi)$は以下のように変形することができます。&lt;/p&gt;
+&lt;div&gt;
+$$
+\begin{eqnarray*}
+M(\Theta,\Phi) &amp;=&amp; P(T_1;\Theta|0)P(0;\Theta,\Phi)×P(T_2;\Theta|0)P(0;\Theta,\Phi)×...\\
+&amp;&amp;×P(T_Q;\Theta|0)P(0;\Theta,\Phi)×P(T_{Q+1};\Theta|1)P(1;\Theta,\Phi) \\
+&amp;=&amp; \Pi_{k=0}^1P(k;\Theta,\Phi)\Pi_{i=1}^{Q_k}P(T_{Q_i};\Theta|k)
+\end{eqnarray*}
+$$
+&lt;/div&gt;
+&lt;p&gt;ここで、$Q_k$は$Y=k$となる学習データの個数を表しています。&lt;br&gt;
+&lt;code&gt;\(\Theta,\Phi\)&lt;/code&gt;が既知で、学修データセット${(S,T)}$が手元にあれば、上記によって事後確率の分子を計算することができます。&lt;/p&gt;
+&lt;h3 id=&#34;確率分布のパラメータの推定方法&#34;&gt;確率分布のパラメータの推定方法&lt;/h3&gt;
+&lt;p&gt;次に気になるのは$\Theta, \Phi$をどのようにして計算するかです。これは確率分布を特定しないと進めないため、尤度には多項分布、事前分布にはディリクレ分布を仮定します。一般的な仮定だと思います。多項分布とは同時確率関数が以下のような確率分布です。&lt;/p&gt;
+&lt;p&gt;$$
+P(n_1,&amp;hellip;,n_k) = \frac{n!}{n_1!&amp;hellip;n_k!}p_1^{n_1}&amp;hellip;p_k^{n_k}
+$$&lt;/p&gt;
+&lt;p&gt;ここで、$n_i$は非負で$n=n_1+&amp;hellip;+n_k$です。また、$p_1+&amp;hellip;p_k=1$を満たします。多項分布は名前から分かるとおり、二項分布の拡張版です。二項分布はコイン投げが例として使われますが、多項分布はサイコロ投げが従う分布です($n=6, p_i=1/6$)。テキスト解析の文脈では、$n_i$は文章に含まれる単語$i$の出現回数になります。&lt;br&gt;
+ディリクレ分布は同時確率密度関数が以下のような確率分布です。&lt;/p&gt;
+&lt;p&gt;$$
+f(x_1,&amp;hellip;,x_n) = \frac{\Gamma(\alpha)}{\Gamma(\alpha_1)&amp;hellip;\Gamma(\alpha_n)}x_1^{\alpha_1-1}&amp;hellip;x_n^{\alpha_n-1}
+$$&lt;/p&gt;
+&lt;p&gt;ここで、$x_i$は非負で$x_1+&amp;hellip;+x_n=1$、$\alpha_1+&amp;hellip;+\alpha_n=\alpha$はパラメータです。今、$\alpha_i$を正の整数とすると$\Gamma(\alpha_i)=(\alpha_{i-1})!$より、&lt;/p&gt;
+&lt;p&gt;$$
+f(x_1,&amp;hellip;,x_n) = \frac{(\alpha-1)!}{(\alpha_{1}-1)!&amp;hellip;(\alpha_n-1)!}x_1^{\alpha_1-1}&amp;hellip;x_n^{\alpha_n-1}
+$$&lt;/p&gt;
+&lt;p&gt;となります。多項分布とディリクレ分布の確率分布を見比べると、とても似た形であることがわかります。両者は形は似ていますが、関数の入力が異なります。多項分布は各単語の生起確率がパラメータ、指数部分の出現回数が入力である一方、ディリクレ分布は生起確率が入力、出現回数がパラメータになります。また、ディリクレ分布は多項分布の共役事前分布となっています。 これらの確率分布を仮定すると、$M(\Theta,\Phi)$は以下のようになります。&lt;/p&gt;
+&lt;div&gt;
+$$
+\begin{eqnarray*}
+M(\vec{\alpha};\vec{p}) &amp;\propto&amp; \frac{1}{Z(\vec{\alpha})}\Pi_{k=0}^1\Pi_{i=1}^Vp_{ki}^{\alpha_{i}-1}\Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}} \\
+&amp;=&amp; \frac{1}{Z(\vec{\alpha})}\Pi_{k=0}^1 \Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1}
+\end{eqnarray*}
+$$
+&lt;/div&gt;
+&lt;p&gt;ここで、$p_{k_j}$はポジティブ(またはネガティブ)である文書で単語$j$が出現する確率、$\tau_{k_j}=\sum_{i=1}^{Q_k}c_{kij}$はポジティブ(またはネガティブ)である教師データに含まれる単語$j$の総数、$\alpha_j$は単語$j$のディリクレ分布のパラメータ、$V$は単語数の上限を表しています。$Z(\vec{\alpha})$は確率の総和を1とするための正規化定数で、ベイズ統計学では分配関数と呼ばれます。ここから、パラメータ$p_{k_{j}}$の値を学習データセットの事後分布を最大にするパラメータを推定値として求めます。ただし、以下の制約条件があります。&lt;/p&gt;
+&lt;p&gt;$$
+\sum_{j=1}^V p_{k_{j}}=1
+$$&lt;/p&gt;
+&lt;p&gt;この制約の下で$M(\vec{p};\vec{\alpha})$を最大化するためにラグランジュ未定乗数法を使用します。&lt;/p&gt;
+&lt;div&gt;
+$$
+\begin{eqnarray*}
+L &amp;=&amp; (\frac{1}{Z(\vec{\alpha})}\Pi_{k=0}^1 \Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1}-\lambda(1-\sum_{k=1}^V p_{k_{j}})) \\
+\frac{\partial L}{\partial p_{l_m}}
+&amp;=&amp; (\tau_{l_m}+\alpha_m-1)p_{l_m}^{\tau_{l_m}+\alpha_m-2}\frac{1}{Z(\vec{\alpha})}\Pi_{k\neq l}^1 \Pi_{j\neq m}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1}-\lambda \\
+&amp;=&amp; (\tau_{l_m}+\alpha_m-1)p_{l_m}^{-1}\frac{1}{Z(\vec{\alpha})}\Pi_{k=0}^1 \Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1}-\lambda \\
+p_{l_m} &amp;=&amp; \frac{(\tau_{l_m}+\alpha_m-1)}{\lambda}\frac{1}{Z(\vec{\alpha})}\Pi_{k=0}^1 \Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1} \tag{1}
+\end{eqnarray*}
+$$
+&lt;/div&gt;
+上記のように解けます。ここで、制約条件を用いて上式の両辺で総和を取ると、
+&lt;div&gt;
+$$
+\begin{eqnarray*}
+1 &amp;=&amp; \sum_{m=1}^V \frac{(\tau_{l_m}+\alpha_m-1)}{\lambda}\frac{1}{Z(\vec{\alpha})}\Pi_{k=0}^1 \Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1} \\
+\lambda &amp;=&amp; \sum_{m=1}^V (\tau_{l_m}+\alpha_m-1)\frac{1}{Z(\vec{\alpha})}\Pi_{k=0}^1 \Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1}
+\end{eqnarray*}
+$$
+&lt;/div&gt;
+&lt;p&gt;となるので、$\lambda$を(1)式に代入すると、&lt;/p&gt;
+&lt;p&gt;$$
+p_{l_m} = \frac{(\tau_{l_m}+\alpha_m-1)}{\sum_{m=1}^V (\tau_{l_m}+\alpha_m-1)} \tag{2}
+$$&lt;/p&gt;
+&lt;p&gt;と、事後分布を最大にするパラメータを求めることができます。$p_{l_m}$の直感的な解釈は、ポジティブ(ネガティブ)な文脈での単語$m$の出現頻度が全ての単語の出現頻度に占める割合です。ただ、それだけだと学習データに含まれない単語の$p_{l_m}$が０となってしまい、事後確率も0となってしまいます。上記では、事前分布にディリクレ分布を使用しているため、$p_{l_m}$が0にならないことがわかります($+\alpha_m$の部分)。所謂、頻度ゼロ問題を解決しています。&lt;/p&gt;
+&lt;p&gt;ところで、ディリクレ分布の$\alpha_m$は事前にわかっている知識を用いて何らかの値を定めると言っていましたが、どのようにして求めるのでしょうか？推定値を見ればわかる通り、$\alpha_m$は文書内における単語$m$の主観的な出現頻度を表していると解釈できます。ですが、正直$\alpha_m$に意味を持たせている人は少なく、先述した頻度ゼロ問題を解決できればよいと考えている人が大半ではないでしょうか。つまり、$\alpha_m=\alpha+1$($\alpha$は定数、例えば1とか)としてしまうということです。これは加算スクリーニングと呼ばれます。&lt;/p&gt;
+&lt;p&gt;さて、このようにして求めた分類器で分類を行います。思考実験として、1つの単語を除いて他の単語がニュートラルかつ各単語の出現頻度が全て同じ文書を考えます。この場合、その1つの単語が両文脈(ポジティブ/ネガティブ)のうち相対的に頻出である文脈へ分類されることになります。&lt;/p&gt;
+&lt;p&gt;ナイーブベイズ分類器は教師あり学習です。つまり、正解ラベルデータを用意する必要があります。これがナイーブベイズ分類器の欠点ですが、一方でデータがある場合には特殊な文脈でも分類が可能です。&lt;/p&gt;
+&lt;h3 id=&#34;ナイーブベイズ分類器の利点欠点&#34;&gt;ナイーブベイズ分類器の利点・欠点&lt;/h3&gt;
+&lt;p&gt;ナイーブベイズ分類器の利点・欠点は以下のようなものだと思います。&lt;/p&gt;
+&lt;p&gt;&amp;lt;利点👍&amp;gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;辞書が不要&lt;/li&gt;
+&lt;li&gt;未知語が出現しても分類できる&lt;/li&gt;
+&lt;li&gt;分類過程がわかりやすい&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&amp;lt;欠点👎&amp;gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;学習のための教師ありデータセットが必要&lt;/li&gt;
+&lt;li&gt;文章の語順を考慮できない(bag of words)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;欠点の文章の語順を考慮できないという点は辞書ベース手法にも当てはまりますが、文章中の単語の発生回数を使用しているため、語順の関係性や係り受けといった情報を活用することができません。そのため、例えば「良くない」のような肯定語を否定するような言い回しは、ポジティブと分類されやすい可能性があります。&lt;/p&gt;
+&lt;h2 id=&#34;2-ナイーブベイズ分類器の実践&#34;&gt;2. ナイーブベイズ分類器の実践&lt;/h2&gt;
+</description>
+    </item>
+    
+    <item>
       <title>【徹底比較】センチメントスコア算出手法！！ - 第2回</title>
       <link>/post/post27/</link>
       <pubDate>Thu, 24 Mar 2022 00:00:00 +0000</pubDate>
       <guid>/post/post27/</guid>
       <description>&lt;script src=&#34;../../post/post27/index_files/kePrint/kePrint.js&#34;&gt;&lt;/script&gt;
+&lt;link href=&#34;../../post/post27/index_files/lightable/lightable.css&#34; rel=&#34;stylesheet&#34; /&gt;
+&lt;link href=&#34;../../post/post27/index_files/bsTable/bootstrapTable.min.css&#34; rel=&#34;stylesheet&#34; /&gt;
+&lt;script src=&#34;../../post/post27/index_files/bsTable/bootstrapTable.js&#34;&gt;&lt;/script&gt;
+&lt;script src=&#34;../../post/post27/index_files/kePrint/kePrint.js&#34;&gt;&lt;/script&gt;
+&lt;link href=&#34;../../post/post27/index_files/lightable/lightable.css&#34; rel=&#34;stylesheet&#34; /&gt;
+&lt;link href=&#34;../../post/post27/index_files/bsTable/bootstrapTable.min.css&#34; rel=&#34;stylesheet&#34; /&gt;
+&lt;script src=&#34;../../post/post27/index_files/bsTable/bootstrapTable.js&#34;&gt;&lt;/script&gt;
+&lt;script src=&#34;../../post/post27/index_files/kePrint/kePrint.js&#34;&gt;&lt;/script&gt;
 &lt;link href=&#34;../../post/post27/index_files/lightable/lightable.css&#34; rel=&#34;stylesheet&#34; /&gt;
 &lt;link href=&#34;../../post/post27/index_files/bsTable/bootstrapTable.min.css&#34; rel=&#34;stylesheet&#34; /&gt;
 &lt;script src=&#34;../../post/post27/index_files/bsTable/bootstrapTable.js&#34;&gt;&lt;/script&gt;
@@ -197,106 +326,57 @@
 &lt;/tbody&gt;
 &lt;/table&gt;
 &lt;p&gt;「景気の現状判断」が景況感を表しており、その判断の理由が「追加説明及び具体的状況の説明」にある形です。よって、前者を教師データ、後者を説明データとする教師あり学習データとして利用することができます。&lt;/p&gt;
-&lt;h3 id=&#34;前処理&#34;&gt;前処理&lt;/h3&gt;
-&lt;p&gt;まず、各手法で共通の前処理を行います。以下では、使用するモジュールを呼び出し、学習データのうち有効回答のみを抽出します。
-なお、使用するモジュールの関係でPythonでの処理を紹介しますが、Rでも同じ処理ができます。&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; sudachipy &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; tokenizer
-&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; sudachipy &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; dictionary
-&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; sklearn.preprocessing &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; LabelEncoder
-&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; pandas &lt;span style=&#34;color:#f92672&#34;&gt;as&lt;/span&gt; pd
-
-sample &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; pd&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;read_csv(&lt;span style=&#34;color:#e6db74&#34;&gt;r&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;C:\Users\hogehoge\景気ウオッチャー\生データ\watcher_2016.csv&amp;#34;&lt;/span&gt;,encoding&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;shift-jis&amp;#34;&lt;/span&gt;)
-sample &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; sample[(sample&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;追加説明及び具体的状況の説明&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;−&amp;#39;&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;(sample&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;追加説明及び具体的状況の説明&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;＊&amp;#39;&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;False&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;(sample&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;景気の現状判断&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;□&amp;#39;&lt;/span&gt;)]
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;次に、文書のトークン化を行います。日本語のような言語では英語などと異なり単語ごとの間にスペースがないため、別途区切りを入れてやる必要があります。区切られた各語は形態素と呼ばれ、言葉が意味を持つまとまりの単語の最小単位を指します。また、文章を形態素へ分割することを形態素解析と言います(英語のような場合単にTokenizationと言ったりします)。形態素解析を行うツールは以下のようなものが存在します。&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;MeCab&lt;/li&gt;
-&lt;li&gt;JUMAN&lt;/li&gt;
-&lt;li&gt;JANOME&lt;/li&gt;
-&lt;li&gt;Ginza&lt;/li&gt;
-&lt;li&gt;Sudachi&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;おそらく最も使用されているものはMecabではないかと思いますが、標準装備されている辞書(ipadic)の更新がストップしており、最近の新語に対応できないという問題があります。この点については新語に強いNEologd辞書を加えることで、対処可能であることを別記事で紹介していますが、今回はワークスアプリケーションズが提供しているSudachi(Takaoka et al. 2018)を使用することにしたいと思います。公式GithubからSudachiの特長を引用します。&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;
-&lt;p&gt;複数の分割単位の併用&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;必要に応じて切り替え&lt;/li&gt;
-&lt;li&gt;形態素解析と固有表現抽出の融合&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;多数の収録語彙&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;UniDic と NEologd をベースに調整&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;機能のプラグイン化&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;文字正規化や未知語処理に機能追加が可能&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;同義語辞書との連携&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;後日公開予定&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;特質すべきは「複数の分割単位の併用」でしょう。Sudachiでは短い方から A, B, Cの3つの分割モードを提供しています。AはUniDic短単位相当、Cは固有表現相当、BはA, Cの中間的な単位となっており、以下のように同じ「選挙管理委員会」という単語でも形態素が異なることが確認できます。これはSudachi特有の特長になります。&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;tokenizer_obj &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; dictionary&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Dictionary()&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;create()
-
-mode &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;SplitMode&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;A
-[m&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;normalized_form() &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; m &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; tokenizer_obj&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;tokenize(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;選挙管理委員会&amp;#34;&lt;/span&gt;, mode)]
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## [&#39;選挙&#39;, &#39;管理&#39;, &#39;委員&#39;, &#39;会&#39;]
-&lt;/code&gt;&lt;/pre&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;mode &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;SplitMode&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;B
-[m&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;normalized_form() &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; m &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; tokenizer_obj&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;tokenize(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;選挙管理委員会&amp;#34;&lt;/span&gt;, mode)]
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## [&#39;選挙&#39;, &#39;管理&#39;, &#39;委員会&#39;]
-&lt;/code&gt;&lt;/pre&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;mode &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;SplitMode&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;C
-[m&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;normalized_form() &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; m &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; tokenizer_obj&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;tokenize(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;選挙管理委員会&amp;#34;&lt;/span&gt;, mode)]
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## [&#39;選挙管理委員会&#39;]
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;また、辞書についてもUniDicとNEologdをベースとして更新が続けられており、新語にも対応できます。&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;mode &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;SplitMode&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;C
-[m&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;normalized_form() &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; m &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; tokenizer_obj&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;tokenize(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;新型コロナウイルス&amp;#34;&lt;/span&gt;, mode)]
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## [&#39;新型コロナウイルス&#39;]
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;個人的に素晴らしいと思うポイントは表記正規化や文字正規化ができると言うことです。以下のように旧字等で同じ意味だが表記が異なる単語や英語/日本語、書き間違え等を正規化する機能があります。&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;tokenizer_obj&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;tokenize(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;附属&amp;#34;&lt;/span&gt;, mode)[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;]&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;normalized_form()
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## &#39;付属&#39;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;tokenizer_obj&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;tokenize(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;SUMMER&amp;#34;&lt;/span&gt;, mode)[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;]&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;normalized_form()
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## &#39;サマー&#39;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;tokenizer_obj&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;tokenize(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;シュミレーション&amp;#34;&lt;/span&gt;, mode)[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;]&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;normalized_form()
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## &#39;シミュレーション&#39;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;このような高性能な形態素解析ツールが無償でしかも商用利用も可というところに驚きを隠せません。後述しますが、このSudachiで形態素解析を行ったWord2vecモデルであるChiveもワークスアプリケーションズは提供をしています。&lt;/p&gt;
-&lt;p&gt;説明が長くなりましたがSudachiでTokenizationを行いましょう。Sudachiは&lt;code&gt;Python&lt;/code&gt;で使用することができます。説明が前後していますが、上記コードで行っているように&lt;code&gt;tokenizer&lt;/code&gt;オブジェクトを作成し、&lt;code&gt;tokenize()&lt;/code&gt;メソッドで文章をTokenizeします。Tokenizeされた結果は&lt;code&gt;MorphemeList&lt;/code&gt;オブジェクトに格納されます。&lt;code&gt;MorphemeList&lt;/code&gt;オブジェクトの各要素に対して&lt;code&gt;normalized_form()&lt;/code&gt;メソッドを実行することで正規化された形態素を取得することができます。ここまでをやってみます。&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;tokenizer_obj &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; dictionary&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Dictionary()&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;create()
-mode &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;SplitMode&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;C
-tokenizer_sudachi &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;lambda&lt;/span&gt; t: [m&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;normalized_form() &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; m &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; tokenizer_obj&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;tokenize(t, mode)]
-tokens &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; sample&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;追加説明及び具体的状況の説明&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;map(tokenizer_sudachi)
-tokens&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;head()
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## 0    [・, 店頭, の, 取り扱い, 額, が, 前年, 比, 約, 120, %, と, 好調...
-## 1    [・, 当, 施設, の, 利用, 乗降, 客数, は, 1, 月, 26, 日, 時点, ...
-## 2    [・, 年, 末, の, 消費, の, 反動, も, 有る, て, か, 、, 客, の, ...
-## 3    [・, 外国人, 観光客, に, よる, 売り上げ, が, 前年, 比, 152, %, と...
-## 4    [・, 積極的, だ, 景気, が, 上向き, に, 有る, と, まで, は, 言う, 辛...
-## Name: 追加説明及び具体的状況の説明, dtype: object
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Tokenizeすることができました。次に5段階の景況判断をLabel Encodingに変換します。変換には&lt;code&gt;Scikit-Learn&lt;/code&gt;の&lt;code&gt;LabelEncoder&lt;/code&gt;を使用します。&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;score_mapping &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;◎&amp;#39;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;○&amp;#39;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;▲&amp;#39;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;×&amp;#39;&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;}
-label &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; sample&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;景気の現状判断&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;map(score_mapping)
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;これで前処理は完了です。&lt;/p&gt;
 &lt;h3 id=&#34;センチメントスコアの抽出&#34;&gt;センチメントスコアの抽出&lt;/h3&gt;
-&lt;p&gt;では、実践です。&lt;code&gt;quanteda&lt;/code&gt;というパッケージを用いるため、&lt;code&gt;R&lt;/code&gt;で行っていきます。前処理は&lt;code&gt;R&lt;/code&gt;で実施済みで、&lt;code&gt;toks_sent&lt;/code&gt;という変数に各文書の形態素が文書別に格納されています。&lt;/p&gt;
-&lt;p&gt;この&lt;code&gt;toks_sent&lt;/code&gt;から文書行列を生成します。文書行列とは、単語と文書の関係を表す行列で、各行が単語(token)、各列が文書を表し、各要素は文書中の単語の出現回数となっています。&lt;/p&gt;
+&lt;p&gt;では、実践です。&lt;code&gt;quanteda&lt;/code&gt;というパッケージを用いるため、&lt;code&gt;R&lt;/code&gt;で行っていきます。&lt;br&gt;
+まず、前処理です。サンプルデータを読み込みます。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;filepath &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; r&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;(C:\Users\hogehoge\Watcher\RawData)&amp;#34;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(magrittr)
+files &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; stringr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;str_c&lt;/span&gt;(filepath, &lt;span style=&#34;color:#a6e22e&#34;&gt;list.files&lt;/span&gt;(filepath, pattern &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;*.csv&amp;#34;&lt;/span&gt;))
+sample &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; readr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;read_csv&lt;/span&gt;(files,locale&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;readr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;locale&lt;/span&gt;(encoding&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Shift-JIS&amp;#34;&lt;/span&gt;),show_col_types &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;FALSE&lt;/span&gt;)
+sample &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; sample[sample&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;追加説明及び具体的状況の説明&lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;-&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;sample&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;追加説明及び具体的状況の説明&lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;*&amp;#34;&lt;/span&gt;,]
+sample&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;景気の現状判断 &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;factor&lt;/span&gt;(sample&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;景気の現状判断, levels&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;◎&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;○&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;□&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;▲&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;×&amp;#34;&lt;/span&gt;))
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;次に、&lt;code&gt;sudachi&lt;/code&gt;を用いてテキストデータのToken化を行います。&lt;code&gt;R&lt;/code&gt;には&lt;code&gt;sudachi&lt;/code&gt;を使えるパッケージが存在しないので、Pythonパッケージの&lt;code&gt;sudachipy&lt;/code&gt;を&lt;code&gt;reticulate&lt;/code&gt;で呼び出して使用します。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;stopwords_path &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; r&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;(C:\Users\hogehoge\Watcher\marimo-master\yaml\stopwords_ja.yml)&amp;#34;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# sudachiによる形態素解析→Token化&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# stopwordsはmarimoを使用&lt;/span&gt;
+ja_stopwords &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; quanteda&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;dictionary&lt;/span&gt;(yaml&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;read_yaml&lt;/span&gt;(stopwords_path))
+&lt;span style=&#34;color:#75715e&#34;&gt;# コーパス生成&lt;/span&gt;
+corp &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; quanteda&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;corpus&lt;/span&gt;(sample,text_field&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;追加説明及び具体的状況の説明&amp;#34;&lt;/span&gt;)
+&lt;span style=&#34;color:#75715e&#34;&gt;# sudachipy呼び出し→インスタンス化&lt;/span&gt;
+sudachipy &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; reticulate&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;import&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;sudachipy&amp;#34;&lt;/span&gt;)
+&lt;span style=&#34;color:#75715e&#34;&gt;# 正規化関数定義&lt;/span&gt;
+sudachi_normalize &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(tokens){
+  res &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;()
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;for&lt;/span&gt;(i in &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;length&lt;/span&gt;(tokens)&lt;span style=&#34;color:#ae81ff&#34;&gt;-1&lt;/span&gt;)){
+    res &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;append&lt;/span&gt;(res,tokens[i]&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;normalized_form&lt;/span&gt;())
+  }
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;return&lt;/span&gt;(res)
+}
+&lt;span style=&#34;color:#75715e&#34;&gt;# tokenize関数定義&lt;/span&gt;
+sudachi_tokenize &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(sentence, mode &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;A&amp;#34;&lt;/span&gt;){
+  tokenizer_obj &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; sudachipy&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;dictionary&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;Dictionary&lt;/span&gt;()&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;create&lt;/span&gt;()
+  mode &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;switch&lt;/span&gt;(mode, 
+                 &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;A&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; sudachipy&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;Tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;SplitMode&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;A,
+                 &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;B&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; sudachipy&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;Tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;SplitMode&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;B,
+                 &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;C&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; sudachipy&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;Tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;SplitMode&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;C,
+                 &lt;span style=&#34;color:#a6e22e&#34;&gt;stop&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Only Can Use A, B, C&amp;#34;&lt;/span&gt;))
+  res &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; purrr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;map&lt;/span&gt;(sentence, &lt;span style=&#34;color:#f92672&#34;&gt;~&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;sudachi_normalize&lt;/span&gt;(tokenizer_obj&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;tokenize&lt;/span&gt;(., mode)))
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;return&lt;/span&gt;(res)
+}
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# Token化実行&lt;/span&gt;
+toks_sent &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; corp &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt;
+              &lt;span style=&#34;color:#a6e22e&#34;&gt;sudachi_tokenize&lt;/span&gt;() &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+              quanteda&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;as.tokens&lt;/span&gt;() &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+              quanteda&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;tokens_remove&lt;/span&gt;(ja_stopwords, padding &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TRUE&lt;/span&gt;)
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# メタデータをTokenに再付与&lt;/span&gt;
+quanteda&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;docvars&lt;/span&gt;(toks_sent) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; quanteda&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;docvars&lt;/span&gt;(corp)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;この&lt;code&gt;toks_sent&lt;/code&gt;から文書行列を生成します。文書行列とは、単語と文書の関係を表す行列で、各行が単語(token)、各列が文書を表し、各要素は文書中の単語の出現回数となっています。&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 文書行列の生成&lt;/span&gt;
 dfmt_sent &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; toks_sent &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
-              quanteda&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;dfm&lt;/span&gt;(remove &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+              quanteda&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;dfm&lt;/span&gt;() &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+              quanteda&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;dfm_remove&lt;/span&gt;(pattern&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
               quanteda&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;dfm_trim&lt;/span&gt;(min_termfreq &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;)
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;文書行列&lt;code&gt;dfmt_sent&lt;/code&gt;と各単語のスコアベクトルの内積を取り、文書のセンチメントスコアを算出します。&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 単語感情極性対応表&lt;/span&gt;
@@ -307,37 +387,392 @@ dfmt_sent_arranged &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&
 
 &lt;span style=&#34;color:#75715e&#34;&gt;# 文書のセンチメントスコア算出&lt;/span&gt;
 n &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;unname&lt;/span&gt;(quanteda&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;rowSums&lt;/span&gt;(dfmt_sent_arranged))
-score_dict &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ifelse&lt;/span&gt;(n&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, quanteda&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;rowSums&lt;/span&gt;(dfmt_sent_arranged &lt;span style=&#34;color:#f92672&#34;&gt;%*%&lt;/span&gt; PNdict&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;V4)&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;n, &lt;span style=&#34;color:#66d9ef&#34;&gt;NA&lt;/span&gt;)
+score_dict &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;scale&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;ifelse&lt;/span&gt;(n&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, quanteda&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;rowSums&lt;/span&gt;(dfmt_sent_arranged &lt;span style=&#34;color:#f92672&#34;&gt;%*%&lt;/span&gt; PNdict&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;V4)&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;n, &lt;span style=&#34;color:#66d9ef&#34;&gt;NA&lt;/span&gt;))
 sample_with_score_dict &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; sample &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;cbind&lt;/span&gt;(score_dict) 
-sample_with_score_dict &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;head&lt;/span&gt;()
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;##   基準年  基準日 景気の現状判断                 業種・職種   判断の理由
-## 1   2016 1月31日             ◎       旅行代理店（従業員） 販売量の動き
-## 2   2016 1月31日             ◎         観光名所（従業員） 来客数の動き
-## 3   2016 1月31日             ○ 一般小売店［酒］（経営者）   単価の動き
-## 4   2016 1月31日             ○         百貨店（売場主任） お客様の様子
-## 5   2016 1月31日             ○           百貨店（担当者） 来客数の動き
-## 6   2016 1月31日             ○     百貨店（販売促進担当）     それ以外
-##                                                                                                                                                                               追加説明及び具体的状況の説明
-## 1                                                                                                                                                            ・店頭の取扱額が前年比約120％と好調であった。
-## 2                                                            ・当施設の利用乗降客数は１月26日時点で前年比130.1％となっており、１月としては過去最高の利用乗降客数になることが確定したほどの入込状況にある。
-## 3                                                           ・年末の消費の反動もあってか、客の動きがやや鈍い。ただ、相変わらず高額商材が売れているということもあり、売上はそれなりの金額をキープしている。
-## 4 ・外国人観光客による売上が前年比152％と好調を継続しているほか、来客数が前年比102％と好調を維持している。月半ばに停滞した売上も下旬に入ってから回復傾向にあり、定価品、バーゲン品とも前年を上回っている。
-## 5                                                                                                                 ・積極的に景気が上向きにあるとまではいいづらいものの、３か月前との比較では改善している。
-## 6                                                                     ・気温が平年並みとなり、これまでの温暖、少雪の状態がみられなくなってきたことで、防寒衣料、雑貨商材を中心に多少改善の傾向がみられる。
-##     score_dict
-## 1 -0.348178400
-## 2 -0.565735877
-## 3 -0.612866000
-## 4 -0.325386370
-## 5  0.006678875
-## 6 -0.476283793
-&lt;/code&gt;&lt;/pre&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;サンプルデータを抜き出して、センチメントスコアを観察してみましょう。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;sample_with_score_dict &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;head&lt;/span&gt;() &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+  knitr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;kable&lt;/span&gt;() &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+  kableExtra&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;kable_styling&lt;/span&gt;(bootstrap_options &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;striped&amp;#34;&lt;/span&gt;))
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;table class=&#34;table table-striped&#34; style=&#34;margin-left: auto; margin-right: auto;&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+基準年
+&lt;/th&gt;
+&lt;th style=&#34;text-align:left;&#34;&gt;
+基準日
+&lt;/th&gt;
+&lt;th style=&#34;text-align:left;&#34;&gt;
+景気の現状判断
+&lt;/th&gt;
+&lt;th style=&#34;text-align:left;&#34;&gt;
+業種・職種
+&lt;/th&gt;
+&lt;th style=&#34;text-align:left;&#34;&gt;
+判断の理由
+&lt;/th&gt;
+&lt;th style=&#34;text-align:left;&#34;&gt;
+追加説明及び具体的状況の説明
+&lt;/th&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+score_dict
+&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2016
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+1月31日
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+◎
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+旅行代理店（従業員）
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+販売量の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+・店頭の取扱額が前年比約120％と好調であった。
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+1.0918056
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2016
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+1月31日
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+◎
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+観光名所（従業員）
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+来客数の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+・当施設の利用乗降客数は１月26日時点で前年比130.1％となっており、１月としては過去最高の利用乗降客数になることが確定したほどの入込状況にある。
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+-0.7191220
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2016
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+1月31日
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+○
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+一般小売店［酒］（経営者）
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+単価の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+・年末の消費の反動もあってか、客の動きがやや鈍い。ただ、相変わらず高額商材が売れているということもあり、売上はそれなりの金額をキープしている。
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+-0.9872586
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2016
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+1月31日
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+○
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+百貨店（売場主任）
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+お客様の様子
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+・外国人観光客による売上が前年比152％と好調を継続しているほか、来客数が前年比102％と好調を維持している。月半ばに停滞した売上も下旬に入ってから回復傾向にあり、定価品、バーゲン品とも前年を上回っている。
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+1.0711102
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2016
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+1月31日
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+○
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+百貨店（担当者）
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+来客数の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+・積極的に景気が上向きにあるとまではいいづらいものの、３か月前との比較では改善している。
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+3.1257848
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2016
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+1月31日
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+○
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+百貨店（販売促進担当）
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+それ以外
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+・気温が平年並みとなり、これまでの温暖、少雪の状態がみられなくなってきたことで、防寒衣料、雑貨商材を中心に多少改善の傾向がみられる。
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+0.0254686
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;2行目の文章は明らかにポジティブですが、なにが影響したのかネガティブ寄りの判定になっていますね。また、顕著なのが3行目で「鈍い」という単語に引っ張られ、ネガティブなセンチメントを抽出しやすくなっています。この文章の本意は「ただ・・・」という逆接以降の文章ですが、文脈や語順が捉えられないために正しい情報を引き出すことができていません。5行目は「積極的」、「上向き」、「改善」といった単語を検知し、かなりポジティブなセンチメントがあるという判定をしていますが、「積極的に景気が上向きとは&lt;strong&gt;いいづらい&lt;/strong&gt;*」というネガティブな文脈を捉え切れておらず、過大評価となっています。&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 結果の可視化&lt;/span&gt;
 &lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(ggplot2)
 &lt;span style=&#34;color:#a6e22e&#34;&gt;ggplot&lt;/span&gt;(sample_with_score_dict, &lt;span style=&#34;color:#a6e22e&#34;&gt;aes&lt;/span&gt;(x&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;景気の現状判断,y&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;score_dict)) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;geom_boxplot&lt;/span&gt;()
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../post/post27/index_files/figure-html/unnamed-chunk-13-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
 &lt;p&gt;「景気の現状判断」毎にboxplotを書いてみましたが、ぱっと見はあまり変わらない結果になりました。
-どの判断も-0.5くらいが平均で、ほんの少し緩やかに右肩上がりのような気もしますが、文書を分類できている言える結果ではないことがわかります。&lt;/p&gt;
+ほんの少し緩やかに右下がりのような気もしますが、文書分類可能な結果ではないことがわかります。&lt;/p&gt;
+&lt;h3 id=&#34;追加検証tf-idfを用いた算出&#34;&gt;(追加検証)tf-idfを用いた算出&lt;/h3&gt;
+&lt;p&gt;上記の分析では単語の出現回数を利用していましたが、tf-idfを用いた分析も行うことにします。tf-idfとは、term frequency-inverse document frequencyの略で、情報検索やテキストマイニングでよく使われる重みのことです。この重みは、ある単語がコーパス&lt;sup id=&#34;fnref:1&#34;&gt;&lt;a href=&#34;#fn:1&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;1&lt;/a&gt;&lt;/sup&gt;の中の文書にとってどれだけ重要かを評価するために使われる統計的尺度で、その特徴量は文書中の単語の出現回数が増加するほど上昇しますが、コーパス中の単語の頻度によって相殺されます。例えば、迷惑メールを分類することを意図した電子メールのコーパスにおいて、「お知らせ」や「ニュース」などは出現頻度が高い一方でどの文書にも出現するため、迷惑メールを特定するという点においては重要度は高くありません。一方で、「当選」や「今だけ！」などはコーパス上にはそこまで出現頻度が高くない単語であるものの、迷惑メールの文章中には頻度が高く出現すると考えられます。tf-idfでは後者の単語の特徴量が高くなるように定義されています。&lt;/p&gt;
+&lt;p&gt;tf-idfの計算方法はtfとidfに分かれます。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;tf: Term frequency
+単語が文書中にどれだけ頻繁に出現しているかを測定するもの。文書の長さはそれぞれ異なるため、長い文書では短い文書よりはるかに多くの用語が出現する可能性があります。そのため、正規化の方法として、単語頻度を文書の長さ（文書内の単語総数）で割ることがよくあります。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;$$
+tf(t) = \frac{文章内の単語tの出現回数}{文章内の単語総数}
+$$&lt;/p&gt;
+&lt;p&gt;-idf: Inverse Document Frequency
+ある単語がコーパス内でどの程度希少であるかを測定するもの。「です」、「は」、「が」などの頻出語を減らして、希少語を増やす意図があります。&lt;/p&gt;
+&lt;p&gt;$$
+idf(t) = \log(\frac{コーパス内の文書総数}{単語tを含む文書数})
+$$&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;r&lt;/code&gt;で実装してみます。tf-idfは&lt;code&gt;quanteda::dfm_tfidf()&lt;/code&gt;で計算できます。引数には、文書行列を渡します。そのほかは上記の分析と同じです。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# tf-idf版文書行列の生成&lt;/span&gt;
+dfmt_tfidf_sent &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; dfmt_sent &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; quanteda&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;dfm_tfidf&lt;/span&gt;()
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# 辞書の並びに合わせて文書行列の列を入れ替える。&lt;/span&gt;
+dfmt_tfidf_sent_arranged &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; quanteda&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;dfm_match&lt;/span&gt;(dfmt_tfidf_sent, PNdict&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;V1)
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# 文書のセンチメントスコア算出&lt;/span&gt;
+n &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;unname&lt;/span&gt;(quanteda&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;rowSums&lt;/span&gt;(dfmt_tfidf_sent_arranged))
+score_dict &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;scale&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;ifelse&lt;/span&gt;(n&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, quanteda&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;rowSums&lt;/span&gt;(dfmt_tfidf_sent_arranged &lt;span style=&#34;color:#f92672&#34;&gt;%*%&lt;/span&gt; PNdict&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;V4)&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;n, &lt;span style=&#34;color:#66d9ef&#34;&gt;NA&lt;/span&gt;))
+sample_with_score_dict &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; sample &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;cbind&lt;/span&gt;(score_dict)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;先ほどと同じようにサンプルを抜き出してみます。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;sample_with_score_dict &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;head&lt;/span&gt;() &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+  knitr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;kable&lt;/span&gt;() &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+  kableExtra&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;kable_styling&lt;/span&gt;(bootstrap_options &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;striped&amp;#34;&lt;/span&gt;))
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;table class=&#34;table table-striped&#34; style=&#34;margin-left: auto; margin-right: auto;&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+基準年
+&lt;/th&gt;
+&lt;th style=&#34;text-align:left;&#34;&gt;
+基準日
+&lt;/th&gt;
+&lt;th style=&#34;text-align:left;&#34;&gt;
+景気の現状判断
+&lt;/th&gt;
+&lt;th style=&#34;text-align:left;&#34;&gt;
+業種・職種
+&lt;/th&gt;
+&lt;th style=&#34;text-align:left;&#34;&gt;
+判断の理由
+&lt;/th&gt;
+&lt;th style=&#34;text-align:left;&#34;&gt;
+追加説明及び具体的状況の説明
+&lt;/th&gt;
+&lt;th style=&#34;text-align:right;&#34;&gt;
+score_dict
+&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2016
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+1月31日
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+◎
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+旅行代理店（従業員）
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+販売量の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+・店頭の取扱額が前年比約120％と好調であった。
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+0.1052126
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2016
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+1月31日
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+◎
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+観光名所（従業員）
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+来客数の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+・当施設の利用乗降客数は１月26日時点で前年比130.1％となっており、１月としては過去最高の利用乗降客数になることが確定したほどの入込状況にある。
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+-0.1025889
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2016
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+1月31日
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+○
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+一般小売店［酒］（経営者）
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+単価の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+・年末の消費の反動もあってか、客の動きがやや鈍い。ただ、相変わらず高額商材が売れているということもあり、売上はそれなりの金額をキープしている。
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+-0.8938789
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2016
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+1月31日
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+○
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+百貨店（売場主任）
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+お客様の様子
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+・外国人観光客による売上が前年比152％と好調を継続しているほか、来客数が前年比102％と好調を維持している。月半ばに停滞した売上も下旬に入ってから回復傾向にあり、定価品、バーゲン品とも前年を上回っている。
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+1.0201638
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2016
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+1月31日
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+○
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+百貨店（担当者）
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+来客数の動き
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+・積極的に景気が上向きにあるとまではいいづらいものの、３か月前との比較では改善している。
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2.4385447
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+2016
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+1月31日
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+○
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+百貨店（販売促進担当）
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+それ以外
+&lt;/td&gt;
+&lt;td style=&#34;text-align:left;&#34;&gt;
+・気温が平年並みとなり、これまでの温暖、少雪の状態がみられなくなってきたことで、防寒衣料、雑貨商材を中心に多少改善の傾向がみられる。
+&lt;/td&gt;
+&lt;td style=&#34;text-align:right;&#34;&gt;
+0.7675009
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;傾向は先ほどの分析とさほど変わらないように見受けられます。
+boxplotの結果も見てみましょう。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 結果の可視化&lt;/span&gt;
+&lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(ggplot2)
+&lt;span style=&#34;color:#a6e22e&#34;&gt;ggplot&lt;/span&gt;(sample_with_score_dict, &lt;span style=&#34;color:#a6e22e&#34;&gt;aes&lt;/span&gt;(x&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;景気の現状判断,y&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;score_dict)) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;geom_boxplot&lt;/span&gt;()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../post/post27/index_files/figure-html/unnamed-chunk-16-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;右下がりの傾向が強くなったかもしれません。ただ、依然として景気判断別に見たスコアの分布は差がなく、文書分類ができる精度ではないことがわかります。&lt;/p&gt;
 &lt;h2 id=&#34;3-終わりに&#34;&gt;3. 終わりに&lt;/h2&gt;
 &lt;p&gt;最も簡易な手法ということで予想はしていましたが、辞書ベース手法ではセンチメントスコアの抽出はできませんでした。もちろん、私のやり方が悪いのが理由で上手くやれば文書の分類は可能かもしれません。ただ、経済に特化した極性辞書を準備しなければ難しいのではないかというのが、私の感想です。
 次はナイーブベイズ分類器を用いた文書分類に取り組みます。
@@ -346,10 +781,15 @@ sample_with_score_dict &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/
 &lt;div id=&#34;ref-takamura2005&#34; class=&#34;csl-entry&#34;&gt;
 &lt;p&gt;Takamura, Hiroya, Takashi Inui, and Manabu Okumura. 2005. “The 43rd Annual Meeting.” In. Association for Computational Linguistics. &lt;a href=&#34;https://doi.org/10.3115/1219840.1219857&#34;&gt;https://doi.org/10.3115/1219840.1219857&lt;/a&gt;.&lt;/p&gt;
 &lt;/div&gt;
-&lt;div id=&#34;ref-TAKAOKA18.8884&#34; class=&#34;csl-entry&#34;&gt;
-&lt;p&gt;Takaoka, Kazuma, Sorami Hisamoto, Noriko Kawahara, Miho Sakamoto, Yoshitaka Uchida, and Yuji Matsumoto. 2018. “Sudachi: A Japanese Tokenizer for Business.” In &lt;em&gt;Proceedings of the Eleventh International Conference on Language Resources and Evaluation (LREC 2018)&lt;/em&gt;, edited by Nicoletta Calzolari (Conference chair), Khalid Choukri, Christopher Cieri, Thierry Declerck, Sara Goggi, Koiti Hasida, Hitoshi Isahara, et al. Paris, France: European Language Resources Association (ELRA).&lt;/p&gt;
 &lt;/div&gt;
-&lt;/div&gt;
+&lt;section class=&#34;footnotes&#34; role=&#34;doc-endnotes&#34;&gt;
+&lt;hr&gt;
+&lt;ol&gt;
+&lt;li id=&#34;fn:1&#34; role=&#34;doc-endnote&#34;&gt;
+&lt;p&gt;文章を構造化し大規模に集積したもの &lt;a href=&#34;#fnref:1&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/section&gt;
 </description>
     </item>
     
@@ -386,7 +826,7 @@ sample_with_score_dict &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/
 &lt;link href=&#34;../../post/post25/index_files/lightable/lightable.css&#34; rel=&#34;stylesheet&#34; /&gt;
 &lt;link href=&#34;../../post/post25/index_files/bsTable/bootstrapTable.min.css&#34; rel=&#34;stylesheet&#34; /&gt;
 &lt;script src=&#34;../../post/post25/index_files/bsTable/bootstrapTable.js&#34;&gt;&lt;/script&gt;
-&lt;p&gt;おはこんばんにちは。テキスト解析はデータ分析界隈ではもうかなり当たり前になってきています。テキストの感性情報(センチメント)を抽出する手法には、どのようなものがあるかあるのか調べたところかなり時代は進んでいると実感しました。今回は実際に&lt;code&gt;R&lt;/code&gt;や&lt;code&gt;Python&lt;/code&gt;で作成した機械学習モデルを用いて、それらの精度を比較してみたいと思います。 今回はその第１回目ということで、データセットや全体感のお話です。&lt;/p&gt;
+&lt;p&gt;おはこんばんにちは。テキスト解析はデータ分析界隈ではもうかなり当たり前になってきています。テキストの感性情報(センチメント)を抽出する手法には、どのようなものがあるかあるのか調べたところかなり時代は進んでいると実感しました。これら数回にわたって、実際に&lt;code&gt;R&lt;/code&gt;や&lt;code&gt;Python&lt;/code&gt;で作成した機械学習モデルの精度を比較してみたいと思います。 今回はその第１回目ということで、データセットや全体感のお話です。&lt;/p&gt;
 &lt;h2 id=&#34;1-解きたい問題&#34;&gt;1. 解きたい問題&lt;/h2&gt;
 &lt;p&gt;今回解きたい問題は「景況感を表す文書表現を学習し、実際の景気判断を予測する」というタスクです。 データセットには、内閣府が出している景気ウオッチャー調査を使用します。&lt;/p&gt;
 &lt;h3 id=&#34;景気ウオッチャー調査とは&#34;&gt;景気ウオッチャー調査とは&lt;/h3&gt;
@@ -917,6 +1357,123 @@ stringr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&
 &lt;/tbody&gt;
 &lt;/table&gt;
 &lt;p&gt;「来客数の動き」と「販売量の動き」が多く、「お客様の様子」や「受注量や販売量の動き」まで含めると7割を占めます。回答業種に小売店が多いことから、このような項目が上位にきているのだと推察されます。&lt;/p&gt;
+&lt;h3 id=&#34;景気判断の理由に関するテキストマイニング&#34;&gt;景気判断の理由に関するテキストマイニング&lt;/h3&gt;
+&lt;p&gt;景気の現状判断に対する理由の追加説明及び具体的状況の説明を解析し、どのような単語が頻繁に使用されているかをWordCloudを用いて確認します。&lt;/p&gt;
+&lt;p&gt;まず、文書のトークン化を行います。日本語のような言語では英語などと異なり単語ごとの間にスペースがないため、別途区切りを入れてやる必要があります。区切られた各語は形態素と呼ばれ、言葉が意味を持つまとまりの単語の最小単位を指します。また、文章を形態素へ分割することを形態素解析と言います(英語のような場合単にTokenizationと言ったりします)。&lt;br&gt;
+形態素解析を行うツールは以下のようなものが存在します。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;MeCab&lt;/li&gt;
+&lt;li&gt;JUMAN&lt;/li&gt;
+&lt;li&gt;JANOME&lt;/li&gt;
+&lt;li&gt;Ginza&lt;/li&gt;
+&lt;li&gt;Sudachi&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;おそらく最も使用されているものはMecabではないかと思いますが、標準装備されている辞書(ipadic)の更新がストップしており、最近の新語に対応できないという問題があります。この点については新語に強いNEologd辞書を加えることで、対処可能であることを別記事で紹介していますが、今回はワークスアプリケーションズが提供しているSudachi[@TAKAOKA18.8884]を使用することにしたいと思います。公式GithubからSudachiの特長を引用します。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;複数の分割単位の併用&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;必要に応じて切り替え&lt;/li&gt;
+&lt;li&gt;形態素解析と固有表現抽出の融合&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;多数の収録語彙&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;UniDic と NEologd をベースに調整&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;機能のプラグイン化&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;文字正規化や未知語処理に機能追加が可能&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;同義語辞書との連携&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;後日公開予定&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;特質すべきは「複数の分割単位の併用」でしょう。Sudachiでは短い方から A, B, Cの3つの分割モードを提供しています。AはUniDic短単位相当、Cは固有表現相当、BはA, Cの中間的な単位となっており、以下のように同じ「選挙管理委員会」という単語でも形態素が異なることが確認できます。これはSudachi特有の特長になります。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; sudachipy &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; tokenizer
+&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; sudachipy &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; dictionary
+
+tokenizer_obj &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; dictionary&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Dictionary()&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;create()
+
+mode &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;SplitMode&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;A
+[m&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;normalized_form() &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; m &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; tokenizer_obj&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;tokenize(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;選挙管理委員会&amp;#34;&lt;/span&gt;, mode)]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## [&#39;選挙&#39;, &#39;管理&#39;, &#39;委員&#39;, &#39;会&#39;]
+&lt;/code&gt;&lt;/pre&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;mode &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;SplitMode&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;B
+[m&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;normalized_form() &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; m &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; tokenizer_obj&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;tokenize(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;選挙管理委員会&amp;#34;&lt;/span&gt;, mode)]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## [&#39;選挙&#39;, &#39;管理&#39;, &#39;委員会&#39;]
+&lt;/code&gt;&lt;/pre&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;mode &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;SplitMode&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;C
+[m&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;normalized_form() &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; m &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; tokenizer_obj&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;tokenize(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;選挙管理委員会&amp;#34;&lt;/span&gt;, mode)]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## [&#39;選挙管理委員会&#39;]
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;また、辞書についてもUniDicとNEologdをベースとして更新が続けられており、新語にも対応できます。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;mode &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;SplitMode&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;C
+[m&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;normalized_form() &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; m &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; tokenizer_obj&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;tokenize(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;新型コロナウイルス&amp;#34;&lt;/span&gt;, mode)]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## [&#39;新型コロナウイルス&#39;]
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;個人的に素晴らしいと思うポイントは表記正規化や文字正規化ができると言うことです。以下のように旧字等で同じ意味だが表記が異なる単語や英語/日本語、書き間違え等を正規化する機能があります。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;tokenizer_obj&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;tokenize(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;附属&amp;#34;&lt;/span&gt;, mode)[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;]&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;normalized_form()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## &#39;付属&#39;
+&lt;/code&gt;&lt;/pre&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;tokenizer_obj&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;tokenize(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;SUMMER&amp;#34;&lt;/span&gt;, mode)[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;]&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;normalized_form()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## &#39;サマー&#39;
+&lt;/code&gt;&lt;/pre&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;tokenizer_obj&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;tokenize(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;シュミレーション&amp;#34;&lt;/span&gt;, mode)[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;]&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;normalized_form()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## &#39;シミュレーション&#39;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;このような高性能な形態素解析ツールが無償でしかも商用利用も可というところに驚きを隠せません。次回以降で説明しますが、このSudachiで形態素解析を行ったWord2vecモデルであるChiveも提供されています。&lt;/p&gt;
+&lt;p&gt;説明が長くなりましたがSudachiでTokenizationを行いましょう。Sudachiは&lt;code&gt;Python&lt;/code&gt;で使用することができます。説明が前後していますが、上記コードで行っているように&lt;code&gt;tokenizer&lt;/code&gt;オブジェクトを作成し、&lt;code&gt;tokenize()&lt;/code&gt;メソッドで文章をTokenizeします。Tokenizeされた結果は&lt;code&gt;MorphemeList&lt;/code&gt;オブジェクトに格納されます。&lt;code&gt;MorphemeList&lt;/code&gt;オブジェクトの各要素に対して&lt;code&gt;normalized_form()&lt;/code&gt;メソッドを実行することで正規化された形態素を取得することができます。ここまでをやってみます。&lt;/p&gt;
+&lt;p&gt;まず、サンプルデータを読み込みます。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; sudachipy &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; tokenizer
+&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; sudachipy &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; dictionary
+&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; sklearn.preprocessing &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; LabelEncoder
+&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; pandas &lt;span style=&#34;color:#f92672&#34;&gt;as&lt;/span&gt; pd
+
+sample &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; pd&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;read_csv(&lt;span style=&#34;color:#e6db74&#34;&gt;r&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;C:\Users\hogehoge\景気ウオッチャー\生データ\watcher_2016.csv&amp;#34;&lt;/span&gt;,encoding&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;shift-jis&amp;#34;&lt;/span&gt;)
+sample &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; sample[(sample&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;追加説明及び具体的状況の説明&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;−&amp;#39;&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;(sample&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;追加説明及び具体的状況の説明&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;＊&amp;#39;&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;False&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;(sample&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;景気の現状判断&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;□&amp;#39;&lt;/span&gt;)]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;読み込んだ&lt;code&gt;sample&lt;/code&gt;をtokenizerでToken化していきます。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;tokenizer_obj &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; dictionary&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Dictionary()&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;create()
+mode &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;SplitMode&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;C
+tokenizer_sudachi &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;lambda&lt;/span&gt; t: [m&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;normalized_form() &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; m &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; tokenizer_obj&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;tokenize(t, mode)]
+tokens &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; sample&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;追加説明及び具体的状況の説明&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;map(tokenizer_sudachi)
+tokens&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;head()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## 0    [・, 店頭, の, 取り扱い, 額, が, 前年, 比, 約, 120, %, と, 好調...
+## 1    [・, 当, 施設, の, 利用, 乗降, 客数, は, 1, 月, 26, 日, 時点, ...
+## 2    [・, 年, 末, の, 消費, の, 反動, も, 有る, て, か, 、, 客, の, ...
+## 3    [・, 外国人, 観光客, に, よる, 売り上げ, が, 前年, 比, 152, %, と...
+## 4    [・, 積極的, だ, 景気, が, 上向き, に, 有る, と, まで, は, 言う, 辛...
+## Name: 追加説明及び具体的状況の説明, dtype: object
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Tokenizeすることができました。
+WordCloudを作成するために&lt;code&gt;Python&lt;/code&gt;の&lt;code&gt;wordcloud&lt;/code&gt;を用います。これは引数にTokenをスペースで区切った文字列を与える必要があるため、その整形を行います。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;word_lists &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; []
+&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; token &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; tokens:
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; word &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; token:
+    word_lists&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;append(word)
+word_chain &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39; &amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;join(word_lists)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;では、wordcloudを作成していきます。日本語表示では文字化けが発生するため、&lt;a href=&#34;https://moji.or.jp/ipafont/ipaex00401/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;こちら&lt;/a&gt;でフォント「IPAexゴシック」を予めダウンロードし、フォルダに保存したものを読み込んでいます。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;font_path &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;r&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;C:\Users\hogehoge\Watcher\ipaexg.ttf&amp;#39;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;wordcloud.WordCloud.genetate()&lt;/code&gt;でWordCloudを作成します。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; wordcloud &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; WordCloud
+&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; matplotlib.pyplot &lt;span style=&#34;color:#f92672&#34;&gt;as&lt;/span&gt; plt
+wc &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; WordCloud(background_color&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;white&amp;#34;&lt;/span&gt;, font_path&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;font_path, max_words&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt;, max_font_size&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt;, contour_width&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, contour_color&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;steelblue&amp;#39;&lt;/span&gt;)
+wc&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;generate(word_chain)
+plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;figure(figsize&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;12&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;))
+plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;imshow(wc, cmap&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;cm&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;gray, interpolation&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;bilinear&amp;#34;&lt;/span&gt;)
+plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;axis(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;off&amp;#34;&lt;/span&gt;)
+plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;show()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../wordcloud.png&#34; alt=&#34;alt text&#34;&gt;&lt;/p&gt;
+&lt;p&gt;助詞や「為る」、「有る」、「居る」、「成る」など特徴のない語句が頻出しており、意味のある可視化になっていません。これらを&lt;code&gt;word_chain&lt;/code&gt;から除き、もう一度実行してみます。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;stopwords &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;見る&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;為る&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;有る&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;居る&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;成る&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;は&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;に&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;よる&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;た&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;が&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;て&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;だ&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;など&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;と&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;も&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;の&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;や&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;で&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;から&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;を&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;おる&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;より&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;等&amp;#34;&lt;/span&gt;]
+&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; stopword &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; stopwords:
+  word_chain &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; word_chain&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;replace(stopword, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt;)
+wc&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;generate(word_chain)
+plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;figure(figsize&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;12&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;))
+plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;imshow(wc, cmap&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;cm&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;gray, interpolation&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;bilinear&amp;#34;&lt;/span&gt;)
+plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;axis(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;off&amp;#34;&lt;/span&gt;)
+plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;show()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../wordcloud2.png&#34; alt=&#34;alt text&#34;&gt;&lt;/p&gt;
+&lt;p&gt;先ほどよりは意味のある可視化になっています。「来客数」、「売り上げ」、「販売量」などやはり小売店関連のワードが頻出しているようです。これは回答者属性とも整合的です。&lt;/p&gt;
 &lt;h2 id=&#34;4-終わりに&#34;&gt;4. 終わりに&lt;/h2&gt;
 &lt;p&gt;これから各回で以下の手法を用いた予測モデルの構築を行っていきます。次回は、辞書ベースに基づくセンチメントの抽出を行い、文書のポジネガ分類を行います。&lt;/p&gt;
 &lt;ol&gt;
@@ -1514,8 +2071,7 @@ plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;show()
 &lt;pre&gt;&lt;code&gt;## Test accuracy: 0.711864406779661
 &lt;/code&gt;&lt;/pre&gt;&lt;pre&gt;&lt;code&gt;## &amp;lt;sklearn.metrics._plot.confusion_matrix.ConfusionMatrixDisplay object at 0x000000003694DFC8&amp;gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;img src=&#34;../../post/post20/index_files/figure-html/unnamed-chunk-9-3.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
-&lt;p&gt;散々な結果になりました。
-まったく識別できていません。馬体写真には順位を予測するような特徴量はないんでしょうか。それともG1の出走馬ではバラツキがなく、識別不可能なのでしょうか。いずれいにせよ、ちょっと厳しそうです。&lt;/p&gt;
+&lt;p&gt;まったく識別できていません。全ての馬が負値の予想になっています。馬体写真には順位を予測するような特徴量はないんでしょうか。それともG1の出走馬ではバラツキがなく、識別不可能なのでしょうか。いずれいにせよ、ちょっと厳しそうです。&lt;/p&gt;
 &lt;h2 id=&#34;4-shap値を用いた結果解釈&#34;&gt;4. Shap値を用いた結果解釈&lt;/h2&gt;
 &lt;p&gt;前回同様、どのように失敗したのか&lt;code&gt;shap&lt;/code&gt;値を使って検証してみましょう。この画像を例として使います。&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;imshow(X_test[&lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;])
@@ -1790,7 +2346,7 @@ score &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; accuracy_score(y_
 &lt;/code&gt;&lt;/pre&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;show()
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../post/post18/index_files/figure-html/unnamed-chunk-12-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;close()
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;不均衡データのバイアス修正はしたんですが、それでもなお負値を予測しやすいモデルとなっています。これでは使えないですね。&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;不均衡データのバイアス修正はしたんですが、それでもなお正値を予測しやすいモデルとなっています。これでは使えないですね。&lt;/p&gt;
 &lt;h2 id=&#34;3-shap値を用いた結果解釈&#34;&gt;3. Shap値を用いた結果解釈&lt;/h2&gt;
 &lt;p&gt;今学習したモデルの&lt;code&gt;shap&lt;/code&gt;値を考え、結果の解釈をしたいと思います。&lt;code&gt;shap&lt;/code&gt;値については時間があれば、説明を追記したいと思います。簡単に言えば、CNNが画像のどの部分に特徴を捉え、馬が上位に入るかを予想したかを可視化で捉えることができます。この馬の解析をすることにします。&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;imshow(X_test[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;])
@@ -1906,23 +2462,7 @@ cat_list &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; [&lt;span styl
     le&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;fit(target_column)
     label_encoded_column &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; le&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;transform(target_column)
     df[column] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; pd&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Series(label_encoded_column)&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;astype(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;category&amp;#39;&lt;/span&gt;)
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-&lt;/code&gt;&lt;/pre&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; pandas_profiling &lt;span style=&#34;color:#f92672&#34;&gt;as&lt;/span&gt; pdq
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; pandas_profiling &lt;span style=&#34;color:#f92672&#34;&gt;as&lt;/span&gt; pdq
 profile &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; pdq&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;ProfileReport(df)
 profile
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;2-予測モデルの作成&#34;&gt;2. 予測モデルの作成&lt;/h2&gt;

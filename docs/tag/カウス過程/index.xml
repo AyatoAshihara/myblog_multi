@@ -223,39 +223,78 @@ sns&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;relplot(data&lt;span 
 &lt;p&gt;$$
 \displaystyle y_{i}  = \textbf{w}^{T}\phi(\textbf{x}_{i})
 $$&lt;/p&gt;
-&lt;p&gt;ここで、$\textbf{x}&lt;em&gt;{i}$は$i$番目の説明変数ベクトル、$\phi(・)$は非線形関数、 &lt;code&gt;\(\textbf{w}^{T}\)&lt;/code&gt;は各入力データに対する重み係数（回帰係数）ベクトルです。非線形関数としては、$\phi(\textbf{x}&lt;/em&gt;{i}) = (x_{1,i}, x_{1,i}^{2},&amp;hellip;,x_{1,i}x_{2,i},&amp;hellip;)$を想定しています（$x_{1,i}$は$i$番目の入力データ$\textbf{x}_{i}$の１番目の変数）。詳しくは過去記事を参照してください。&lt;/p&gt;
+&lt;div&gt;
+ここで、$\textbf{x}_{i}$は$i$番目の説明変数ベクトル、$\phi(・)$は非線形関数、 $\textbf{w}^{T}$は各入力データに対する重み係数（回帰係数）ベクトルです。非線形関数としては、$\phi(\textbf{x}_{i}) = (x_{1,i}, x_{1,i}^{2},...,x_{1,i}x_{2,i},...)$を想定しています（$x_{1,i}$は$i$番目の入力データ$\textbf{x}_{i}$の１番目の変数）。詳しくは過去記事を参照してください。
+&lt;/div&gt;
 &lt;p&gt;今回やるGPLVMは説明変数ベクトルが観測できない潜在変数（Latent Variable）であるところが特徴です。以下のスライドが非常にわかりやすいですが、GP-LVMは確率的主成分分析（PPCA）の非線形版という位置付けになっています。&lt;/p&gt;
 &lt;p&gt;&lt;a href=&#34;https://www.slideshare.net/antiplastics/pcagplvm&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;資料&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;では具体的な説明に移ります。GPLVMは主成分分析の発展版ですので、主に次元削減のために行われることを想定しています。つまり、データセットがあったとして、サンプルサイズ$n$よりも変数の次元$p$が大きいような場合を想定しています。&lt;/p&gt;
 &lt;h2 id=&#34;2-最もprimitiveなgp-lvmhttppapersnipsccpaper2540-gaussian-process-latent-variable-models-for-visualisation-of-high-dimensional-datapdf&#34;&gt;2. &lt;a href=&#34;http://papers.nips.cc/paper/2540-gaussian-process-latent-variable-models-for-visualisation-of-high-dimensional-data.pdf&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;最もPrimitiveなGP-LVM&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;先述したようにGPLVMはPPCAの非線形版です。なので、GPLVMを説明するスタートはPPCAになります。観測可能な$D$次元データセットを${\textbf{y}&lt;em&gt;{n}}&lt;/em&gt;{n=1}^{N}$とします。そして、潜在変数を$\textbf{x}_{n}$とおきます。今、データセットと潜在変数の間には以下のような関係があるとします。&lt;/p&gt;
-&lt;p&gt;$$
-\textbf{y}&lt;em&gt;{n} = \textbf{W}\textbf{x}&lt;/em&gt;{n} + \epsilon_{n}
-$$&lt;/p&gt;
-&lt;p&gt;ここで、$\textbf{W}$はウェイト行列、$\epsilon_{n}$はかく乱項で$N(0,\beta^{-1}\textbf{I})$に従います（被説明変数が多次元になることに注意）。また、$\textbf{x}_{n}$は$N(0,\textbf{I})$に従います。このとき、$\textbf{y}_{n}$の尤度を$\textbf{x}_{n}$を周辺化することで表現すると、&lt;/p&gt;
-&lt;p&gt;$$
-&lt;code&gt;\begin{eqnarray*} \displaystyle p(\textbf{y}_{n}|\textbf{W},\beta) &amp;amp;=&amp;amp; \int p(\textbf{y}_{n}|\textbf{x}_{n},\textbf{W},\beta)N(0,\textbf{I})d\textbf{x}_{n} \\ \displaystyle &amp;amp;=&amp;amp; \int N(\textbf{W}\textbf{x}_{n},\beta^{-1}\textbf{I})N(0,\textbf{I})d\textbf{x}_{n} \\ &amp;amp;=&amp;amp; N(0,\textbf{W}\textbf{W}^{T} + \beta^{-1}\textbf{I}) \\ \displaystyle &amp;amp;=&amp;amp; \frac{1}{(2\pi)^{DN/2}|\textbf{W}\textbf{W}^{T} + \beta^{-1}\textbf{I}|^{N/2}}\exp(\frac{1}{2}\textbf{tr}( (\textbf{W}\textbf{W}^{T} + \beta^{-1}\textbf{I})^{-1}\textbf{YY}^{T})) \end{eqnarray*}&lt;/code&gt;
-$$&lt;/p&gt;
-&lt;p&gt;となります。ここで、$p(\textbf{y}&lt;em&gt;{n}|\textbf{x}&lt;/em&gt;{n},\textbf{W},\beta)=N(\textbf{W}\textbf{x}_{n},\beta^{-1}\textbf{I})$です。平均と分散は以下から求めました。&lt;/p&gt;
-&lt;p&gt;$$
-&lt;code&gt;\begin{eqnarray*} E(\textbf{y}_{n}|\textbf{W},\beta) &amp;amp;=&amp;amp; E(\textbf{W}\textbf{x}_{n} + \epsilon_{n}) \\ &amp;amp;=&amp;amp; E(\textbf{W}\textbf{x}_{n}) + E(\epsilon_{n}) \\ &amp;amp;=&amp;amp; \textbf{W}E(\textbf{x}_{n}) + E(\epsilon_{n}) = 0 \end{eqnarray*}&lt;/code&gt;
-$$&lt;/p&gt;
-&lt;p&gt;$$
-&lt;code&gt;\begin{eqnarray*} E[(\textbf{y}_{n}|\textbf{W},\beta)(\textbf{y}_{n}|\textbf{W},\beta)^{T}] &amp;amp;=&amp;amp; E[ (\textbf{W}\textbf{x}_{n} + \epsilon_{n} - 0)(\textbf{W}\textbf{x}_{n} + \epsilon_{n} - 0)^{T} ] \\ &amp;amp;=&amp;amp; E[ (\textbf{W}\textbf{x}_{n} + \epsilon_{n})(\textbf{W}\textbf{x}_{n} + \epsilon_{n})^{T} ] \\ &amp;amp;=&amp;amp; E[ \textbf{W}\textbf{x}_{n}(\textbf{W}\textbf{x}_{n})^{T} + \textbf{W}\textbf{x}_{n}\epsilon_{n}^{T} + \epsilon_{n}\textbf{W}\textbf{x}_{n}^{T} + \epsilon_{n}\epsilon_{n}^{T} ] \\ &amp;amp;=&amp;amp; E[ \textbf{W}\textbf{x}_{n}(\textbf{W}\textbf{x}_{n})^{T} + \epsilon_{n}\epsilon_{n}^{T} ] \\ &amp;amp;=&amp;amp; E[ \textbf{W}\textbf{x}_{n}\textbf{x}_{n}^{T}\textbf{W}^{T} + \epsilon_{n}\epsilon_{n}^{T} ] \\ &amp;amp;=&amp;amp; E[ \textbf{W}\textbf{x}_{n}\textbf{x}_{n}^{T}\textbf{W}^{T}] + E[\epsilon_{n}\epsilon_{n}^{T} ] \\ &amp;amp;=&amp;amp; \textbf{W}\textbf{W}^{T} + \beta^{-1}\textbf{I} \end{eqnarray*}&lt;/code&gt;
-$$&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;\(\textbf{W}\)&lt;/code&gt;を求めるためには$\textbf{y}_{n}$がi.i.d.と仮定し、以下のようなデータセット全体の尤度を最大化すれば良いことになります。&lt;/p&gt;
+&lt;div&gt;
+先述したようにGPLVMはPPCAの非線形版です。なので、GPLVMを説明するスタートはPPCAになります。観測可能な$D$次元データセットを$\{\textbf{y}_{n}\}_{n=1}^{N}$とします。そして、潜在変数を$\textbf{x}_{n}$とおきます。今、データセットと潜在変数の間には以下のような関係があるとします。
+&lt;/div&gt;
+&lt;div&gt;
+$$
+\textbf{y}_{n} = \textbf{W}\textbf{x}_{n} + \epsilon_{n}
+$$
+&lt;/div&gt;
+&lt;div&gt;
+ここで、$\textbf{W}$はウェイト行列、$\epsilon_{n}$はかく乱項で$N(0,\beta^{-1}\textbf{I})$に従います（被説明変数が多次元になることに注意）。また、$\textbf{x}_{n}$は$N(0,\textbf{I})$に従います。このとき、$\textbf{y}_{n}$の尤度を$\textbf{x}_{n}$を周辺化することで表現すると、
+&lt;/div&gt;
+&lt;div&gt;
+$$
+\begin{eqnarray*}
+\displaystyle p(\textbf{y}_{n}|\textbf{W},\beta) &amp;=&amp; \int p(\textbf{y}_{n}|\textbf{x}_{n},\textbf{W},\beta)N(0,\textbf{I})d\textbf{x}_{n} \\
+\displaystyle &amp;=&amp; \int N(\textbf{W}\textbf{x}_{n},\beta^{-1}\textbf{I})N(0,\textbf{I})d\textbf{x}_{n} \\
+&amp;=&amp; N(0,\textbf{W}\textbf{W}^{T} + \beta^{-1}\textbf{I}) \\
+\displaystyle &amp;=&amp; \frac{1}{(2\pi)^{DN/2}|\textbf{W}\textbf{W}^{T} + \beta^{-1}\textbf{I}|^{N/2}}\exp(\frac{1}{2}\textbf{tr}( (\textbf{W}\textbf{W}^{T} + \beta^{-1}\textbf{I})^{-1}\textbf{YY}^{T}))
+\end{eqnarray*}
+$$
+&lt;/div&gt;
+&lt;div&gt;
+となります。ここで、$p(\textbf{y}_{n}|\textbf{x}_{n},\textbf{W},\beta)=N(\textbf{W}\textbf{x}_{n},\beta^{-1}\textbf{I})$です。平均と分散は以下から求めました。
+&lt;/div&gt;
+&lt;div&gt;
+$$
+\begin{eqnarray*}
+E(\textbf{y}_{n}|\textbf{W},\beta) &amp;=&amp; E(\textbf{W}\textbf{x}_{n} + \epsilon_{n}) \\
+&amp;=&amp; E(\textbf{W}\textbf{x}_{n}) + E(\epsilon_{n}) \\
+&amp;=&amp; \textbf{W}E(\textbf{x}_{n}) + E(\epsilon_{n}) = 0
+\end{eqnarray*}
+$$
+&lt;/div&gt;
+&lt;div&gt;
+$$
+\begin{eqnarray*}
+E[(\textbf{y}_{n}|\textbf{W},\beta)(\textbf{y}_{n}|\textbf{W},\beta)^{T}] &amp;=&amp; E[ (\textbf{W}\textbf{x}_{n} + \epsilon_{n} - 0)(\textbf{W}\textbf{x}_{n} + \epsilon_{n} - 0)^{T} ] \\
+&amp;=&amp; E[ (\textbf{W}\textbf{x}_{n} + \epsilon_{n})(\textbf{W}\textbf{x}_{n} + \epsilon_{n})^{T} ] \\
+&amp;=&amp; E[ \textbf{W}\textbf{x}_{n}(\textbf{W}\textbf{x}_{n})^{T} + \textbf{W}\textbf{x}_{n}\epsilon_{n}^{T} + \epsilon_{n}\textbf{W}\textbf{x}_{n}^{T} + \epsilon_{n}\epsilon_{n}^{T} ] \\
+&amp;=&amp; E[ \textbf{W}\textbf{x}_{n}(\textbf{W}\textbf{x}_{n})^{T} + \epsilon_{n}\epsilon_{n}^{T} ] \\
+&amp;=&amp; E[ \textbf{W}\textbf{x}_{n}\textbf{x}_{n}^{T}\textbf{W}^{T} + \epsilon_{n}\epsilon_{n}^{T} ] \\
+&amp;=&amp; E[ \textbf{W}\textbf{x}_{n}\textbf{x}_{n}^{T}\textbf{W}^{T}] + E[\epsilon_{n}\epsilon_{n}^{T} ] \\
+&amp;=&amp; \textbf{W}\textbf{W}^{T} + \beta^{-1}\textbf{I}
+\end{eqnarray*}
+$$
+&lt;/div&gt;
+&lt;p&gt;$\textbf{W}$を求めるためには$\textbf{y}_{n}$がi.i.d.と仮定し、以下のようなデータセット全体の尤度を最大化すれば良いことになります。&lt;/p&gt;
 &lt;p&gt;$$
 \displaystyle p(\textbf{Y}|\textbf{W},\beta) = \prod_{n=1}^{N}p(\textbf{y}_{n}|\textbf{W},\beta)
 $$&lt;/p&gt;
-&lt;p&gt;ここで、$\textbf{Y}$は$N×D$の計画行列です。このように、PPCAでは$\textbf{x}&lt;em&gt;{n}$を周辺化し、$\textbf{W}$を最適化します。逆に、Lawrence(2004)では$\textbf{W}$を周辺化し、$\textbf{x}&lt;/em&gt;{n}$します（理由は後述）。$\textbf{W}$を周辺化するために、$\textbf{W}$に事前分布を与えましょう。&lt;/p&gt;
+&lt;div&gt;
+ここで、$\textbf{Y}$は$N×D$の計画行列です。このように、PPCAでは$\textbf{x}_{n}$を周辺化し、$\textbf{W}$を最適化します。逆に、Lawrence(2004)では$\textbf{W}$を周辺化し、$\textbf{x}_{n}$します（理由は後述）。$\textbf{W}$を周辺化するために、$\textbf{W}$に事前分布を与えましょう。
+&lt;/div&gt;
 &lt;p&gt;$$
 \displaystyle p(\textbf{W}) = \prod_{i=1}^{D}N(\textbf{w}_{i}|0,\alpha^{-1}\textbf{I})
 $$&lt;/p&gt;
-&lt;p&gt;ここで、$\textbf{w}_{i}$はウェイト行列$\textbf{W}$の$i$番目の列です。では、$\textbf{W}$を周辺化して$\textbf{Y}$の尤度関数を導出してみます。やり方はさっきとほぼ同じなので省略します。&lt;/p&gt;
+&lt;div&gt;
+ここで、$\textbf{w}_{i}$はウェイト行列$\textbf{W}$の$i$番目の列です。では、$\textbf{W}$を周辺化して$\textbf{Y}$の尤度関数を導出してみます。やり方はさっきとほぼ同じなので省略します。
+&lt;/div&gt;
 &lt;p&gt;$$
 \displaystyle p(\textbf{Y}|\textbf{X},\beta) = \frac{1}{(2\pi)^{DN/2}|K|^{D/2}}\exp(\frac{1}{2}\textbf{tr}(\textbf{K}^{-1}\textbf{YY}^{T}))
 $$&lt;/p&gt;
-&lt;p&gt;ここで、$\textbf{K}=\alpha^2\textbf{X}\textbf{X}^{T} + \beta^{-1}\textbf{I}$は$p(\textbf{Y}|\textbf{X},\beta)$の分散共分散行列で、$\textbf{X}=(\textbf{x}&lt;em&gt;{1},\textbf{x}&lt;/em&gt;{2},&amp;hellip;,\textbf{x}_{N})^{T}$は入力ベクトルです。対数尤度は&lt;/p&gt;
+&lt;div&gt;
+ここで、$\textbf{K}=\alpha^2\textbf{X}\textbf{X}^{T} + \beta^{-1}\textbf{I}$は$p(\textbf{Y}|\textbf{X},\beta)$の分散共分散行列で、$\textbf{X}=(\textbf{x}_{1},\textbf{x}_{2},...,\textbf{x}_{N})^{T}$は入力ベクトルです。対数尤度は
+&lt;/div&gt;
 &lt;p&gt;$$
 \displaystyle L = - \frac{DN}{2}\ln{2\pi} - \frac{1}{2}\ln{|\textbf{K}|} - \frac{1}{2}\textbf{tr}(\textbf{K}^{-1}\textbf{YY}^{T})
 $$&lt;/p&gt;
@@ -271,14 +310,29 @@ $$&lt;/p&gt;
 &lt;p&gt;$$
 \textbf{X} = \textbf{ULV}^{T}
 $$&lt;/p&gt;
-&lt;p&gt;となります。$\textbf{U} = (\textbf{u}&lt;em&gt;{1},\textbf{u}&lt;/em&gt;{2},&amp;hellip;,\textbf{u}&lt;em&gt;{q})$は$N×q$直交行列、$\textbf{L} = diag(l&lt;/em&gt;{1},l_{2},&amp;hellip;, l_{q})$は$q×q$の特異値を対角成分に並べた行列、$\textbf{V}$は$q×q$直交行列です。これを先ほどの式に代入すると、&lt;/p&gt;
-&lt;p&gt;$$
-&lt;code&gt;\begin{eqnarray*} \textbf{K}^{-1}\textbf{X} &amp;amp;=&amp;amp; (\alpha^2\textbf{X}\textbf{X}^{T} + \beta^{-1}\textbf{I})^{-1}\textbf{X} \\ &amp;amp;=&amp;amp; \textbf{X}(\alpha^2\textbf{X}^{T}\textbf{X} + \beta^{-1}\textbf{I})^{-1} \\ &amp;amp;=&amp;amp; \textbf{ULV}^{T}(\alpha^2\textbf{VLU}^{T}\textbf{ULV}^{T} + \beta^{-1}\textbf{I})^{-1} \\ &amp;amp;=&amp;amp; \textbf{ULV}^{T}\textbf{V}(\alpha^2\textbf{LU}^{T}\textbf{UL} + \beta^{-1}\textbf{I}^{-1})\textbf{V}^{T} \\ &amp;amp;=&amp;amp; \textbf{UL}(\alpha^2\textbf{L}^{2} + \beta^{-1}\textbf{I})^{-1}\textbf{V}^{T} \end{eqnarray*}&lt;/code&gt;
-$$&lt;/p&gt;
+&lt;div&gt;
+となります。$\textbf{U} = (\textbf{u}_{1},\textbf{u}_{2},...,\textbf{u}_{q})$は$N×q$直交行列、$\textbf{L} = diag(l_{1},l_{2},..., l_{q})$は$q×q$の特異値を対角成分に並べた行列、$\textbf{V}$は$q×q$直交行列です。これを先ほどの式に代入すると、
+&lt;/div&gt;
+&lt;div&gt;
+$$
+\begin{eqnarray*}
+\textbf{K}^{-1}\textbf{X} &amp;=&amp; (\alpha^2\textbf{X}\textbf{X}^{T} + \beta^{-1}\textbf{I})^{-1}\textbf{X} \\
+&amp;=&amp; \textbf{X}(\alpha^2\textbf{X}^{T}\textbf{X} + \beta^{-1}\textbf{I})^{-1} \\
+&amp;=&amp; \textbf{ULV}^{T}(\alpha^2\textbf{VLU}^{T}\textbf{ULV}^{T} + \beta^{-1}\textbf{I})^{-1} \\
+&amp;=&amp; \textbf{ULV}^{T}\textbf{V}(\alpha^2\textbf{LU}^{T}\textbf{UL} + \beta^{-1}\textbf{I}^{-1})\textbf{V}^{T} \\
+&amp;=&amp; \textbf{UL}(\alpha^2\textbf{L}^{2} + \beta^{-1}\textbf{I})^{-1}\textbf{V}^{T}
+\end{eqnarray*}
+$$
+&lt;/div&gt;
 &lt;p&gt;なので、&lt;/p&gt;
-&lt;p&gt;$$
-&lt;code&gt;\begin{eqnarray*} \displaystyle \frac{1}{D}\textbf{Y}\textbf{Y}^{T}\textbf{UL}(\alpha^2\textbf{L}^{2} + \beta^{-1}\textbf{I})^{-1})\textbf{V}^{T} &amp;amp;=&amp;amp; \textbf{ULV}^{T}\\ \displaystyle \textbf{Y}\textbf{Y}^{T}\textbf{UL} &amp;amp;=&amp;amp; D\textbf{U}(\alpha^2\textbf{L}^{2} + \beta^{-1}\textbf{I})^{-1}\textbf{L} \\ \end{eqnarray*}&lt;/code&gt;
-$$&lt;/p&gt;
+&lt;div&gt;
+$$
+\begin{eqnarray*}
+\displaystyle \frac{1}{D}\textbf{Y}\textbf{Y}^{T}\textbf{UL}(\alpha^2\textbf{L}^{2} + \beta^{-1}\textbf{I})^{-1})\textbf{V}^{T} &amp;=&amp; \textbf{ULV}^{T}\\
+\displaystyle \textbf{Y}\textbf{Y}^{T}\textbf{UL} &amp;=&amp; D\textbf{U}(\alpha^2\textbf{L}^{2} + \beta^{-1}\textbf{I})^{-1}\textbf{L} \\
+\end{eqnarray*}
+$$
+&lt;/div&gt;
 &lt;p&gt;となります。$l_{j}$が0でなければ、$\textbf{Y}\textbf{Y}^{T}\textbf{u}_{j} = D(\alpha^2 l_{j}^{2} + \beta^{-1})\textbf{u}_{j}$となり、$\textbf{U}$のそれぞれの列は$\textbf{Y}\textbf{Y}^{T}$の固有ベクトルであり、対応する固有値$\lambda_{j}$は$D(\alpha^2 l_{j}^{2} + \beta^{-1})$となります。つまり、未知であった$X=ULV$が実は$\textbf{Y}\textbf{Y}^{T}$の固有値問題から求めることが出来るというわけです。$l_{j}$は上式を利用して、&lt;/p&gt;
 &lt;p&gt;$$
 \displaystyle l_{j} = (\frac{\lambda_{j}}{D\alpha^2} - \frac{1}{\beta\alpha^2})^{1/2}
@@ -289,19 +343,27 @@ $$&lt;/p&gt;
 $$&lt;/p&gt;
 &lt;p&gt;となります。ここで、$\textbf{U}_{q}$は$\textbf{Y}\textbf{Y}^{T}$の固有ベクトルを$q$個取り出したものです。$\beta$が限りなく大きければ（=観測誤差が限りなく小さければ）通常のPCAと一致します。&lt;/p&gt;
 &lt;p&gt;以上がPPCAです。GPLVMはPPCAで確率モデルとして想定していた以下のモデルを拡張します。&lt;/p&gt;
-&lt;p&gt;$$
-\textbf{y}&lt;em&gt;{n} = \textbf{W}^{T}\textbf{x}&lt;/em&gt;{n} + \epsilon_{n}
-$$&lt;/p&gt;
+&lt;div&gt;
+$$
+\textbf{y}_{n} = \textbf{W}^{T}\textbf{x}_{n} + \epsilon_{n}
+$$
+&lt;/div&gt;
 &lt;p&gt;具体的には、通常のガウス過程と同様、&lt;/p&gt;
-&lt;p&gt;$$
-\displaystyle \textbf{y}&lt;em&gt;{n}  = \textbf{W}^{T}\phi(\textbf{x}&lt;/em&gt;{n})+ \epsilon_{n}
-$$&lt;/p&gt;
-&lt;p&gt;という風に基底関数$\phi(\textbf{x}&lt;em&gt;{n})$をかませて拡張します。$\phi(・)$は平均$\textbf{0}$、分散共分散行列$\textbf{K}&lt;/em&gt;{\textbf{x}}$のガウス過程と仮定します。分散共分散行列$\textbf{K}_{\textbf{x}}$は&lt;/p&gt;
+&lt;div&gt;
+$$
+\displaystyle \textbf{y}_{n}  = \textbf{W}^{T}\phi(\textbf{x}_{n})+ \epsilon_{n}
+$$
+&lt;/div&gt;
+&lt;div&gt;
+という風に基底関数$\phi(\textbf{x}_{n})$をかませて拡張します。$\phi(・)$は平均$\textbf{0}$、分散共分散行列$\textbf{K}_{\textbf{x}}$のガウス過程と仮定します。分散共分散行列$\textbf{K}_{\textbf{x}}$は
+&lt;/div&gt;
 &lt;p&gt;$$
 \textbf{K}_{\textbf{x}} = \alpha^2\phi(\textbf{x})\phi(\textbf{x})^T
 $$&lt;/p&gt;
-&lt;p&gt;であり、入力ベクトル$\textbf{X}$を$\phi(\textbf{・})$で非線形変換した特徴量$\phi(\textbf{x})$が近いほど、出力値$\textbf{Y}$も近くなりやすいという性質があることになります。GPLVMではこの性質を逆に利用しています。つまり、出力値$Y_i$と$Y_j$が近い→$\phi(\textbf{x}&lt;em&gt;i)$と$\phi(\textbf{x}&lt;em&gt;j)$が近い（内積が大きい）→$\textbf{K}&lt;/em&gt;{x,ij}$が大きい→観測不可能なデータ$X&lt;/em&gt;{i}$と$X_{j}$は近い値（or同じようなパターン）をとる。
-この議論からもわかるように、$\textbf{K}_{\textbf{x}}$は入力ベクトル$\textbf{X}$それぞれの距離を表したものになります。分散共分散行列の計算には入力ベクトル$\textbf{X}$を基底関数$\phi(\textbf{・})$で非線形変換した後、内積を求めるといったことをする必要はなく、カーネル関数を計算するのみでOKです。今回は王道中の王道RBFカーネルを使用していますので、これを例説明します。&lt;/p&gt;
+&lt;div&gt;
+であり、入力ベクトル$\textbf{X}$を$\phi(\textbf{・})$で非線形変換した特徴量$\phi(\textbf{x})$が近いほど、出力値$\textbf{Y}$も近くなりやすいという性質があることになります。GPLVMではこの性質を逆に利用しています。つまり、出力値$Y_i$と$Y_j$が近い→$\phi(\textbf{x}_i)$と$\phi(\textbf{x}_j)$が近い（内積が大きい）→$\textbf{K}_{x,ij}$が大きい→観測不可能なデータ$X_{i}$と$X_{j}$は近い値（or同じようなパターン）をとる。
+この議論からもわかるように、$\textbf{K}_{\textbf{x}}$は入力ベクトル$\textbf{X}$それぞれの距離を表したものになります。分散共分散行列の計算には入力ベクトル$\textbf{X}$を基底関数$\phi(\textbf{・})$で非線形変換した後、内積を求めるといったことをする必要はなく、カーネル関数を計算するのみでOKです。今回は王道中の王道RBFカーネルを使用していますので、これを例説明します。
+&lt;/div&gt;
 &lt;p&gt;RBFカーネル（スカラーに対する）
 $$
 \theta_{1}\exp(-\frac{1}{\theta_{2}}(x-x^T)^2)
@@ -311,29 +373,52 @@ $$&lt;/p&gt;
 \phi(x)_h = \tau\exp(-\frac{1}{r}(x-h)^2)
 $$&lt;/p&gt;
 &lt;p&gt;例えば、この基底関数で入力$x$を変換したものを$2H^2+1$個並べた関数を&lt;/p&gt;
-&lt;p&gt;$$
-\phi(x) = (\phi(x)&lt;em&gt;{-H^2}, &amp;hellip;, \phi(x)&lt;/em&gt;{0},&amp;hellip;,\phi(x)_{H^2})
-$$&lt;/p&gt;
+&lt;div&gt;
+$$
+\phi(x) = (\phi(x)_{-H^2}, ..., \phi(x)_{0},...,\phi(x)_{H^2})
+$$
+&lt;/div&gt;
 &lt;p&gt;入力$x$の特徴量だとすると$x&#39;$との共分散$K_{x}(x,x&#39;)$は内積の和なので&lt;/p&gt;
 &lt;p&gt;$$
 K_{x}(x,x&#39;) = \sum_{h=-H^2}^{H^2}\phi_{h}(x)\phi_{h}(x&#39;)
 $$&lt;/p&gt;
 &lt;p&gt;となります。ここで、$H \to \infty$とし、グリッドを極限まで細かくしてみます。&lt;/p&gt;
-&lt;p&gt;$$
-&lt;code&gt;\begin{eqnarray*} K_{x}(x,x&#39;) &amp;amp;=&amp;amp; \lim_{H \to \infty}\sum_{h=-H^2}^{H^2}\phi_{h}(x)\phi_{h}(x&#39;) \\ &amp;amp;\to&amp;amp;\int_{-\infty}^{\infty}\tau\exp(-\frac{1}{r}(x-h)^2)\tau\exp(-\frac{1}{r}(x&#39;-h)^2)dh \\ &amp;amp;=&amp;amp; \tau^2 \int_{-\infty}^{\infty}\exp(-\frac{1}{r}\{(x-h)^2+(x&#39;-h)^2\})dh \\ &amp;amp;=&amp;amp; \tau^2 \int_{-\infty}^{\infty}\exp(-\frac{1}{r}\{2(h-\frac{x+x&#39;}{2})^2+\frac{1}{2}(x-x&#39;)^2\})dh \\ \end{eqnarray*}&lt;/code&gt;
-$$&lt;/p&gt;
+&lt;div&gt;
+$$
+\begin{eqnarray*}
+K_{x}(x,x&#39;) &amp;=&amp; \lim_{H \to \infty}\sum_{h=-H^2}^{H^2}\phi_{h}(x)\phi_{h}(x&#39;) \\
+&amp;\to&amp;\int_{-\infty}^{\infty}\tau\exp(-\frac{1}{r}(x-h)^2)\tau\exp(-\frac{1}{r}(x&#39;-h)^2)dh \\
+&amp;=&amp; \tau^2 \int_{-\infty}^{\infty}\exp(-\frac{1}{r}\{(x-h)^2+(x&#39;-h)^2\})dh \\
+&amp;=&amp; \tau^2 \int_{-\infty}^{\infty}\exp(-\frac{1}{r}\{2(h-\frac{x+x&#39;}{2})^2+\frac{1}{2}(x-x&#39;)^2\})dh \\
+\end{eqnarray*}
+$$
+&lt;/div&gt;
 &lt;p&gt;となります。$h$に関係のない部分を積分の外に出します。&lt;/p&gt;
-&lt;p&gt;$$
-&lt;code&gt;\begin{eqnarray*} &amp;amp;=&amp;amp; \tau^2 \int_{-\infty}^{\infty}\exp(-\frac{2}{r}(h-\frac{x+x&#39;}{2})^2)dh\exp(-\frac{1}{2r}(x-x&#39;)^2) \\ \end{eqnarray*}&lt;/code&gt;
-$$&lt;/p&gt;
+&lt;div&gt;
+$$
+\begin{eqnarray*}
+&amp;=&amp; \tau^2 \int_{-\infty}^{\infty}\exp(-\frac{2}{r}(h-\frac{x+x&#39;}{2})^2)dh\exp(-\frac{1}{2r}(x-x&#39;)^2) \\
+\end{eqnarray*}
+$$
+&lt;/div&gt;
 &lt;p&gt;残った積分を見ると、正規分布の正規化定数と等しいことがわかります。&lt;/p&gt;
-&lt;p&gt;$$
-&lt;code&gt;\begin{eqnarray*} \int_{-\infty}^{\infty}\exp(-\frac{1}{2\sigma}(h-\frac{x+x&#39;}{2})^2)dh &amp;amp;=&amp;amp;  \int_{-\infty}^{\infty}\exp(-\frac{2}{r}(h-\frac{x+x&#39;}{2})^2)dh\\ \sigma &amp;amp;=&amp;amp; \frac{r}{4} \end{eqnarray*}&lt;/code&gt;
-$$&lt;/p&gt;
+&lt;div&gt;
+$$
+\begin{eqnarray*}
+\int_{-\infty}^{\infty}\exp(-\frac{1}{2\sigma}(h-\frac{x+x&#39;}{2})^2)dh &amp;=&amp;  \int_{-\infty}^{\infty}\exp(-\frac{2}{r}(h-\frac{x+x&#39;}{2})^2)dh\\
+\sigma &amp;=&amp; \frac{r}{4}
+\end{eqnarray*}
+$$
+&lt;/div&gt;
 &lt;p&gt;となるので、ガウス積分の公式を用いて&lt;/p&gt;
-&lt;p&gt;$$
-&lt;code&gt;\begin{eqnarray*} &amp;amp;=&amp;amp; \tau^2 \sqrt{\frac{\pi r}{2}}\exp(-\frac{1}{2r}(x-x&#39;)^2)　\\ &amp;amp;=&amp;amp; \theta_{1}\exp(-\frac{1}{\theta_{2}}(x-x’)^2) \end{eqnarray*}&lt;/code&gt;
-$$&lt;/p&gt;
+&lt;div&gt;
+$$
+\begin{eqnarray*}
+&amp;=&amp; \tau^2 \sqrt{\frac{\pi r}{2}}\exp(-\frac{1}{2r}(x-x&#39;)^2)　\\
+&amp;=&amp; \theta_{1}\exp(-\frac{1}{\theta_{2}}(x-x’)^2)
+\end{eqnarray*}
+$$
+&lt;/div&gt;
 &lt;p&gt;となり、RBFカーネルと等しくなることがわかります。よって、RBFカーネルで計算した共分散は上述した基底関数で入力$x$を無限次元へ拡張した特徴量ベクトルの内積から計算した共分散と同値になることがわかります。つまり、入力$x$と$x&#39;$のスカラーの計算のみで$K_{x}(x,x&#39;)$ができてしまうという夢のような計算効率化が可能になるわけです。無限次元特徴量ベクトルの回帰問題なんて普通計算できませんからね。。。カーネル関数は偉大です。
 前の記事にも載せましたが、RBFカーネルで分散共分散行列を計算したガウス過程のサンプルパスは以下通りです（$\theta_1=1,\theta_2=0.5$）。&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Define Kernel function&lt;/span&gt;
@@ -379,11 +464,20 @@ $$&lt;/p&gt;
 &lt;p&gt;$$
 \frac{\partial L}{\partial \textbf{x}} = \frac{\partial L}{\partial \textbf{K}_x}\frac{\partial \textbf{K}_x}{\partial \textbf{x}}
 $$&lt;/p&gt;
-&lt;p&gt;なので、カーネル関数を決め、$\textbf{x}$に初期値を与えてやれば勾配法によって尤度$L$が最大となる点を探索することができます。今回使用するRBFカーネルで$\frac{\partial \textbf{K}&lt;em&gt;x}{\partial x&lt;/em&gt;{nj}}$を計算してみます。&lt;/p&gt;
-&lt;p&gt;$$
-&lt;code&gt;\begin{eqnarray*} \frac{\partial \textbf{K}_x(\textbf{x}_n,\textbf{x}_n&#39;)}{x_{nj}}&amp;amp;=&amp;amp;\frac{\partial\theta_{1}\exp(-\frac{|\textbf{x}_n-\textbf{x}_n&#39;|^2}{\theta_{2}})}{\partial x_{nk}} \\ &amp;amp;=&amp;amp; \frac{\partial\theta_{1}\exp(-\frac{(\textbf{x}_n-\textbf{x}_n&#39;)^T(\textbf{x}_n-\textbf{x}_n&#39;)}{\theta_{2}})}{\partial x_{nk}} \\ &amp;amp;=&amp;amp; \frac{\partial\theta_{1}\exp(-\frac{-(\textbf{x}_n^T\textbf{x}_n-2\textbf{x}_n&#39;^T\textbf{x}_n+\textbf{x}_n&#39;^T\textbf{x}_n&#39;)}{\theta_{2}})}{\partial x_{nk}} \\ &amp;amp;=&amp;amp; -2\textbf{K}_x(\textbf{x}_n\textbf{x}_n&#39;)\frac{(x_{nj}-x_{n&#39;j})}{\theta_2} \end{eqnarray*}&lt;/code&gt;
-$$&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;\(j\)&lt;/code&gt;番目の潜在変数の$n$番目のサンプルそれぞれに導関数を計算し、それを分散共分散行列と同じ行列に整理したものと$\frac{\partial L}{\partial \textbf{K}_x}$との要素ごとの積を足し合わせたものが勾配となります。&lt;/p&gt;
+&lt;div&gt;
+なので、カーネル関数を決め、$\textbf{x}$に初期値を与えてやれば勾配法によって尤度$L$が最大となる点を探索することができます。今回使用するRBFカーネルで$\frac{\partial \textbf{K}_x}{\partial x_{nj}}$を計算してみます。
+&lt;/div&gt;
+&lt;div&gt;
+$$
+\begin{eqnarray*}
+\frac{\partial \textbf{K}_x(\textbf{x}_n,\textbf{x}_n&#39;)}{x_{nj}}&amp;=&amp;\frac{\partial\theta_{1}\exp(-\frac{|\textbf{x}_n-\textbf{x}_n&#39;|^2}{\theta_{2}})}{\partial x_{nk}} \\
+&amp;=&amp; \frac{\partial\theta_{1}\exp(-\frac{(\textbf{x}_n-\textbf{x}_n&#39;)^T(\textbf{x}_n-\textbf{x}_n&#39;)}{\theta_{2}})}{\partial x_{nk}} \\
+&amp;=&amp; \frac{\partial\theta_{1}\exp(-\frac{-(\textbf{x}_n^T\textbf{x}_n-2\textbf{x}_n&#39;^T\textbf{x}_n+\textbf{x}_n&#39;^T\textbf{x}_n&#39;)}{\theta_{2}})}{\partial x_{nk}} \\
+&amp;=&amp; -2\textbf{K}_x(\textbf{x}_n\textbf{x}_n&#39;)\frac{(x_{nj}-x_{n&#39;j})}{\theta_2}
+\end{eqnarray*}
+$$
+&lt;/div&gt;
+&lt;p&gt;$(j)$番目の潜在変数の$n$番目のサンプルそれぞれに導関数を計算し、それを分散共分散行列と同じ行列に整理したものと$\frac{\partial L}{\partial \textbf{K}_x}$との要素ごとの積を足し合わせたものが勾配となります。&lt;/p&gt;
 &lt;h2 id=&#34;3-rでの実装&#34;&gt;3. Rでの実装&lt;/h2&gt;
 &lt;p&gt;GPLVMを&lt;code&gt;R&lt;/code&gt;で実装します。使用するデータは以前giannoneの記事で使用したものと同じものです。&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;ESTIMATE_GPLVM &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(Y,P,sigma){

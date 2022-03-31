@@ -417,11 +417,17 @@ $$
 r_{t}(q) \equiv r_{t} + r_{t-1} + &amp;hellip; + r_{t-q+1}
 $$
 と定義すると(複利部分を無視してます)、年率化されたシャープレシオは&lt;/p&gt;
-&lt;p&gt;$$
-&lt;code&gt;\begin{eqnarray} SR(q) &amp;amp;=&amp;amp; \frac{E[r_{t}(q)]}{\sqrt{Var(r_{t}(q))}}\\ &amp;amp;=&amp;amp; \frac{q\mu}{\sqrt{q}\sigma}\\ &amp;amp;=&amp;amp; \frac{\mu}{\sigma}\sqrt{q} \end{eqnarray}&lt;/code&gt;
+&lt;div&gt;
 $$
-と表すことができます。ここで、$q$は年毎のリターンの数(頻度)です。例えば、日次リターンの場合$q=365$となります(閏年を除く)。
-&lt;code&gt;\(\mu\)&lt;/code&gt;と$\sigma$は一般に未知ですので、$SR$の真値を知ることはできません。なので、$R_t$を標本リターン、リスクフリーレート$R^f$(定数)とすると、標本平均$\hat{\mu}=1/T\sum_{t=1}^T R_{t}-R^f$と標本標準偏差$\hat{\sigma}=\sqrt{1/T\sum_{t=1}^{T}(R_{t}-\hat{\mu})}$を用いてシャープレシオの推定値を計算することになります($T$はバックテストを行うサンプルサイズ)。&lt;/p&gt;
+\begin{eqnarray}
+SR(q) &amp;=&amp; \frac{E[r_{t}(q)]}{\sqrt{Var(r_{t}(q))}}\\
+&amp;=&amp; \frac{q\mu}{\sqrt{q}\sigma}\\
+&amp;=&amp; \frac{\mu}{\sigma}\sqrt{q}
+\end{eqnarray}
+$$
+&lt;/div&gt;
+&lt;p&gt;と表すことができます。ここで、$q$は年毎のリターンの数(頻度)です。例えば、日次リターンの場合$q=365$となります(閏年を除く)。
+$\mu$と$\sigma$は一般に未知ですので、$SR$の真値を知ることはできません。なので、$R_t$を標本リターン、リスクフリーレート$R^f$(定数)とすると、標本平均$\hat{\mu}=1/T\sum_{t=1}^T R_{t}-R^f$と標本標準偏差$\hat{\sigma}=\sqrt{1/T\sum_{t=1}^{T}(R_{t}-\hat{\mu})}$を用いてシャープレシオの推定値を計算することになります($T$はバックテストを行うサンプルサイズ)。&lt;/p&gt;
 &lt;p&gt;$$
 \hat{SR}(q) = \frac{\hat{\mu}}{\hat{\sigma}}\sqrt{q}
 $$
@@ -467,10 +473,44 @@ $$
 \right]
 $$
 よって、&lt;/p&gt;
-&lt;p&gt;$$
-&lt;code&gt;\begin{eqnarray} \boldsymbol V_g &amp;amp;=&amp;amp; \left( \begin{array}{cccc} \frac{\partial g}{\partial \mu}, \frac{\partial g}{\partial \sigma}\\ \end{array} \right) \left(  \begin{array}{cccc} \sigma^2 &amp;amp; 0\\ 0 &amp;amp; 2\sigma^4\\ \end{array} \right) \left( \begin{array}{cccc} \frac{\partial g}{\partial \mu}\\ \frac{\partial g}{\partial \sigma}\\ \end{array} \right) \\ &amp;amp;=&amp;amp; \left( \begin{array}{cccc} \frac{\partial g}{\partial \mu}\sigma^2, \frac{\partial g}{\partial \sigma}2\sigma^4\\ \end{array} \right) \left( \begin{array}{cccc} \frac{\partial g}{\partial \mu}\\ \frac{\partial g}{\partial \sigma}\\ \end{array} \right) \\ &amp;amp;=&amp;amp; (\frac{\partial g}{\partial \mu})^2\sigma^2 + (\frac{\partial g}{\partial \sigma})^2\sigma^4 \\ &amp;amp;=&amp;amp; 1 + \frac{\mu^2}{2\sigma^2} \\ &amp;amp;=&amp;amp; 1 + \frac{1}{2}SR^2 \end{eqnarray}&lt;/code&gt;
+&lt;div&gt;
 $$
-と導出することができます。シャープレシオの絶対値が大きくなるほど指数的に分散が大きくなる傾向があるので良いパフォーマンスを見た時には注意が必要かもしれません。年率化されたシャープレシオの推定値$\hat{SR}(q)$が従う分布はここから&lt;/p&gt;
+\begin{eqnarray}
+\boldsymbol V_g &amp;=&amp; \left(
+    \begin{array}{cccc}
+      \frac{\partial g}{\partial \mu}, \frac{\partial g}{\partial \sigma}\\
+    \end{array}
+  \right)
+  \left( 
+    \begin{array}{cccc}
+      \sigma^2 &amp; 0\\
+      0 &amp; 2\sigma^4\\
+    \end{array}
+  \right)
+  \left(
+    \begin{array}{cccc}
+      \frac{\partial g}{\partial \mu}\\
+      \frac{\partial g}{\partial \sigma}\\
+    \end{array}
+  \right) \\
+  &amp;=&amp; \left(
+    \begin{array}{cccc}
+      \frac{\partial g}{\partial \mu}\sigma^2, \frac{\partial g}{\partial \sigma}2\sigma^4\\
+    \end{array}
+  \right)
+    \left(
+    \begin{array}{cccc}
+      \frac{\partial g}{\partial \mu}\\
+      \frac{\partial g}{\partial \sigma}\\
+    \end{array}
+  \right) \\
+  &amp;=&amp; (\frac{\partial g}{\partial \mu})^2\sigma^2 + (\frac{\partial g}{\partial \sigma})^2\sigma^4 \\
+  &amp;=&amp; 1 + \frac{\mu^2}{2\sigma^2} \\
+  &amp;=&amp; 1 + \frac{1}{2}SR^2
+\end{eqnarray}
+$$
+&lt;/div&gt;
+&lt;p&gt;と導出することができます。シャープレシオの絶対値が大きくなるほど指数的に分散が大きくなる傾向があるので良いパフォーマンスを見た時には注意が必要かもしれません。年率化されたシャープレシオの推定値$\hat{SR}(q)$が従う分布はここから&lt;/p&gt;
 &lt;p&gt;$$
 \hat{SR}(q)\sim^a \mathcal{N}(\sqrt{q}SR,\frac{V(q)}{T}) \&lt;br&gt;
 V(q) = q{\boldsymbol V}_g = q(1 + \frac{1}{2}SR^2)
@@ -488,18 +528,34 @@ $$
 \lim_{N\rightarrow\infty}prob[\frac{\max[\hat{SR}]_N-\alpha}{\beta}\leq x] = G(x) = e^{-e^{-x}}
 $$
 ここで、$\alpha=Z(x)^{-1}[1-1/N], \beta=Z(x)^{-1}[1-1/Ne^{-1}]-\alpha$で、$Z(x)$は標準正規分布の累積分布関数を表しています。ガンベル分布のモーメント母関数$M_x(t)$は&lt;/p&gt;
-&lt;p&gt;$$
-&lt;code&gt;\begin{eqnarray} M_x(t) &amp;amp;=&amp;amp; E[e^{tx}] = \int_{-\infty}^\infty e^{tx}e^{-x}e^{-e^{-x}}dx \\ \end{eqnarray}&lt;/code&gt;
+&lt;div&gt;
 $$
-と書け、$x=-\log(y)$と変数変換すると$dx/dy=-1/y=-(e^{-x})^{-1}$なので、&lt;/p&gt;
-&lt;p&gt;$$
-&lt;code&gt;\begin{eqnarray} M_x(t) &amp;amp;=&amp;amp; \int_{\infty}^0-e^{-t\log(y)}e^{-y}dy \\ &amp;amp;=&amp;amp; \int_{0}^\infty y^{-t}e^{-y}dy \\ &amp;amp;=&amp;amp; \Gamma(1-t) \end{eqnarray}&lt;/code&gt;
+\begin{eqnarray}
+M_x(t) &amp;=&amp; E[e^{tx}] = \int_{-\infty}^\infty e^{tx}e^{-x}e^{-e^{-x}}dx \\
+\end{eqnarray}
 $$
-となります。$\Gamma(x)$はガンマ関数です。ここから、標準化された最大統計量の期待値(平均)は&lt;/p&gt;
-&lt;p&gt;$$
-&lt;code&gt;\begin{eqnarray} \lim_{N\rightarrow\infty} E[\frac{\max[\hat{SR}]_N-\alpha}{\beta}] &amp;amp;=&amp;amp; M_x&#39;(t)|_{t=0} \\ &amp;amp;=&amp;amp; (-1)\Gamma&#39;(1) \\ &amp;amp;=&amp;amp; (-1)(-\gamma) = \gamma \end{eqnarray}&lt;/code&gt;
+&lt;/div&gt;
+&lt;p&gt;と書け、$x=-\log(y)$と変数変換すると$dx/dy=-1/y=-(e^{-x})^{-1}$なので、&lt;/p&gt;
+&lt;div&gt;
 $$
-となります。ここで、$\gamma\approx0.5772156649&amp;hellip;$はEuler-Mascheroni定数です。よって、$N$が大きいとき、i.i.d.の標準正規分布の最大統計量の期待値は&lt;/p&gt;
+\begin{eqnarray}
+M_x(t) &amp;=&amp; \int_{\infty}^0-e^{-t\log(y)}e^{-y}dy \\
+&amp;=&amp; \int_{0}^\infty y^{-t}e^{-y}dy \\
+&amp;=&amp; \Gamma(1-t)
+\end{eqnarray}
+$$
+&lt;\div&gt;
+&lt;p&gt;となります。$\Gamma(x)$はガンマ関数です。ここから、標準化された最大統計量の期待値(平均)は&lt;/p&gt;
+&lt;div&gt;
+$$
+\begin{eqnarray}
+\lim_{N\rightarrow\infty} E[\frac{\max[\hat{SR}]_N-\alpha}{\beta}] &amp;=&amp; M_x&#39;(t)|_{t=0} \\
+&amp;=&amp; (-1)\Gamma&#39;(1) \\
+&amp;=&amp; (-1)(-\gamma) = \gamma
+\end{eqnarray}
+$$
+&lt;/div&gt;
+&lt;p&gt;となります。ここで、$\gamma\approx0.5772156649&amp;hellip;$はEuler-Mascheroni定数です。よって、$N$が大きいとき、i.i.d.の標準正規分布の最大統計量の期待値は&lt;/p&gt;
 &lt;p&gt;$$
 E[\max[\hat{SR}]] \approx \alpha + \gamma\beta = (1-\gamma)Z^{-1}[1-\frac{1}{N}]+\gamma Z^{-1}[1-\frac{1}{N}e^{-1}] \tag{2}
 $$
@@ -726,32 +782,32 @@ trial2 &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span
 &lt;span style=&#34;color:#a6e22e&#34;&gt;plot&lt;/span&gt;(trial2)
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../post/post14/index_files/figure-html/unnamed-chunk-4-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;trial2&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;lambda.min
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## [1] 0.000436523
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## [1] 0.001463052
 &lt;/code&gt;&lt;/pre&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;coef&lt;/span&gt;(trial2,s&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;trial2&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;lambda.min)
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## 12 x 1 sparse Matrix of class &amp;quot;dgCMatrix&amp;quot;
 ##                          s1
-## (Intercept)   12.6534378623
-## FEDFUNDS      -0.1102828579
-## CPIAUCSL      -0.0620847662
-## UNRATE        -0.1986570797
-## TB3MS          0.2163014268
-## INDPRO        -0.0660285269
-## T10YIEM        1.1674773831
-## TWEXBMTH      -0.0241845518
-## RECPROUSM156N -0.0099694305
-## BAA            0.7626872357
-## T5YIFRM       -0.4561364454
-## PCE            0.0008164901
+## (Intercept)    8.1170282595
+## FEDFUNDS       .           
+## CPIAUCSL      -0.0370371311
+## UNRATE        -0.1675017594
+## TB3MS          0.1244417351
+## INDPRO        -0.0554153857
+## T10YIEM        1.1916137480
+## TWEXBMTH      -0.0124760531
+## RECPROUSM156N -0.0094119322
+## BAA            0.7423502867
+## T5YIFRM       -0.4664569086
+## PCE            0.0004936828
 &lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;Unemployment Rate&lt;/code&gt;、&lt;code&gt;3-Month Treasury Bill&lt;/code&gt;、&lt;code&gt;Breakeven Inflation Rate、Moody&#39;s Seasoned Baa Corporate Bond Yield&lt;/code&gt;、&lt;code&gt;Inflation Expectation Rate&lt;/code&gt;の回帰係数が大きくなるという結果ですね。失業率以外は想定内の結果です。ただ、今回の結果を見る限り景気との相関は低そうです（逆向きにしか効かない？）。MSEを計算します。&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;est.lasso.Y &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;predict&lt;/span&gt;(trial2, newx &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;as.matrix&lt;/span&gt;(testdata[,&lt;span style=&#34;color:#ae81ff&#34;&gt;-1&lt;/span&gt;]), s &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; trial2&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;lambda.min, type &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;response&amp;#39;&lt;/span&gt;)
 mse.lasso &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;sum&lt;/span&gt;((Y &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; est.lasso.Y)^2) &lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;length&lt;/span&gt;(Y)
 mse.lasso
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## [1] 0.2171154
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## [1] 0.1590115
 &lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;lasso&lt;/code&gt;回帰のほうが良い結果になりました。&lt;code&gt;lasso&lt;/code&gt;回帰で計算した予測値と実績値を時系列プロットしてみます。&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(tidyverse)
 
 &lt;span style=&#34;color:#a6e22e&#34;&gt;ggplot&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;gather&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;data.frame&lt;/span&gt;(actual&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;Y[,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;],lasso_prediction&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;est.lasso.Y[,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;],OLS_prediction&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;est.OLS.Y,date&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;as.POSIXct&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;rownames&lt;/span&gt;(Y))),key&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;data,value&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;rate,&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;date),&lt;span style=&#34;color:#a6e22e&#34;&gt;aes&lt;/span&gt;(x&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;date,y&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;rate, colour&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;data)) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
-  &lt;span style=&#34;color:#a6e22e&#34;&gt;geom_line&lt;/span&gt;(size&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1.5&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;geom_line&lt;/span&gt;() &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
   &lt;span style=&#34;color:#a6e22e&#34;&gt;scale_x_datetime&lt;/span&gt;(breaks &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;6 month&amp;#34;&lt;/span&gt;,date_labels &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%Y-%m&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
   &lt;span style=&#34;color:#a6e22e&#34;&gt;scale_y_continuous&lt;/span&gt;(breaks&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;1.5&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;2.5&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;3.5&lt;/span&gt;),limits &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1.25&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;3.5&lt;/span&gt;))
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../post/post14/index_files/figure-html/unnamed-chunk-6-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
@@ -835,7 +891,7 @@ mse.lasso.d
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## [1] 0.8492769
 &lt;/code&gt;&lt;/pre&gt;&lt;p&gt;予測値をプロットします。&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;ggplot&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;gather&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;data.frame&lt;/span&gt;(actual&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;Y.d[,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;],lasso_prediction&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;est.lasso.Y.d[,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;],OLS_prediction&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;est.OLS.Y.d,date&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;as.POSIXct&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;rownames&lt;/span&gt;(Y.d))),key&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;data,value&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;rate,&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;date),&lt;span style=&#34;color:#a6e22e&#34;&gt;aes&lt;/span&gt;(x&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;date,y&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;rate, colour&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;data)) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
-  &lt;span style=&#34;color:#a6e22e&#34;&gt;geom_line&lt;/span&gt;(size&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1.5&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;geom_line&lt;/span&gt;() &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
   &lt;span style=&#34;color:#a6e22e&#34;&gt;scale_x_datetime&lt;/span&gt;(breaks &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;2 year&amp;#34;&lt;/span&gt;,date_labels &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%Y-%m&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
   &lt;span style=&#34;color:#a6e22e&#34;&gt;scale_y_continuous&lt;/span&gt;(breaks&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;1.5&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;2.5&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;3.5&lt;/span&gt;),limits &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1.25&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;))
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../post/post14/index_files/figure-html/unnamed-chunk-12-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;

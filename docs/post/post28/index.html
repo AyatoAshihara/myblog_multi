@@ -34,12 +34,10 @@
   
     
   
-  <meta name="description" content="前回の馬体モデルでは厩舎の背景が邪魔だったのでトリミングしました。">
+  <meta name="description" content="ナイーブベイズ分類器を用いたセンチメントスコアの算出を実践します！">
 
   
-  <link rel="alternate" hreflang="en" href="../../en/post/post20/">
-  
-  <link rel="alternate" hreflang="ja" href="../../post/post20/">
+  <link rel="alternate" hreflang="ja" href="../../post/post28/">
 
   
 
@@ -298,7 +296,7 @@
   <link rel="icon" type="image/png" href="../../images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
   <link rel="apple-touch-icon" type="image/png" href="../../images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
 
-  <link rel="canonical" href="../../post/post20/">
+  <link rel="canonical" href="../../post/post28/">
 
   
   
@@ -313,15 +311,15 @@
   <meta property="twitter:card" content="summary_large_image">
   
   <meta property="og:site_name" content="京都の電子部品メーカーで働く社会人が研究に没頭するブログ">
-  <meta property="og:url" content="/post/post20/">
-  <meta property="og:title" content="PytorchのPre-trainedモデルで馬体写真の背景を自動トリミングする | 京都の電子部品メーカーで働く社会人が研究に没頭するブログ">
-  <meta property="og:description" content="前回の馬体モデルでは厩舎の背景が邪魔だったのでトリミングしました。"><meta property="og:image" content="/post/post20/featured.jpg">
-  <meta property="twitter:image" content="/post/post20/featured.jpg"><meta property="og:locale" content="ja">
+  <meta property="og:url" content="/post/post28/">
+  <meta property="og:title" content="【徹底比較】センチメントスコア算出手法！！ - 第3回 | 京都の電子部品メーカーで働く社会人が研究に没頭するブログ">
+  <meta property="og:description" content="ナイーブベイズ分類器を用いたセンチメントスコアの算出を実践します！"><meta property="og:image" content="/post/post28/featured.jpg">
+  <meta property="twitter:image" content="/post/post28/featured.jpg"><meta property="og:locale" content="ja">
   
     
-      <meta property="article:published_time" content="2020-08-12T00:00:00&#43;00:00">
+      <meta property="article:published_time" content="2022-03-25T00:00:00&#43;00:00">
     
-    <meta property="article:modified_time" content="2020-08-12T00:00:00&#43;00:00">
+    <meta property="article:modified_time" content="2022-03-25T00:00:00&#43;00:00">
   
 
   
@@ -345,16 +343,16 @@
   "@type": "BlogPosting",
   "mainEntityOfPage": {
     "@type": "WebPage",
-    "@id": "/post/post20/"
+    "@id": "/post/post28/"
   },
-  "headline": "PytorchのPre-trainedモデルで馬体写真の背景を自動トリミングする",
+  "headline": "【徹底比較】センチメントスコア算出手法！！ - 第3回",
   
   "image": [
-    "/post/post20/featured.jpg"
+    "/post/post28/featured.jpg"
   ],
   
-  "datePublished": "2020-08-12T00:00:00Z",
-  "dateModified": "2020-08-12T00:00:00Z",
+  "datePublished": "2022-03-25T00:00:00Z",
+  "dateModified": "2022-03-25T00:00:00Z",
   
   "author": {
     "@type": "Person",
@@ -369,7 +367,7 @@
       "url": "/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png"
     }
   },
-  "description": "前回の馬体モデルでは厩舎の背景が邪魔だったのでトリミングしました。"
+  "description": "ナイーブベイズ分類器を用いたセンチメントスコアの算出を実践します！"
 }
 </script>
 
@@ -387,7 +385,7 @@
 
 
 
-  <title>PytorchのPre-trainedモデルで馬体写真の背景を自動トリミングする | 京都の電子部品メーカーで働く社会人が研究に没頭するブログ</title>
+  <title>【徹底比較】センチメントスコア算出手法！！ - 第3回 | 京都の電子部品メーカーで働く社会人が研究に没頭するブログ</title>
 
 </head>
 
@@ -649,21 +647,6 @@
       
 
       
-      <li class="nav-item dropdown i18n-dropdown">
-        <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true">
-          <i class="fas fa-globe mr-1" aria-hidden="true"></i><span class="d-none d-lg-inline">日本語</span></a>
-        <div class="dropdown-menu">
-          <div class="dropdown-item dropdown-item-active">
-            <span>日本語</span>
-          </div>
-          
-          <a class="dropdown-item" href="../../en/post/post20/">
-            <span>English</span>
-          </a>
-          
-        </div>
-      </li>
-      
 
     </ul>
 
@@ -683,11 +666,15 @@
   <ul>
     <li>
       <ul>
-        <li><a href="#1-pre-trainedモデルのダウンロード">1. Pre-trainedモデルのダウンロード</a></li>
-        <li><a href="#2-背景削除処理の実行">2. 背景削除処理の実行</a></li>
-        <li><a href="#3-cnnを用いた分析">3. CNNを用いた分析</a></li>
-        <li><a href="#4-shap値を用いた結果解釈">4. Shap値を用いた結果解釈</a></li>
-        <li><a href="#5まとめ">5.まとめ</a></li>
+        <li><a href="#1-分析手法の説明">1. 分析手法の説明</a>
+          <ul>
+            <li><a href="#ナイーブベイズ分類器とは">ナイーブベイズ分類器とは</a></li>
+            <li><a href="#事後確率の推定方法">事後確率の推定方法</a></li>
+            <li><a href="#確率分布のパラメータの推定方法">確率分布のパラメータの推定方法</a></li>
+            <li><a href="#ナイーブベイズ分類器の利点欠点">ナイーブベイズ分類器の利点・欠点</a></li>
+          </ul>
+        </li>
+        <li><a href="#2-ナイーブベイズ分類器の実践">2. ナイーブベイズ分類器の実践</a></li>
       </ul>
     </li>
   </ul>
@@ -721,27 +708,16 @@
 
   
   
+    
+  
 
 
 <div class="article-container pt-3">
-  <h1>PytorchのPre-trainedモデルで馬体写真の背景を自動トリミングする</h1>
+  <h1>【徹底比較】センチメントスコア算出手法！！ - 第3回</h1>
 
   
 
   
-
-
-<div id="code-folding-buttons" class="dropdown btn-group pull-right">
-  <a class="btn btn-light btn-sm dropdown-toggle" href="#" role="button" id="allCodeToggleButton"
-     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-    Code
-  </a>
-  <div class="dropdown-menu" aria-labelledby="allCodeToggleButton">
-    <a id="rmd-show-all-code" class="dropdown-item small" href="#">Show all</a>
-    <a id="rmd-hide-all-code" class="dropdown-item small" href="#">Hide all</a>
-  </div>
-</div>
-
 
 
   
@@ -758,7 +734,7 @@
     
       
     
-    Aug 12, 2020
+    Mar 25, 2022
   </span>
   
 
@@ -767,7 +743,7 @@
   
   <span class="middot-divider"></span>
   <span class="article-reading-time">
-    3 分で読める
+    9 分で読める
   </span>
   
 
@@ -775,14 +751,14 @@
   
   
   <span class="middot-divider"></span>
-  <a href="../../post/post20/#disqus_thread"></a>
+  <a href="../../post/post28/#disqus_thread"></a>
   
 
   
   
   <span class="middot-divider"></span>
   <span class="article-categories">
-    <i class="fas fa-folder mr-1"></i><a href="../../category/%E7%AB%B6%E9%A6%AC/">競馬</a></span>
+    <i class="fas fa-folder mr-1"></i><a href="../../category/%E5%8D%98%E7%99%BA/">単発</a></span>
   
 
 </div>
@@ -805,9 +781,9 @@
 </div>
 
 
-<div class="article-header container featured-image-wrapper mt-4 mb-4" style="max-width: 450px; max-height: 357px;">
+<div class="article-header container featured-image-wrapper mt-4 mb-4" style="max-width: 1200px; max-height: 900px;">
   <div style="position: relative">
-    <img src="../../post/post20/featured.jpg" alt="" class="featured-image">
+    <img src="../../post/post28/featured_hu96ab143ed4c68584fb1fd81b27b8e1e6_2532298_1200x0_resize_q90_lanczos.jpg" alt="" class="featured-image">
     
   </div>
 </div>
@@ -817,95 +793,119 @@
         <div class="article-container">
 
           <div class="article-style">
-            <p>おはこんばんにちは。前回、競走馬の馬体写真からCNNを用いて順位を予想するモデルを構築しました。結果は芳しくなく、特に<code>shap</code>値を用いた要因分析を行うと馬体よりも背景の厩舎に反応している様子が見えたりと分析の精緻化が必要となりました。今回は<code>Pytorch</code>のPre-trainedモデルを用いて馬体写真から背景を切り出し、馬体のみとなった写真で再分析を行いたいと思います。</p>
-<h2 id="1-pre-trainedモデルのダウンロード">1. Pre-trainedモデルのダウンロード</h2>
-<p>コードは<a href="https://pytorch.org/hub/pytorch_vision_deeplabv3_resnet101/" target="_blank" rel="noopener">こちら</a>のものを参考にしています。まず、パッケージをインストールします。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> numpy <span style="color:#f92672">as</span> np
-<span style="color:#f92672">import</span> cv2
-<span style="color:#f92672">import</span> matplotlib.pyplot <span style="color:#f92672">as</span> plt
-<span style="color:#f92672">import</span> torch
-<span style="color:#f92672">import</span> torchvision
-<span style="color:#f92672">from</span> torchvision <span style="color:#f92672">import</span> transforms
-<span style="color:#f92672">import</span> glob
-<span style="color:#f92672">from</span> PIL <span style="color:#f92672">import</span> Image
-<span style="color:#f92672">import</span> PIL
-<span style="color:#f92672">import</span> os
-</code></pre></div><p>学習済みモデルのインストールを行います。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#75715e">#学習済みモデルをインストール</span>
-device <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>device(<span style="color:#e6db74">&#34;cuda:0&#34;</span> <span style="color:#66d9ef">if</span> torch<span style="color:#f92672">.</span>cuda<span style="color:#f92672">.</span>is_available() <span style="color:#66d9ef">else</span> <span style="color:#e6db74">&#34;cpu&#34;</span>)
-model <span style="color:#f92672">=</span> torchvision<span style="color:#f92672">.</span>models<span style="color:#f92672">.</span>segmentation<span style="color:#f92672">.</span>deeplabv3_resnet101(pretrained<span style="color:#f92672">=</span>True)
-model <span style="color:#f92672">=</span> model<span style="color:#f92672">.</span>to(device)
-model<span style="color:#f92672">.</span>eval()
-</code></pre></div><p>どうやら全てのPre-trainedモデルは、同じ方法で正規化された形状$（N, 3, H, W）$の3チャンネルRGB画像のミニバッチを想定しているようです。ここで$N$は画像の数、$H$と$W$は少なくとも224ピクセルであることが想定されています。画像は、[0, 1]の範囲にスケーリングされ、その後、平均値＝[0.485, 0.456, 0.406]と標準値＝[0.229, 0.224, 0.225]を使用して正規化される必要があります。ということで、前処理を行う関数を定義します。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#75715e">#前処理</span>
-preprocess <span style="color:#f92672">=</span> transforms<span style="color:#f92672">.</span>Compose([
-    transforms<span style="color:#f92672">.</span>ToTensor(),
-    transforms<span style="color:#f92672">.</span>Normalize(mean<span style="color:#f92672">=</span>[<span style="color:#ae81ff">0.485</span>, <span style="color:#ae81ff">0.456</span>, <span style="color:#ae81ff">0.406</span>], std<span style="color:#f92672">=</span>[<span style="color:#ae81ff">0.229</span>, <span style="color:#ae81ff">0.224</span>, <span style="color:#ae81ff">0.225</span>]),
-])
-</code></pre></div><h2 id="2-背景削除処理の実行">2. 背景削除処理の実行</h2>
-<p>では、前回記事の<code>selenium</code>を用いたコードで収集した画像を読み込み、1枚1枚背景削除処理を行っていきます。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#75715e">#フォルダを指定</span>
-folders <span style="color:#f92672">=</span> os<span style="color:#f92672">.</span>listdir(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;C:\Users\aashi\umanalytics\photo\image&#34;</span>)
-
-<span style="color:#75715e">#それぞれのフォルダから画像を読み込み、Image関数を使用してRGB値ベクトル(numpy array)へ変換</span>
-<span style="color:#66d9ef">for</span> i, folder <span style="color:#f92672">in</span> enumerate(folders):
-  files <span style="color:#f92672">=</span> glob<span style="color:#f92672">.</span>glob(<span style="color:#e6db74">&#34;C:/Users/aashi/umanalytics/photo/image/&#34;</span> <span style="color:#f92672">+</span> folder <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;/*.jpg&#34;</span>)
-  index <span style="color:#f92672">=</span> i
-  <span style="color:#66d9ef">for</span> k, file <span style="color:#f92672">in</span> enumerate(files):
-    img_array <span style="color:#f92672">=</span> np<span style="color:#f92672">.</span>fromfile(file, dtype<span style="color:#f92672">=</span>np<span style="color:#f92672">.</span>uint8)
-    img <span style="color:#f92672">=</span> cv2<span style="color:#f92672">.</span>imdecode(img_array, cv2<span style="color:#f92672">.</span>IMREAD_COLOR)
-    h,w,_ <span style="color:#f92672">=</span> img<span style="color:#f92672">.</span>shape
-    input_tensor <span style="color:#f92672">=</span> preprocess(img)
-    input_batch <span style="color:#f92672">=</span> input_tensor<span style="color:#f92672">.</span>unsqueeze(<span style="color:#ae81ff">0</span>)<span style="color:#f92672">.</span>to(device)
-
-    <span style="color:#66d9ef">with</span> torch<span style="color:#f92672">.</span>no_grad():
-      output <span style="color:#f92672">=</span> model(input_batch)[<span style="color:#e6db74">&#39;out&#39;</span>][<span style="color:#ae81ff">0</span>]
-    output_predictions <span style="color:#f92672">=</span> output<span style="color:#f92672">.</span>argmax(<span style="color:#ae81ff">0</span>)
-    mask_array <span style="color:#f92672">=</span> output_predictions<span style="color:#f92672">.</span>byte()<span style="color:#f92672">.</span>cpu()<span style="color:#f92672">.</span>numpy()
-    Image<span style="color:#f92672">.</span>fromarray(mask_array<span style="color:#f92672">*</span><span style="color:#ae81ff">255</span>)<span style="color:#f92672">.</span>save(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#39;C:\Users\aashi\umanalytics\photo\image\mask.jpg&#39;</span>)
-    mask <span style="color:#f92672">=</span> cv2<span style="color:#f92672">.</span>imread(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#39;C:\Users\aashi\umanalytics\photo\image\mask.jpg&#39;</span>)
-    bg <span style="color:#f92672">=</span> np<span style="color:#f92672">.</span>full_like(img,<span style="color:#ae81ff">255</span>)
-    img <span style="color:#f92672">=</span> cv2<span style="color:#f92672">.</span>multiply(img<span style="color:#f92672">.</span>astype(float), mask<span style="color:#f92672">.</span>astype(float)<span style="color:#f92672">/</span><span style="color:#ae81ff">255</span>)
-    bg <span style="color:#f92672">=</span> cv2<span style="color:#f92672">.</span>multiply(bg<span style="color:#f92672">.</span>astype(float), <span style="color:#ae81ff">1.0</span> <span style="color:#f92672">-</span> mask<span style="color:#f92672">.</span>astype(float)<span style="color:#f92672">/</span><span style="color:#ae81ff">255</span>)
-    outImage <span style="color:#f92672">=</span> cv2<span style="color:#f92672">.</span>add(img, bg)
-    Image<span style="color:#f92672">.</span>fromarray(outImage<span style="color:#f92672">.</span>astype(np<span style="color:#f92672">.</span>uint8))<span style="color:#f92672">.</span>convert(<span style="color:#e6db74">&#39;L&#39;</span>)<span style="color:#f92672">.</span>save(file)
-</code></pre></div><p>行っている処理はPre-trainedモデルで以下のような<code>mask</code>画像を出力し、実際の画像の<code>numpy</code>配列と<code>mask</code>画像を統合して、背景削除画像を生成しています。出力例は以下のような感じです。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">plt<span style="color:#f92672">.</span>gray()
-plt<span style="color:#f92672">.</span>figure(figsize<span style="color:#f92672">=</span>(<span style="color:#ae81ff">20</span>,<span style="color:#ae81ff">20</span>))
-plt<span style="color:#f92672">.</span>subplot(<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">1</span>)
-plt<span style="color:#f92672">.</span>imshow(img)
-plt<span style="color:#f92672">.</span>subplot(<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">2</span>)
-plt<span style="color:#f92672">.</span>imshow(mask)
-plt<span style="color:#f92672">.</span>subplot(<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>)
-plt<span style="color:#f92672">.</span>imshow(outImage)
-plt<span style="color:#f92672">.</span>show()
-</code></pre></div><p><img src="../../post/post20/index_files/figure-html/unnamed-chunk-7-1.png" width="1920" /></p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">plt<span style="color:#f92672">.</span>close()
-</code></pre></div><p>フォルダはこんな感じです。うまく処理できているものもあれば調教師の方が映ってしまっているのもありますね。物体を識別して、馬だけを<code>mask</code>する方法もあるとは思いますがこのモデルでは物体のラベリングまではできないのでこのまま進みます。</p>
-<p><img src="maskhorse.PNG" alt="フォルダ"></p>
-<h2 id="3-cnnを用いた分析">3. CNNを用いた分析</h2>
-<p>ここからは前回記事と同じ内容です。結果のみ掲載します。</p>
-<pre><code>## Test accuracy: 0.711864406779661
-</code></pre><pre><code>## &lt;sklearn.metrics._plot.confusion_matrix.ConfusionMatrixDisplay object at 0x000000003694DFC8&gt;
-</code></pre><p><img src="../../post/post20/index_files/figure-html/unnamed-chunk-9-3.png" width="672" /></p>
-<p>まったく識別できていません。全ての馬が負値の予想になっています。馬体写真には順位を予測するような特徴量はないんでしょうか。それともG1の出走馬ではバラツキがなく、識別不可能なのでしょうか。いずれいにせよ、ちょっと厳しそうです。</p>
-<h2 id="4-shap値を用いた結果解釈">4. Shap値を用いた結果解釈</h2>
-<p>前回同様、どのように失敗したのか<code>shap</code>値を使って検証してみましょう。この画像を例として使います。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">plt<span style="color:#f92672">.</span>imshow(X_test[<span style="color:#ae81ff">4</span>])
-plt<span style="color:#f92672">.</span>show()
-</code></pre></div><p><img src="../../post/post20/index_files/figure-html/unnamed-chunk-10-5.png" width="672" /></p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">plt<span style="color:#f92672">.</span>close()
-</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> shap
-background <span style="color:#f92672">=</span> X_resampled[np<span style="color:#f92672">.</span>random<span style="color:#f92672">.</span>choice(X_resampled<span style="color:#f92672">.</span>shape[<span style="color:#ae81ff">0</span>],<span style="color:#ae81ff">100</span>,replace<span style="color:#f92672">=</span>False)]
-
-e <span style="color:#f92672">=</span> shap<span style="color:#f92672">.</span>GradientExplainer(model,background)
-
-shap_values <span style="color:#f92672">=</span> e<span style="color:#f92672">.</span>shap_values(X_test[[<span style="color:#ae81ff">4</span>]])
-shap<span style="color:#f92672">.</span>image_plot(shap_values[<span style="color:#ae81ff">1</span>],X_test[[<span style="color:#ae81ff">4</span>]])
-</code></pre></div><p><img src="../../post/post20/index_files/figure-html/unnamed-chunk-11-7.png" width="576" /></p>
-<p>前足から顔にかけてを評価しているようです。意外に臀部を評価している様子はありません。</p>
-<h2 id="5まとめ">5.まとめ</h2>
-<p>厩舎背景を削除し、再実行してみましたが結果変わらずでした。PyTorchを使ったり、背景削除を行ういい経験にはなりましたが結果は伴わずということで馬体写真はいったんここでストップです。</p>
+            <p>おはこんばんにちは。センチメントスコア算出企画の第3弾です。
+今回はナイーブベイズ分類器のセンチメントスコア算出方法を実践します。</p>
+<h2 id="1-分析手法の説明">1. 分析手法の説明</h2>
+<h3 id="ナイーブベイズ分類器とは">ナイーブベイズ分類器とは</h3>
+<p>ナイーブベイズ分類器、または単純ベイズ分類器と呼ばれる手法です。分類問題をベイズの定理を用いて解く手法を指します。まず、ベイズの定理から説明します。入力情報$X$が与えられた時に、出力$Y$が得られる確率は以下で表すことができます。</p>
+<p>$$
+P(Y|X) = \frac{P(X|Y)P(Y)}{P(X)}
+$$</p>
+<p>これがベイズの定理で、$P(Y)$は事前確率、$P(Y|X)$は事後確率、$P(X|Y)$は尤度と呼ばれます。ナイーブベイズ分類器が利用される典型的な問題に迷惑メールの分類問題があります。この問題だと、$X$は受信メールに含まれている単語、$Y$は迷惑メールかどうかを表す2値(0,1)のデータとなります。受信メールに$\hat{X}$という単語が含まれている際に、そのメールが迷惑メール($Y=1$)である確率は$P(Y=1|X=\hat{X})$であり、それは以下の3つで求められます。</p>
+<ul>
+<li>迷惑メールが発生する確率$P(Y=1)$</li>
+<li>そのメールが迷惑メールだった際に単語$\hat{X}$が含まれている確率$P(X=\hat{X}|Y=1)$</li>
+<li>単語$\hat{X}$が発生する確率$P(X=\hat{X})$</li>
+</ul>
+<p>ただし、事後確率によって文書分類を行う際には、上式の確率を計算する必要はありません。知りたいのは確率の値ではなく、ある$X$が与えられた時に$P(Y=1|X)$と$P(Y=0|X)$のどちらが大きいかですので、共通している分母は計算から除外することができ、分子$P(X|Y)P(Y)$をそれぞれ計算し、その大小関係によって迷惑メールかどうかを割り振ればよいことになります。<br>
+また、上記は迷惑メールの分類に限らず、今回行おうとしているセンチメント情報、つまりその文書内容がポジティブかネガティブかを分類する問題に対しても使えることがわかると思います。</p>
+<h3 id="事後確率の推定方法">事後確率の推定方法</h3>
+<p>求めたい事後確率の分子を求める方法について説明します。その計算のためには事前確率$P(Y)$と尤度$P(Y|X)$を求める必要がありますが、基本的にそれぞれにパラメトリックな確率分布を仮定するため、確率分布のパラメータを推定する必要があります。なお、事前確率が従う確率分布を事前分布と呼びます。<br>
+入力単語ベクトルを$X={x_1,x_2,&hellip;,x_N}$とします。ここで、各$x_n$は$n$番目の単語を表します。各$x_n$が生起する条件付確率は語順や周辺の単語に依存しないと仮定すると、$P(X|Y)$は以下のように書き替えることができます。</p>
+<p>$$
+P(X|Y) = \Pi_{i=1}^N P(x_i|Y)
+$$</p>
+<p>では、上記の条件付確率をどのように求めるかに話を移しましょう。今、学習データセットとして、</p>
+<p>$$
+{(S,T)} = (Y=S_1,X=T_1), (Y=S_2,X=T_2), &hellip;,(Y=S_D,X=T_D)
+$$</p>
+<p>が得られているとします。ここで、$D$はサンプルサイズです。また、$Y$は$1$の時にポジティブ、$0$の時にネガティブとし、独立を仮定します(つまり$S$は0,1の2値を取る)。今、$P(・)$にとある確率分布を仮定すると、${(S,T)}$が得られたもとでの事後分布は</p>
+<p>$$
+M(\Theta,\Phi) = \Pi_{j=1}^{D}P(T_j;\Phi,\Theta|S_j)P(S_j;\Theta)
+$$</p>
+<p>に比例します(ベイズの定理の分子を取り出した)。ここで、$\Theta={\theta_1,\theta2,&hellip;,\theta_M}, \Phi={\phi_1,\phi_2,&hellip;,\phi_L}$は事前分布と尤度の確率分布のパラメータです。$M(\Theta,\Phi)$はパラメータによってさまざまな値を取り、最も望ましいパラメータの値を特定してやる必要があります。ここでは、$\Phi$は学習データセットの事後分布を最大にするパラメータを推定値として選択することにし、$\Theta$は事前にわかっている知識を用いて何らかの値を定めます。$M(\Theta,\Phi)$は以下のように変形することができます。</p>
+<div>
+$$
+\begin{eqnarray*}
+M(\Theta,\Phi) &=& P(T_1;\Theta|0)P(0;\Theta,\Phi)×P(T_2;\Theta|0)P(0;\Theta,\Phi)×...\\
+&&×P(T_Q;\Theta|0)P(0;\Theta,\Phi)×P(T_{Q+1};\Theta|1)P(1;\Theta,\Phi) \\
+&=& \Pi_{k=0}^1P(k;\Theta,\Phi)\Pi_{i=1}^{Q_k}P(T_{Q_i};\Theta|k)
+\end{eqnarray*}
+$$
+</div>
+<p>ここで、$Q_k$は$Y=k$となる学習データの個数を表しています。<br>
+<code>\(\Theta,\Phi\)</code>が既知で、学修データセット${(S,T)}$が手元にあれば、上記によって事後確率の分子を計算することができます。</p>
+<h3 id="確率分布のパラメータの推定方法">確率分布のパラメータの推定方法</h3>
+<p>次に気になるのは$\Theta, \Phi$をどのようにして計算するかです。これは確率分布を特定しないと進めないため、尤度には多項分布、事前分布にはディリクレ分布を仮定します。一般的な仮定だと思います。多項分布とは同時確率関数が以下のような確率分布です。</p>
+<p>$$
+P(n_1,&hellip;,n_k) = \frac{n!}{n_1!&hellip;n_k!}p_1^{n_1}&hellip;p_k^{n_k}
+$$</p>
+<p>ここで、$n_i$は非負で$n=n_1+&hellip;+n_k$です。また、$p_1+&hellip;p_k=1$を満たします。多項分布は名前から分かるとおり、二項分布の拡張版です。二項分布はコイン投げが例として使われますが、多項分布はサイコロ投げが従う分布です($n=6, p_i=1/6$)。テキスト解析の文脈では、$n_i$は文章に含まれる単語$i$の出現回数になります。<br>
+ディリクレ分布は同時確率密度関数が以下のような確率分布です。</p>
+<p>$$
+f(x_1,&hellip;,x_n) = \frac{\Gamma(\alpha)}{\Gamma(\alpha_1)&hellip;\Gamma(\alpha_n)}x_1^{\alpha_1-1}&hellip;x_n^{\alpha_n-1}
+$$</p>
+<p>ここで、$x_i$は非負で$x_1+&hellip;+x_n=1$、$\alpha_1+&hellip;+\alpha_n=\alpha$はパラメータです。今、$\alpha_i$を正の整数とすると$\Gamma(\alpha_i)=(\alpha_{i-1})!$より、</p>
+<p>$$
+f(x_1,&hellip;,x_n) = \frac{(\alpha-1)!}{(\alpha_{1}-1)!&hellip;(\alpha_n-1)!}x_1^{\alpha_1-1}&hellip;x_n^{\alpha_n-1}
+$$</p>
+<p>となります。多項分布とディリクレ分布の確率分布を見比べると、とても似た形であることがわかります。両者は形は似ていますが、関数の入力が異なります。多項分布は各単語の生起確率がパラメータ、指数部分の出現回数が入力である一方、ディリクレ分布は生起確率が入力、出現回数がパラメータになります。また、ディリクレ分布は多項分布の共役事前分布となっています。 これらの確率分布を仮定すると、$M(\Theta,\Phi)$は以下のようになります。</p>
+<div>
+$$
+\begin{eqnarray*}
+M(\vec{\alpha};\vec{p}) &\propto& \frac{1}{Z(\vec{\alpha})}\Pi_{k=0}^1\Pi_{i=1}^Vp_{ki}^{\alpha_{i}-1}\Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}} \\
+&=& \frac{1}{Z(\vec{\alpha})}\Pi_{k=0}^1 \Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1}
+\end{eqnarray*}
+$$
+</div>
+<p>ここで、$p_{k_j}$はポジティブ(またはネガティブ)である文書で単語$j$が出現する確率、$\tau_{k_j}=\sum_{i=1}^{Q_k}c_{kij}$はポジティブ(またはネガティブ)である教師データに含まれる単語$j$の総数、$\alpha_j$は単語$j$のディリクレ分布のパラメータ、$V$は単語数の上限を表しています。$Z(\vec{\alpha})$は確率の総和を1とするための正規化定数で、ベイズ統計学では分配関数と呼ばれます。ここから、パラメータ$p_{k_{j}}$の値を学習データセットの事後分布を最大にするパラメータを推定値として求めます。ただし、以下の制約条件があります。</p>
+<p>$$
+\sum_{j=1}^V p_{k_{j}}=1
+$$</p>
+<p>この制約の下で$M(\vec{p};\vec{\alpha})$を最大化するためにラグランジュ未定乗数法を使用します。</p>
+<div>
+$$
+\begin{eqnarray*}
+L &=& (\frac{1}{Z(\vec{\alpha})}\Pi_{k=0}^1 \Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1}-\lambda(1-\sum_{k=1}^V p_{k_{j}})) \\
+\frac{\partial L}{\partial p_{l_m}}
+&=& (\tau_{l_m}+\alpha_m-1)p_{l_m}^{\tau_{l_m}+\alpha_m-2}\frac{1}{Z(\vec{\alpha})}\Pi_{k\neq l}^1 \Pi_{j\neq m}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1}-\lambda \\
+&=& (\tau_{l_m}+\alpha_m-1)p_{l_m}^{-1}\frac{1}{Z(\vec{\alpha})}\Pi_{k=0}^1 \Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1}-\lambda \\
+p_{l_m} &=& \frac{(\tau_{l_m}+\alpha_m-1)}{\lambda}\frac{1}{Z(\vec{\alpha})}\Pi_{k=0}^1 \Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1} \tag{1}
+\end{eqnarray*}
+$$
+</div>
+上記のように解けます。ここで、制約条件を用いて上式の両辺で総和を取ると、
+<div>
+$$
+\begin{eqnarray*}
+1 &=& \sum_{m=1}^V \frac{(\tau_{l_m}+\alpha_m-1)}{\lambda}\frac{1}{Z(\vec{\alpha})}\Pi_{k=0}^1 \Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1} \\
+\lambda &=& \sum_{m=1}^V (\tau_{l_m}+\alpha_m-1)\frac{1}{Z(\vec{\alpha})}\Pi_{k=0}^1 \Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1}
+\end{eqnarray*}
+$$
+</div>
+<p>となるので、$\lambda$を(1)式に代入すると、</p>
+<p>$$
+p_{l_m} = \frac{(\tau_{l_m}+\alpha_m-1)}{\sum_{m=1}^V (\tau_{l_m}+\alpha_m-1)} \tag{2}
+$$</p>
+<p>と、事後分布を最大にするパラメータを求めることができます。$p_{l_m}$の直感的な解釈は、ポジティブ(ネガティブ)な文脈での単語$m$の出現頻度が全ての単語の出現頻度に占める割合です。ただ、それだけだと学習データに含まれない単語の$p_{l_m}$が０となってしまい、事後確率も0となってしまいます。上記では、事前分布にディリクレ分布を使用しているため、$p_{l_m}$が0にならないことがわかります($+\alpha_m$の部分)。所謂、頻度ゼロ問題を解決しています。</p>
+<p>ところで、ディリクレ分布の$\alpha_m$は事前にわかっている知識を用いて何らかの値を定めると言っていましたが、どのようにして求めるのでしょうか？推定値を見ればわかる通り、$\alpha_m$は文書内における単語$m$の主観的な出現頻度を表していると解釈できます。ですが、正直$\alpha_m$に意味を持たせている人は少なく、先述した頻度ゼロ問題を解決できればよいと考えている人が大半ではないでしょうか。つまり、$\alpha_m=\alpha+1$($\alpha$は定数、例えば1とか)としてしまうということです。これは加算スクリーニングと呼ばれます。</p>
+<p>さて、このようにして求めた分類器で分類を行います。思考実験として、1つの単語を除いて他の単語がニュートラルかつ各単語の出現頻度が全て同じ文書を考えます。この場合、その1つの単語が両文脈(ポジティブ/ネガティブ)のうち相対的に頻出である文脈へ分類されることになります。</p>
+<p>ナイーブベイズ分類器は教師あり学習です。つまり、正解ラベルデータを用意する必要があります。これがナイーブベイズ分類器の欠点ですが、一方でデータがある場合には特殊な文脈でも分類が可能です。</p>
+<h3 id="ナイーブベイズ分類器の利点欠点">ナイーブベイズ分類器の利点・欠点</h3>
+<p>ナイーブベイズ分類器の利点・欠点は以下のようなものだと思います。</p>
+<p>&lt;利点👍&gt;</p>
+<ul>
+<li>辞書が不要</li>
+<li>未知語が出現しても分類できる</li>
+<li>分類過程がわかりやすい</li>
+</ul>
+<p>&lt;欠点👎&gt;</p>
+<ul>
+<li>学習のための教師ありデータセットが必要</li>
+<li>文章の語順を考慮できない(bag of words)</li>
+</ul>
+<p>欠点の文章の語順を考慮できないという点は辞書ベース手法にも当てはまりますが、文章中の単語の発生回数を使用しているため、語順の関係性や係り受けといった情報を活用することができません。そのため、例えば「良くない」のような肯定語を否定するような言い回しは、ポジティブと分類されやすい可能性があります。</p>
+<h2 id="2-ナイーブベイズ分類器の実践">2. ナイーブベイズ分類器の実践</h2>
 
           </div>
 
@@ -920,9 +920,11 @@ shap<span style="color:#f92672">.</span>image_plot(shap_values[<span style="colo
   
   <a class="badge badge-light" href="../../tag/python/">Python</a>
   
+  <a class="badge badge-light" href="../../tag/%E5%89%8D%E5%87%A6%E7%90%86/">前処理</a>
+  
   <a class="badge badge-light" href="../../tag/%E6%A9%9F%E6%A2%B0%E5%AD%A6%E7%BF%92/">機械学習</a>
   
-  <a class="badge badge-light" href="../../tag/%E5%89%8D%E5%87%A6%E7%90%86/">前処理</a>
+  <a class="badge badge-light" href="../../tag/%E3%83%86%E3%82%AD%E3%82%B9%E3%83%88%E8%A7%A3%E6%9E%90/">テキスト解析</a>
   
 </div>
 
@@ -939,7 +941,7 @@ shap<span style="color:#f92672">.</span>image_plot(shap_values[<span style="colo
       
       
       <li>
-        <a href="https://twitter.com/intent/tweet?url=../../post/post20/&amp;text=Pytorch%e3%81%aePre-trained%e3%83%a2%e3%83%87%e3%83%ab%e3%81%a7%e9%a6%ac%e4%bd%93%e5%86%99%e7%9c%9f%e3%81%ae%e8%83%8c%e6%99%af%e3%82%92%e8%87%aa%e5%8b%95%e3%83%88%e3%83%aa%e3%83%9f%e3%83%b3%e3%82%b0%e3%81%99%e3%82%8b" target="_blank" rel="noopener" class="share-btn-twitter">
+        <a href="https://twitter.com/intent/tweet?url=../../post/post28/&amp;text=%e3%80%90%e5%be%b9%e5%ba%95%e6%af%94%e8%bc%83%e3%80%91%e3%82%bb%e3%83%b3%e3%83%81%e3%83%a1%e3%83%b3%e3%83%88%e3%82%b9%e3%82%b3%e3%82%a2%e7%ae%97%e5%87%ba%e6%89%8b%e6%b3%95%ef%bc%81%ef%bc%81%20-%20%e7%ac%ac3%e5%9b%9e" target="_blank" rel="noopener" class="share-btn-twitter">
           <i class="fab fa-twitter"></i>
         </a>
       </li>
@@ -952,7 +954,7 @@ shap<span style="color:#f92672">.</span>image_plot(shap_values[<span style="colo
       
       
       <li>
-        <a href="https://www.facebook.com/sharer.php?u=/post/post20/&amp;t=Pytorch%e3%81%aePre-trained%e3%83%a2%e3%83%87%e3%83%ab%e3%81%a7%e9%a6%ac%e4%bd%93%e5%86%99%e7%9c%9f%e3%81%ae%e8%83%8c%e6%99%af%e3%82%92%e8%87%aa%e5%8b%95%e3%83%88%e3%83%aa%e3%83%9f%e3%83%b3%e3%82%b0%e3%81%99%e3%82%8b" target="_blank" rel="noopener" class="share-btn-facebook">
+        <a href="https://www.facebook.com/sharer.php?u=/post/post28/&amp;t=%e3%80%90%e5%be%b9%e5%ba%95%e6%af%94%e8%bc%83%e3%80%91%e3%82%bb%e3%83%b3%e3%83%81%e3%83%a1%e3%83%b3%e3%83%88%e3%82%b9%e3%82%b3%e3%82%a2%e7%ae%97%e5%87%ba%e6%89%8b%e6%b3%95%ef%bc%81%ef%bc%81%20-%20%e7%ac%ac3%e5%9b%9e" target="_blank" rel="noopener" class="share-btn-facebook">
           <i class="fab fa-facebook"></i>
         </a>
       </li>
@@ -965,7 +967,7 @@ shap<span style="color:#f92672">.</span>image_plot(shap_values[<span style="colo
       
       
       <li>
-        <a href="mailto:?subject=Pytorch%e3%81%aePre-trained%e3%83%a2%e3%83%87%e3%83%ab%e3%81%a7%e9%a6%ac%e4%bd%93%e5%86%99%e7%9c%9f%e3%81%ae%e8%83%8c%e6%99%af%e3%82%92%e8%87%aa%e5%8b%95%e3%83%88%e3%83%aa%e3%83%9f%e3%83%b3%e3%82%b0%e3%81%99%e3%82%8b&amp;body=/post/post20/" target="_blank" rel="noopener" class="share-btn-email">
+        <a href="mailto:?subject=%e3%80%90%e5%be%b9%e5%ba%95%e6%af%94%e8%bc%83%e3%80%91%e3%82%bb%e3%83%b3%e3%83%81%e3%83%a1%e3%83%b3%e3%83%88%e3%82%b9%e3%82%b3%e3%82%a2%e7%ae%97%e5%87%ba%e6%89%8b%e6%b3%95%ef%bc%81%ef%bc%81%20-%20%e7%ac%ac3%e5%9b%9e&amp;body=/post/post28/" target="_blank" rel="noopener" class="share-btn-email">
           <i class="fas fa-envelope"></i>
         </a>
       </li>
@@ -978,7 +980,7 @@ shap<span style="color:#f92672">.</span>image_plot(shap_values[<span style="colo
       
       
       <li>
-        <a href="https://www.linkedin.com/shareArticle?url=../../post/post20/&amp;title=Pytorch%e3%81%aePre-trained%e3%83%a2%e3%83%87%e3%83%ab%e3%81%a7%e9%a6%ac%e4%bd%93%e5%86%99%e7%9c%9f%e3%81%ae%e8%83%8c%e6%99%af%e3%82%92%e8%87%aa%e5%8b%95%e3%83%88%e3%83%aa%e3%83%9f%e3%83%b3%e3%82%b0%e3%81%99%e3%82%8b" target="_blank" rel="noopener" class="share-btn-linkedin">
+        <a href="https://www.linkedin.com/shareArticle?url=../../post/post28/&amp;title=%e3%80%90%e5%be%b9%e5%ba%95%e6%af%94%e8%bc%83%e3%80%91%e3%82%bb%e3%83%b3%e3%83%81%e3%83%a1%e3%83%b3%e3%83%88%e3%82%b9%e3%82%b3%e3%82%a2%e7%ae%97%e5%87%ba%e6%89%8b%e6%b3%95%ef%bc%81%ef%bc%81%20-%20%e7%ac%ac3%e5%9b%9e" target="_blank" rel="noopener" class="share-btn-linkedin">
           <i class="fab fa-linkedin-in"></i>
         </a>
       </li>
@@ -991,7 +993,7 @@ shap<span style="color:#f92672">.</span>image_plot(shap_values[<span style="colo
       
       
       <li>
-        <a href="whatsapp://send?text=Pytorch%e3%81%aePre-trained%e3%83%a2%e3%83%87%e3%83%ab%e3%81%a7%e9%a6%ac%e4%bd%93%e5%86%99%e7%9c%9f%e3%81%ae%e8%83%8c%e6%99%af%e3%82%92%e8%87%aa%e5%8b%95%e3%83%88%e3%83%aa%e3%83%9f%e3%83%b3%e3%82%b0%e3%81%99%e3%82%8b%20/post/post20/" target="_blank" rel="noopener" class="share-btn-whatsapp">
+        <a href="whatsapp://send?text=%e3%80%90%e5%be%b9%e5%ba%95%e6%af%94%e8%bc%83%e3%80%91%e3%82%bb%e3%83%b3%e3%83%81%e3%83%a1%e3%83%b3%e3%83%88%e3%82%b9%e3%82%b3%e3%82%a2%e7%ae%97%e5%87%ba%e6%89%8b%e6%b3%95%ef%bc%81%ef%bc%81%20-%20%e7%ac%ac3%e5%9b%9e%20/post/post28/" target="_blank" rel="noopener" class="share-btn-whatsapp">
           <i class="fab fa-whatsapp"></i>
         </a>
       </li>
@@ -1004,7 +1006,7 @@ shap<span style="color:#f92672">.</span>image_plot(shap_values[<span style="colo
       
       
       <li>
-        <a href="https://service.weibo.com/share/share.php?url=../../post/post20/&amp;title=Pytorch%e3%81%aePre-trained%e3%83%a2%e3%83%87%e3%83%ab%e3%81%a7%e9%a6%ac%e4%bd%93%e5%86%99%e7%9c%9f%e3%81%ae%e8%83%8c%e6%99%af%e3%82%92%e8%87%aa%e5%8b%95%e3%83%88%e3%83%aa%e3%83%9f%e3%83%b3%e3%82%b0%e3%81%99%e3%82%8b" target="_blank" rel="noopener" class="share-btn-weibo">
+        <a href="https://service.weibo.com/share/share.php?url=../../post/post28/&amp;title=%e3%80%90%e5%be%b9%e5%ba%95%e6%af%94%e8%bc%83%e3%80%91%e3%82%bb%e3%83%b3%e3%83%81%e3%83%a1%e3%83%b3%e3%83%88%e3%82%b9%e3%82%b3%e3%82%a2%e7%ae%97%e5%87%ba%e6%89%8b%e6%b3%95%ef%bc%81%ef%bc%81%20-%20%e7%ac%ac3%e5%9b%9e" target="_blank" rel="noopener" class="share-btn-weibo">
           <i class="fab fa-weibo"></i>
         </a>
       </li>
@@ -1166,15 +1168,15 @@ shap<span style="color:#f92672">.</span>image_plot(shap_values[<span style="colo
     <h3>関連項目</h3>
     <ul>
       
-      <li><a href="../../post/post16/">LightGBMを使用して競馬結果を予想してみる</a></li>
-      
-      <li><a href="../../post/post28/">【徹底比較】センチメントスコア算出手法！！ - 第3回</a></li>
-      
       <li><a href="../../post/post27/">【徹底比較】センチメントスコア算出手法！！ - 第2回</a></li>
       
       <li><a href="../../post/post25/">【徹底比較】センチメントスコア算出手法！！ - 第1回</a></li>
       
-      <li><a href="../../post/post18/">CNNを使って馬体写真から順位予想してみた</a></li>
+      <li><a href="../../post/post20/">PytorchのPre-trainedモデルで馬体写真の背景を自動トリミングする</a></li>
+      
+      <li><a href="../../post/post16/">LightGBMを使用して競馬結果を予想してみる</a></li>
+      
+      <li><a href="../../post/post15/">Pythonのpandas_datareaderから色々なデータを取得してみる</a></li>
       
     </ul>
   </div>
@@ -1317,14 +1319,7 @@ shap<span style="color:#f92672">.</span>image_plot(shap_values[<span style="colo
   
 
   
-   
-  <script>
-  $(document).ready(function () {
-    window.initializeCodeFolding("show" === "show");
-  });
-  </script>
-  <script src="../../js/codefolding.js"></script>
-
+  
 
   <p class="powered-by">
     

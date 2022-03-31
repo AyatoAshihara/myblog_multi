@@ -963,32 +963,32 @@ trial2 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">cv.g
 <span style="color:#a6e22e">plot</span>(trial2)
 </code></pre></div><p><img src="../../post/post14/index_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">trial2<span style="color:#f92672">$</span>lambda.min
-</code></pre></div><pre><code>## [1] 0.000436523
+</code></pre></div><pre><code>## [1] 0.001463052
 </code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">coef</span>(trial2,s<span style="color:#f92672">=</span>trial2<span style="color:#f92672">$</span>lambda.min)
 </code></pre></div><pre><code>## 12 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
 ##                          s1
-## (Intercept)   12.6534378623
-## FEDFUNDS      -0.1102828579
-## CPIAUCSL      -0.0620847662
-## UNRATE        -0.1986570797
-## TB3MS          0.2163014268
-## INDPRO        -0.0660285269
-## T10YIEM        1.1674773831
-## TWEXBMTH      -0.0241845518
-## RECPROUSM156N -0.0099694305
-## BAA            0.7626872357
-## T5YIFRM       -0.4561364454
-## PCE            0.0008164901
+## (Intercept)    8.1170282595
+## FEDFUNDS       .           
+## CPIAUCSL      -0.0370371311
+## UNRATE        -0.1675017594
+## TB3MS          0.1244417351
+## INDPRO        -0.0554153857
+## T10YIEM        1.1916137480
+## TWEXBMTH      -0.0124760531
+## RECPROUSM156N -0.0094119322
+## BAA            0.7423502867
+## T5YIFRM       -0.4664569086
+## PCE            0.0004936828
 </code></pre><p><code>Unemployment Rate</code>、<code>3-Month Treasury Bill</code>、<code>Breakeven Inflation Rate、Moody's Seasoned Baa Corporate Bond Yield</code>、<code>Inflation Expectation Rate</code>の回帰係数が大きくなるという結果ですね。失業率以外は想定内の結果です。ただ、今回の結果を見る限り景気との相関は低そうです（逆向きにしか効かない？）。MSEを計算します。</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">est.lasso.Y <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">predict</span>(trial2, newx <span style="color:#f92672">=</span> <span style="color:#a6e22e">as.matrix</span>(testdata[,<span style="color:#ae81ff">-1</span>]), s <span style="color:#f92672">=</span> trial2<span style="color:#f92672">$</span>lambda.min, type <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;response&#39;</span>)
 mse.lasso <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">sum</span>((Y <span style="color:#f92672">-</span> est.lasso.Y)^2) <span style="color:#f92672">/</span> <span style="color:#a6e22e">length</span>(Y)
 mse.lasso
-</code></pre></div><pre><code>## [1] 0.2171154
+</code></pre></div><pre><code>## [1] 0.1590115
 </code></pre><p><code>lasso</code>回帰のほうが良い結果になりました。<code>lasso</code>回帰で計算した予測値と実績値を時系列プロットしてみます。</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">library</span>(tidyverse)
 
 <span style="color:#a6e22e">ggplot</span>(<span style="color:#a6e22e">gather</span>(<span style="color:#a6e22e">data.frame</span>(actual<span style="color:#f92672">=</span>Y[,<span style="color:#ae81ff">1</span>],lasso_prediction<span style="color:#f92672">=</span>est.lasso.Y[,<span style="color:#ae81ff">1</span>],OLS_prediction<span style="color:#f92672">=</span>est.OLS.Y,date<span style="color:#f92672">=</span><span style="color:#a6e22e">as.POSIXct</span>(<span style="color:#a6e22e">rownames</span>(Y))),key<span style="color:#f92672">=</span>data,value<span style="color:#f92672">=</span>rate,<span style="color:#f92672">-</span>date),<span style="color:#a6e22e">aes</span>(x<span style="color:#f92672">=</span>date,y<span style="color:#f92672">=</span>rate, colour<span style="color:#f92672">=</span>data)) <span style="color:#f92672">+</span>
-  <span style="color:#a6e22e">geom_line</span>(size<span style="color:#f92672">=</span><span style="color:#ae81ff">1.5</span>) <span style="color:#f92672">+</span>
+  <span style="color:#a6e22e">geom_line</span>() <span style="color:#f92672">+</span>
   <span style="color:#a6e22e">scale_x_datetime</span>(breaks <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;6 month&#34;</span>,date_labels <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;%Y-%m&#34;</span>) <span style="color:#f92672">+</span>
   <span style="color:#a6e22e">scale_y_continuous</span>(breaks<span style="color:#f92672">=</span><span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">1.5</span>,<span style="color:#ae81ff">2</span>,<span style="color:#ae81ff">2.5</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3.5</span>),limits <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1.25</span>,<span style="color:#ae81ff">3.5</span>))
 </code></pre></div><p><img src="../../post/post14/index_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
@@ -1072,7 +1072,7 @@ mse.lasso.d
 </code></pre></div><pre><code>## [1] 0.8492769
 </code></pre><p>予測値をプロットします。</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">ggplot</span>(<span style="color:#a6e22e">gather</span>(<span style="color:#a6e22e">data.frame</span>(actual<span style="color:#f92672">=</span>Y.d[,<span style="color:#ae81ff">1</span>],lasso_prediction<span style="color:#f92672">=</span>est.lasso.Y.d[,<span style="color:#ae81ff">1</span>],OLS_prediction<span style="color:#f92672">=</span>est.OLS.Y.d,date<span style="color:#f92672">=</span><span style="color:#a6e22e">as.POSIXct</span>(<span style="color:#a6e22e">rownames</span>(Y.d))),key<span style="color:#f92672">=</span>data,value<span style="color:#f92672">=</span>rate,<span style="color:#f92672">-</span>date),<span style="color:#a6e22e">aes</span>(x<span style="color:#f92672">=</span>date,y<span style="color:#f92672">=</span>rate, colour<span style="color:#f92672">=</span>data)) <span style="color:#f92672">+</span>
-  <span style="color:#a6e22e">geom_line</span>(size<span style="color:#f92672">=</span><span style="color:#ae81ff">1.5</span>) <span style="color:#f92672">+</span>
+  <span style="color:#a6e22e">geom_line</span>() <span style="color:#f92672">+</span>
   <span style="color:#a6e22e">scale_x_datetime</span>(breaks <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;2 year&#34;</span>,date_labels <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;%Y-%m&#34;</span>) <span style="color:#f92672">+</span>
   <span style="color:#a6e22e">scale_y_continuous</span>(breaks<span style="color:#f92672">=</span><span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">1.5</span>,<span style="color:#ae81ff">2</span>,<span style="color:#ae81ff">2.5</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3.5</span>),limits <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1.25</span>,<span style="color:#ae81ff">5</span>))
 </code></pre></div><p><img src="../../post/post14/index_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>

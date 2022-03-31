@@ -463,7 +463,7 @@ score &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; accuracy_score(y_
 &lt;/code&gt;&lt;/pre&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;show()
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../post/post18/index_files/figure-html/unnamed-chunk-12-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;close()
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;不均衡データのバイアス修正はしたんですが、それでもなお負値を予測しやすいモデルとなっています。これでは使えないですね。&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;不均衡データのバイアス修正はしたんですが、それでもなお正値を予測しやすいモデルとなっています。これでは使えないですね。&lt;/p&gt;
 &lt;h2 id=&#34;3-shap値を用いた結果解釈&#34;&gt;3. Shap値を用いた結果解釈&lt;/h2&gt;
 &lt;p&gt;今学習したモデルの&lt;code&gt;shap&lt;/code&gt;値を考え、結果の解釈をしたいと思います。&lt;code&gt;shap&lt;/code&gt;値については時間があれば、説明を追記したいと思います。簡単に言えば、CNNが画像のどの部分に特徴を捉え、馬が上位に入るかを予想したかを可視化で捉えることができます。この馬の解析をすることにします。&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;imshow(X_test[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;])

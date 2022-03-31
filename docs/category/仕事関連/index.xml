@@ -60,11 +60,17 @@ $$
 r_{t}(q) \equiv r_{t} + r_{t-1} + &amp;hellip; + r_{t-q+1}
 $$
 と定義すると(複利部分を無視してます)、年率化されたシャープレシオは&lt;/p&gt;
-&lt;p&gt;$$
-&lt;code&gt;\begin{eqnarray} SR(q) &amp;amp;=&amp;amp; \frac{E[r_{t}(q)]}{\sqrt{Var(r_{t}(q))}}\\ &amp;amp;=&amp;amp; \frac{q\mu}{\sqrt{q}\sigma}\\ &amp;amp;=&amp;amp; \frac{\mu}{\sigma}\sqrt{q} \end{eqnarray}&lt;/code&gt;
+&lt;div&gt;
 $$
-と表すことができます。ここで、$q$は年毎のリターンの数(頻度)です。例えば、日次リターンの場合$q=365$となります(閏年を除く)。
-&lt;code&gt;\(\mu\)&lt;/code&gt;と$\sigma$は一般に未知ですので、$SR$の真値を知ることはできません。なので、$R_t$を標本リターン、リスクフリーレート$R^f$(定数)とすると、標本平均$\hat{\mu}=1/T\sum_{t=1}^T R_{t}-R^f$と標本標準偏差$\hat{\sigma}=\sqrt{1/T\sum_{t=1}^{T}(R_{t}-\hat{\mu})}$を用いてシャープレシオの推定値を計算することになります($T$はバックテストを行うサンプルサイズ)。&lt;/p&gt;
+\begin{eqnarray}
+SR(q) &amp;=&amp; \frac{E[r_{t}(q)]}{\sqrt{Var(r_{t}(q))}}\\
+&amp;=&amp; \frac{q\mu}{\sqrt{q}\sigma}\\
+&amp;=&amp; \frac{\mu}{\sigma}\sqrt{q}
+\end{eqnarray}
+$$
+&lt;/div&gt;
+&lt;p&gt;と表すことができます。ここで、$q$は年毎のリターンの数(頻度)です。例えば、日次リターンの場合$q=365$となります(閏年を除く)。
+$\mu$と$\sigma$は一般に未知ですので、$SR$の真値を知ることはできません。なので、$R_t$を標本リターン、リスクフリーレート$R^f$(定数)とすると、標本平均$\hat{\mu}=1/T\sum_{t=1}^T R_{t}-R^f$と標本標準偏差$\hat{\sigma}=\sqrt{1/T\sum_{t=1}^{T}(R_{t}-\hat{\mu})}$を用いてシャープレシオの推定値を計算することになります($T$はバックテストを行うサンプルサイズ)。&lt;/p&gt;
 &lt;p&gt;$$
 \hat{SR}(q) = \frac{\hat{\mu}}{\hat{\sigma}}\sqrt{q}
 $$
@@ -110,10 +116,44 @@ $$
 \right]
 $$
 よって、&lt;/p&gt;
-&lt;p&gt;$$
-&lt;code&gt;\begin{eqnarray} \boldsymbol V_g &amp;amp;=&amp;amp; \left( \begin{array}{cccc} \frac{\partial g}{\partial \mu}, \frac{\partial g}{\partial \sigma}\\ \end{array} \right) \left(  \begin{array}{cccc} \sigma^2 &amp;amp; 0\\ 0 &amp;amp; 2\sigma^4\\ \end{array} \right) \left( \begin{array}{cccc} \frac{\partial g}{\partial \mu}\\ \frac{\partial g}{\partial \sigma}\\ \end{array} \right) \\ &amp;amp;=&amp;amp; \left( \begin{array}{cccc} \frac{\partial g}{\partial \mu}\sigma^2, \frac{\partial g}{\partial \sigma}2\sigma^4\\ \end{array} \right) \left( \begin{array}{cccc} \frac{\partial g}{\partial \mu}\\ \frac{\partial g}{\partial \sigma}\\ \end{array} \right) \\ &amp;amp;=&amp;amp; (\frac{\partial g}{\partial \mu})^2\sigma^2 + (\frac{\partial g}{\partial \sigma})^2\sigma^4 \\ &amp;amp;=&amp;amp; 1 + \frac{\mu^2}{2\sigma^2} \\ &amp;amp;=&amp;amp; 1 + \frac{1}{2}SR^2 \end{eqnarray}&lt;/code&gt;
+&lt;div&gt;
 $$
-と導出することができます。シャープレシオの絶対値が大きくなるほど指数的に分散が大きくなる傾向があるので良いパフォーマンスを見た時には注意が必要かもしれません。年率化されたシャープレシオの推定値$\hat{SR}(q)$が従う分布はここから&lt;/p&gt;
+\begin{eqnarray}
+\boldsymbol V_g &amp;=&amp; \left(
+    \begin{array}{cccc}
+      \frac{\partial g}{\partial \mu}, \frac{\partial g}{\partial \sigma}\\
+    \end{array}
+  \right)
+  \left( 
+    \begin{array}{cccc}
+      \sigma^2 &amp; 0\\
+      0 &amp; 2\sigma^4\\
+    \end{array}
+  \right)
+  \left(
+    \begin{array}{cccc}
+      \frac{\partial g}{\partial \mu}\\
+      \frac{\partial g}{\partial \sigma}\\
+    \end{array}
+  \right) \\
+  &amp;=&amp; \left(
+    \begin{array}{cccc}
+      \frac{\partial g}{\partial \mu}\sigma^2, \frac{\partial g}{\partial \sigma}2\sigma^4\\
+    \end{array}
+  \right)
+    \left(
+    \begin{array}{cccc}
+      \frac{\partial g}{\partial \mu}\\
+      \frac{\partial g}{\partial \sigma}\\
+    \end{array}
+  \right) \\
+  &amp;=&amp; (\frac{\partial g}{\partial \mu})^2\sigma^2 + (\frac{\partial g}{\partial \sigma})^2\sigma^4 \\
+  &amp;=&amp; 1 + \frac{\mu^2}{2\sigma^2} \\
+  &amp;=&amp; 1 + \frac{1}{2}SR^2
+\end{eqnarray}
+$$
+&lt;/div&gt;
+&lt;p&gt;と導出することができます。シャープレシオの絶対値が大きくなるほど指数的に分散が大きくなる傾向があるので良いパフォーマンスを見た時には注意が必要かもしれません。年率化されたシャープレシオの推定値$\hat{SR}(q)$が従う分布はここから&lt;/p&gt;
 &lt;p&gt;$$
 \hat{SR}(q)\sim^a \mathcal{N}(\sqrt{q}SR,\frac{V(q)}{T}) \&lt;br&gt;
 V(q) = q{\boldsymbol V}_g = q(1 + \frac{1}{2}SR^2)
@@ -131,18 +171,34 @@ $$
 \lim_{N\rightarrow\infty}prob[\frac{\max[\hat{SR}]_N-\alpha}{\beta}\leq x] = G(x) = e^{-e^{-x}}
 $$
 ここで、$\alpha=Z(x)^{-1}[1-1/N], \beta=Z(x)^{-1}[1-1/Ne^{-1}]-\alpha$で、$Z(x)$は標準正規分布の累積分布関数を表しています。ガンベル分布のモーメント母関数$M_x(t)$は&lt;/p&gt;
-&lt;p&gt;$$
-&lt;code&gt;\begin{eqnarray} M_x(t) &amp;amp;=&amp;amp; E[e^{tx}] = \int_{-\infty}^\infty e^{tx}e^{-x}e^{-e^{-x}}dx \\ \end{eqnarray}&lt;/code&gt;
+&lt;div&gt;
 $$
-と書け、$x=-\log(y)$と変数変換すると$dx/dy=-1/y=-(e^{-x})^{-1}$なので、&lt;/p&gt;
-&lt;p&gt;$$
-&lt;code&gt;\begin{eqnarray} M_x(t) &amp;amp;=&amp;amp; \int_{\infty}^0-e^{-t\log(y)}e^{-y}dy \\ &amp;amp;=&amp;amp; \int_{0}^\infty y^{-t}e^{-y}dy \\ &amp;amp;=&amp;amp; \Gamma(1-t) \end{eqnarray}&lt;/code&gt;
+\begin{eqnarray}
+M_x(t) &amp;=&amp; E[e^{tx}] = \int_{-\infty}^\infty e^{tx}e^{-x}e^{-e^{-x}}dx \\
+\end{eqnarray}
 $$
-となります。$\Gamma(x)$はガンマ関数です。ここから、標準化された最大統計量の期待値(平均)は&lt;/p&gt;
-&lt;p&gt;$$
-&lt;code&gt;\begin{eqnarray} \lim_{N\rightarrow\infty} E[\frac{\max[\hat{SR}]_N-\alpha}{\beta}] &amp;amp;=&amp;amp; M_x&#39;(t)|_{t=0} \\ &amp;amp;=&amp;amp; (-1)\Gamma&#39;(1) \\ &amp;amp;=&amp;amp; (-1)(-\gamma) = \gamma \end{eqnarray}&lt;/code&gt;
+&lt;/div&gt;
+&lt;p&gt;と書け、$x=-\log(y)$と変数変換すると$dx/dy=-1/y=-(e^{-x})^{-1}$なので、&lt;/p&gt;
+&lt;div&gt;
 $$
-となります。ここで、$\gamma\approx0.5772156649&amp;hellip;$はEuler-Mascheroni定数です。よって、$N$が大きいとき、i.i.d.の標準正規分布の最大統計量の期待値は&lt;/p&gt;
+\begin{eqnarray}
+M_x(t) &amp;=&amp; \int_{\infty}^0-e^{-t\log(y)}e^{-y}dy \\
+&amp;=&amp; \int_{0}^\infty y^{-t}e^{-y}dy \\
+&amp;=&amp; \Gamma(1-t)
+\end{eqnarray}
+$$
+&lt;\div&gt;
+&lt;p&gt;となります。$\Gamma(x)$はガンマ関数です。ここから、標準化された最大統計量の期待値(平均)は&lt;/p&gt;
+&lt;div&gt;
+$$
+\begin{eqnarray}
+\lim_{N\rightarrow\infty} E[\frac{\max[\hat{SR}]_N-\alpha}{\beta}] &amp;=&amp; M_x&#39;(t)|_{t=0} \\
+&amp;=&amp; (-1)\Gamma&#39;(1) \\
+&amp;=&amp; (-1)(-\gamma) = \gamma
+\end{eqnarray}
+$$
+&lt;/div&gt;
+&lt;p&gt;となります。ここで、$\gamma\approx0.5772156649&amp;hellip;$はEuler-Mascheroni定数です。よって、$N$が大きいとき、i.i.d.の標準正規分布の最大統計量の期待値は&lt;/p&gt;
 &lt;p&gt;$$
 E[\max[\hat{SR}]] \approx \alpha + \gamma\beta = (1-\gamma)Z^{-1}[1-\frac{1}{N}]+\gamma Z^{-1}[1-\frac{1}{N}e^{-1}] \tag{2}
 $$
@@ -230,11 +286,11 @@ start from scratch. Resist the temptation of reusing those results.
 &lt;blockquote&gt;
 &lt;p&gt;this paper focusses on minimum-variance portfolios requiring only estimates of asset covariance, hence bypassing the well-known problem of estimation error in forecasting expected asset returns.&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;p&gt;と記載されており、現状でも期待リターンの推計は難しく、それを必要としない最小分散ポートフォリオは有益で実践的な手法であるといえます。最小分散ポートフォリオの目的関数は、その名の通り「分散を最小化すること」です。今、各資産のリターンを集めたベクトルを[tex:r]、各資産の保有ウェイトを$\theta$、ポートフォリオリターンを$R_{p}$で表すことにすると、ポートフォリオ全体の分散$var(R_{p})$は以下のように記述できます。&lt;/p&gt;
+&lt;p&gt;と記載されており、現状でも期待リターンの推計は難しく、それを必要としない最小分散ポートフォリオは有益で実践的な手法であるといえます。最小分散ポートフォリオの目的関数は、その名の通り「分散を最小化すること」です。今、各資産のリターンを集めたベクトルを$r$、各資産の保有ウェイトを$\theta$、ポートフォリオリターンを$R_{p}$で表すことにすると、ポートフォリオ全体の分散$var(R_{p})$は以下のように記述できます。&lt;/p&gt;
 &lt;p&gt;$$
 var(R_{p}) = var(r^{T}\theta) = E( (r^{T}\theta)(r^{T}\theta)^{T}) = \theta^{T}\Sigma\theta
 $$&lt;/p&gt;
-&lt;p&gt;ここで$Sigma$は$r$の分散共分散行列です。よって、最小化問題は以下になります。&lt;/p&gt;
+&lt;p&gt;ここで$\Sigma$は$r$の分散共分散行列です。よって、最小化問題は以下になります。&lt;/p&gt;
 &lt;p&gt;$$
 \min_{\theta}(\theta^{T}\Sigma\theta) \&lt;br&gt;
 s.t 1^{T}\theta = 1
@@ -252,12 +308,18 @@ $$&lt;/p&gt;
 &lt;p&gt;$$
 \theta = \Sigma^{-1}1\lambda^{*}
 $$&lt;/p&gt;
-&lt;p&gt;となります。ここで、$\lambda^{&lt;em&gt;}=-1/2\lambda$です。これを2本目の式に代入し、$\lambda^{&lt;/em&gt;}$について解きます。&lt;/p&gt;
-&lt;p&gt;$$
-1^{T}\Sigma1\lambda^{&lt;em&gt;} = 1 \&lt;br&gt;
-\displaystyle \lambda^{&lt;/em&gt;} = \frac{1}{1^{T}\Sigma^{-1}1}
-$$&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;\(\theta = \Sigma^{-1}1\lambda^{*}\)&lt;/code&gt;だったので、$\lambda^{*}$を消去すると、&lt;/p&gt;
+&lt;div&gt;
+となります。ここで、$\lambda^{*}=-1/2\lambda$です。これを2本目の式に代入し、$\lambda^{*}$について解きます。
+&lt;/div&gt;
+&lt;div&gt;
+$$
+1^{T}\Sigma1\lambda^{*} = 1 \\
+\displaystyle \lambda^{*} = \frac{1}{1^{T}\Sigma^{-1}1}
+$$
+&lt;/div&gt;
+&lt;div&gt;
+$\theta = \Sigma^{-1}1\lambda^{*}$だったので、$\lambda^{*}$を消去すると、
+&lt;/div&gt;
 &lt;p&gt;$$
 \displaystyle \theta_{gmv} = \frac{\Sigma^{-1}1}{1^{T}\Sigma^{-1}1}
 $$&lt;/p&gt;
@@ -307,7 +369,7 @@ $$&lt;/p&gt;
 &lt;p&gt;ここで、$\mu$はリターンの標本平均です。$\alpha_{i}$は推定すべきパラメータ。$D_{t}$をGARCHで推計しているので、リターンの分布が正規分布より裾野の厚い分布に従い、またリターンの変化は一定ではなく前日の分散に依存する関係をモデル化しているといえるのではないでしょうか。とりあえずこれで$D_{t}$の推計はできたということにします。次に$R_{t}$の推計ですが、このモデルではリターンを標本として求めるヒストリカルなアプローチを取ります。つまり、$R_{t}$は定数です。よって、リターン変動の大きさは時間によって変化するが、各資産の相対的な関係性は不変であるという仮定を置いていることになります。&lt;/p&gt;
 &lt;h3 id=&#34;b-dynamic-conditional-correlation-dcc-model&#34;&gt;B. Dynamic Conditional Correlation (DCC) model&lt;/h3&gt;
 &lt;p&gt;元論文は&lt;a href=&#34;http://www.cass.city.ac.uk/__data/assets/pdf_file/0003/78960/Week7Engle_2002.pdf&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;こちら&lt;/a&gt;。&lt;/p&gt;
-&lt;p&gt;こちらのモデルでは、$D_{t}$を求めるところまでは①と同じですが、[$R_{t}$の求め方が異なっており、ARMA(1,1)を用いて推計します。相関行列はやはり定数ではないということで、$tex:t$期までに利用可能なリターンを用いて推計をかけようということになっています。このモデルの相関行列$R_{t}$は、&lt;/p&gt;
+&lt;p&gt;こちらのモデルでは、$D_{t}$を求めるところまでは①と同じですが、[$R_{t}$の求め方が異なっており、ARMA(1,1)を用いて推計します。相関行列はやはり定数ではないということで、$t$期までに利用可能なリターンを用いて推計をかけようということになっています。このモデルの相関行列$R_{t}$は、&lt;/p&gt;
 &lt;p&gt;$$
 R_{t} = diag(Q_{t})^{-1/2}Q_{t}diag(Q_{t})^{-1/2}
 $$&lt;/p&gt;

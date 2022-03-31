@@ -34,7 +34,7 @@
   
     
   
-  <meta name="description" content="機械学習を用いたセンチメントスコアの算出方法の発展を簡単にさらっていきます。">
+  <meta name="description" content="辞書ベース手法を用いたセンチメントスコアの算出を実践します。">
 
   
   <link rel="alternate" hreflang="ja" href="../../post/post27/">
@@ -313,7 +313,7 @@
   <meta property="og:site_name" content="京都の電子部品メーカーで働く社会人が研究に没頭するブログ">
   <meta property="og:url" content="/post/post27/">
   <meta property="og:title" content="【徹底比較】センチメントスコア算出手法！！ - 第2回 | 京都の電子部品メーカーで働く社会人が研究に没頭するブログ">
-  <meta property="og:description" content="機械学習を用いたセンチメントスコアの算出方法の発展を簡単にさらっていきます。"><meta property="og:image" content="/post/post27/featured.jpg">
+  <meta property="og:description" content="辞書ベース手法を用いたセンチメントスコアの算出を実践します。"><meta property="og:image" content="/post/post27/featured.jpg">
   <meta property="twitter:image" content="/post/post27/featured.jpg"><meta property="og:locale" content="ja">
   
     
@@ -367,7 +367,7 @@
       "url": "/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png"
     }
   },
-  "description": "機械学習を用いたセンチメントスコアの算出方法の発展を簡単にさらっていきます。"
+  "description": "辞書ベース手法を用いたセンチメントスコアの算出を実践します。"
 }
 </script>
 
@@ -676,8 +676,8 @@
         <li><a href="#2-辞書ベース手法の実践">2. 辞書ベース手法の実践</a>
           <ul>
             <li><a href="#使用データ">使用データ</a></li>
-            <li><a href="#前処理">前処理</a></li>
             <li><a href="#センチメントスコアの抽出">センチメントスコアの抽出</a></li>
+            <li><a href="#追加検証tf-idfを用いた算出">(追加検証)tf-idfを用いた算出</a></li>
           </ul>
         </li>
         <li><a href="#3-終わりに">3. 終わりに</a></li>
@@ -713,6 +713,8 @@
 
 
   
+  
+    
   
 
 
@@ -798,9 +800,9 @@
 </div>
 
 
-<div class="article-header container featured-image-wrapper mt-4 mb-4" style="max-width: 640px; max-height: 361px;">
+<div class="article-header container featured-image-wrapper mt-4 mb-4" style="max-width: 1200px; max-height: 800px;">
   <div style="position: relative">
-    <img src="../../post/post27/featured.jpg" alt="" class="featured-image">
+    <img src="../../post/post27/featured_hu5526d388a82011bbf133a882c54814f2_863572_1200x0_resize_q90_lanczos.jpg" alt="" class="featured-image">
     
   </div>
 </div>
@@ -811,6 +813,14 @@
 
           <div class="article-style">
             <script src="../../post/post27/index_files/kePrint/kePrint.js"></script>
+<link href="../../post/post27/index_files/lightable/lightable.css" rel="stylesheet" />
+<link href="../../post/post27/index_files/bsTable/bootstrapTable.min.css" rel="stylesheet" />
+<script src="../../post/post27/index_files/bsTable/bootstrapTable.js"></script>
+<script src="../../post/post27/index_files/kePrint/kePrint.js"></script>
+<link href="../../post/post27/index_files/lightable/lightable.css" rel="stylesheet" />
+<link href="../../post/post27/index_files/bsTable/bootstrapTable.min.css" rel="stylesheet" />
+<script src="../../post/post27/index_files/bsTable/bootstrapTable.js"></script>
+<script src="../../post/post27/index_files/kePrint/kePrint.js"></script>
 <link href="../../post/post27/index_files/lightable/lightable.css" rel="stylesheet" />
 <link href="../../post/post27/index_files/bsTable/bootstrapTable.min.css" rel="stylesheet" />
 <script src="../../post/post27/index_files/bsTable/bootstrapTable.js"></script>
@@ -990,106 +1000,57 @@
 </tbody>
 </table>
 <p>「景気の現状判断」が景況感を表しており、その判断の理由が「追加説明及び具体的状況の説明」にある形です。よって、前者を教師データ、後者を説明データとする教師あり学習データとして利用することができます。</p>
-<h3 id="前処理">前処理</h3>
-<p>まず、各手法で共通の前処理を行います。以下では、使用するモジュールを呼び出し、学習データのうち有効回答のみを抽出します。
-なお、使用するモジュールの関係でPythonでの処理を紹介しますが、Rでも同じ処理ができます。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> sudachipy <span style="color:#f92672">import</span> tokenizer
-<span style="color:#f92672">from</span> sudachipy <span style="color:#f92672">import</span> dictionary
-<span style="color:#f92672">from</span> sklearn.preprocessing <span style="color:#f92672">import</span> LabelEncoder
-<span style="color:#f92672">import</span> pandas <span style="color:#f92672">as</span> pd
-
-sample <span style="color:#f92672">=</span> pd<span style="color:#f92672">.</span>read_csv(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;C:\Users\hogehoge\景気ウオッチャー\生データ\watcher_2016.csv&#34;</span>,encoding<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;shift-jis&#34;</span>)
-sample <span style="color:#f92672">=</span> sample[(sample<span style="color:#f92672">.</span><span style="color:#960050;background-color:#1e0010">追加説明及び具体的状況の説明</span><span style="color:#f92672">==</span><span style="color:#e6db74">&#39;−&#39;</span>)<span style="color:#f92672">|</span>(sample<span style="color:#f92672">.</span><span style="color:#960050;background-color:#1e0010">追加説明及び具体的状況の説明</span><span style="color:#f92672">==</span><span style="color:#e6db74">&#39;＊&#39;</span>)<span style="color:#f92672">==</span>False<span style="color:#f92672">|</span>(sample<span style="color:#f92672">.</span><span style="color:#960050;background-color:#1e0010">景気の現状判断</span><span style="color:#f92672">==</span><span style="color:#e6db74">&#39;□&#39;</span>)]
-</code></pre></div><p>次に、文書のトークン化を行います。日本語のような言語では英語などと異なり単語ごとの間にスペースがないため、別途区切りを入れてやる必要があります。区切られた各語は形態素と呼ばれ、言葉が意味を持つまとまりの単語の最小単位を指します。また、文章を形態素へ分割することを形態素解析と言います(英語のような場合単にTokenizationと言ったりします)。形態素解析を行うツールは以下のようなものが存在します。</p>
-<ul>
-<li>MeCab</li>
-<li>JUMAN</li>
-<li>JANOME</li>
-<li>Ginza</li>
-<li>Sudachi</li>
-</ul>
-<p>おそらく最も使用されているものはMecabではないかと思いますが、標準装備されている辞書(ipadic)の更新がストップしており、最近の新語に対応できないという問題があります。この点については新語に強いNEologd辞書を加えることで、対処可能であることを別記事で紹介していますが、今回はワークスアプリケーションズが提供しているSudachi(Takaoka et al. 2018)を使用することにしたいと思います。公式GithubからSudachiの特長を引用します。</p>
-<ul>
-<li>
-<p>複数の分割単位の併用</p>
-<ul>
-<li>必要に応じて切り替え</li>
-<li>形態素解析と固有表現抽出の融合</li>
-</ul>
-</li>
-<li>
-<p>多数の収録語彙</p>
-<ul>
-<li>UniDic と NEologd をベースに調整</li>
-</ul>
-</li>
-<li>
-<p>機能のプラグイン化</p>
-<ul>
-<li>文字正規化や未知語処理に機能追加が可能</li>
-</ul>
-</li>
-<li>
-<p>同義語辞書との連携</p>
-<ul>
-<li>後日公開予定</li>
-</ul>
-</li>
-</ul>
-<p>特質すべきは「複数の分割単位の併用」でしょう。Sudachiでは短い方から A, B, Cの3つの分割モードを提供しています。AはUniDic短単位相当、Cは固有表現相当、BはA, Cの中間的な単位となっており、以下のように同じ「選挙管理委員会」という単語でも形態素が異なることが確認できます。これはSudachi特有の特長になります。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">tokenizer_obj <span style="color:#f92672">=</span> dictionary<span style="color:#f92672">.</span>Dictionary()<span style="color:#f92672">.</span>create()
-
-mode <span style="color:#f92672">=</span> tokenizer<span style="color:#f92672">.</span>Tokenizer<span style="color:#f92672">.</span>SplitMode<span style="color:#f92672">.</span>A
-[m<span style="color:#f92672">.</span>normalized_form() <span style="color:#66d9ef">for</span> m <span style="color:#f92672">in</span> tokenizer_obj<span style="color:#f92672">.</span>tokenize(<span style="color:#e6db74">&#34;選挙管理委員会&#34;</span>, mode)]
-</code></pre></div><pre><code>## ['選挙', '管理', '委員', '会']
-</code></pre>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">mode <span style="color:#f92672">=</span> tokenizer<span style="color:#f92672">.</span>Tokenizer<span style="color:#f92672">.</span>SplitMode<span style="color:#f92672">.</span>B
-[m<span style="color:#f92672">.</span>normalized_form() <span style="color:#66d9ef">for</span> m <span style="color:#f92672">in</span> tokenizer_obj<span style="color:#f92672">.</span>tokenize(<span style="color:#e6db74">&#34;選挙管理委員会&#34;</span>, mode)]
-</code></pre></div><pre><code>## ['選挙', '管理', '委員会']
-</code></pre>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">mode <span style="color:#f92672">=</span> tokenizer<span style="color:#f92672">.</span>Tokenizer<span style="color:#f92672">.</span>SplitMode<span style="color:#f92672">.</span>C
-[m<span style="color:#f92672">.</span>normalized_form() <span style="color:#66d9ef">for</span> m <span style="color:#f92672">in</span> tokenizer_obj<span style="color:#f92672">.</span>tokenize(<span style="color:#e6db74">&#34;選挙管理委員会&#34;</span>, mode)]
-</code></pre></div><pre><code>## ['選挙管理委員会']
-</code></pre>
-<p>また、辞書についてもUniDicとNEologdをベースとして更新が続けられており、新語にも対応できます。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">mode <span style="color:#f92672">=</span> tokenizer<span style="color:#f92672">.</span>Tokenizer<span style="color:#f92672">.</span>SplitMode<span style="color:#f92672">.</span>C
-[m<span style="color:#f92672">.</span>normalized_form() <span style="color:#66d9ef">for</span> m <span style="color:#f92672">in</span> tokenizer_obj<span style="color:#f92672">.</span>tokenize(<span style="color:#e6db74">&#34;新型コロナウイルス&#34;</span>, mode)]
-</code></pre></div><pre><code>## ['新型コロナウイルス']
-</code></pre>
-<p>個人的に素晴らしいと思うポイントは表記正規化や文字正規化ができると言うことです。以下のように旧字等で同じ意味だが表記が異なる単語や英語/日本語、書き間違え等を正規化する機能があります。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">tokenizer_obj<span style="color:#f92672">.</span>tokenize(<span style="color:#e6db74">&#34;附属&#34;</span>, mode)[<span style="color:#ae81ff">0</span>]<span style="color:#f92672">.</span>normalized_form()
-</code></pre></div><pre><code>## '付属'
-</code></pre>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">tokenizer_obj<span style="color:#f92672">.</span>tokenize(<span style="color:#e6db74">&#34;SUMMER&#34;</span>, mode)[<span style="color:#ae81ff">0</span>]<span style="color:#f92672">.</span>normalized_form()
-</code></pre></div><pre><code>## 'サマー'
-</code></pre>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">tokenizer_obj<span style="color:#f92672">.</span>tokenize(<span style="color:#e6db74">&#34;シュミレーション&#34;</span>, mode)[<span style="color:#ae81ff">0</span>]<span style="color:#f92672">.</span>normalized_form()
-</code></pre></div><pre><code>## 'シミュレーション'
-</code></pre>
-<p>このような高性能な形態素解析ツールが無償でしかも商用利用も可というところに驚きを隠せません。後述しますが、このSudachiで形態素解析を行ったWord2vecモデルであるChiveもワークスアプリケーションズは提供をしています。</p>
-<p>説明が長くなりましたがSudachiでTokenizationを行いましょう。Sudachiは<code>Python</code>で使用することができます。説明が前後していますが、上記コードで行っているように<code>tokenizer</code>オブジェクトを作成し、<code>tokenize()</code>メソッドで文章をTokenizeします。Tokenizeされた結果は<code>MorphemeList</code>オブジェクトに格納されます。<code>MorphemeList</code>オブジェクトの各要素に対して<code>normalized_form()</code>メソッドを実行することで正規化された形態素を取得することができます。ここまでをやってみます。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">tokenizer_obj <span style="color:#f92672">=</span> dictionary<span style="color:#f92672">.</span>Dictionary()<span style="color:#f92672">.</span>create()
-mode <span style="color:#f92672">=</span> tokenizer<span style="color:#f92672">.</span>Tokenizer<span style="color:#f92672">.</span>SplitMode<span style="color:#f92672">.</span>C
-tokenizer_sudachi <span style="color:#f92672">=</span> <span style="color:#66d9ef">lambda</span> t: [m<span style="color:#f92672">.</span>normalized_form() <span style="color:#66d9ef">for</span> m <span style="color:#f92672">in</span> tokenizer_obj<span style="color:#f92672">.</span>tokenize(t, mode)]
-tokens <span style="color:#f92672">=</span> sample<span style="color:#f92672">.</span><span style="color:#960050;background-color:#1e0010">追加説明及び具体的状況の説明</span><span style="color:#f92672">.</span>map(tokenizer_sudachi)
-tokens<span style="color:#f92672">.</span>head()
-</code></pre></div><pre><code>## 0    [・, 店頭, の, 取り扱い, 額, が, 前年, 比, 約, 120, %, と, 好調...
-## 1    [・, 当, 施設, の, 利用, 乗降, 客数, は, 1, 月, 26, 日, 時点, ...
-## 2    [・, 年, 末, の, 消費, の, 反動, も, 有る, て, か, 、, 客, の, ...
-## 3    [・, 外国人, 観光客, に, よる, 売り上げ, が, 前年, 比, 152, %, と...
-## 4    [・, 積極的, だ, 景気, が, 上向き, に, 有る, と, まで, は, 言う, 辛...
-## Name: 追加説明及び具体的状況の説明, dtype: object
-</code></pre>
-<p>Tokenizeすることができました。次に5段階の景況判断をLabel Encodingに変換します。変換には<code>Scikit-Learn</code>の<code>LabelEncoder</code>を使用します。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">score_mapping <span style="color:#f92672">=</span> {<span style="color:#e6db74">&#39;◎&#39;</span>: <span style="color:#ae81ff">1</span>, <span style="color:#e6db74">&#39;○&#39;</span>: <span style="color:#ae81ff">1</span>, <span style="color:#e6db74">&#39;▲&#39;</span>: <span style="color:#ae81ff">0</span>, <span style="color:#e6db74">&#39;×&#39;</span>:<span style="color:#ae81ff">0</span>}
-label <span style="color:#f92672">=</span> sample<span style="color:#f92672">.</span><span style="color:#960050;background-color:#1e0010">景気の現状判断</span><span style="color:#f92672">.</span>map(score_mapping)
-</code></pre></div><p>これで前処理は完了です。</p>
 <h3 id="センチメントスコアの抽出">センチメントスコアの抽出</h3>
-<p>では、実践です。<code>quanteda</code>というパッケージを用いるため、<code>R</code>で行っていきます。前処理は<code>R</code>で実施済みで、<code>toks_sent</code>という変数に各文書の形態素が文書別に格納されています。</p>
-<p>この<code>toks_sent</code>から文書行列を生成します。文書行列とは、単語と文書の関係を表す行列で、各行が単語(token)、各列が文書を表し、各要素は文書中の単語の出現回数となっています。</p>
+<p>では、実践です。<code>quanteda</code>というパッケージを用いるため、<code>R</code>で行っていきます。<br>
+まず、前処理です。サンプルデータを読み込みます。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">filepath <span style="color:#f92672">&lt;-</span> r<span style="color:#e6db74">&#34;(C:\Users\hogehoge\Watcher\RawData)&#34;</span>
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">library</span>(magrittr)
+files <span style="color:#f92672">&lt;-</span> stringr<span style="color:#f92672">::</span><span style="color:#a6e22e">str_c</span>(filepath, <span style="color:#a6e22e">list.files</span>(filepath, pattern <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;*.csv&#34;</span>))
+sample <span style="color:#f92672">&lt;-</span> readr<span style="color:#f92672">::</span><span style="color:#a6e22e">read_csv</span>(files,locale<span style="color:#f92672">=</span>readr<span style="color:#f92672">::</span><span style="color:#a6e22e">locale</span>(encoding<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Shift-JIS&#34;</span>),show_col_types <span style="color:#f92672">=</span> <span style="color:#66d9ef">FALSE</span>)
+sample <span style="color:#f92672">&lt;-</span> sample[sample<span style="color:#f92672">$</span>追加説明及び具体的状況の説明<span style="color:#f92672">!=</span><span style="color:#e6db74">&#34;-&#34;</span><span style="color:#f92672">|</span>sample<span style="color:#f92672">$</span>追加説明及び具体的状況の説明<span style="color:#f92672">!=</span><span style="color:#e6db74">&#34;*&#34;</span>,]
+sample<span style="color:#f92672">$</span>景気の現状判断 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">factor</span>(sample<span style="color:#f92672">$</span>景気の現状判断, levels<span style="color:#f92672">=</span><span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;◎&#34;</span>,<span style="color:#e6db74">&#34;○&#34;</span>,<span style="color:#e6db74">&#34;□&#34;</span>,<span style="color:#e6db74">&#34;▲&#34;</span>,<span style="color:#e6db74">&#34;×&#34;</span>))
+</code></pre></div><p>次に、<code>sudachi</code>を用いてテキストデータのToken化を行います。<code>R</code>には<code>sudachi</code>を使えるパッケージが存在しないので、Pythonパッケージの<code>sudachipy</code>を<code>reticulate</code>で呼び出して使用します。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">stopwords_path <span style="color:#f92672">&lt;-</span> r<span style="color:#e6db74">&#34;(C:\Users\hogehoge\Watcher\marimo-master\yaml\stopwords_ja.yml)&#34;</span>
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># sudachiによる形態素解析→Token化</span>
+<span style="color:#75715e"># stopwordsはmarimoを使用</span>
+ja_stopwords <span style="color:#f92672">&lt;-</span> quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">dictionary</span>(yaml<span style="color:#f92672">::</span><span style="color:#a6e22e">read_yaml</span>(stopwords_path))
+<span style="color:#75715e"># コーパス生成</span>
+corp <span style="color:#f92672">&lt;-</span> quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">corpus</span>(sample,text_field<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;追加説明及び具体的状況の説明&#34;</span>)
+<span style="color:#75715e"># sudachipy呼び出し→インスタンス化</span>
+sudachipy <span style="color:#f92672">&lt;-</span> reticulate<span style="color:#f92672">::</span><span style="color:#a6e22e">import</span>(<span style="color:#e6db74">&#34;sudachipy&#34;</span>)
+<span style="color:#75715e"># 正規化関数定義</span>
+sudachi_normalize <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(tokens){
+  res <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>()
+  <span style="color:#a6e22e">for</span>(i in <span style="color:#ae81ff">0</span><span style="color:#f92672">:</span>(<span style="color:#a6e22e">length</span>(tokens)<span style="color:#ae81ff">-1</span>)){
+    res <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">append</span>(res,tokens[i]<span style="color:#f92672">$</span><span style="color:#a6e22e">normalized_form</span>())
+  }
+  <span style="color:#a6e22e">return</span>(res)
+}
+<span style="color:#75715e"># tokenize関数定義</span>
+sudachi_tokenize <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(sentence, mode <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;A&#34;</span>){
+  tokenizer_obj <span style="color:#f92672">&lt;-</span> sudachipy<span style="color:#f92672">$</span>dictionary<span style="color:#f92672">$</span><span style="color:#a6e22e">Dictionary</span>()<span style="color:#f92672">$</span><span style="color:#a6e22e">create</span>()
+  mode <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">switch</span>(mode, 
+                 <span style="color:#e6db74">&#34;A&#34;</span> <span style="color:#f92672">=</span> sudachipy<span style="color:#f92672">$</span>tokenizer<span style="color:#f92672">$</span>Tokenizer<span style="color:#f92672">$</span>SplitMode<span style="color:#f92672">$</span>A,
+                 <span style="color:#e6db74">&#34;B&#34;</span> <span style="color:#f92672">=</span> sudachipy<span style="color:#f92672">$</span>tokenizer<span style="color:#f92672">$</span>Tokenizer<span style="color:#f92672">$</span>SplitMode<span style="color:#f92672">$</span>B,
+                 <span style="color:#e6db74">&#34;C&#34;</span> <span style="color:#f92672">=</span> sudachipy<span style="color:#f92672">$</span>tokenizer<span style="color:#f92672">$</span>Tokenizer<span style="color:#f92672">$</span>SplitMode<span style="color:#f92672">$</span>C,
+                 <span style="color:#a6e22e">stop</span>(<span style="color:#e6db74">&#34;Only Can Use A, B, C&#34;</span>))
+  res <span style="color:#f92672">&lt;-</span> purrr<span style="color:#f92672">::</span><span style="color:#a6e22e">map</span>(sentence, <span style="color:#f92672">~</span><span style="color:#a6e22e">sudachi_normalize</span>(tokenizer_obj<span style="color:#f92672">$</span><span style="color:#a6e22e">tokenize</span>(., mode)))
+  <span style="color:#a6e22e">return</span>(res)
+}
+
+<span style="color:#75715e"># Token化実行</span>
+toks_sent <span style="color:#f92672">&lt;-</span> corp <span style="color:#f92672">%&gt;%</span>
+              <span style="color:#a6e22e">sudachi_tokenize</span>() <span style="color:#f92672">%&gt;%</span> 
+              quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">as.tokens</span>() <span style="color:#f92672">%&gt;%</span> 
+              quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">tokens_remove</span>(ja_stopwords, padding <span style="color:#f92672">=</span> <span style="color:#66d9ef">TRUE</span>)
+
+<span style="color:#75715e"># メタデータをTokenに再付与</span>
+quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">docvars</span>(toks_sent) <span style="color:#f92672">&lt;-</span> quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">docvars</span>(corp)
+</code></pre></div><p>この<code>toks_sent</code>から文書行列を生成します。文書行列とは、単語と文書の関係を表す行列で、各行が単語(token)、各列が文書を表し、各要素は文書中の単語の出現回数となっています。</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># 文書行列の生成</span>
 dfmt_sent <span style="color:#f92672">&lt;-</span> toks_sent <span style="color:#f92672">%&gt;%</span> 
-              quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">dfm</span>(remove <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&#34;</span>) <span style="color:#f92672">%&gt;%</span> 
+              quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">dfm</span>() <span style="color:#f92672">%&gt;%</span> 
+              quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">dfm_remove</span>(pattern<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>) <span style="color:#f92672">%&gt;%</span> 
               quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">dfm_trim</span>(min_termfreq <span style="color:#f92672">=</span> <span style="color:#ae81ff">10</span>)
 </code></pre></div><p>文書行列<code>dfmt_sent</code>と各単語のスコアベクトルの内積を取り、文書のセンチメントスコアを算出します。</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># 単語感情極性対応表</span>
@@ -1100,37 +1061,392 @@ dfmt_sent_arranged <span style="color:#f92672">&lt;-</span> quanteda<span style=
 
 <span style="color:#75715e"># 文書のセンチメントスコア算出</span>
 n <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">unname</span>(quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">rowSums</span>(dfmt_sent_arranged))
-score_dict <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ifelse</span>(n<span style="color:#f92672">&gt;</span><span style="color:#ae81ff">0</span>, quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">rowSums</span>(dfmt_sent_arranged <span style="color:#f92672">%*%</span> PNdict<span style="color:#f92672">$</span>V4)<span style="color:#f92672">/</span>n, <span style="color:#66d9ef">NA</span>)
+score_dict <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">scale</span>(<span style="color:#a6e22e">ifelse</span>(n<span style="color:#f92672">&gt;</span><span style="color:#ae81ff">0</span>, quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">rowSums</span>(dfmt_sent_arranged <span style="color:#f92672">%*%</span> PNdict<span style="color:#f92672">$</span>V4)<span style="color:#f92672">/</span>n, <span style="color:#66d9ef">NA</span>))
 sample_with_score_dict <span style="color:#f92672">&lt;-</span> sample <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">cbind</span>(score_dict) 
-sample_with_score_dict <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">head</span>()
-</code></pre></div><pre><code>##   基準年  基準日 景気の現状判断                 業種・職種   判断の理由
-## 1   2016 1月31日             ◎       旅行代理店（従業員） 販売量の動き
-## 2   2016 1月31日             ◎         観光名所（従業員） 来客数の動き
-## 3   2016 1月31日             ○ 一般小売店［酒］（経営者）   単価の動き
-## 4   2016 1月31日             ○         百貨店（売場主任） お客様の様子
-## 5   2016 1月31日             ○           百貨店（担当者） 来客数の動き
-## 6   2016 1月31日             ○     百貨店（販売促進担当）     それ以外
-##                                                                                                                                                                               追加説明及び具体的状況の説明
-## 1                                                                                                                                                            ・店頭の取扱額が前年比約120％と好調であった。
-## 2                                                            ・当施設の利用乗降客数は１月26日時点で前年比130.1％となっており、１月としては過去最高の利用乗降客数になることが確定したほどの入込状況にある。
-## 3                                                           ・年末の消費の反動もあってか、客の動きがやや鈍い。ただ、相変わらず高額商材が売れているということもあり、売上はそれなりの金額をキープしている。
-## 4 ・外国人観光客による売上が前年比152％と好調を継続しているほか、来客数が前年比102％と好調を維持している。月半ばに停滞した売上も下旬に入ってから回復傾向にあり、定価品、バーゲン品とも前年を上回っている。
-## 5                                                                                                                 ・積極的に景気が上向きにあるとまではいいづらいものの、３か月前との比較では改善している。
-## 6                                                                     ・気温が平年並みとなり、これまでの温暖、少雪の状態がみられなくなってきたことで、防寒衣料、雑貨商材を中心に多少改善の傾向がみられる。
-##     score_dict
-## 1 -0.348178400
-## 2 -0.565735877
-## 3 -0.612866000
-## 4 -0.325386370
-## 5  0.006678875
-## 6 -0.476283793
-</code></pre>
+</code></pre></div><p>サンプルデータを抜き出して、センチメントスコアを観察してみましょう。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">sample_with_score_dict <span style="color:#f92672">%&gt;%</span> 
+  <span style="color:#a6e22e">head</span>() <span style="color:#f92672">%&gt;%</span> 
+  knitr<span style="color:#f92672">::</span><span style="color:#a6e22e">kable</span>() <span style="color:#f92672">%&gt;%</span> 
+  kableExtra<span style="color:#f92672">::</span><span style="color:#a6e22e">kable_styling</span>(bootstrap_options <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;striped&#34;</span>))
+</code></pre></div><table class="table table-striped" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:right;">
+基準年
+</th>
+<th style="text-align:left;">
+基準日
+</th>
+<th style="text-align:left;">
+景気の現状判断
+</th>
+<th style="text-align:left;">
+業種・職種
+</th>
+<th style="text-align:left;">
+判断の理由
+</th>
+<th style="text-align:left;">
+追加説明及び具体的状況の説明
+</th>
+<th style="text-align:right;">
+score_dict
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+2016
+</td>
+<td style="text-align:left;">
+1月31日
+</td>
+<td style="text-align:left;">
+◎
+</td>
+<td style="text-align:left;">
+旅行代理店（従業員）
+</td>
+<td style="text-align:left;">
+販売量の動き
+</td>
+<td style="text-align:left;">
+・店頭の取扱額が前年比約120％と好調であった。
+</td>
+<td style="text-align:right;">
+1.0918056
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2016
+</td>
+<td style="text-align:left;">
+1月31日
+</td>
+<td style="text-align:left;">
+◎
+</td>
+<td style="text-align:left;">
+観光名所（従業員）
+</td>
+<td style="text-align:left;">
+来客数の動き
+</td>
+<td style="text-align:left;">
+・当施設の利用乗降客数は１月26日時点で前年比130.1％となっており、１月としては過去最高の利用乗降客数になることが確定したほどの入込状況にある。
+</td>
+<td style="text-align:right;">
+-0.7191220
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2016
+</td>
+<td style="text-align:left;">
+1月31日
+</td>
+<td style="text-align:left;">
+○
+</td>
+<td style="text-align:left;">
+一般小売店［酒］（経営者）
+</td>
+<td style="text-align:left;">
+単価の動き
+</td>
+<td style="text-align:left;">
+・年末の消費の反動もあってか、客の動きがやや鈍い。ただ、相変わらず高額商材が売れているということもあり、売上はそれなりの金額をキープしている。
+</td>
+<td style="text-align:right;">
+-0.9872586
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2016
+</td>
+<td style="text-align:left;">
+1月31日
+</td>
+<td style="text-align:left;">
+○
+</td>
+<td style="text-align:left;">
+百貨店（売場主任）
+</td>
+<td style="text-align:left;">
+お客様の様子
+</td>
+<td style="text-align:left;">
+・外国人観光客による売上が前年比152％と好調を継続しているほか、来客数が前年比102％と好調を維持している。月半ばに停滞した売上も下旬に入ってから回復傾向にあり、定価品、バーゲン品とも前年を上回っている。
+</td>
+<td style="text-align:right;">
+1.0711102
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2016
+</td>
+<td style="text-align:left;">
+1月31日
+</td>
+<td style="text-align:left;">
+○
+</td>
+<td style="text-align:left;">
+百貨店（担当者）
+</td>
+<td style="text-align:left;">
+来客数の動き
+</td>
+<td style="text-align:left;">
+・積極的に景気が上向きにあるとまではいいづらいものの、３か月前との比較では改善している。
+</td>
+<td style="text-align:right;">
+3.1257848
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2016
+</td>
+<td style="text-align:left;">
+1月31日
+</td>
+<td style="text-align:left;">
+○
+</td>
+<td style="text-align:left;">
+百貨店（販売促進担当）
+</td>
+<td style="text-align:left;">
+それ以外
+</td>
+<td style="text-align:left;">
+・気温が平年並みとなり、これまでの温暖、少雪の状態がみられなくなってきたことで、防寒衣料、雑貨商材を中心に多少改善の傾向がみられる。
+</td>
+<td style="text-align:right;">
+0.0254686
+</td>
+</tr>
+</tbody>
+</table>
+<p>2行目の文章は明らかにポジティブですが、なにが影響したのかネガティブ寄りの判定になっていますね。また、顕著なのが3行目で「鈍い」という単語に引っ張られ、ネガティブなセンチメントを抽出しやすくなっています。この文章の本意は「ただ・・・」という逆接以降の文章ですが、文脈や語順が捉えられないために正しい情報を引き出すことができていません。5行目は「積極的」、「上向き」、「改善」といった単語を検知し、かなりポジティブなセンチメントがあるという判定をしていますが、「積極的に景気が上向きとは<strong>いいづらい</strong>*」というネガティブな文脈を捉え切れておらず、過大評価となっています。</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># 結果の可視化</span>
 <span style="color:#a6e22e">library</span>(ggplot2)
 <span style="color:#a6e22e">ggplot</span>(sample_with_score_dict, <span style="color:#a6e22e">aes</span>(x<span style="color:#f92672">=</span>景気の現状判断,y<span style="color:#f92672">=</span>score_dict)) <span style="color:#f92672">+</span> <span style="color:#a6e22e">geom_boxplot</span>()
 </code></pre></div><p><img src="../../post/post27/index_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
 <p>「景気の現状判断」毎にboxplotを書いてみましたが、ぱっと見はあまり変わらない結果になりました。
-どの判断も-0.5くらいが平均で、ほんの少し緩やかに右肩上がりのような気もしますが、文書を分類できている言える結果ではないことがわかります。</p>
+ほんの少し緩やかに右下がりのような気もしますが、文書分類可能な結果ではないことがわかります。</p>
+<h3 id="追加検証tf-idfを用いた算出">(追加検証)tf-idfを用いた算出</h3>
+<p>上記の分析では単語の出現回数を利用していましたが、tf-idfを用いた分析も行うことにします。tf-idfとは、term frequency-inverse document frequencyの略で、情報検索やテキストマイニングでよく使われる重みのことです。この重みは、ある単語がコーパス<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup>の中の文書にとってどれだけ重要かを評価するために使われる統計的尺度で、その特徴量は文書中の単語の出現回数が増加するほど上昇しますが、コーパス中の単語の頻度によって相殺されます。例えば、迷惑メールを分類することを意図した電子メールのコーパスにおいて、「お知らせ」や「ニュース」などは出現頻度が高い一方でどの文書にも出現するため、迷惑メールを特定するという点においては重要度は高くありません。一方で、「当選」や「今だけ！」などはコーパス上にはそこまで出現頻度が高くない単語であるものの、迷惑メールの文章中には頻度が高く出現すると考えられます。tf-idfでは後者の単語の特徴量が高くなるように定義されています。</p>
+<p>tf-idfの計算方法はtfとidfに分かれます。</p>
+<ul>
+<li>tf: Term frequency
+単語が文書中にどれだけ頻繁に出現しているかを測定するもの。文書の長さはそれぞれ異なるため、長い文書では短い文書よりはるかに多くの用語が出現する可能性があります。そのため、正規化の方法として、単語頻度を文書の長さ（文書内の単語総数）で割ることがよくあります。</li>
+</ul>
+<p>$$
+tf(t) = \frac{文章内の単語tの出現回数}{文章内の単語総数}
+$$</p>
+<p>-idf: Inverse Document Frequency
+ある単語がコーパス内でどの程度希少であるかを測定するもの。「です」、「は」、「が」などの頻出語を減らして、希少語を増やす意図があります。</p>
+<p>$$
+idf(t) = \log(\frac{コーパス内の文書総数}{単語tを含む文書数})
+$$</p>
+<p><code>r</code>で実装してみます。tf-idfは<code>quanteda::dfm_tfidf()</code>で計算できます。引数には、文書行列を渡します。そのほかは上記の分析と同じです。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># tf-idf版文書行列の生成</span>
+dfmt_tfidf_sent <span style="color:#f92672">&lt;-</span> dfmt_sent <span style="color:#f92672">%&gt;%</span> quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">dfm_tfidf</span>()
+
+<span style="color:#75715e"># 辞書の並びに合わせて文書行列の列を入れ替える。</span>
+dfmt_tfidf_sent_arranged <span style="color:#f92672">&lt;-</span> quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">dfm_match</span>(dfmt_tfidf_sent, PNdict<span style="color:#f92672">$</span>V1)
+
+<span style="color:#75715e"># 文書のセンチメントスコア算出</span>
+n <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">unname</span>(quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">rowSums</span>(dfmt_tfidf_sent_arranged))
+score_dict <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">scale</span>(<span style="color:#a6e22e">ifelse</span>(n<span style="color:#f92672">&gt;</span><span style="color:#ae81ff">0</span>, quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">rowSums</span>(dfmt_tfidf_sent_arranged <span style="color:#f92672">%*%</span> PNdict<span style="color:#f92672">$</span>V4)<span style="color:#f92672">/</span>n, <span style="color:#66d9ef">NA</span>))
+sample_with_score_dict <span style="color:#f92672">&lt;-</span> sample <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">cbind</span>(score_dict)
+</code></pre></div><p>先ほどと同じようにサンプルを抜き出してみます。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">sample_with_score_dict <span style="color:#f92672">%&gt;%</span> 
+  <span style="color:#a6e22e">head</span>() <span style="color:#f92672">%&gt;%</span> 
+  knitr<span style="color:#f92672">::</span><span style="color:#a6e22e">kable</span>() <span style="color:#f92672">%&gt;%</span> 
+  kableExtra<span style="color:#f92672">::</span><span style="color:#a6e22e">kable_styling</span>(bootstrap_options <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;striped&#34;</span>))
+</code></pre></div><table class="table table-striped" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:right;">
+基準年
+</th>
+<th style="text-align:left;">
+基準日
+</th>
+<th style="text-align:left;">
+景気の現状判断
+</th>
+<th style="text-align:left;">
+業種・職種
+</th>
+<th style="text-align:left;">
+判断の理由
+</th>
+<th style="text-align:left;">
+追加説明及び具体的状況の説明
+</th>
+<th style="text-align:right;">
+score_dict
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+2016
+</td>
+<td style="text-align:left;">
+1月31日
+</td>
+<td style="text-align:left;">
+◎
+</td>
+<td style="text-align:left;">
+旅行代理店（従業員）
+</td>
+<td style="text-align:left;">
+販売量の動き
+</td>
+<td style="text-align:left;">
+・店頭の取扱額が前年比約120％と好調であった。
+</td>
+<td style="text-align:right;">
+0.1052126
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2016
+</td>
+<td style="text-align:left;">
+1月31日
+</td>
+<td style="text-align:left;">
+◎
+</td>
+<td style="text-align:left;">
+観光名所（従業員）
+</td>
+<td style="text-align:left;">
+来客数の動き
+</td>
+<td style="text-align:left;">
+・当施設の利用乗降客数は１月26日時点で前年比130.1％となっており、１月としては過去最高の利用乗降客数になることが確定したほどの入込状況にある。
+</td>
+<td style="text-align:right;">
+-0.1025889
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2016
+</td>
+<td style="text-align:left;">
+1月31日
+</td>
+<td style="text-align:left;">
+○
+</td>
+<td style="text-align:left;">
+一般小売店［酒］（経営者）
+</td>
+<td style="text-align:left;">
+単価の動き
+</td>
+<td style="text-align:left;">
+・年末の消費の反動もあってか、客の動きがやや鈍い。ただ、相変わらず高額商材が売れているということもあり、売上はそれなりの金額をキープしている。
+</td>
+<td style="text-align:right;">
+-0.8938789
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2016
+</td>
+<td style="text-align:left;">
+1月31日
+</td>
+<td style="text-align:left;">
+○
+</td>
+<td style="text-align:left;">
+百貨店（売場主任）
+</td>
+<td style="text-align:left;">
+お客様の様子
+</td>
+<td style="text-align:left;">
+・外国人観光客による売上が前年比152％と好調を継続しているほか、来客数が前年比102％と好調を維持している。月半ばに停滞した売上も下旬に入ってから回復傾向にあり、定価品、バーゲン品とも前年を上回っている。
+</td>
+<td style="text-align:right;">
+1.0201638
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2016
+</td>
+<td style="text-align:left;">
+1月31日
+</td>
+<td style="text-align:left;">
+○
+</td>
+<td style="text-align:left;">
+百貨店（担当者）
+</td>
+<td style="text-align:left;">
+来客数の動き
+</td>
+<td style="text-align:left;">
+・積極的に景気が上向きにあるとまではいいづらいものの、３か月前との比較では改善している。
+</td>
+<td style="text-align:right;">
+2.4385447
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2016
+</td>
+<td style="text-align:left;">
+1月31日
+</td>
+<td style="text-align:left;">
+○
+</td>
+<td style="text-align:left;">
+百貨店（販売促進担当）
+</td>
+<td style="text-align:left;">
+それ以外
+</td>
+<td style="text-align:left;">
+・気温が平年並みとなり、これまでの温暖、少雪の状態がみられなくなってきたことで、防寒衣料、雑貨商材を中心に多少改善の傾向がみられる。
+</td>
+<td style="text-align:right;">
+0.7675009
+</td>
+</tr>
+</tbody>
+</table>
+<p>傾向は先ほどの分析とさほど変わらないように見受けられます。
+boxplotの結果も見てみましょう。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># 結果の可視化</span>
+<span style="color:#a6e22e">library</span>(ggplot2)
+<span style="color:#a6e22e">ggplot</span>(sample_with_score_dict, <span style="color:#a6e22e">aes</span>(x<span style="color:#f92672">=</span>景気の現状判断,y<span style="color:#f92672">=</span>score_dict)) <span style="color:#f92672">+</span> <span style="color:#a6e22e">geom_boxplot</span>()
+</code></pre></div><p><img src="../../post/post27/index_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
+<p>右下がりの傾向が強くなったかもしれません。ただ、依然として景気判断別に見たスコアの分布は差がなく、文書分類ができる精度ではないことがわかります。</p>
 <h2 id="3-終わりに">3. 終わりに</h2>
 <p>最も簡易な手法ということで予想はしていましたが、辞書ベース手法ではセンチメントスコアの抽出はできませんでした。もちろん、私のやり方が悪いのが理由で上手くやれば文書の分類は可能かもしれません。ただ、経済に特化した極性辞書を準備しなければ難しいのではないかというのが、私の感想です。
 次はナイーブベイズ分類器を用いた文書分類に取り組みます。
@@ -1139,10 +1455,15 @@ sample_with_score_dict <span style="color:#f92672">%&gt;%</span> <span style="co
 <div id="ref-takamura2005" class="csl-entry">
 <p>Takamura, Hiroya, Takashi Inui, and Manabu Okumura. 2005. “The 43rd Annual Meeting.” In. Association for Computational Linguistics. <a href="https://doi.org/10.3115/1219840.1219857">https://doi.org/10.3115/1219840.1219857</a>.</p>
 </div>
-<div id="ref-TAKAOKA18.8884" class="csl-entry">
-<p>Takaoka, Kazuma, Sorami Hisamoto, Noriko Kawahara, Miho Sakamoto, Yoshitaka Uchida, and Yuji Matsumoto. 2018. “Sudachi: A Japanese Tokenizer for Business.” In <em>Proceedings of the Eleventh International Conference on Language Resources and Evaluation (LREC 2018)</em>, edited by Nicoletta Calzolari (Conference chair), Khalid Choukri, Christopher Cieri, Thierry Declerck, Sara Goggi, Koiti Hasida, Hitoshi Isahara, et al. Paris, France: European Language Resources Association (ELRA).</p>
 </div>
-</div>
+<section class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1" role="doc-endnote">
+<p>文章を構造化し大規模に集積したもの <a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+</ol>
+</section>
 
           </div>
 
@@ -1405,6 +1726,8 @@ sample_with_score_dict <span style="color:#f92672">%&gt;%</span> <span style="co
     <h3>関連項目</h3>
     <ul>
       
+      <li><a href="../../post/post28/">【徹底比較】センチメントスコア算出手法！！ - 第3回</a></li>
+      
       <li><a href="../../post/post25/">【徹底比較】センチメントスコア算出手法！！ - 第1回</a></li>
       
       <li><a href="../../post/post20/">PytorchのPre-trainedモデルで馬体写真の背景を自動トリミングする</a></li>
@@ -1412,8 +1735,6 @@ sample_with_score_dict <span style="color:#f92672">%&gt;%</span> <span style="co
       <li><a href="../../post/post16/">LightGBMを使用して競馬結果を予想してみる</a></li>
       
       <li><a href="../../post/post15/">Pythonのpandas_datareaderから色々なデータを取得してみる</a></li>
-      
-      <li><a href="../../post/post22/">OECD.orgからマクロパネルデータをAPIで取得する</a></li>
       
     </ul>
   </div>

@@ -905,23 +905,7 @@ cat_list <span style="color:#f92672">=</span> [<span style="color:#e6db74">&#39;
     le<span style="color:#f92672">.</span>fit(target_column)
     label_encoded_column <span style="color:#f92672">=</span> le<span style="color:#f92672">.</span>transform(target_column)
     df[column] <span style="color:#f92672">=</span> pd<span style="color:#f92672">.</span>Series(label_encoded_column)<span style="color:#f92672">.</span>astype(<span style="color:#e6db74">&#39;category&#39;</span>)
-</code></pre></div><pre><code>## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-## LabelEncoder()
-</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> pandas_profiling <span style="color:#f92672">as</span> pdq
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> pandas_profiling <span style="color:#f92672">as</span> pdq
 profile <span style="color:#f92672">=</span> pdq<span style="color:#f92672">.</span>ProfileReport(df)
 profile
 </code></pre></div><h2 id="2-予測モデルの作成">2. 予測モデルの作成</h2>
@@ -1264,13 +1248,13 @@ shap<span style="color:#f92672">.</span>initjs()
       
       <li><a href="../../post/post20/">PytorchのPre-trainedモデルで馬体写真の背景を自動トリミングする</a></li>
       
+      <li><a href="../../post/post28/">【徹底比較】センチメントスコア算出手法！！ - 第3回</a></li>
+      
       <li><a href="../../post/post27/">【徹底比較】センチメントスコア算出手法！！ - 第2回</a></li>
       
       <li><a href="../../post/post25/">【徹底比較】センチメントスコア算出手法！！ - 第1回</a></li>
       
       <li><a href="../../post/post18/">CNNを使って馬体写真から順位予想してみた</a></li>
-      
-      <li><a href="../../post/post15/">Pythonのpandas_datareaderから色々なデータを取得してみる</a></li>
       
     </ul>
   </div>

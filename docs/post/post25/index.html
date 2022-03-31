@@ -34,7 +34,7 @@
   
     
   
-  <meta name="description" content="機械学習を用いたセンチメントスコアの算出方法の発展を簡単にさらっていきます。">
+  <meta name="description" content="テキストからセンチメント情報を抽出する手法を数回にわたって紹介します。">
 
   
   <link rel="alternate" hreflang="ja" href="../../post/post25/">
@@ -313,7 +313,7 @@
   <meta property="og:site_name" content="京都の電子部品メーカーで働く社会人が研究に没頭するブログ">
   <meta property="og:url" content="/post/post25/">
   <meta property="og:title" content="【徹底比較】センチメントスコア算出手法！！ - 第1回 | 京都の電子部品メーカーで働く社会人が研究に没頭するブログ">
-  <meta property="og:description" content="機械学習を用いたセンチメントスコアの算出方法の発展を簡単にさらっていきます。"><meta property="og:image" content="/post/post25/featured.jpg">
+  <meta property="og:description" content="テキストからセンチメント情報を抽出する手法を数回にわたって紹介します。"><meta property="og:image" content="/post/post25/featured.jpg">
   <meta property="twitter:image" content="/post/post25/featured.jpg"><meta property="og:locale" content="ja">
   
     
@@ -367,7 +367,7 @@
       "url": "/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png"
     }
   },
-  "description": "機械学習を用いたセンチメントスコアの算出方法の発展を簡単にさらっていきます。"
+  "description": "テキストからセンチメント情報を抽出する手法を数回にわたって紹介します。"
 }
 </script>
 
@@ -680,6 +680,7 @@
             <li><a href="#景気の現状判断の分布"><code>景気の現状判断</code>の分布</a></li>
             <li><a href="#回答者の属性">回答者の属性</a></li>
             <li><a href="#景気判断の理由の分布"><code>(景気)判断の理由</code>の分布</a></li>
+            <li><a href="#景気判断の理由に関するテキストマイニング">景気判断の理由に関するテキストマイニング</a></li>
           </ul>
         </li>
         <li><a href="#4-終わりに">4. 終わりに</a></li>
@@ -762,7 +763,7 @@
   
   <span class="middot-divider"></span>
   <span class="article-reading-time">
-    10 分で読める
+    16 分で読める
   </span>
   
 
@@ -840,7 +841,7 @@
 <link href="../../post/post25/index_files/lightable/lightable.css" rel="stylesheet" />
 <link href="../../post/post25/index_files/bsTable/bootstrapTable.min.css" rel="stylesheet" />
 <script src="../../post/post25/index_files/bsTable/bootstrapTable.js"></script>
-<p>おはこんばんにちは。テキスト解析はデータ分析界隈ではもうかなり当たり前になってきています。テキストの感性情報(センチメント)を抽出する手法には、どのようなものがあるかあるのか調べたところかなり時代は進んでいると実感しました。今回は実際に<code>R</code>や<code>Python</code>で作成した機械学習モデルを用いて、それらの精度を比較してみたいと思います。 今回はその第１回目ということで、データセットや全体感のお話です。</p>
+<p>おはこんばんにちは。テキスト解析はデータ分析界隈ではもうかなり当たり前になってきています。テキストの感性情報(センチメント)を抽出する手法には、どのようなものがあるかあるのか調べたところかなり時代は進んでいると実感しました。これら数回にわたって、実際に<code>R</code>や<code>Python</code>で作成した機械学習モデルの精度を比較してみたいと思います。 今回はその第１回目ということで、データセットや全体感のお話です。</p>
 <h2 id="1-解きたい問題">1. 解きたい問題</h2>
 <p>今回解きたい問題は「景況感を表す文書表現を学習し、実際の景気判断を予測する」というタスクです。 データセットには、内閣府が出している景気ウオッチャー調査を使用します。</p>
 <h3 id="景気ウオッチャー調査とは">景気ウオッチャー調査とは</h3>
@@ -1371,6 +1372,123 @@ stringr<span style="color:#f92672">::</span><span style="color:#a6e22e">str_remo
 </tbody>
 </table>
 <p>「来客数の動き」と「販売量の動き」が多く、「お客様の様子」や「受注量や販売量の動き」まで含めると7割を占めます。回答業種に小売店が多いことから、このような項目が上位にきているのだと推察されます。</p>
+<h3 id="景気判断の理由に関するテキストマイニング">景気判断の理由に関するテキストマイニング</h3>
+<p>景気の現状判断に対する理由の追加説明及び具体的状況の説明を解析し、どのような単語が頻繁に使用されているかをWordCloudを用いて確認します。</p>
+<p>まず、文書のトークン化を行います。日本語のような言語では英語などと異なり単語ごとの間にスペースがないため、別途区切りを入れてやる必要があります。区切られた各語は形態素と呼ばれ、言葉が意味を持つまとまりの単語の最小単位を指します。また、文章を形態素へ分割することを形態素解析と言います(英語のような場合単にTokenizationと言ったりします)。<br>
+形態素解析を行うツールは以下のようなものが存在します。</p>
+<ul>
+<li>MeCab</li>
+<li>JUMAN</li>
+<li>JANOME</li>
+<li>Ginza</li>
+<li>Sudachi</li>
+</ul>
+<p>おそらく最も使用されているものはMecabではないかと思いますが、標準装備されている辞書(ipadic)の更新がストップしており、最近の新語に対応できないという問題があります。この点については新語に強いNEologd辞書を加えることで、対処可能であることを別記事で紹介していますが、今回はワークスアプリケーションズが提供しているSudachi[@TAKAOKA18.8884]を使用することにしたいと思います。公式GithubからSudachiの特長を引用します。</p>
+<ul>
+<li>
+<p>複数の分割単位の併用</p>
+<ul>
+<li>必要に応じて切り替え</li>
+<li>形態素解析と固有表現抽出の融合</li>
+</ul>
+</li>
+<li>
+<p>多数の収録語彙</p>
+<ul>
+<li>UniDic と NEologd をベースに調整</li>
+</ul>
+</li>
+<li>
+<p>機能のプラグイン化</p>
+<ul>
+<li>文字正規化や未知語処理に機能追加が可能</li>
+</ul>
+</li>
+<li>
+<p>同義語辞書との連携</p>
+<ul>
+<li>後日公開予定</li>
+</ul>
+</li>
+</ul>
+<p>特質すべきは「複数の分割単位の併用」でしょう。Sudachiでは短い方から A, B, Cの3つの分割モードを提供しています。AはUniDic短単位相当、Cは固有表現相当、BはA, Cの中間的な単位となっており、以下のように同じ「選挙管理委員会」という単語でも形態素が異なることが確認できます。これはSudachi特有の特長になります。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> sudachipy <span style="color:#f92672">import</span> tokenizer
+<span style="color:#f92672">from</span> sudachipy <span style="color:#f92672">import</span> dictionary
+
+tokenizer_obj <span style="color:#f92672">=</span> dictionary<span style="color:#f92672">.</span>Dictionary()<span style="color:#f92672">.</span>create()
+
+mode <span style="color:#f92672">=</span> tokenizer<span style="color:#f92672">.</span>Tokenizer<span style="color:#f92672">.</span>SplitMode<span style="color:#f92672">.</span>A
+[m<span style="color:#f92672">.</span>normalized_form() <span style="color:#66d9ef">for</span> m <span style="color:#f92672">in</span> tokenizer_obj<span style="color:#f92672">.</span>tokenize(<span style="color:#e6db74">&#34;選挙管理委員会&#34;</span>, mode)]
+</code></pre></div><pre><code>## ['選挙', '管理', '委員', '会']
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">mode <span style="color:#f92672">=</span> tokenizer<span style="color:#f92672">.</span>Tokenizer<span style="color:#f92672">.</span>SplitMode<span style="color:#f92672">.</span>B
+[m<span style="color:#f92672">.</span>normalized_form() <span style="color:#66d9ef">for</span> m <span style="color:#f92672">in</span> tokenizer_obj<span style="color:#f92672">.</span>tokenize(<span style="color:#e6db74">&#34;選挙管理委員会&#34;</span>, mode)]
+</code></pre></div><pre><code>## ['選挙', '管理', '委員会']
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">mode <span style="color:#f92672">=</span> tokenizer<span style="color:#f92672">.</span>Tokenizer<span style="color:#f92672">.</span>SplitMode<span style="color:#f92672">.</span>C
+[m<span style="color:#f92672">.</span>normalized_form() <span style="color:#66d9ef">for</span> m <span style="color:#f92672">in</span> tokenizer_obj<span style="color:#f92672">.</span>tokenize(<span style="color:#e6db74">&#34;選挙管理委員会&#34;</span>, mode)]
+</code></pre></div><pre><code>## ['選挙管理委員会']
+</code></pre><p>また、辞書についてもUniDicとNEologdをベースとして更新が続けられており、新語にも対応できます。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">mode <span style="color:#f92672">=</span> tokenizer<span style="color:#f92672">.</span>Tokenizer<span style="color:#f92672">.</span>SplitMode<span style="color:#f92672">.</span>C
+[m<span style="color:#f92672">.</span>normalized_form() <span style="color:#66d9ef">for</span> m <span style="color:#f92672">in</span> tokenizer_obj<span style="color:#f92672">.</span>tokenize(<span style="color:#e6db74">&#34;新型コロナウイルス&#34;</span>, mode)]
+</code></pre></div><pre><code>## ['新型コロナウイルス']
+</code></pre><p>個人的に素晴らしいと思うポイントは表記正規化や文字正規化ができると言うことです。以下のように旧字等で同じ意味だが表記が異なる単語や英語/日本語、書き間違え等を正規化する機能があります。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">tokenizer_obj<span style="color:#f92672">.</span>tokenize(<span style="color:#e6db74">&#34;附属&#34;</span>, mode)[<span style="color:#ae81ff">0</span>]<span style="color:#f92672">.</span>normalized_form()
+</code></pre></div><pre><code>## '付属'
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">tokenizer_obj<span style="color:#f92672">.</span>tokenize(<span style="color:#e6db74">&#34;SUMMER&#34;</span>, mode)[<span style="color:#ae81ff">0</span>]<span style="color:#f92672">.</span>normalized_form()
+</code></pre></div><pre><code>## 'サマー'
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">tokenizer_obj<span style="color:#f92672">.</span>tokenize(<span style="color:#e6db74">&#34;シュミレーション&#34;</span>, mode)[<span style="color:#ae81ff">0</span>]<span style="color:#f92672">.</span>normalized_form()
+</code></pre></div><pre><code>## 'シミュレーション'
+</code></pre><p>このような高性能な形態素解析ツールが無償でしかも商用利用も可というところに驚きを隠せません。次回以降で説明しますが、このSudachiで形態素解析を行ったWord2vecモデルであるChiveも提供されています。</p>
+<p>説明が長くなりましたがSudachiでTokenizationを行いましょう。Sudachiは<code>Python</code>で使用することができます。説明が前後していますが、上記コードで行っているように<code>tokenizer</code>オブジェクトを作成し、<code>tokenize()</code>メソッドで文章をTokenizeします。Tokenizeされた結果は<code>MorphemeList</code>オブジェクトに格納されます。<code>MorphemeList</code>オブジェクトの各要素に対して<code>normalized_form()</code>メソッドを実行することで正規化された形態素を取得することができます。ここまでをやってみます。</p>
+<p>まず、サンプルデータを読み込みます。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> sudachipy <span style="color:#f92672">import</span> tokenizer
+<span style="color:#f92672">from</span> sudachipy <span style="color:#f92672">import</span> dictionary
+<span style="color:#f92672">from</span> sklearn.preprocessing <span style="color:#f92672">import</span> LabelEncoder
+<span style="color:#f92672">import</span> pandas <span style="color:#f92672">as</span> pd
+
+sample <span style="color:#f92672">=</span> pd<span style="color:#f92672">.</span>read_csv(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;C:\Users\hogehoge\景気ウオッチャー\生データ\watcher_2016.csv&#34;</span>,encoding<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;shift-jis&#34;</span>)
+sample <span style="color:#f92672">=</span> sample[(sample<span style="color:#f92672">.</span><span style="color:#960050;background-color:#1e0010">追加説明及び具体的状況の説明</span><span style="color:#f92672">==</span><span style="color:#e6db74">&#39;−&#39;</span>)<span style="color:#f92672">|</span>(sample<span style="color:#f92672">.</span><span style="color:#960050;background-color:#1e0010">追加説明及び具体的状況の説明</span><span style="color:#f92672">==</span><span style="color:#e6db74">&#39;＊&#39;</span>)<span style="color:#f92672">==</span>False<span style="color:#f92672">|</span>(sample<span style="color:#f92672">.</span><span style="color:#960050;background-color:#1e0010">景気の現状判断</span><span style="color:#f92672">==</span><span style="color:#e6db74">&#39;□&#39;</span>)]
+</code></pre></div><p>読み込んだ<code>sample</code>をtokenizerでToken化していきます。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">tokenizer_obj <span style="color:#f92672">=</span> dictionary<span style="color:#f92672">.</span>Dictionary()<span style="color:#f92672">.</span>create()
+mode <span style="color:#f92672">=</span> tokenizer<span style="color:#f92672">.</span>Tokenizer<span style="color:#f92672">.</span>SplitMode<span style="color:#f92672">.</span>C
+tokenizer_sudachi <span style="color:#f92672">=</span> <span style="color:#66d9ef">lambda</span> t: [m<span style="color:#f92672">.</span>normalized_form() <span style="color:#66d9ef">for</span> m <span style="color:#f92672">in</span> tokenizer_obj<span style="color:#f92672">.</span>tokenize(t, mode)]
+tokens <span style="color:#f92672">=</span> sample<span style="color:#f92672">.</span><span style="color:#960050;background-color:#1e0010">追加説明及び具体的状況の説明</span><span style="color:#f92672">.</span>map(tokenizer_sudachi)
+tokens<span style="color:#f92672">.</span>head()
+</code></pre></div><pre><code>## 0    [・, 店頭, の, 取り扱い, 額, が, 前年, 比, 約, 120, %, と, 好調...
+## 1    [・, 当, 施設, の, 利用, 乗降, 客数, は, 1, 月, 26, 日, 時点, ...
+## 2    [・, 年, 末, の, 消費, の, 反動, も, 有る, て, か, 、, 客, の, ...
+## 3    [・, 外国人, 観光客, に, よる, 売り上げ, が, 前年, 比, 152, %, と...
+## 4    [・, 積極的, だ, 景気, が, 上向き, に, 有る, と, まで, は, 言う, 辛...
+## Name: 追加説明及び具体的状況の説明, dtype: object
+</code></pre><p>Tokenizeすることができました。
+WordCloudを作成するために<code>Python</code>の<code>wordcloud</code>を用います。これは引数にTokenをスペースで区切った文字列を与える必要があるため、その整形を行います。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">word_lists <span style="color:#f92672">=</span> []
+<span style="color:#66d9ef">for</span> token <span style="color:#f92672">in</span> tokens:
+  <span style="color:#66d9ef">for</span> word <span style="color:#f92672">in</span> token:
+    word_lists<span style="color:#f92672">.</span>append(word)
+word_chain <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39; &#39;</span><span style="color:#f92672">.</span>join(word_lists)
+</code></pre></div><p>では、wordcloudを作成していきます。日本語表示では文字化けが発生するため、<a href="https://moji.or.jp/ipafont/ipaex00401/" target="_blank" rel="noopener">こちら</a>でフォント「IPAexゴシック」を予めダウンロードし、フォルダに保存したものを読み込んでいます。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">font_path <span style="color:#f92672">=</span> <span style="color:#e6db74">r</span><span style="color:#e6db74">&#39;C:\Users\hogehoge\Watcher\ipaexg.ttf&#39;</span>
+</code></pre></div><p><code>wordcloud.WordCloud.genetate()</code>でWordCloudを作成します。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> wordcloud <span style="color:#f92672">import</span> WordCloud
+<span style="color:#f92672">import</span> matplotlib.pyplot <span style="color:#f92672">as</span> plt
+wc <span style="color:#f92672">=</span> WordCloud(background_color<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;white&#34;</span>, font_path<span style="color:#f92672">=</span>font_path, max_words<span style="color:#f92672">=</span><span style="color:#ae81ff">100</span>, max_font_size<span style="color:#f92672">=</span><span style="color:#ae81ff">100</span>, contour_width<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>, contour_color<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;steelblue&#39;</span>)
+wc<span style="color:#f92672">.</span>generate(word_chain)
+plt<span style="color:#f92672">.</span>figure(figsize<span style="color:#f92672">=</span>(<span style="color:#ae81ff">12</span>,<span style="color:#ae81ff">10</span>))
+plt<span style="color:#f92672">.</span>imshow(wc, cmap<span style="color:#f92672">=</span>plt<span style="color:#f92672">.</span>cm<span style="color:#f92672">.</span>gray, interpolation<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;bilinear&#34;</span>)
+plt<span style="color:#f92672">.</span>axis(<span style="color:#e6db74">&#34;off&#34;</span>)
+plt<span style="color:#f92672">.</span>show()
+</code></pre></div><p><img src="../../wordcloud.png" alt="alt text"></p>
+<p>助詞や「為る」、「有る」、「居る」、「成る」など特徴のない語句が頻出しており、意味のある可視化になっていません。これらを<code>word_chain</code>から除き、もう一度実行してみます。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">stopwords <span style="color:#f92672">=</span> [<span style="color:#e6db74">&#34;見る&#34;</span>,<span style="color:#e6db74">&#34;為る&#34;</span>,<span style="color:#e6db74">&#34;有る&#34;</span>,<span style="color:#e6db74">&#34;居る&#34;</span>,<span style="color:#e6db74">&#34;成る&#34;</span>,<span style="color:#e6db74">&#34;は&#34;</span>,<span style="color:#e6db74">&#34;に&#34;</span>,<span style="color:#e6db74">&#34;よる&#34;</span>,<span style="color:#e6db74">&#34;た&#34;</span>,<span style="color:#e6db74">&#34;が&#34;</span>,<span style="color:#e6db74">&#34;て&#34;</span>,<span style="color:#e6db74">&#34;だ&#34;</span>,<span style="color:#e6db74">&#34;など&#34;</span>,<span style="color:#e6db74">&#34;と&#34;</span>,<span style="color:#e6db74">&#34;も&#34;</span>,<span style="color:#e6db74">&#34;の&#34;</span>,<span style="color:#e6db74">&#34;や&#34;</span>,<span style="color:#e6db74">&#34;で&#34;</span>,<span style="color:#e6db74">&#34;から&#34;</span>,<span style="color:#e6db74">&#34;を&#34;</span>,<span style="color:#e6db74">&#34;おる&#34;</span>,<span style="color:#e6db74">&#34;より&#34;</span>,<span style="color:#e6db74">&#34;等&#34;</span>]
+<span style="color:#66d9ef">for</span> stopword <span style="color:#f92672">in</span> stopwords:
+  word_chain <span style="color:#f92672">=</span> word_chain<span style="color:#f92672">.</span>replace(stopword, <span style="color:#e6db74">&#34;&#34;</span>)
+wc<span style="color:#f92672">.</span>generate(word_chain)
+plt<span style="color:#f92672">.</span>figure(figsize<span style="color:#f92672">=</span>(<span style="color:#ae81ff">12</span>,<span style="color:#ae81ff">10</span>))
+plt<span style="color:#f92672">.</span>imshow(wc, cmap<span style="color:#f92672">=</span>plt<span style="color:#f92672">.</span>cm<span style="color:#f92672">.</span>gray, interpolation<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;bilinear&#34;</span>)
+plt<span style="color:#f92672">.</span>axis(<span style="color:#e6db74">&#34;off&#34;</span>)
+plt<span style="color:#f92672">.</span>show()
+</code></pre></div><p><img src="../../wordcloud2.png" alt="alt text"></p>
+<p>先ほどよりは意味のある可視化になっています。「来客数」、「売り上げ」、「販売量」などやはり小売店関連のワードが頻出しているようです。これは回答者属性とも整合的です。</p>
 <h2 id="4-終わりに">4. 終わりに</h2>
 <p>これから各回で以下の手法を用いた予測モデルの構築を行っていきます。次回は、辞書ベースに基づくセンチメントの抽出を行い、文書のポジネガ分類を行います。</p>
 <ol>
@@ -1643,6 +1761,8 @@ stringr<span style="color:#f92672">::</span><span style="color:#a6e22e">str_remo
     <h3>関連項目</h3>
     <ul>
       
+      <li><a href="../../post/post28/">【徹底比較】センチメントスコア算出手法！！ - 第3回</a></li>
+      
       <li><a href="../../post/post27/">【徹底比較】センチメントスコア算出手法！！ - 第2回</a></li>
       
       <li><a href="../../post/post20/">PytorchのPre-trainedモデルで馬体写真の背景を自動トリミングする</a></li>
@@ -1650,8 +1770,6 @@ stringr<span style="color:#f92672">::</span><span style="color:#a6e22e">str_remo
       <li><a href="../../post/post16/">LightGBMを使用して競馬結果を予想してみる</a></li>
       
       <li><a href="../../post/post15/">Pythonのpandas_datareaderから色々なデータを取得してみる</a></li>
-      
-      <li><a href="../../post/post22/">OECD.orgからマクロパネルデータをAPIで取得する</a></li>
       
     </ul>
   </div>
