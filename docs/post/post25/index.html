@@ -1477,7 +1477,7 @@ plt<span style="color:#f92672">.</span>figure(figsize<span style="color:#f92672"
 plt<span style="color:#f92672">.</span>imshow(wc, cmap<span style="color:#f92672">=</span>plt<span style="color:#f92672">.</span>cm<span style="color:#f92672">.</span>gray, interpolation<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;bilinear&#34;</span>)
 plt<span style="color:#f92672">.</span>axis(<span style="color:#e6db74">&#34;off&#34;</span>)
 plt<span style="color:#f92672">.</span>show()
-</code></pre></div><p><img src="../../wordcloud.png" alt="alt text"></p>
+</code></pre></div><p><img src="../../post/post25/wordcloud.png" alt="alt text"></p>
 <p>助詞や「為る」、「有る」、「居る」、「成る」など特徴のない語句が頻出しており、意味のある可視化になっていません。これらを<code>word_chain</code>から除き、もう一度実行してみます。</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">stopwords <span style="color:#f92672">=</span> [<span style="color:#e6db74">&#34;見る&#34;</span>,<span style="color:#e6db74">&#34;為る&#34;</span>,<span style="color:#e6db74">&#34;有る&#34;</span>,<span style="color:#e6db74">&#34;居る&#34;</span>,<span style="color:#e6db74">&#34;成る&#34;</span>,<span style="color:#e6db74">&#34;は&#34;</span>,<span style="color:#e6db74">&#34;に&#34;</span>,<span style="color:#e6db74">&#34;よる&#34;</span>,<span style="color:#e6db74">&#34;た&#34;</span>,<span style="color:#e6db74">&#34;が&#34;</span>,<span style="color:#e6db74">&#34;て&#34;</span>,<span style="color:#e6db74">&#34;だ&#34;</span>,<span style="color:#e6db74">&#34;など&#34;</span>,<span style="color:#e6db74">&#34;と&#34;</span>,<span style="color:#e6db74">&#34;も&#34;</span>,<span style="color:#e6db74">&#34;の&#34;</span>,<span style="color:#e6db74">&#34;や&#34;</span>,<span style="color:#e6db74">&#34;で&#34;</span>,<span style="color:#e6db74">&#34;から&#34;</span>,<span style="color:#e6db74">&#34;を&#34;</span>,<span style="color:#e6db74">&#34;おる&#34;</span>,<span style="color:#e6db74">&#34;より&#34;</span>,<span style="color:#e6db74">&#34;等&#34;</span>]
 <span style="color:#66d9ef">for</span> stopword <span style="color:#f92672">in</span> stopwords:
@@ -1487,7 +1487,7 @@ plt<span style="color:#f92672">.</span>figure(figsize<span style="color:#f92672"
 plt<span style="color:#f92672">.</span>imshow(wc, cmap<span style="color:#f92672">=</span>plt<span style="color:#f92672">.</span>cm<span style="color:#f92672">.</span>gray, interpolation<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;bilinear&#34;</span>)
 plt<span style="color:#f92672">.</span>axis(<span style="color:#e6db74">&#34;off&#34;</span>)
 plt<span style="color:#f92672">.</span>show()
-</code></pre></div><p><img src="../../wordcloud2.png" alt="alt text"></p>
+</code></pre></div><p><img src="../../post/post25/wordcloud2.png" alt="alt text"></p>
 <p>先ほどよりは意味のある可視化になっています。「来客数」、「売り上げ」、「販売量」などやはり小売店関連のワードが頻出しているようです。これは回答者属性とも整合的です。</p>
 <h2 id="4-終わりに">4. 終わりに</h2>
 <p>これから各回で以下の手法を用いた予測モデルの構築を行っていきます。次回は、辞書ベースに基づくセンチメントの抽出を行い、文書のポジネガ分類を行います。</p>

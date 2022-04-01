@@ -360,7 +360,7 @@ plt.axis("off")
 plt.show()
 ```
 
-![alt text](/wordcloud.png)
+![alt text](/post/post25/wordcloud.png)
 
 助詞や「為る」、「有る」、「居る」、「成る」など特徴のない語句が頻出しており、意味のある可視化になっていません。これらを`word_chain`から除き、もう一度実行してみます。
 
@@ -374,7 +374,7 @@ plt.imshow(wc, cmap=plt.cm.gray, interpolation="bilinear")
 plt.axis("off")
 plt.show()
 ```
-![alt text](/wordcloud2.png)
+![alt text](/post/post25/wordcloud2.png)
 
 先ほどよりは意味のある可視化になっています。「来客数」、「売り上げ」、「販売量」などやはり小売店関連のワードが頻出しているようです。これは回答者属性とも整合的です。
 
