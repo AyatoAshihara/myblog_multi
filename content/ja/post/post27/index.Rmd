@@ -102,8 +102,9 @@ filepath <- r"(C:\Users\aashi\Desktop\TextMining\景気ウオッチャー\生デ
 library(magrittr)
 files <- stringr::str_c(filepath, list.files(filepath, pattern = "*.csv"))
 sample <- readr::read_csv(files,locale=readr::locale(encoding="Shift-JIS"),show_col_types = FALSE)
-sample <- sample[sample$追加説明及び具体的状況の説明!="-"|sample$追加説明及び具体的状況の説明!="*",]
-sample$景気の現状判断 <- factor(sample$景気の現状判断, levels=c("◎","○","□","▲","×"))
+sample <- sample[sample$追加説明及び具体的状況の説明!="−"|sample$追加説明及び具体的状況の説明!="＊",]
+sample <- sample[sample$景気の現状判断!="□",]
+sample$景気の現状判断 <- factor(sample$景気の現状判断, levels=c("◎","○","▲","×"))
 ```
 
 次に、`sudachi`を用いてテキストデータのToken化を行います。`R`には`sudachi`を使えるパッケージが存在しないので、Pythonパッケージの`sudachipy`を`reticulate`で呼び出して使用します。

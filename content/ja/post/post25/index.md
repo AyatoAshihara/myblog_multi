@@ -96,9 +96,17 @@ codefolding_show: "hide"
 ご参考までに2016年1月調査のサンプルデータをお見せします。
 
 
+
+
+```r
+filePath <- r"(C:\Users\hogehoge\Watcher\RawData\watcher_2016.csv)"
+```
+
+
+
 ```r
 library(magrittr)
-sample <- readr::read_csv(r"(C:\Users\aashi\Desktop\TextMining\景気ウオッチャー\生データ\watcher_2016.csv)",locale=readr::locale(encoding="SHIFT-JIS"), show_col_types=FALSE)
+sample <- readr::read_csv(filePath,locale=readr::locale(encoding="SHIFT-JIS"), show_col_types=FALSE)
 options(kableExtra.html.bsTable = TRUE)
 knitr::kable(head(sample)) %>% 
   kableExtra::kable_styling(bootstrap_options = c("striped"))
@@ -170,7 +178,7 @@ knitr::kable(head(sample)) %>%
 ### 問題設定
 
 今回の問題設定は、「追加説明及び具体的状況の説明」に記載されているテキスト情報をもとに、「景気の現状判断」を予測するタスクになります。
-「景気の現状判断」は「良い」、「やや良い」、「どちらとも言えない」、「やや悪い」、「悪い」となっており、これを2値分類問題にして学習を行います(どちらとも言えないはネガティブに分類)。
+「景気の現状判断」は「良い(◎)」、「やや良い(○)」、「変わらない(■)」、「やや悪い(▲)」、「悪い(×)」となっており、これを2値分類問題にして学習を行います(変わらない(■)はサンプルから除外)。
 
 ## 2. テキスト解析手法の進化の譜系
 
@@ -784,7 +792,7 @@ from sudachipy import dictionary
 from sklearn.preprocessing import LabelEncoder
 import pandas as pd
 
-sample = pd.read_csv(r"C:\Users\hogehoge\景気ウオッチャー\生データ\watcher_2016.csv",encoding="shift-jis")
+sample = pd.read_csv(r"C:\Users\hogehoge\Watcher\RawData\watcher_2016.csv",encoding="shift-jis")
 sample = sample[(sample.追加説明及び具体的状況の説明=='−')|(sample.追加説明及び具体的状況の説明=='＊')==False|(sample.景気の現状判断=='□')]
 ```
 

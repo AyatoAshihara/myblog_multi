@@ -1007,8 +1007,9 @@
 </code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">library</span>(magrittr)
 files <span style="color:#f92672">&lt;-</span> stringr<span style="color:#f92672">::</span><span style="color:#a6e22e">str_c</span>(filepath, <span style="color:#a6e22e">list.files</span>(filepath, pattern <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;*.csv&#34;</span>))
 sample <span style="color:#f92672">&lt;-</span> readr<span style="color:#f92672">::</span><span style="color:#a6e22e">read_csv</span>(files,locale<span style="color:#f92672">=</span>readr<span style="color:#f92672">::</span><span style="color:#a6e22e">locale</span>(encoding<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Shift-JIS&#34;</span>),show_col_types <span style="color:#f92672">=</span> <span style="color:#66d9ef">FALSE</span>)
-sample <span style="color:#f92672">&lt;-</span> sample[sample<span style="color:#f92672">$</span>追加説明及び具体的状況の説明<span style="color:#f92672">!=</span><span style="color:#e6db74">&#34;-&#34;</span><span style="color:#f92672">|</span>sample<span style="color:#f92672">$</span>追加説明及び具体的状況の説明<span style="color:#f92672">!=</span><span style="color:#e6db74">&#34;*&#34;</span>,]
-sample<span style="color:#f92672">$</span>景気の現状判断 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">factor</span>(sample<span style="color:#f92672">$</span>景気の現状判断, levels<span style="color:#f92672">=</span><span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;◎&#34;</span>,<span style="color:#e6db74">&#34;○&#34;</span>,<span style="color:#e6db74">&#34;□&#34;</span>,<span style="color:#e6db74">&#34;▲&#34;</span>,<span style="color:#e6db74">&#34;×&#34;</span>))
+sample <span style="color:#f92672">&lt;-</span> sample[sample<span style="color:#f92672">$</span>追加説明及び具体的状況の説明<span style="color:#f92672">!=</span><span style="color:#e6db74">&#34;−&#34;</span><span style="color:#f92672">|</span>sample<span style="color:#f92672">$</span>追加説明及び具体的状況の説明<span style="color:#f92672">!=</span><span style="color:#e6db74">&#34;＊&#34;</span>,]
+sample <span style="color:#f92672">&lt;-</span> sample[sample<span style="color:#f92672">$</span>景気の現状判断<span style="color:#f92672">!=</span><span style="color:#e6db74">&#34;□&#34;</span>,]
+sample<span style="color:#f92672">$</span>景気の現状判断 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">factor</span>(sample<span style="color:#f92672">$</span>景気の現状判断, levels<span style="color:#f92672">=</span><span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;◎&#34;</span>,<span style="color:#e6db74">&#34;○&#34;</span>,<span style="color:#e6db74">&#34;▲&#34;</span>,<span style="color:#e6db74">&#34;×&#34;</span>))
 </code></pre></div><p>次に、<code>sudachi</code>を用いてテキストデータのToken化を行います。<code>R</code>には<code>sudachi</code>を使えるパッケージが存在しないので、Pythonパッケージの<code>sudachipy</code>を<code>reticulate</code>で呼び出して使用します。</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">stopwords_path <span style="color:#f92672">&lt;-</span> r<span style="color:#e6db74">&#34;(C:\Users\hogehoge\Watcher\marimo-master\yaml\stopwords_ja.yml)&#34;</span>
 </code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># sudachiによる形態素解析→Token化</span>
@@ -1115,7 +1116,7 @@ score_dict
 ・店頭の取扱額が前年比約120％と好調であった。
 </td>
 <td style="text-align:right;">
-1.0918056
+1.1372119
 </td>
 </tr>
 <tr>
@@ -1138,7 +1139,7 @@ score_dict
 ・当施設の利用乗降客数は１月26日時点で前年比130.1％となっており、１月としては過去最高の利用乗降客数になることが確定したほどの入込状況にある。
 </td>
 <td style="text-align:right;">
--0.7191220
+-0.7233374
 </td>
 </tr>
 <tr>
@@ -1161,7 +1162,7 @@ score_dict
 ・年末の消費の反動もあってか、客の動きがやや鈍い。ただ、相変わらず高額商材が売れているということもあり、売上はそれなりの金額をキープしている。
 </td>
 <td style="text-align:right;">
--0.9872586
+-0.9988214
 </td>
 </tr>
 <tr>
@@ -1184,7 +1185,7 @@ score_dict
 ・外国人観光客による売上が前年比152％と好調を継続しているほか、来客数が前年比102％と好調を維持している。月半ばに停滞した売上も下旬に入ってから回復傾向にあり、定価品、バーゲン品とも前年を上回っている。
 </td>
 <td style="text-align:right;">
-1.0711102
+1.1159495
 </td>
 </tr>
 <tr>
@@ -1207,7 +1208,7 @@ score_dict
 ・積極的に景気が上向きにあるとまではいいづらいものの、３か月前との比較では改善している。
 </td>
 <td style="text-align:right;">
-3.1257848
+3.2269249
 </td>
 </tr>
 <tr>
@@ -1230,12 +1231,12 @@ score_dict
 ・気温が平年並みとなり、これまでの温暖、少雪の状態がみられなくなってきたことで、防寒衣料、雑貨商材を中心に多少改善の傾向がみられる。
 </td>
 <td style="text-align:right;">
-0.0254686
+0.0416559
 </td>
 </tr>
 </tbody>
 </table>
-<p>2行目の文章は明らかにポジティブですが、なにが影響したのかネガティブ寄りの判定になっていますね。また、顕著なのが3行目で「鈍い」という単語に引っ張られ、ネガティブなセンチメントを抽出しやすくなっています。この文章の本意は「ただ・・・」という逆接以降の文章ですが、文脈や語順が捉えられないために正しい情報を引き出すことができていません。5行目は「積極的」、「上向き」、「改善」といった単語を検知し、かなりポジティブなセンチメントがあるという判定をしていますが、「積極的に景気が上向きとは<strong>いいづらい</strong>*」というネガティブな文脈を捉え切れておらず、過大評価となっています。</p>
+<p>2行目の文章は明らかにポジティブですが、なにが影響したのかネガティブ寄りの判定になっていますね。また、顕著なのが3行目で「鈍い」という単語に引っ張られ、ネガティブなセンチメントを抽出しやすくなっています。この文章の本意は「ただ・・・」という逆接以降の文章ですが、文脈や語順が捉えられないために正しい情報を引き出すことができていません。5行目は「積極的」、「上向き」、「改善」といった単語を検知し、かなりポジティブなセンチメントがあるという判定をしていますが、「積極的に景気が上向きとは<strong>いいづらい</strong>」というネガティブな文脈を捉え切れておらず、過大評価となっています。</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># 結果の可視化</span>
 <span style="color:#a6e22e">library</span>(ggplot2)
 <span style="color:#a6e22e">ggplot</span>(sample_with_score_dict, <span style="color:#a6e22e">aes</span>(x<span style="color:#f92672">=</span>景気の現状判断,y<span style="color:#f92672">=</span>score_dict)) <span style="color:#f92672">+</span> <span style="color:#a6e22e">geom_boxplot</span>()
@@ -1320,7 +1321,7 @@ score_dict
 ・店頭の取扱額が前年比約120％と好調であった。
 </td>
 <td style="text-align:right;">
-0.1052126
+0.1641589
 </td>
 </tr>
 <tr>
@@ -1343,7 +1344,7 @@ score_dict
 ・当施設の利用乗降客数は１月26日時点で前年比130.1％となっており、１月としては過去最高の利用乗降客数になることが確定したほどの入込状況にある。
 </td>
 <td style="text-align:right;">
--0.1025889
+-0.0770581
 </td>
 </tr>
 <tr>
@@ -1366,7 +1367,7 @@ score_dict
 ・年末の消費の反動もあってか、客の動きがやや鈍い。ただ、相変わらず高額商材が売れているということもあり、売上はそれなりの金額をキープしている。
 </td>
 <td style="text-align:right;">
--0.8938789
+-0.8631460
 </td>
 </tr>
 <tr>
@@ -1389,7 +1390,7 @@ score_dict
 ・外国人観光客による売上が前年比152％と好調を継続しているほか、来客数が前年比102％と好調を維持している。月半ばに停滞した売上も下旬に入ってから回復傾向にあり、定価品、バーゲン品とも前年を上回っている。
 </td>
 <td style="text-align:right;">
-1.0201638
+1.0510362
 </td>
 </tr>
 <tr>
@@ -1412,7 +1413,7 @@ score_dict
 ・積極的に景気が上向きにあるとまではいいづらいものの、３か月前との比較では改善している。
 </td>
 <td style="text-align:right;">
-2.4385447
+2.3897946
 </td>
 </tr>
 <tr>
@@ -1435,7 +1436,7 @@ score_dict
 ・気温が平年並みとなり、これまでの温暖、少雪の状態がみられなくなってきたことで、防寒衣料、雑貨商材を中心に多少改善の傾向がみられる。
 </td>
 <td style="text-align:right;">
-0.7675009
+0.8152262
 </td>
 </tr>
 </tbody>

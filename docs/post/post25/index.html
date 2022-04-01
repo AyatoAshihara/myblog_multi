@@ -880,8 +880,9 @@
 </li>
 </ol>
 <p>ご参考までに2016年1月調査のサンプルデータをお見せします。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">library</span>(magrittr)
-sample <span style="color:#f92672">&lt;-</span> readr<span style="color:#f92672">::</span><span style="color:#a6e22e">read_csv</span>(r<span style="color:#e6db74">&#34;(C:\Users\aashi\Desktop\TextMining\景気ウオッチャー\生データ\watcher_2016.csv)&#34;</span>,locale<span style="color:#f92672">=</span>readr<span style="color:#f92672">::</span><span style="color:#a6e22e">locale</span>(encoding<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;SHIFT-JIS&#34;</span>), show_col_types<span style="color:#f92672">=</span><span style="color:#66d9ef">FALSE</span>)
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">filePath <span style="color:#f92672">&lt;-</span> r<span style="color:#e6db74">&#34;(C:\Users\hogehoge\Watcher\RawData\watcher_2016.csv)&#34;</span>
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">library</span>(magrittr)
+sample <span style="color:#f92672">&lt;-</span> readr<span style="color:#f92672">::</span><span style="color:#a6e22e">read_csv</span>(filePath,locale<span style="color:#f92672">=</span>readr<span style="color:#f92672">::</span><span style="color:#a6e22e">locale</span>(encoding<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;SHIFT-JIS&#34;</span>), show_col_types<span style="color:#f92672">=</span><span style="color:#66d9ef">FALSE</span>)
 <span style="color:#a6e22e">options</span>(kableExtra.html.bsTable <span style="color:#f92672">=</span> <span style="color:#66d9ef">TRUE</span>)
 knitr<span style="color:#f92672">::</span><span style="color:#a6e22e">kable</span>(<span style="color:#a6e22e">head</span>(sample)) <span style="color:#f92672">%&gt;%</span> 
   kableExtra<span style="color:#f92672">::</span><span style="color:#a6e22e">kable_styling</span>(bootstrap_options <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;striped&#34;</span>))
@@ -949,7 +950,7 @@ knitr<span style="color:#f92672">::</span><span style="color:#a6e22e">kable</spa
 </table>
 <h3 id="問題設定">問題設定</h3>
 <p>今回の問題設定は、「追加説明及び具体的状況の説明」に記載されているテキスト情報をもとに、「景気の現状判断」を予測するタスクになります。
-「景気の現状判断」は「良い」、「やや良い」、「どちらとも言えない」、「やや悪い」、「悪い」となっており、これを2値分類問題にして学習を行います(どちらとも言えないはネガティブに分類)。</p>
+「景気の現状判断」は「良い(◎)」、「やや良い(○)」、「変わらない(■)」、「やや悪い(▲)」、「悪い(×)」となっており、これを2値分類問題にして学習を行います(変わらない(■)はサンプルから除外)。</p>
 <h2 id="2-テキスト解析手法の進化の譜系">2. テキスト解析手法の進化の譜系</h2>
 <p>上記問題設定を解くためには、テキスト情報から感性情報(センチメント)を抽出する必要があります。私が調べた浅い知識によると、感性情報の抽出方法には以下のような手法があります。</p>
 <ol>
@@ -1445,7 +1446,7 @@ mode <span style="color:#f92672">=</span> tokenizer<span style="color:#f92672">.
 <span style="color:#f92672">from</span> sklearn.preprocessing <span style="color:#f92672">import</span> LabelEncoder
 <span style="color:#f92672">import</span> pandas <span style="color:#f92672">as</span> pd
 
-sample <span style="color:#f92672">=</span> pd<span style="color:#f92672">.</span>read_csv(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;C:\Users\hogehoge\景気ウオッチャー\生データ\watcher_2016.csv&#34;</span>,encoding<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;shift-jis&#34;</span>)
+sample <span style="color:#f92672">=</span> pd<span style="color:#f92672">.</span>read_csv(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;C:\Users\hogehoge\Watcher\RawData\watcher_2016.csv&#34;</span>,encoding<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;shift-jis&#34;</span>)
 sample <span style="color:#f92672">=</span> sample[(sample<span style="color:#f92672">.</span><span style="color:#960050;background-color:#1e0010">追加説明及び具体的状況の説明</span><span style="color:#f92672">==</span><span style="color:#e6db74">&#39;−&#39;</span>)<span style="color:#f92672">|</span>(sample<span style="color:#f92672">.</span><span style="color:#960050;background-color:#1e0010">追加説明及び具体的状況の説明</span><span style="color:#f92672">==</span><span style="color:#e6db74">&#39;＊&#39;</span>)<span style="color:#f92672">==</span>False<span style="color:#f92672">|</span>(sample<span style="color:#f92672">.</span><span style="color:#960050;background-color:#1e0010">景気の現状判断</span><span style="color:#f92672">==</span><span style="color:#e6db74">&#39;□&#39;</span>)]
 </code></pre></div><p>読み込んだ<code>sample</code>をtokenizerでToken化していきます。</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">tokenizer_obj <span style="color:#f92672">=</span> dictionary<span style="color:#f92672">.</span>Dictionary()<span style="color:#f92672">.</span>create()

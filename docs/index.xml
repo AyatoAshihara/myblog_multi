@@ -101,28 +101,35 @@ $$&lt;/p&gt;
 &lt;p&gt;$$
 P(X|Y) = \Pi_{i=1}^N P(x_i|Y)
 $$&lt;/p&gt;
-&lt;p&gt;では、上記の条件付確率をどのように求めるかに話を移しましょう。今、学習データセットとして、&lt;/p&gt;
+&lt;p&gt;では、上記の条件付確率をどのように求めるかに話を移しましょう。今、$P(・)$のそれぞれにとある確率分布を仮定すると、$P(X|Y)P(Y)$は&lt;/p&gt;
+&lt;p&gt;$$
+P(Y;\Theta,\Phi)P(X;\Theta|Y) \tag{1}
+$$
+と書けます。ここで、$\Theta={\theta_1,\theta_2,&amp;hellip;,\theta_M}, \Phi={\phi_1,\phi_2,&amp;hellip;,\phi_L}$は確率分布のパラメータです。このパラメータを求めることができれば、(1)を計算でき、$X$が与えられた際の$Y={0,1}$のそれぞれの事後確率を求めることができます。 &lt;br&gt;
+このようにして、事後確率の推定問題を確率分布のパラメータの推定問題に帰着させることができました。具体的に、どのようにしてパラメータを推定するのかについて、見ていきましょう。&lt;br&gt;
+学習データセットとして、&lt;/p&gt;
 &lt;p&gt;$$
 {(S,T)} = (Y=S_1,X=T_1), (Y=S_2,X=T_2), &amp;hellip;,(Y=S_D,X=T_D)
 $$&lt;/p&gt;
-&lt;p&gt;が得られているとします。ここで、$D$はサンプルサイズです。また、$Y$は$1$の時にポジティブ、$0$の時にネガティブとし、独立を仮定します(つまり$S$は0,1の2値を取る)。今、$P(・)$にとある確率分布を仮定すると、${(S,T)}$が得られたもとでの事後分布は&lt;/p&gt;
+&lt;p&gt;が得られているとします。ここで、$D$はサンプルサイズです。また、$Y$は$1$の時にポジティブ、$0$の時にネガティブとし、独立を仮定します(つまり$S$は0,1の2値を取る)。最も望ましいパラメータ$\Phi$の値は、学習データセットの(1)の同時確率を最大にするパラメータを推定値として選択することにし、$\Theta$は事前にわかっている知識を用いて何らかの値を定めます。つまり、以下を最大にするということです。&lt;/p&gt;
 &lt;p&gt;$$
-M(\Theta,\Phi) = \Pi_{j=1}^{D}P(T_j;\Phi,\Theta|S_j)P(S_j;\Theta)
+M(\Theta,\Phi) = \Pi_{j=1}^{D}P(S_j;\Theta,\Phi)P(T_j;\Theta|S_j) \tag{2}
 $$&lt;/p&gt;
-&lt;p&gt;に比例します(ベイズの定理の分子を取り出した)。ここで、$\Theta={\theta_1,\theta2,&amp;hellip;,\theta_M}, \Phi={\phi_1,\phi_2,&amp;hellip;,\phi_L}$は事前分布と尤度の確率分布のパラメータです。$M(\Theta,\Phi)$はパラメータによってさまざまな値を取り、最も望ましいパラメータの値を特定してやる必要があります。ここでは、$\Phi$は学習データセットの事後分布を最大にするパラメータを推定値として選択することにし、$\Theta$は事前にわかっている知識を用いて何らかの値を定めます。$M(\Theta,\Phi)$は以下のように変形することができます。&lt;/p&gt;
+&lt;p&gt;(2)は以下のように変形することができます。&lt;/p&gt;
 &lt;div&gt;
 $$
 \begin{eqnarray*}
 M(\Theta,\Phi) &amp;=&amp; P(T_1;\Theta|0)P(0;\Theta,\Phi)×P(T_2;\Theta|0)P(0;\Theta,\Phi)×...\\
 &amp;&amp;×P(T_Q;\Theta|0)P(0;\Theta,\Phi)×P(T_{Q+1};\Theta|1)P(1;\Theta,\Phi) \\
-&amp;=&amp; \Pi_{k=0}^1P(k;\Theta,\Phi)\Pi_{i=1}^{Q_k}P(T_{Q_i};\Theta|k)
+&amp;=&amp; \Pi_{k=0}^1P(k;\Theta,\Phi)\Pi_{i=1}^{Q_k}P(T_{Q_i};\Theta|k) \tag{3}
 \end{eqnarray*}
 $$
 &lt;/div&gt;
-&lt;p&gt;ここで、$Q_k$は$Y=k$となる学習データの個数を表しています。&lt;br&gt;
-&lt;code&gt;\(\Theta,\Phi\)&lt;/code&gt;が既知で、学修データセット${(S,T)}$が手元にあれば、上記によって事後確率の分子を計算することができます。&lt;/p&gt;
+&lt;div&gt;
+ここで、$Q_k$は$Y=k$となる学習データの個数を表しています。  
+&lt;/div&gt;
 &lt;h3 id=&#34;確率分布のパラメータの推定方法&#34;&gt;確率分布のパラメータの推定方法&lt;/h3&gt;
-&lt;p&gt;次に気になるのは$\Theta, \Phi$をどのようにして計算するかです。これは確率分布を特定しないと進めないため、尤度には多項分布、事前分布にはディリクレ分布を仮定します。一般的な仮定だと思います。多項分布とは同時確率関数が以下のような確率分布です。&lt;/p&gt;
+&lt;p&gt;次に気になるのは$\Theta, \Phi$を具体的にどのようにして計算するかです。これは確率分布を特定しないと進めないため、尤度には多項分布、事前分布にはディリクレ分布を仮定します。一般的な仮定だと思います。多項分布とは確率密度関数が以下のような確率分布です。&lt;/p&gt;
 &lt;p&gt;$$
 P(n_1,&amp;hellip;,n_k) = \frac{n!}{n_1!&amp;hellip;n_k!}p_1^{n_1}&amp;hellip;p_k^{n_k}
 $$&lt;/p&gt;
@@ -135,20 +142,29 @@ $$&lt;/p&gt;
 &lt;p&gt;$$
 f(x_1,&amp;hellip;,x_n) = \frac{(\alpha-1)!}{(\alpha_{1}-1)!&amp;hellip;(\alpha_n-1)!}x_1^{\alpha_1-1}&amp;hellip;x_n^{\alpha_n-1}
 $$&lt;/p&gt;
-&lt;p&gt;となります。多項分布とディリクレ分布の確率分布を見比べると、とても似た形であることがわかります。両者は形は似ていますが、関数の入力が異なります。多項分布は各単語の生起確率がパラメータ、指数部分の出現回数が入力である一方、ディリクレ分布は生起確率が入力、出現回数がパラメータになります。また、ディリクレ分布は多項分布の共役事前分布となっています。 これらの確率分布を仮定すると、$M(\Theta,\Phi)$は以下のようになります。&lt;/p&gt;
+&lt;p&gt;となります。多項分布とディリクレ分布の確率分布を見比べると、とても似た形であることがわかります。両者は形は似ていますが、関数の入力が異なります。多項分布は各単語の生起確率がパラメータ、指数部分の出現回数が入力である一方、ディリクレ分布は生起確率が入力、出現回数がパラメータになります。また、ディリクレ分布は多項分布の共役事前分布となっています。 これらの確率分布を仮定すると、(3)は以下のようになります。&lt;/p&gt;
 &lt;div&gt;
 $$
 \begin{eqnarray*}
-M(\vec{\alpha};\vec{p}) &amp;\propto&amp; \frac{1}{Z(\vec{\alpha})}\Pi_{k=0}^1\Pi_{i=1}^Vp_{ki}^{\alpha_{i}-1}\Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}} \\
-&amp;=&amp; \frac{1}{Z(\vec{\alpha})}\Pi_{k=0}^1 \Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1}
+M(\vec{p};\vec{\alpha}) &amp;\propto&amp; \frac{1}{Z(\vec{\alpha})}\Pi_{k=0}^1\Pi_{i=1}^Vp_{k_i}^{\alpha_{i}-1}\Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}} \\
+&amp;=&amp; \frac{1}{Z(\vec{\alpha})}\Pi_{k=0}^1 \Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1} \tag{4}
 \end{eqnarray*}
 $$
 &lt;/div&gt;
-&lt;p&gt;ここで、$p_{k_j}$はポジティブ(またはネガティブ)である文書で単語$j$が出現する確率、$\tau_{k_j}=\sum_{i=1}^{Q_k}c_{kij}$はポジティブ(またはネガティブ)である教師データに含まれる単語$j$の総数、$\alpha_j$は単語$j$のディリクレ分布のパラメータ、$V$は単語数の上限を表しています。$Z(\vec{\alpha})$は確率の総和を1とするための正規化定数で、ベイズ統計学では分配関数と呼ばれます。ここから、パラメータ$p_{k_{j}}$の値を学習データセットの事後分布を最大にするパラメータを推定値として求めます。ただし、以下の制約条件があります。&lt;/p&gt;
+&lt;p&gt;ここで、$p_{k_j}$はポジティブ(またはネガティブ)である文書($k={1,0}$)で単語$j$が出現する確率、$\tau_{k_j}=\sum_{i=1}^{Q_k}c_{kij}$はポジティブ(またはネガティブ)である教師データに含まれる単語$j$の総数、$\alpha_j$は単語$j$のディリクレ分布のパラメータ、$V$は単語数の上限を表しています。$Z(\vec{\alpha})$は確率の総和を1とするための正規化定数で、ベイズ統計学では分配関数と呼ばれます。(3)に対応させると、$\Theta=\vec{p}={p_{k_j}}_{k_j=0_1}^{1_V}$、$\Phi=\vec{\alpha}={\alpha_j}_{j=1}^V$となります。ここから、パラメータ$p_{k_{j}}$の推定値を$M(\vec{\alpha};\vec{p})$を最大にする値として求めます。ただし、以下の制約条件があります。&lt;/p&gt;
 &lt;p&gt;$$
 \sum_{j=1}^V p_{k_{j}}=1
 $$&lt;/p&gt;
-&lt;p&gt;この制約の下で$M(\vec{p};\vec{\alpha})$を最大化するためにラグランジュ未定乗数法を使用します。&lt;/p&gt;
+&lt;p&gt;つまり、以下の最適化問題として定式化できます。&lt;/p&gt;
+&lt;div&gt;
+$$
+\begin{eqnarray*}
+\hat{p}_{k_j} &amp;=&amp; \underset{{p_{k_j}}}{\arg\max}~M(\vec{p};\vec{\alpha})~~s.t.\sum_{j=1}^V p_{k_{j}}=1\\
+&amp;=&amp;\underset{{p_{k_j}}}{\arg\max}~\frac{1}{Z(\vec{\alpha})}\Pi_{k=0}^1 \Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1}~~s.t.\sum_{j=1}^V p_{k_{j}}=1
+\end{eqnarray*}
+$$
+&lt;/div&gt;
+&lt;p&gt;この問題を解くためにラグランジュ未定乗数法を使用します。&lt;/p&gt;
 &lt;div&gt;
 $$
 \begin{eqnarray*}
@@ -156,7 +172,7 @@ L &amp;=&amp; (\frac{1}{Z(\vec{\alpha})}\Pi_{k=0}^1 \Pi_{j=1}^V p_{k_{j}}^{\tau_
 \frac{\partial L}{\partial p_{l_m}}
 &amp;=&amp; (\tau_{l_m}+\alpha_m-1)p_{l_m}^{\tau_{l_m}+\alpha_m-2}\frac{1}{Z(\vec{\alpha})}\Pi_{k\neq l}^1 \Pi_{j\neq m}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1}-\lambda \\
 &amp;=&amp; (\tau_{l_m}+\alpha_m-1)p_{l_m}^{-1}\frac{1}{Z(\vec{\alpha})}\Pi_{k=0}^1 \Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1}-\lambda \\
-p_{l_m} &amp;=&amp; \frac{(\tau_{l_m}+\alpha_m-1)}{\lambda}\frac{1}{Z(\vec{\alpha})}\Pi_{k=0}^1 \Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1} \tag{1}
+p_{l_m} &amp;=&amp; \frac{(\tau_{l_m}+\alpha_m-1)}{\lambda}\frac{1}{Z(\vec{\alpha})}\Pi_{k=0}^1 \Pi_{j=1}^V p_{k_{j}}^{\tau_{k_{j}}+\alpha_j-1} \tag{5}
 \end{eqnarray*}
 $$
 &lt;/div&gt;
@@ -169,10 +185,12 @@ $$
 \end{eqnarray*}
 $$
 &lt;/div&gt;
-&lt;p&gt;となるので、$\lambda$を(1)式に代入すると、&lt;/p&gt;
-&lt;p&gt;$$
-p_{l_m} = \frac{(\tau_{l_m}+\alpha_m-1)}{\sum_{m=1}^V (\tau_{l_m}+\alpha_m-1)} \tag{2}
-$$&lt;/p&gt;
+&lt;p&gt;となるので、$\lambda$を(5)式に代入すると、&lt;/p&gt;
+&lt;div&gt;
+$$
+\hat{p}_{l_m} = \frac{(\tau_{l_m}+\alpha_m-1)}{\sum_{m=1}^V (\tau_{l_m}+\alpha_m-1)} \tag{6}
+$$
+&lt;/div&gt;
 &lt;p&gt;と、事後分布を最大にするパラメータを求めることができます。$p_{l_m}$の直感的な解釈は、ポジティブ(ネガティブ)な文脈での単語$m$の出現頻度が全ての単語の出現頻度に占める割合です。ただ、それだけだと学習データに含まれない単語の$p_{l_m}$が０となってしまい、事後確率も0となってしまいます。上記では、事前分布にディリクレ分布を使用しているため、$p_{l_m}$が0にならないことがわかります($+\alpha_m$の部分)。所謂、頻度ゼロ問題を解決しています。&lt;/p&gt;
 &lt;p&gt;ところで、ディリクレ分布の$\alpha_m$は事前にわかっている知識を用いて何らかの値を定めると言っていましたが、どのようにして求めるのでしょうか？推定値を見ればわかる通り、$\alpha_m$は文書内における単語$m$の主観的な出現頻度を表していると解釈できます。ですが、正直$\alpha_m$に意味を持たせている人は少なく、先述した頻度ゼロ問題を解決できればよいと考えている人が大半ではないでしょうか。つまり、$\alpha_m=\alpha+1$($\alpha$は定数、例えば1とか)としてしまうということです。これは加算スクリーニングと呼ばれます。&lt;/p&gt;
 &lt;p&gt;さて、このようにして求めた分類器で分類を行います。思考実験として、1つの単語を除いて他の単語がニュートラルかつ各単語の出現頻度が全て同じ文書を考えます。この場合、その1つの単語が両文脈(ポジティブ/ネガティブ)のうち相対的に頻出である文脈へ分類されることになります。&lt;/p&gt;
@@ -190,8 +208,95 @@ $$&lt;/p&gt;
 &lt;li&gt;学習のための教師ありデータセットが必要&lt;/li&gt;
 &lt;li&gt;文章の語順を考慮できない(bag of words)&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;欠点の文章の語順を考慮できないという点は辞書ベース手法にも当てはまりますが、文章中の単語の発生回数を使用しているため、語順の関係性や係り受けといった情報を活用することができません。そのため、例えば「良くない」のような肯定語を否定するような言い回しは、ポジティブと分類されやすい可能性があります。&lt;/p&gt;
+&lt;p&gt;欠点の文章の語順を考慮できないという点は辞書ベース手法にも当てはまりますが、&lt;strong&gt;文章中の単語の発生回数を使用しているため、語順の関係性や係り受けといった情報を活用することができません&lt;/strong&gt;。そのため、例えば「良くない」のような肯定語を否定するような言い回しは、ポジティブと分類されやすい可能性があります。&lt;/p&gt;
 &lt;h2 id=&#34;2-ナイーブベイズ分類器の実践&#34;&gt;2. ナイーブベイズ分類器の実践&lt;/h2&gt;
+&lt;p&gt;ここからは、ナイーブベイズ分類器を用いて実際に分析をしていきます。学習データセットの景気ウオッチャー調査では、タクシー運転手や小売店の店主、旅館の経営者など景気に敏感な方々(景気ウオッチャー)に対して、5段階の景況感とその理由を毎月アンケートしています。5段階は、「良い(◎)」、「やや良い(○)」、「変わらない(■)」、「やや悪い(▲)」、「悪い(×)」となっています。&lt;br&gt;
+まずサンプルデータを読み込みます。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;filePath &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;r&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;C:\Users\hogehoge\Watchder\RawData\*.csv&amp;#34;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; pandas &lt;span style=&#34;color:#f92672&#34;&gt;as&lt;/span&gt; pd
+&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; glob
+
+files &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; glob&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;glob(filePath)
+lists &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; []
+&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; file &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; files:
+  df &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; pd&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;read_csv(file, encoding&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;shift-jis&amp;#34;&lt;/span&gt;)
+  lists&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;append(df)
+
+sample &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; pd&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;concat(lists, axis&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, ignore_index&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;True)
+sample &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; sample[((sample&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;追加説明及び具体的状況の説明&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;−&amp;#39;&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;(sample&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;追加説明及び具体的状況の説明&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;＊&amp;#39;&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;False)]
+sample &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; sample[sample&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;景気の現状判断&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;□&amp;#39;&lt;/span&gt;]
+corpus &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; sample&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;追加説明及び具体的状況の説明&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;str&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;replace(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;・&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt;)
+corpus&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;head()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## 0                              店頭の取扱額が前年比約120％と好調であった。
+## 1    当施設の利用乗降客数は１月26日時点で前年比130.1％となっており、１月としては過去最高の...
+## 2    年末の消費の反動もあってか、客の動きがやや鈍い。ただ、相変わらず高額商材が売れているというこ...
+## 3    外国人観光客による売上が前年比152％と好調を継続しているほか、来客数が前年比102％と好調...
+## 4          積極的に景気が上向きにあるとまではいいづらいものの、３か月前との比較では改善している。
+## Name: 追加説明及び具体的状況の説明, dtype: object
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;なお、自由記述部分(追加説明及び具体的状況の説明)が「－」は回答が存在しない、「＊」は主だった回答等が存在しないため、サンプルから除外しています。  また、景気の現状判断が「変わらない(■)」のデータは分類対象外とするため、こちらもサンプルから除外しています。&lt;br&gt;
+次に、分類対象となるラベル(景気の現状判断)を数値へ加工します。「良い(◎)」と「やや良い(○)」を1、「やや悪い(▲)」、「悪い(×)」を0とする2値分類です。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; sklearn.preprocessing &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; LabelEncoder
+
+score_mapping &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;◎&amp;#39;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;○&amp;#39;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;▲&amp;#39;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;×&amp;#39;&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;}
+labels &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; sample&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;景気の現状判断&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;map(score_mapping)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;自由記述部分の処理を行います。前節で説明したとおり、ナイーブベイズ分類器は入力変数として、各文章に含まれる単語の出現回数が必要です。このデータを作成するためには、&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;サンプルデータの文章を形態素に分解&lt;/li&gt;
+&lt;li&gt;各文中に形態素が出現する回数をカウント&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;の処理が必要です。英語であれば、この処理は&lt;code&gt;sklearn.feature_extraction.CountVectorizer&lt;/code&gt;が行ってくれますが、日本語の場合はそうはいかず、形態素解析のための関数を渡してやる必要があります。よって、入力：文章ベクトル、出力：形態素のリストとなる関数&lt;code&gt;tokenizer_sudachi&lt;/code&gt;を定義し、それを&lt;code&gt;sklearn.feature_extraction.CountVectorizer&lt;/code&gt;の引数&lt;code&gt;analyzer&lt;/code&gt;に渡しています。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; sudachipy &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; tokenizer
+&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; sudachipy &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; dictionary
+&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; sklearn.feature_extraction.text &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; CountVectorizer
+
+tokenizer_obj &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; dictionary&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Dictionary()&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;create()
+mode &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;SplitMode&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;A
+tokenizer_sudachi &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;lambda&lt;/span&gt; t: [m&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;normalized_form() &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; m &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; tokenizer_obj&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;tokenize(t, mode)]
+
+vectorizer &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; CountVectorizer(analyzer&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;tokenizer_sudachi)
+counts &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; vectorizer&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;fit_transform(corpus)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;counts&lt;/code&gt;はサンプルサイズ×出現単語総数となる&lt;code&gt;sparse matrix&lt;/code&gt;で、これがナイーブベイズ分類器の入力変数となります。&lt;br&gt;
+入力&lt;code&gt;counts&lt;/code&gt;と出力&lt;code&gt;labels&lt;/code&gt;が準備できたので、&lt;code&gt;sklearn.model_selection.train_test_split&lt;/code&gt;を使って学習データとテストデータにランダムに分割します。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; sklearn.model_selection &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; train_test_split
+
+X_train, X_test, y_train, y_test &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; train_test_split(counts, labels, test_size&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0.5&lt;/span&gt;, random_state&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;42&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;前回の辞書ベース手法ではサンプル全体を用いて予測を行いました。それは辞書に含まれる極性スコアが景気ウオッチャー調査のサンプルデータをもとに作成したものではなく、過学習しないためです。ただ、今回のナイーブベイズ分類器はそのデータを用いてパラメータの学習を行う教師あり学習のため、その性能を適切に評価するためには学習データ以外のデータを検証用に残しておく必要があります。&lt;br&gt;
+いよいよ、学習パートに入ります。学習には&lt;code&gt;sklearn.naive_bayes.MultinomialNB&lt;/code&gt;を使用します。これは前節で説明した(6)でパラメータの推計を行い、予測モデルを構築するクラスとなっています。引数として&lt;code&gt;alpha&lt;/code&gt;を指定する必要がありますが、これは事前分布であるディリクレ分布の$\alpha$です。デフォルト値である1を指定すると、加算スクリーニングとなります。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; sklearn.naive_bayes &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; MultinomialNB
+clf &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; MultinomialNB(alpha&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1.0&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;clf&lt;/code&gt;としてインスタンス化することができました。
+では、&lt;code&gt;fit()&lt;/code&gt;メソッドを用いて、学習を行います。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;clf&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;fit(X_train, y_train)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## MultinomialNB()
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;学習が完了しました。&lt;code&gt;score()&lt;/code&gt;メソッドで学習データに対する正解率を確認してみましょう。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;clf&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;score(X_train, y_train)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## 0.874935083329399
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;およそ87.5%ということで、高い正解率を得ることが出来ました。&lt;br&gt;
+ただ、学習データに対して過学習している可能性があるため、テストデータでの精度も確認してみましょう。テストデータの予測値を計算するためには&lt;code&gt;predict&lt;/code&gt;メソッドを使用します。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;y_pred &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; clf&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;predict(X_test)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;次に、混同行列(ConfusionMatrix)を作成します。これは分類モデルの性能を評価するために用いられるもので、横軸に予測値、縦軸に実際の値をとり、(1,1)と(2,2)要素に多くサンプルが集まるほど正しい予測ができています。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; sklearn.metrics &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; classification_report, confusion_matrix, ConfusionMatrixDisplay
+&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; matplotlib.pyplot &lt;span style=&#34;color:#f92672&#34;&gt;as&lt;/span&gt; plt
+
+ConfusionMatrixDisplay(confusion_matrix(y_test, y_pred))&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;plot()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## &amp;lt;sklearn.metrics._plot.confusion_matrix.ConfusionMatrixDisplay object at 0x000000000EC7CA48&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;show()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;./post/post28/index_files/figure-html/unnamed-chunk-12-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;たまに、正解率が高くてもほとんど0を予測するだけのモデルになっており、正解データも0が多いデータであるため、見かけ上上手く分類することができていることもありますが、今回に限ってはしっかりと識別できているようです。正例よりも負例の予測精度が高いようです。単純に負例のサンプルサイズが大きいのが原因かも知れません。&lt;br&gt;
+最後に、性能評価のための分類指標を記載します。各指標の意味はここでは説明しませんが、正解率は学習データと変わらず、過学習はしていないようです。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt;(classification_report(y_test, y_pred))
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;##               precision    recall  f1-score   support
+## 
+##            0       0.87      0.88      0.87     13223
+##            1       0.79      0.78      0.78      7958
+## 
+##     accuracy                           0.84     21181
+##    macro avg       0.83      0.83      0.83     21181
+## weighted avg       0.84      0.84      0.84     21181
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&#34;3-終わりに&#34;&gt;3. 終わりに&lt;/h3&gt;
+&lt;p&gt;このpostではナイーブベイズ分類器を用いたセンチメント情報の抽出ならびに文書分類問題の実践を行いました。
+&lt;code&gt;sklearn.naive_bayes.MultinomialNB&lt;/code&gt;クラスを用いれば、比較的容易に分析を行うことが出来ます。テストデータの精度も高く、教師あり学習の威力を思い知りました。いきなり深層学習を行うのではなく、まずはナイーブベイズ分類器から開始するのが良さそうです。&lt;br&gt;
+次回は、準教師あり学習である単語埋め込み(Word Embedding)を用いた方法について紹介します！&lt;/p&gt;
 </description>
     </item>
     
@@ -395,8 +500,9 @@ $$&lt;/p&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(magrittr)
 files &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; stringr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;str_c&lt;/span&gt;(filepath, &lt;span style=&#34;color:#a6e22e&#34;&gt;list.files&lt;/span&gt;(filepath, pattern &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;*.csv&amp;#34;&lt;/span&gt;))
 sample &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; readr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;read_csv&lt;/span&gt;(files,locale&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;readr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;locale&lt;/span&gt;(encoding&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Shift-JIS&amp;#34;&lt;/span&gt;),show_col_types &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;FALSE&lt;/span&gt;)
-sample &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; sample[sample&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;追加説明及び具体的状況の説明&lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;-&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;sample&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;追加説明及び具体的状況の説明&lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;*&amp;#34;&lt;/span&gt;,]
-sample&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;景気の現状判断 &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;factor&lt;/span&gt;(sample&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;景気の現状判断, levels&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;◎&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;○&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;□&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;▲&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;×&amp;#34;&lt;/span&gt;))
+sample &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; sample[sample&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;追加説明及び具体的状況の説明&lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;−&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;sample&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;追加説明及び具体的状況の説明&lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;＊&amp;#34;&lt;/span&gt;,]
+sample &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; sample[sample&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;景気の現状判断&lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;□&amp;#34;&lt;/span&gt;,]
+sample&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;景気の現状判断 &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;factor&lt;/span&gt;(sample&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;景気の現状判断, levels&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;◎&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;○&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;▲&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;×&amp;#34;&lt;/span&gt;))
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;次に、&lt;code&gt;sudachi&lt;/code&gt;を用いてテキストデータのToken化を行います。&lt;code&gt;R&lt;/code&gt;には&lt;code&gt;sudachi&lt;/code&gt;を使えるパッケージが存在しないので、Pythonパッケージの&lt;code&gt;sudachipy&lt;/code&gt;を&lt;code&gt;reticulate&lt;/code&gt;で呼び出して使用します。&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;stopwords_path &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; r&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;(C:\Users\hogehoge\Watcher\marimo-master\yaml\stopwords_ja.yml)&amp;#34;&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# sudachiによる形態素解析→Token化&lt;/span&gt;
@@ -503,7 +609,7 @@ score_dict
 ・店頭の取扱額が前年比約120％と好調であった。
 &lt;/td&gt;
 &lt;td style=&#34;text-align:right;&#34;&gt;
-1.0918056
+1.1372119
 &lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
@@ -526,7 +632,7 @@ score_dict
 ・当施設の利用乗降客数は１月26日時点で前年比130.1％となっており、１月としては過去最高の利用乗降客数になることが確定したほどの入込状況にある。
 &lt;/td&gt;
 &lt;td style=&#34;text-align:right;&#34;&gt;
--0.7191220
+-0.7233374
 &lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
@@ -549,7 +655,7 @@ score_dict
 ・年末の消費の反動もあってか、客の動きがやや鈍い。ただ、相変わらず高額商材が売れているということもあり、売上はそれなりの金額をキープしている。
 &lt;/td&gt;
 &lt;td style=&#34;text-align:right;&#34;&gt;
--0.9872586
+-0.9988214
 &lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
@@ -572,7 +678,7 @@ score_dict
 ・外国人観光客による売上が前年比152％と好調を継続しているほか、来客数が前年比102％と好調を維持している。月半ばに停滞した売上も下旬に入ってから回復傾向にあり、定価品、バーゲン品とも前年を上回っている。
 &lt;/td&gt;
 &lt;td style=&#34;text-align:right;&#34;&gt;
-1.0711102
+1.1159495
 &lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
@@ -595,7 +701,7 @@ score_dict
 ・積極的に景気が上向きにあるとまではいいづらいものの、３か月前との比較では改善している。
 &lt;/td&gt;
 &lt;td style=&#34;text-align:right;&#34;&gt;
-3.1257848
+3.2269249
 &lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
@@ -618,12 +724,12 @@ score_dict
 ・気温が平年並みとなり、これまでの温暖、少雪の状態がみられなくなってきたことで、防寒衣料、雑貨商材を中心に多少改善の傾向がみられる。
 &lt;/td&gt;
 &lt;td style=&#34;text-align:right;&#34;&gt;
-0.0254686
+0.0416559
 &lt;/td&gt;
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
-&lt;p&gt;2行目の文章は明らかにポジティブですが、なにが影響したのかネガティブ寄りの判定になっていますね。また、顕著なのが3行目で「鈍い」という単語に引っ張られ、ネガティブなセンチメントを抽出しやすくなっています。この文章の本意は「ただ・・・」という逆接以降の文章ですが、文脈や語順が捉えられないために正しい情報を引き出すことができていません。5行目は「積極的」、「上向き」、「改善」といった単語を検知し、かなりポジティブなセンチメントがあるという判定をしていますが、「積極的に景気が上向きとは&lt;strong&gt;いいづらい&lt;/strong&gt;*」というネガティブな文脈を捉え切れておらず、過大評価となっています。&lt;/p&gt;
+&lt;p&gt;2行目の文章は明らかにポジティブですが、なにが影響したのかネガティブ寄りの判定になっていますね。また、顕著なのが3行目で「鈍い」という単語に引っ張られ、ネガティブなセンチメントを抽出しやすくなっています。この文章の本意は「ただ・・・」という逆接以降の文章ですが、文脈や語順が捉えられないために正しい情報を引き出すことができていません。5行目は「積極的」、「上向き」、「改善」といった単語を検知し、かなりポジティブなセンチメントがあるという判定をしていますが、「積極的に景気が上向きとは&lt;strong&gt;いいづらい&lt;/strong&gt;」というネガティブな文脈を捉え切れておらず、過大評価となっています。&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 結果の可視化&lt;/span&gt;
 &lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(ggplot2)
 &lt;span style=&#34;color:#a6e22e&#34;&gt;ggplot&lt;/span&gt;(sample_with_score_dict, &lt;span style=&#34;color:#a6e22e&#34;&gt;aes&lt;/span&gt;(x&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;景気の現状判断,y&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;score_dict)) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;geom_boxplot&lt;/span&gt;()
@@ -708,7 +814,7 @@ score_dict
 ・店頭の取扱額が前年比約120％と好調であった。
 &lt;/td&gt;
 &lt;td style=&#34;text-align:right;&#34;&gt;
-0.1052126
+0.1641589
 &lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
@@ -731,7 +837,7 @@ score_dict
 ・当施設の利用乗降客数は１月26日時点で前年比130.1％となっており、１月としては過去最高の利用乗降客数になることが確定したほどの入込状況にある。
 &lt;/td&gt;
 &lt;td style=&#34;text-align:right;&#34;&gt;
--0.1025889
+-0.0770581
 &lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
@@ -754,7 +860,7 @@ score_dict
 ・年末の消費の反動もあってか、客の動きがやや鈍い。ただ、相変わらず高額商材が売れているということもあり、売上はそれなりの金額をキープしている。
 &lt;/td&gt;
 &lt;td style=&#34;text-align:right;&#34;&gt;
--0.8938789
+-0.8631460
 &lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
@@ -777,7 +883,7 @@ score_dict
 ・外国人観光客による売上が前年比152％と好調を継続しているほか、来客数が前年比102％と好調を維持している。月半ばに停滞した売上も下旬に入ってから回復傾向にあり、定価品、バーゲン品とも前年を上回っている。
 &lt;/td&gt;
 &lt;td style=&#34;text-align:right;&#34;&gt;
-1.0201638
+1.0510362
 &lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
@@ -800,7 +906,7 @@ score_dict
 ・積極的に景気が上向きにあるとまではいいづらいものの、３か月前との比較では改善している。
 &lt;/td&gt;
 &lt;td style=&#34;text-align:right;&#34;&gt;
-2.4385447
+2.3897946
 &lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
@@ -823,7 +929,7 @@ score_dict
 ・気温が平年並みとなり、これまでの温暖、少雪の状態がみられなくなってきたことで、防寒衣料、雑貨商材を中心に多少改善の傾向がみられる。
 &lt;/td&gt;
 &lt;td style=&#34;text-align:right;&#34;&gt;
-0.7675009
+0.8152262
 &lt;/td&gt;
 &lt;/tr&gt;
 &lt;/tbody&gt;
@@ -927,8 +1033,9 @@ boxplotの結果も見てみましょう。&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;ご参考までに2016年1月調査のサンプルデータをお見せします。&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(magrittr)
-sample &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; readr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;read_csv&lt;/span&gt;(r&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;(C:\Users\aashi\Desktop\TextMining\景気ウオッチャー\生データ\watcher_2016.csv)&amp;#34;&lt;/span&gt;,locale&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;readr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;locale&lt;/span&gt;(encoding&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;SHIFT-JIS&amp;#34;&lt;/span&gt;), show_col_types&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;FALSE&lt;/span&gt;)
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;filePath &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; r&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;(C:\Users\hogehoge\Watcher\RawData\watcher_2016.csv)&amp;#34;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(magrittr)
+sample &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; readr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;read_csv&lt;/span&gt;(filePath,locale&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;readr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;locale&lt;/span&gt;(encoding&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;SHIFT-JIS&amp;#34;&lt;/span&gt;), show_col_types&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;FALSE&lt;/span&gt;)
 &lt;span style=&#34;color:#a6e22e&#34;&gt;options&lt;/span&gt;(kableExtra.html.bsTable &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TRUE&lt;/span&gt;)
 knitr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;kable&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;head&lt;/span&gt;(sample)) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
   kableExtra&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;kable_styling&lt;/span&gt;(bootstrap_options &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;striped&amp;#34;&lt;/span&gt;))
@@ -996,7 +1103,7 @@ knitr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#3
 &lt;/table&gt;
 &lt;h3 id=&#34;問題設定&#34;&gt;問題設定&lt;/h3&gt;
 &lt;p&gt;今回の問題設定は、「追加説明及び具体的状況の説明」に記載されているテキスト情報をもとに、「景気の現状判断」を予測するタスクになります。
-「景気の現状判断」は「良い」、「やや良い」、「どちらとも言えない」、「やや悪い」、「悪い」となっており、これを2値分類問題にして学習を行います(どちらとも言えないはネガティブに分類)。&lt;/p&gt;
+「景気の現状判断」は「良い(◎)」、「やや良い(○)」、「変わらない(■)」、「やや悪い(▲)」、「悪い(×)」となっており、これを2値分類問題にして学習を行います(変わらない(■)はサンプルから除外)。&lt;/p&gt;
 &lt;h2 id=&#34;2-テキスト解析手法の進化の譜系&#34;&gt;2. テキスト解析手法の進化の譜系&lt;/h2&gt;
 &lt;p&gt;上記問題設定を解くためには、テキスト情報から感性情報(センチメント)を抽出する必要があります。私が調べた浅い知識によると、感性情報の抽出方法には以下のような手法があります。&lt;/p&gt;
 &lt;ol&gt;
@@ -1492,7 +1599,7 @@ mode &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; tokenizer&lt;span 
 &lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; sklearn.preprocessing &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; LabelEncoder
 &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; pandas &lt;span style=&#34;color:#f92672&#34;&gt;as&lt;/span&gt; pd
 
-sample &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; pd&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;read_csv(&lt;span style=&#34;color:#e6db74&#34;&gt;r&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;C:\Users\hogehoge\景気ウオッチャー\生データ\watcher_2016.csv&amp;#34;&lt;/span&gt;,encoding&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;shift-jis&amp;#34;&lt;/span&gt;)
+sample &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; pd&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;read_csv(&lt;span style=&#34;color:#e6db74&#34;&gt;r&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;C:\Users\hogehoge\Watcher\RawData\watcher_2016.csv&amp;#34;&lt;/span&gt;,encoding&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;shift-jis&amp;#34;&lt;/span&gt;)
 sample &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; sample[(sample&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;追加説明及び具体的状況の説明&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;−&amp;#39;&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;(sample&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;追加説明及び具体的状況の説明&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;＊&amp;#39;&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;False&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;(sample&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;景気の現状判断&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;□&amp;#39;&lt;/span&gt;)]
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;読み込んだ&lt;code&gt;sample&lt;/code&gt;をtokenizerでToken化していきます。&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;tokenizer_obj &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; dictionary&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Dictionary()&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;create()
