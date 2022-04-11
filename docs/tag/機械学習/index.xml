@@ -5,12 +5,671 @@
     <link>/tag/%E6%A9%9F%E6%A2%B0%E5%AD%A6%E7%BF%92/</link>
       <atom:link href="/tag/%E6%A9%9F%E6%A2%B0%E5%AD%A6%E7%BF%92/index.xml" rel="self" type="application/rss+xml" />
     <description>機械学習</description>
-    <generator>Wowchemy (https://wowchemy.com)</generator><language>ja</language><lastBuildDate>Fri, 25 Mar 2022 00:00:00 +0000</lastBuildDate>
+    <generator>Wowchemy (https://wowchemy.com)</generator><language>ja</language><lastBuildDate>Sat, 02 Apr 2022 00:00:00 +0000</lastBuildDate>
     <image>
       <url>/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
       <title>機械学習</title>
       <link>/tag/%E6%A9%9F%E6%A2%B0%E5%AD%A6%E7%BF%92/</link>
     </image>
+    
+    <item>
+      <title>【徹底比較】センチメントスコア算出手法！！ - 第4回</title>
+      <link>/post/post29/</link>
+      <pubDate>Sat, 02 Apr 2022 00:00:00 +0000</pubDate>
+      <guid>/post/post29/</guid>
+      <description>&lt;h2 id=&#34;1-単語埋め込みword-embedding手法について&#34;&gt;1. 単語埋め込み(Word Embedding)手法について&lt;/h2&gt;
+&lt;p&gt;前回までのpostで、教師なし学習である辞書ベース分類法と教師あり学習であるナイーブベイズ分類器を紹介しました。教師あり学習のほうが精度は出そうだが、教師データの準備にコストがかかり、教師なし学習は教師データは不要である一方、精度に課題があります。どちらも一長一短がある手法であり、この両者を埋め合わせる良い手法はないのかと調べていると準教師学習を用いた手法であるLatent Semantic Scalingを発見しました。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Latent Semantic Scaling: A Semisupervised Text Analysis Technique for New Domains and Languages&lt;/strong&gt;(&lt;strong&gt;watanabe2020?&lt;/strong&gt;)&lt;/p&gt;
+&lt;p&gt;この手法は単語埋め込み(word embedding)を用いているため、まずはそちらを紹介します。&lt;/p&gt;
+&lt;h3 id=&#34;単語埋め込みword-embeddingとは&#34;&gt;単語埋め込み(Word Embedding)とは&lt;/h3&gt;
+&lt;p&gt;この論文では単語埋め込み(Word Embedding)を使用しています。単語埋め込み(Word Embedding)とは、&lt;strong&gt;自然言語処理における言語モデリング手法の一種であり、単語や語句を固定長の実数ベクトルとして表現する手法のこと&lt;/strong&gt;です。&lt;/p&gt;
+&lt;p&gt;Works Applicationsが提供しているモデルChiveを例とすると、以下のように各単語にその単語の特徴を表現する300次元の実数ベクトル(=Embeddingベクトル)が与えられています。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;chive_path &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;r&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;C:\Users\hogehoge\Watcher\chive-1.2-mc15_gensim\chive-1.2-mc15.kv&amp;#34;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; gensim
+vectors &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; gensim&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;models&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;KeyedVectors&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;load(chive_path)
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Embeddingベクトルの次元数：&amp;#34;&lt;/span&gt;, vectors[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;王様&amp;#34;&lt;/span&gt;]&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;shape[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;])
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## Embeddingベクトルの次元数： 300
+&lt;/code&gt;&lt;/pre&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Embeddingベクトルの値：&amp;#34;&lt;/span&gt;, vectors[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;王様&amp;#34;&lt;/span&gt;][&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;])
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## Embeddingベクトルの値： [ 0.08844764 -0.02172066  0.11218461  0.00986984 -0.26948628 -0.14956778
+##   0.08493619  0.16736646  0.03643996]
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;このEmbeddingベクトルを用いて、単語同士の演算を行うことも可能です。例えば、「王様 - 男 + 女 = 女王」のようなもので、具体的には「王様」のEmbeddingベクトルから「男」のEmbeddingベクトルを減算、「女」のEmbeddingベクトルを加算し、計算結果と最も値が近い単語を返す処理をします。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;王様 - 男 - 女：&amp;#34;&lt;/span&gt;, vectors&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;most_similar(positive&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;王様&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;女&amp;#34;&lt;/span&gt;], negative&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;男&amp;#34;&lt;/span&gt;], topn&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;))
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## 王様 - 男 - 女： [(&#39;王女&#39;, 0.5806534886360168), (&#39;女王&#39;, 0.5754266381263733), (&#39;王妃&#39;, 0.5491030216217041)]
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;上記では「王女」が最も近い単語となっていますが、2番目が「女王」であり、意図した結果が返ったことが分かります。&lt;br&gt;
+以下のように、各単語のEmbeddingベクトルのコサイン類似度を測ることによって、或る単語と意味が近い単語を調べることも可能です。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;関西学院大学と意味の近い単語上位3位：&amp;#34;&lt;/span&gt;, vectors&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;most_similar([&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;関西学院大学&amp;#34;&lt;/span&gt;],topn&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;))
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## 関西学院大学と意味の近い単語上位3位： [(&#39;関西大学&#39;, 0.798370361328125), (&#39;立命館大学&#39;, 0.7937482595443726), (&#39;同志社大学&#39;, 0.7829927206039429)]
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;やはり関関同立というだけあって想定通りの結果です。また、その順番も多くの人のイメージ通りかも知れません(同じキリスト教の大学と言うことであれば、同志社大学の近いという見方もあるかも知れません)。&lt;br&gt;
+では、この実数ベクトルをどのように計算しているのでしょうか。Word Embeddingの手法としては、Word2Vec(&lt;a href=&#34;https://arxiv.org/abs/1301.3781&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Efficient Estimation of Word Representations in Vector Space (arxiv.org)&lt;/a&gt;)が有名です。&lt;/p&gt;
+&lt;h3 id=&#34;latent-semantic-scalingとは&#34;&gt;Latent Semantic Scalingとは&lt;/h3&gt;
+&lt;p&gt;政治学者である渡辺耕平さんによって提案されたWord Embeddingを利用してセンチメントスコアを単語へ付与する手法です。種語(Seed Words)と呼ばれる抽象的な意味を持つ幾つかの単語からの近さでセンチメントスコアの付与対象とする単語群の実数ベクトルを計算する準教師学習となっており、教師あり学習、教師なし学習のメリデメを補完しています。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;教師あり学習&lt;/p&gt;
+&lt;p&gt;メリット - 学習のスピードが速く、精度も高い&lt;/p&gt;
+&lt;p&gt;デメリット - 教師データを整備するのが大変&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;教師なし学習&lt;/p&gt;
+&lt;p&gt;メリット - 教師データを用意する必要がないので、分析を始めやすい&lt;/p&gt;
+&lt;p&gt;デメリット - 学習のスピードが遅く、精度も低い&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Word Embeddingの算出には特異値分解を用いています。各要素がその文書(行)におけるその単語(列)の出現頻度が入力されている行列である文書行列に対して特異値分解を行い、各単語のEmbeddingベクトルを計算します。ここで文書行列を$D$、文書行列$D$における単語(列)数を$n$とすると、&lt;/p&gt;
+&lt;p&gt;$$
+D \approx U \Sigma V&#39;
+$$&lt;/p&gt;
+&lt;p&gt;と分解でき、$V$が$k×n$行列となるので各単語の特徴量ベクトルと見なすことができます($k$は分析者が決定)。$V$のうち$i$列目のベクトルと$V_i$と表すと、センチメントスコアは種語$s \in S$の特徴量ベクトル$V_s$と各単語の特徴量ベクトル$V_j$のコサイン類似度から算出します。単語$f$のセンチメントスコアを$g_f$とすると、算出式は&lt;/p&gt;
+&lt;p&gt;$$
+g_f = \frac{1}{|S|}\sum_{s\in S} \cos(v_s,v_f)p_s
+$$&lt;/p&gt;
+&lt;p&gt;となります。ここで、$p_s$は分析者が定める種語のセンチメントスコアです。種語が複数個存在する場合には平均値を使用します。。&lt;/p&gt;
+&lt;p&gt;次に、単語のセンチメントスコアを用いて文書のセンチメントスコアを算出します。文書$d$のセンチメントスコアを$y_d$とすると、その文書に含まれる単語$f\in F$を用いて&lt;/p&gt;
+&lt;p&gt;$$
+y_d = \frac{1}{N}\sum_{f\in F}g_fh_f
+$$&lt;/p&gt;
+&lt;p&gt;で計算します。ここで、$h_f$は各単語$f$のその文書内での出現回数、$N$はその文書に含まれる単語の総数です($V$に含まれない単語は除く)。&lt;/p&gt;
+&lt;h2 id=&#34;2-latent-semantic-scalingの実践&#34;&gt;2. Latent Semantic Scalingの実践&lt;/h2&gt;
+&lt;p&gt;Latent Semantic Scalingによるセンチメントスコアの算出を行います。&lt;/p&gt;
+&lt;h3 id=&#34;前処理&#34;&gt;前処理&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;R&lt;/code&gt;で行っていきます。まず、サンプルデータを読み込みます。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;filepath &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; r&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;(C:\Users\hogehoge\Watcher\RawData)&amp;#34;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(magrittr)
+files &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; stringr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;str_c&lt;/span&gt;(filepath, &lt;span style=&#34;color:#a6e22e&#34;&gt;list.files&lt;/span&gt;(filepath, pattern &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;*.csv&amp;#34;&lt;/span&gt;))
+sample &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; readr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;read_csv&lt;/span&gt;(files,locale&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;readr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;locale&lt;/span&gt;(encoding&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Shift-JIS&amp;#34;&lt;/span&gt;),show_col_types &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;FALSE&lt;/span&gt;)
+sample &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; sample[sample&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;追加説明及び具体的状況の説明&lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;−&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;sample&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;追加説明及び具体的状況の説明&lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;＊&amp;#34;&lt;/span&gt;,]
+sample &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; sample[sample&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;景気の現状判断&lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;□&amp;#34;&lt;/span&gt;,]
+sample&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;景気の現状判断 &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;factor&lt;/span&gt;(sample&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;景気の現状判断, levels&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;◎&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;○&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;▲&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;×&amp;#34;&lt;/span&gt;))
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;次に、&lt;code&gt;sudachi&lt;/code&gt;を用いてテキストデータのToken化を行います。&lt;code&gt;R&lt;/code&gt;には&lt;code&gt;sudachi&lt;/code&gt;を使えるパッケージが存在しないので、Pythonパッケージの&lt;code&gt;sudachipy&lt;/code&gt;を&lt;code&gt;reticulate&lt;/code&gt;で呼び出して使用します。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# sudachiによる形態素解析→Token化&lt;/span&gt;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# コーパス生成&lt;/span&gt;
+corp &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; quanteda&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;corpus&lt;/span&gt;(sample,text_field&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;追加説明及び具体的状況の説明&amp;#34;&lt;/span&gt;)
+&lt;span style=&#34;color:#75715e&#34;&gt;# sudachipy呼び出し→インスタンス化&lt;/span&gt;
+sudachipy &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; reticulate&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;import&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;sudachipy&amp;#34;&lt;/span&gt;)
+&lt;span style=&#34;color:#75715e&#34;&gt;# 正規化関数定義&lt;/span&gt;
+sudachi_normalize &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(tokens){
+  res &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;()
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;for&lt;/span&gt;(i in &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;length&lt;/span&gt;(tokens)&lt;span style=&#34;color:#ae81ff&#34;&gt;-1&lt;/span&gt;)){
+    res &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;append&lt;/span&gt;(res,tokens[i]&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;normalized_form&lt;/span&gt;())
+  }
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;return&lt;/span&gt;(res)
+}
+&lt;span style=&#34;color:#75715e&#34;&gt;# tokenize関数定義&lt;/span&gt;
+sudachi_tokenize &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;function&lt;/span&gt;(sentence, mode &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;A&amp;#34;&lt;/span&gt;){
+  tokenizer_obj &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; sudachipy&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;dictionary&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;Dictionary&lt;/span&gt;()&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;create&lt;/span&gt;()
+  mode &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;switch&lt;/span&gt;(mode, 
+                 &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;A&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; sudachipy&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;Tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;SplitMode&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;A,
+                 &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;B&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; sudachipy&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;Tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;SplitMode&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;B,
+                 &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;C&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; sudachipy&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;Tokenizer&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;SplitMode&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;C,
+                 &lt;span style=&#34;color:#a6e22e&#34;&gt;stop&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Only Can Use A, B, C&amp;#34;&lt;/span&gt;))
+  res &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; purrr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;map&lt;/span&gt;(sentence, &lt;span style=&#34;color:#f92672&#34;&gt;~&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;sudachi_normalize&lt;/span&gt;(tokenizer_obj&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;tokenize&lt;/span&gt;(., mode)))
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;return&lt;/span&gt;(res)
+}
+
+stopwords &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;の&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;に&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;は&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;を&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;た&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;が&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;で&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;て&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;と&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;し&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;れ&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;さ&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;ある&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;いる&amp;#34;&lt;/span&gt;,
+                &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;も&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;する&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;から&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;な&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;こと&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;い&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;や&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;れる&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;など&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;なっ&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;ない&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;この&amp;#34;&lt;/span&gt;,
+                &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;ため&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;その&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;あっ&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;よう&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;また&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;もの&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;あり&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;まで&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;られ&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;なる&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;へ&amp;#34;&lt;/span&gt;,
+                &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;か&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;だ&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;これ&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;おり&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;より&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;ず&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;なり&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;られる&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;ば&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;なかっ&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;なく&amp;#34;&lt;/span&gt;,
+                &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;しかし&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;せ&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;だっ&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;できる&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;それ&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;う&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;なお&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;のみ&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;でき&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;き&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;つ&amp;#34;&lt;/span&gt;,
+                &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;および&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;いう&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;さらに&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;ら&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;たり&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;たち&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;ます&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;ん&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;なら&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;特に&amp;#34;&lt;/span&gt;,
+                &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;せる&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;及び&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;とき&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;にて&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;ほか&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;ながら&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;うち&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;そして&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;ただし&amp;#34;&lt;/span&gt;,
+                &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;かつて&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;それぞれ&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;お&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;ほど&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;ほとんど&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;です&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;とも&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;ところ&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;ここ&amp;#34;&lt;/span&gt;,
+               &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;居る&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;為る&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;有る&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;成る&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;来る&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;よる&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;おる&amp;#34;&lt;/span&gt;)
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# Token化実行&lt;/span&gt;
+toks_sent &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; corp &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt;
+              &lt;span style=&#34;color:#a6e22e&#34;&gt;sudachi_tokenize&lt;/span&gt;() &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+              quanteda&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;as.tokens&lt;/span&gt;() &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+              quanteda&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;tokens_remove&lt;/span&gt;(quanteda&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;stopwords&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;ja&amp;#34;&lt;/span&gt;, source &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;marimo&amp;#34;&lt;/span&gt;)) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+              quanteda&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;tokens_remove&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;、&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;。&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;・&amp;#34;&lt;/span&gt;)) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+              quanteda&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;tokens_remove&lt;/span&gt;(stopwords)
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# メタデータをTokenに再付与&lt;/span&gt;
+quanteda&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;docvars&lt;/span&gt;(toks_sent) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; quanteda&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;docvars&lt;/span&gt;(corp)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;この&lt;code&gt;toks_sent&lt;/code&gt;から文書行列を生成します。文書行列とは、単語と文書の関係を表す行列で、各行が単語(token)、各列が文書を表し、各要素は文書中の単語の出現回数となっています。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 文書行列の生成&lt;/span&gt;
+dfmt_sent &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; toks_sent &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+              quanteda&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;dfm&lt;/span&gt;() &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+              quanteda&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;dfm_remove&lt;/span&gt;(pattern&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+              quanteda&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;dfm_trim&lt;/span&gt;(min_termfreq &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;出現回数Top20は以下のようになっています。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;print&lt;/span&gt;(quanteda&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;topfeatures&lt;/span&gt;(dfmt_sent, n &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;))
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;##       数       客     前年 売り上げ     影響     来客     減少     新型 
+##    11912    11752    11238     9461     9247     7908     7656     6100 
+##   コロナ        % ウイルス     販売     良い       為   増える     動き 
+##     5928     5893     5865     5114     5045     5037     4832     4602 
+##     状況        3     増加       量 
+##     4590     4587     4483     4402
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;センチメントスコアの算出&#34;&gt;センチメントスコアの算出&lt;/h3&gt;
+&lt;p&gt;次に、種語として以下の単語を定義します。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(magrittr)
+&lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(LSX)
+
+ja_seedwords &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;list&lt;/span&gt;(positive &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;安心&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;好調&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;秀逸&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;改善&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;良好&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;適切&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;安堵&amp;#34;&lt;/span&gt;),
+                     negative&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;不安&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;不調&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;稚拙&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;悪化&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;不良&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;過剰&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;過少&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;懸念&amp;#34;&lt;/span&gt;)) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt;
+                &lt;span style=&#34;color:#a6e22e&#34;&gt;as.seedwords&lt;/span&gt;()
+&lt;span style=&#34;color:#a6e22e&#34;&gt;print&lt;/span&gt;(ja_seedwords)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## 安心 好調 秀逸 改善 良好 適切 安堵 不安 不調 稚拙 悪化 不良 過剰 過少 懸念 
+##    1    1    1    1    1    1    1   -1   -1   -1   -1   -1   -1   -1   -1
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;上記のように、種語のスコアはポジティブ/ネガティブの最大値となっています。&lt;br&gt;
+文書行列に対して特異値分解を行い、センチメントスコアを算出します。Word Embeddingのサイズ$k$は300とします。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;lss &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;textmodel_lss&lt;/span&gt;(dfmt_sent, seeds &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ja_seedwords, k &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;300&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;センチメントスコア上位・下位20単語を抜き出します。&lt;code&gt;LSX::coef()&lt;/code&gt;で抜き出すことができ、降順で並んでいます。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;print&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;head&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;coef&lt;/span&gt;(lss), &lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;)) &lt;span style=&#34;color:#75715e&#34;&gt;# most positive words&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;##         安心         改善         好調         重点         米飯         前期 
+##   0.15075889   0.14272040   0.12926093   0.12218111   0.11418503   0.11297516 
+##           di コンクリート     デザート         誕生       フード         調理 
+##   0.10698720   0.10633358   0.09668659   0.09597283   0.09563199   0.09549041 
+##       努める   ファースト         政権       占める         良好         景況 
+##   0.09523555   0.09523126   0.09446756   0.09153319   0.09054534   0.09019622 
+##         今期     有り難い 
+##   0.09003611   0.08986984
+&lt;/code&gt;&lt;/pre&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;print&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;tail&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;coef&lt;/span&gt;(lss), &lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;)) &lt;span style=&#34;color:#75715e&#34;&gt;# most negative words&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;##        贈与        老後      ローン        繰り        不良        減税 
+## -0.09561125 -0.09683069 -0.09875152 -0.09982278 -0.10067741 -0.10109826 
+##        韓国        益々        情勢        煽る        不調        日韓 
+## -0.10140439 -0.10567625 -0.10567861 -0.10844798 -0.11014713 -0.11054370 
+##        将来        要素      先行き        辿る        一途        不安 
+## -0.11360784 -0.11364341 -0.11439845 -0.11930636 -0.11956281 -0.13344996 
+##        悪化        懸念 
+## -0.15213723 -0.15636390
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;ポジティブな単語に「米飯」、「コンクリート」、「デザート」、「フード」が入っていたり、ネガティブな単語に「贈与」、「老後」が入っているなどツッコミどころはあるものの、7割はそれっぽい単語がリストアップされているのではないでしょうか。&lt;br&gt;
+次に、このスコアを用いて、辞書ベース分類法と同様のやり方で文書のセンチメントスコアを算出します。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 文書のセンチメントスコア算出&lt;/span&gt;
+coef_df &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;data.frame&lt;/span&gt;(word&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;names&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;coef&lt;/span&gt;(lss)), values&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;as.numeric&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;coef&lt;/span&gt;(lss)))
+dfmt_sent_arranged &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; quanteda&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;dfm_match&lt;/span&gt;(dfmt_sent, coef_df&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;word)
+
+n &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;unname&lt;/span&gt;(quanteda&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;rowSums&lt;/span&gt;(dfmt_sent_arranged))
+score_lss &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ifelse&lt;/span&gt;(n&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, quanteda&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;rowSums&lt;/span&gt;(dfmt_sent_arranged &lt;span style=&#34;color:#f92672&#34;&gt;%*%&lt;/span&gt; coef_df&lt;span style=&#34;color:#f92672&#34;&gt;$&lt;/span&gt;values)&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;n, &lt;span style=&#34;color:#66d9ef&#34;&gt;NA&lt;/span&gt;)
+sample_with_score_lss &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; sample &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;cbind&lt;/span&gt;(score_lss)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;センチメントスコア上位10位のサンプルを確認します。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;sample_with_score_lss &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; dplyr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;slice_max&lt;/span&gt;(n&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;, order_by &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; score_lss) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; dplyr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;select&lt;/span&gt;(追加説明及び具体的状況の説明, score_lss)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;##                                                                              追加説明及び具体的状況の説明
+## 1                                                                                  ・景況感が良好である。
+## 2                                                                                  ・好調に推移している。
+## 3                                                                                    ・受注が好調である。
+## 4      ・主要商品である米飯、調理パンやファストフードが好調に推移している。企画商品のデリカも好調である。
+## 5  ・県内企業の景況感は改善している。業況判断ＤＩが製造業で前期に比べて改善し、プラス水準を維持している。
+## 6                                                          ・客先の決算が好調である。納税額も増えている。
+## 7                                        ・ファーストフード、デザートの陳列を増やしたので売上が増加した。
+## 8                                        ・ファーストフード、デザートの陳列を増やしたので売上が増加した。
+## 9                                                                                  ・受注量が好調である。
+## 10                                                                                 ・受注量は好調である。
+##     score_lss
+## 1  0.08265024
+## 2  0.07564103
+## 3  0.07239461
+## 4  0.05859545
+## 5  0.05651628
+## 6  0.05048285
+## 7  0.04896476
+## 8  0.04896476
+## 9  0.04726825
+## 10 0.04726825
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;非常に良い結果となっているように思えます。
+「米飯」、「デザート」、「フード」の謎が解けましたね。「好調」、「改善」、「増加」など肯定的な単語に共起しているため、これらの単語も肯定的と捉えられたようです。サンプルにこれらの単語を含む否定的(または中立)な文章が含まれれば、これらの単語のスコアもあるべき値に収斂すると思われます。&lt;/p&gt;
+&lt;p&gt;センチメントスコア下位10位のサンプルも確認しましょう。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;sample_with_score_lss &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; dplyr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;slice_min&lt;/span&gt;(n&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;, order_by &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; score_lss) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; dplyr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;select&lt;/span&gt;(追加説明及び具体的状況の説明)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;##                          追加説明及び具体的状況の説明
+## 1                        ・全てにおいて悪化している。
+## 2                        ・様々な問題で悪化している。
+## 3          ・客は、先行きが不安で買い控えをしている。
+## 4                              ・景気が悪化している。
+## 5            ・原油の値上がりが懸念材料になってくる。
+## 6                              ・先行きが見通せない。
+## 7                              ・先行きが見通せない。
+## 8        ・為替相場や株安により、先行きに不安がある。
+## 9                          ・客の業績が悪化している。
+## 10 ・海外情勢への不安要素が一層顕著に表れてきている。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;こちらも良さそうです。&lt;/p&gt;
+&lt;h3 id=&#34;文書分類結果&#34;&gt;文書分類結果&lt;/h3&gt;
+&lt;p&gt;boxplotでデータ全体を見てみましょう。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 結果の可視化&lt;/span&gt;
+&lt;span style=&#34;color:#a6e22e&#34;&gt;library&lt;/span&gt;(ggplot2)
+&lt;span style=&#34;color:#a6e22e&#34;&gt;ggplot&lt;/span&gt;(sample_with_score_lss, &lt;span style=&#34;color:#a6e22e&#34;&gt;aes&lt;/span&gt;(x&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;景気の現状判断,y&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;score_lss)) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;geom_boxplot&lt;/span&gt;()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../post/post29/index_files/figure-html/unnamed-chunk-19-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;先ほどとは、様相が異なっています。
+上図では、横軸に「景気の現状判断」をとっていますが、景気が良い/悪いでセンチメントスコアがあまり変わらない結果となっています。サンプル全体でみると、文書分類を行える特徴量といえます。
+念のため、ロジスティック回帰を行ってみます。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;dataset &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; sample_with_score_lss &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+            dplyr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;mutate&lt;/span&gt;(condition&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;as.factor&lt;/span&gt;(dplyr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;if_else&lt;/span&gt;(景気の現状判断&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;○&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;景気の現状判断&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;◎&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;))) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+            dplyr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;select&lt;/span&gt;(condition, score_lss)
+sample_recipe &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; recipes&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;recipe&lt;/span&gt;(condition&lt;span style=&#34;color:#f92672&#34;&gt;~&lt;/span&gt;., dataset) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+                  recipes&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;step_center&lt;/span&gt;(recipes&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;all_predictors&lt;/span&gt;()) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+                  recipes&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;step_scale&lt;/span&gt;(recipes&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;all_predictors&lt;/span&gt;()) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt;
+                  recipes&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;prep&lt;/span&gt;(dataset)
+
+lr_fitted &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; parsnip&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;logistic_reg&lt;/span&gt;() &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+              parsnip&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;set_engine&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;glm&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+              parsnip&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;fit&lt;/span&gt;(condition&lt;span style=&#34;color:#f92672&#34;&gt;~&lt;/span&gt;., data&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;sample_recipe &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; recipes&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;juice&lt;/span&gt;())
+
+lr_fitted &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+  purrr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;pluck&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;fit&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+  gtsummary&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;tbl_regression&lt;/span&gt;() &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+  gtsummary&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;add_n&lt;/span&gt;()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div id=&#34;wtlwlowqss&#34; style=&#34;overflow-x:auto;overflow-y:auto;width:auto;height:auto;&#34;&gt;
+&lt;style&gt;html {
+  font-family: -apple-system, BlinkMacSystemFont, &#39;Segoe UI&#39;, Roboto, Oxygen, Ubuntu, Cantarell, &#39;Helvetica Neue&#39;, &#39;Fira Sans&#39;, &#39;Droid Sans&#39;, Arial, sans-serif;
+}
+&lt;p&gt;#wtlwlowqss .gt_table {
+display: table;
+border-collapse: collapse;
+margin-left: auto;
+margin-right: auto;
+color: #333333;
+font-size: 16px;
+font-weight: normal;
+font-style: normal;
+background-color: #FFFFFF;
+width: auto;
+border-top-style: solid;
+border-top-width: 2px;
+border-top-color: #A8A8A8;
+border-right-style: none;
+border-right-width: 2px;
+border-right-color: #D3D3D3;
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #A8A8A8;
+border-left-style: none;
+border-left-width: 2px;
+border-left-color: #D3D3D3;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_heading {
+background-color: #FFFFFF;
+text-align: center;
+border-bottom-color: #FFFFFF;
+border-left-style: none;
+border-left-width: 1px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 1px;
+border-right-color: #D3D3D3;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_title {
+color: #333333;
+font-size: 125%;
+font-weight: initial;
+padding-top: 4px;
+padding-bottom: 4px;
+padding-left: 5px;
+padding-right: 5px;
+border-bottom-color: #FFFFFF;
+border-bottom-width: 0;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_subtitle {
+color: #333333;
+font-size: 85%;
+font-weight: initial;
+padding-top: 0;
+padding-bottom: 6px;
+padding-left: 5px;
+padding-right: 5px;
+border-top-color: #FFFFFF;
+border-top-width: 0;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_bottom_border {
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_col_headings {
+border-top-style: solid;
+border-top-width: 2px;
+border-top-color: #D3D3D3;
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+border-left-style: none;
+border-left-width: 1px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 1px;
+border-right-color: #D3D3D3;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_col_heading {
+color: #333333;
+background-color: #FFFFFF;
+font-size: 100%;
+font-weight: normal;
+text-transform: inherit;
+border-left-style: none;
+border-left-width: 1px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 1px;
+border-right-color: #D3D3D3;
+vertical-align: bottom;
+padding-top: 5px;
+padding-bottom: 6px;
+padding-left: 5px;
+padding-right: 5px;
+overflow-x: hidden;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_column_spanner_outer {
+color: #333333;
+background-color: #FFFFFF;
+font-size: 100%;
+font-weight: normal;
+text-transform: inherit;
+padding-top: 0;
+padding-bottom: 0;
+padding-left: 4px;
+padding-right: 4px;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_column_spanner_outer:first-child {
+padding-left: 0;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_column_spanner_outer:last-child {
+padding-right: 0;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_column_spanner {
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+vertical-align: bottom;
+padding-top: 5px;
+padding-bottom: 5px;
+overflow-x: hidden;
+display: inline-block;
+width: 100%;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_group_heading {
+padding-top: 8px;
+padding-bottom: 8px;
+padding-left: 5px;
+padding-right: 5px;
+color: #333333;
+background-color: #FFFFFF;
+font-size: 100%;
+font-weight: initial;
+text-transform: inherit;
+border-top-style: solid;
+border-top-width: 2px;
+border-top-color: #D3D3D3;
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+border-left-style: none;
+border-left-width: 1px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 1px;
+border-right-color: #D3D3D3;
+vertical-align: middle;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_empty_group_heading {
+padding: 0.5px;
+color: #333333;
+background-color: #FFFFFF;
+font-size: 100%;
+font-weight: initial;
+border-top-style: solid;
+border-top-width: 2px;
+border-top-color: #D3D3D3;
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+vertical-align: middle;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_from_md &amp;gt; :first-child {
+margin-top: 0;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_from_md &amp;gt; :last-child {
+margin-bottom: 0;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_row {
+padding-top: 8px;
+padding-bottom: 8px;
+padding-left: 5px;
+padding-right: 5px;
+margin: 10px;
+border-top-style: solid;
+border-top-width: 1px;
+border-top-color: #D3D3D3;
+border-left-style: none;
+border-left-width: 1px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 1px;
+border-right-color: #D3D3D3;
+vertical-align: middle;
+overflow-x: hidden;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_stub {
+color: #333333;
+background-color: #FFFFFF;
+font-size: 100%;
+font-weight: initial;
+text-transform: inherit;
+border-right-style: solid;
+border-right-width: 2px;
+border-right-color: #D3D3D3;
+padding-left: 5px;
+padding-right: 5px;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_stub_row_group {
+color: #333333;
+background-color: #FFFFFF;
+font-size: 100%;
+font-weight: initial;
+text-transform: inherit;
+border-right-style: solid;
+border-right-width: 2px;
+border-right-color: #D3D3D3;
+padding-left: 5px;
+padding-right: 5px;
+vertical-align: top;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_row_group_first td {
+border-top-width: 2px;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_summary_row {
+color: #333333;
+background-color: #FFFFFF;
+text-transform: inherit;
+padding-top: 8px;
+padding-bottom: 8px;
+padding-left: 5px;
+padding-right: 5px;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_first_summary_row {
+border-top-style: solid;
+border-top-color: #D3D3D3;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_first_summary_row.thick {
+border-top-width: 2px;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_last_summary_row {
+padding-top: 8px;
+padding-bottom: 8px;
+padding-left: 5px;
+padding-right: 5px;
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_grand_summary_row {
+color: #333333;
+background-color: #FFFFFF;
+text-transform: inherit;
+padding-top: 8px;
+padding-bottom: 8px;
+padding-left: 5px;
+padding-right: 5px;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_first_grand_summary_row {
+padding-top: 8px;
+padding-bottom: 8px;
+padding-left: 5px;
+padding-right: 5px;
+border-top-style: double;
+border-top-width: 6px;
+border-top-color: #D3D3D3;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_striped {
+background-color: rgba(128, 128, 128, 0.05);
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_table_body {
+border-top-style: solid;
+border-top-width: 2px;
+border-top-color: #D3D3D3;
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_footnotes {
+color: #333333;
+background-color: #FFFFFF;
+border-bottom-style: none;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+border-left-style: none;
+border-left-width: 2px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 2px;
+border-right-color: #D3D3D3;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_footnote {
+margin: 0px;
+font-size: 90%;
+padding-left: 4px;
+padding-right: 4px;
+padding-left: 5px;
+padding-right: 5px;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_sourcenotes {
+color: #333333;
+background-color: #FFFFFF;
+border-bottom-style: none;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+border-left-style: none;
+border-left-width: 2px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 2px;
+border-right-color: #D3D3D3;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_sourcenote {
+font-size: 90%;
+padding-top: 4px;
+padding-bottom: 4px;
+padding-left: 5px;
+padding-right: 5px;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_left {
+text-align: left;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_center {
+text-align: center;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_right {
+text-align: right;
+font-variant-numeric: tabular-nums;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_font_normal {
+font-weight: normal;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_font_bold {
+font-weight: bold;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_font_italic {
+font-style: italic;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_super {
+font-size: 65%;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_footnote_marks {
+font-style: italic;
+font-weight: normal;
+font-size: 75%;
+vertical-align: 0.4em;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_asterisk {
+font-size: 100%;
+vertical-align: 0;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_slash_mark {
+font-size: 0.7em;
+line-height: 0.7em;
+vertical-align: 0.15em;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_fraction_numerator {
+font-size: 0.6em;
+line-height: 0.6em;
+vertical-align: 0.45em;
+}&lt;/p&gt;
+&lt;p&gt;#wtlwlowqss .gt_fraction_denominator {
+font-size: 0.6em;
+line-height: 0.6em;
+vertical-align: -0.05em;
+}
+&lt;/style&gt;&lt;/p&gt;
+&lt;table class=&#34;gt_table&#34;&gt;
+  &lt;thead class=&#34;gt_col_headings&#34;&gt;
+    &lt;tr&gt;
+      &lt;th class=&#34;gt_col_heading gt_columns_bottom_border gt_left&#34; rowspan=&#34;1&#34; colspan=&#34;1&#34;&gt;&lt;strong&gt;Characteristic&lt;/strong&gt;&lt;/th&gt;
+      &lt;th class=&#34;gt_col_heading gt_columns_bottom_border gt_center&#34; rowspan=&#34;1&#34; colspan=&#34;1&#34;&gt;&lt;strong&gt;N&lt;/strong&gt;&lt;/th&gt;
+      &lt;th class=&#34;gt_col_heading gt_columns_bottom_border gt_center&#34; rowspan=&#34;1&#34; colspan=&#34;1&#34;&gt;&lt;strong&gt;log(OR)&lt;/strong&gt;&lt;sup class=&#34;gt_footnote_marks&#34;&gt;1&lt;/sup&gt;&lt;/th&gt;
+      &lt;th class=&#34;gt_col_heading gt_columns_bottom_border gt_center&#34; rowspan=&#34;1&#34; colspan=&#34;1&#34;&gt;&lt;strong&gt;95% CI&lt;/strong&gt;&lt;sup class=&#34;gt_footnote_marks&#34;&gt;1&lt;/sup&gt;&lt;/th&gt;
+      &lt;th class=&#34;gt_col_heading gt_columns_bottom_border gt_center&#34; rowspan=&#34;1&#34; colspan=&#34;1&#34;&gt;&lt;strong&gt;p-value&lt;/strong&gt;&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody class=&#34;gt_table_body&#34;&gt;
+    &lt;tr&gt;&lt;td class=&#34;gt_row gt_left&#34;&gt;score_lss&lt;/td&gt;
+&lt;td class=&#34;gt_row gt_center&#34;&gt;44,944&lt;/td&gt;
+&lt;td class=&#34;gt_row gt_center&#34;&gt;0.55&lt;/td&gt;
+&lt;td class=&#34;gt_row gt_center&#34;&gt;0.53, 0.57&lt;/td&gt;
+&lt;td class=&#34;gt_row gt_center&#34;&gt;&lt;0.001&lt;/td&gt;&lt;/tr&gt;
+  &lt;/tbody&gt;
+  &lt;tfoot class=&#34;gt_footnotes&#34;&gt;
+    &lt;tr&gt;
+      &lt;td class=&#34;gt_footnote&#34; colspan=&#34;5&#34;&gt;&lt;sup class=&#34;gt_footnote_marks&#34;&gt;1&lt;/sup&gt; OR = Odds Ratio, CI = Confidence Interval&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tfoot&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;p&gt;推定したモデルの精度を確認するため、データセットの予測分類を計算し、正解ラベルと突合します。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;lr_pred &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;-&lt;/span&gt; lr_fitted &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+              &lt;span style=&#34;color:#a6e22e&#34;&gt;predict&lt;/span&gt;(dataset) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt;
+              dplyr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;mutate&lt;/span&gt;(truth &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; dataset &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; dplyr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;select&lt;/span&gt;(condition) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; dplyr&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;pull&lt;/span&gt;())
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;正解率は約60%となりました。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;lr_pred &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; yardstick&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;metrics&lt;/span&gt;(truth &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; truth, estimate &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; .pred_class)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre&gt;&lt;code&gt;## # A tibble: 2 x 3
+##   .metric  .estimator .estimate
+##   &amp;lt;chr&amp;gt;    &amp;lt;chr&amp;gt;          &amp;lt;dbl&amp;gt;
+## 1 accuracy binary         0.612
+## 2 kap      binary         0
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;混合行列(Confusion Matrix)を描画します。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;lr_pred &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; yardstick&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;conf_mat&lt;/span&gt;(truth &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; truth, estimate &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; .pred_class) &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;%&lt;/span&gt; 
+              ggplot2&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;autoplot&lt;/span&gt;(type &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;heatmap&amp;#34;&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../post/post29/index_files/figure-html/unnamed-chunk-23-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;全く文書分類できていませんね。全てのサンプルの予測値が0(=ネガティブ)となってしまっています。データセットは不均衡ですが、それにしても1(=ポジティブ)の予測がまったくないのは、そもそもの特徴量がいけていないためだと思われます。&lt;br&gt;
+上手くいかない仮説としては、センチメントスコアがゼロ周りに多く分布しているためという理由が考えられます(つまり、センチメントスコアが大きい単語はあまり文章に含まれていない or 様々な言葉で言い換えられている)。
+可視化を行い、確認してみます。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-r&#34; data-lang=&#34;r&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;textplot_terms&lt;/span&gt;(lss, &lt;span style=&#34;color:#a6e22e&#34;&gt;names&lt;/span&gt;(ja_seedwords))
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;../../post/post29/index_files/figure-html/unnamed-chunk-24-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;上記の図は縦軸が頻度(対数)、横軸が極性(Polarity、センチメントスコアと解釈)となっています。極性が大きく、頻度が高い単語は種語が多く、頻度の高い単語はゼロ周りに分布していることが確認できました。
+語調の強い単語以外は極性の絶対値が低いと出るようで、日本語のように強い表現があまり取られない言語では機能しずらいのかもしれません。&lt;/p&gt;
+&lt;h2 id=&#34;3-終わりに&#34;&gt;3. 終わりに&lt;/h2&gt;
+&lt;p&gt;辞書ベース手法の時と同じく、教師あり学習以外の手法で文書分類を行うことは難しいという印象です。&lt;br&gt;
+次は、深層学習ベースの手法を用いて、語順や文脈を加味した分析を行います！&lt;/p&gt;
+</description>
+    </item>
     
     <item>
       <title>【徹底比較】センチメントスコア算出手法！！ - 第3回</title>

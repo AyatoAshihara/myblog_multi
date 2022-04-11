@@ -201,12 +201,9 @@ $$
 まずサンプルデータを読み込みます。
 
 
-
-
 ```python
 filePath = r"C:\Users\hogehoge\Watchder\RawData\*.csv"
 ```
-
 
 ```python
 import pandas as pd
@@ -224,6 +221,7 @@ sample = sample[sample.景気の現状判断!='□']
 corpus = sample.追加説明及び具体的状況の説明.str.replace("・","")
 corpus.head()
 ```
+
 
 ```
 ## 0                              店頭の取扱額が前年比約120％と好調であった。

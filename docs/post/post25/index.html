@@ -75,6 +75,8 @@
   
     
     
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.9.0/css/academicons.min.css" integrity="sha512-W4yqoT1+8NLkinBLBZko+dFB2ZbHsYLDdr50VElllRcNt2Q4/GSs6u71UHKxB7S6JEMCp5Ve4xjh3eGQl/HRvg==" crossorigin="anonymous">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha256-FMvZuGapsJLjouA6k7Eo2lusoAX9i0ShlWFG6qt7SLc=" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin="anonymous">
 
@@ -277,7 +279,7 @@
   }
 
   gtag('js', new Date());
-  gtag('config', 'UA-140804055-1', {});
+  gtag('config', 'UA-140804055-1', { 'anonymize_ip': true });
 
   
   document.addEventListener('click', onClickCallback, false);
@@ -309,6 +311,9 @@
   
   
   <meta property="twitter:card" content="summary_large_image">
+  
+  <meta property="twitter:site" content="@vdjgdkhvskcndj">
+  <meta property="twitter:creator" content="@vdjgdkhvskcndj">
   
   <meta property="og:site_name" content="京都の電子部品メーカーで働く社会人が研究に没頭するブログ">
   <meta property="og:url" content="/post/post25/">
@@ -377,6 +382,36 @@
 
 
   
+  
+  
+  
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.1.1/cookieconsent.min.js" integrity="sha256-5VhCqFam2Cn+yjw61zbBNrbHVJ6SRydPeKopYlngbiQ=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.1.1/cookieconsent.min.css" integrity="sha256-zQ0LblD/Af8vOppw18+2anxsuaz3pWYyVWi+bTvTH8Q=" crossorigin="anonymous">
+  
+  <script>
+  window.addEventListener("load", function(){
+    window.cookieconsent.initialise({
+      "palette": {
+        "popup": {
+          "background": "#2962ff",
+          "text": "rgb(255, 255, 255)"
+        },
+        "button": {
+          "background": "rgb(255, 255, 255)",
+          "text": "#2962ff"
+        }
+      },
+      "theme": "classic",
+      "content": {
+        "message": "このウェブサイトはあなたが最高の体験を得るためにクッキーを使用します。",
+        "dismiss": "はい",
+        "link": "詳細を見る",
+        "href": "https://www.cookiesandyou.com"
+      }
+    })});
+  </script>
+
 
 
   
@@ -660,7 +695,7 @@
 
     <div class="d-none d-xl-block col-xl-2 docs-toc">
       <ul class="nav toc-top">
-        <li><a href="#" id="back_to_top" class="docs-toc-title">On this page</a></li>
+        <li><a href="#" id="back_to_top" class="docs-toc-title">Table Of Contents</a></li>
       </ul>
       <nav id="TableOfContents">
   <ul>
@@ -725,7 +760,6 @@
   
 
   
-
 
 <div id="code-folding-buttons" class="dropdown btn-group pull-right">
   <a class="btn btn-light btn-sm dropdown-toggle" href="#" role="button" id="allCodeToggleButton"
@@ -1752,6 +1786,28 @@ plt<span style="color:#f92672">.</span>show()
 
 
 
+<div class="article-widget">
+  
+<div class="post-nav">
+  
+  
+  
+  <div class="post-nav-item">
+    <div class="meta-nav">次へ</div>
+    <a href="../../post/post27/" rel="next">【徹底比較】センチメントスコア算出手法！！ - 第2回</a>
+  </div>
+  
+  
+  
+  <div class="post-nav-item">
+    <div class="meta-nav">前へ</div>
+    <a href="../../post/post26/" rel="prev">転職します</a>
+  </div>
+  
+</div>
+
+</div>
+
 
 
 
@@ -1762,6 +1818,8 @@ plt<span style="color:#f92672">.</span>show()
     <h3>関連項目</h3>
     <ul>
       
+      <li><a href="../../post/post29/">【徹底比較】センチメントスコア算出手法！！ - 第4回</a></li>
+      
       <li><a href="../../post/post28/">【徹底比較】センチメントスコア算出手法！！ - 第3回</a></li>
       
       <li><a href="../../post/post27/">【徹底比較】センチメントスコア算出手法！！ - 第2回</a></li>
@@ -1769,8 +1827,6 @@ plt<span style="color:#f92672">.</span>show()
       <li><a href="../../post/post20/">PytorchのPre-trainedモデルで馬体写真の背景を自動トリミングする</a></li>
       
       <li><a href="../../post/post16/">LightGBMを使用して競馬結果を予想してみる</a></li>
-      
-      <li><a href="../../post/post15/">Pythonのpandas_datareaderから色々なデータを取得してみる</a></li>
       
     </ul>
   </div>
@@ -1812,9 +1868,9 @@ plt<span style="color:#f92672">.</span>show()
         
         <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/languages/python.min.js"></script>
         
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/languages/SQL.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/languages/sql.min.js"></script>
         
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/languages/C&#43;&#43;.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/languages/cpp.min.js"></script>
         
       
 
@@ -1899,9 +1955,11 @@ plt<span style="color:#f92672">.</span>show()
       
     
     
+      
     
     
-    <script src="../../js/wowchemy.min.4c2bca31150ce93c5a5e43b8a50f22fd.js"></script>
+    
+    <script src="../../js/wowchemy.min.2a3f95be2bc4762ba1847fb5d7a28317.js"></script>
 
     
 

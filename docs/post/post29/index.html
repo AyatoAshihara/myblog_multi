@@ -1,0 +1,2000 @@
+<!DOCTYPE html><html lang="ja" >
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  
+  
+  
+  <meta name="generator" content="Wowchemy 4.8.0 for Hugo">
+  
+
+  
+
+  
+  
+
+  
+  
+  
+  
+  
+    
+    
+    
+  
+  
+
+  <meta name="author" content="Ayato Ashihara">
+
+  
+  
+  
+    
+  
+  <meta name="description" content="単語埋め込み(word embedding)を用いたセンチメントスコアの算出を実践します！">
+
+  
+  <link rel="alternate" hreflang="ja" href="../../post/post29/">
+
+  
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+  
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+
+  
+  
+  
+  <meta name="theme-color" content="#2962ff">
+  
+
+  
+  
+  
+  <script src="../../js/mathjax-config.js"></script>
+  
+
+  
+  
+  
+  
+    
+    
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.9.0/css/academicons.min.css" integrity="sha512-W4yqoT1+8NLkinBLBZko+dFB2ZbHsYLDdr50VElllRcNt2Q4/GSs6u71UHKxB7S6JEMCp5Ve4xjh3eGQl/HRvg==" crossorigin="anonymous">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha256-FMvZuGapsJLjouA6k7Eo2lusoAX9i0ShlWFG6qt7SLc=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin="anonymous">
+
+    
+    
+    
+      
+    
+    
+      
+      
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/solarized-dark.min.css" crossorigin="anonymous" title="hl-light">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/solarized-dark.min.css" crossorigin="anonymous" title="hl-dark" disabled>
+      
+    
+
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.css" integrity="sha512-1xoFisiGdy9nvho8EgXuXvnpR5GAMSjFwp40gSRE3NwdUdIMIKuPa7bqoUhLD0O/5tPNhteAsE5XyyMi5reQVA==" crossorigin="anonymous">
+    
+
+    
+
+    
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.2.2/lazysizes.min.js" integrity="sha512-TmDwFLhg3UA4ZG0Eb4MIyT1O1Mb+Oww5kFG0uHqXsdbyZz9DcvYQhKpGgNkamAI6h2lGGZq2X8ftOJvF/XjTUg==" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" integrity="" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+
+  
+
+  
+  
+  
+    
+      
+      
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,700%7CRoboto:400,400italic,700%7CRoboto+Mono&display=swap">
+    
+  
+
+  
+  
+  
+  
+  <link rel="stylesheet" href="../../css/wowchemy.css">
+
+  
+
+
+
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-140804055-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+
+  function gtag() {
+      dataLayer.push(arguments);
+  }
+
+  function trackOutboundLink(url, target) {
+    gtag('event', 'click', {
+         'event_category': 'outbound',
+         'event_label': url,
+         'transport_type': 'beacon',
+         'event_callback': function () {
+           if (target !== '_blank') {
+             document.location = url;
+           }
+         }
+    });
+    console.debug("Outbound link clicked: " + url);
+  }
+
+  function onClickCallback(event) {
+    if ((event.target.tagName !== 'A') || (event.target.host === window.location.host)) {
+      return;
+    }
+    trackOutboundLink(event.target, event.target.getAttribute('target'));  
+  }
+
+  gtag('js', new Date());
+  gtag('config', 'UA-140804055-1', { 'anonymize_ip': true });
+
+  
+  document.addEventListener('click', onClickCallback, false);
+</script>
+
+
+  
+
+
+  
+  
+
+  
+
+  <link rel="manifest" href="../../index.webmanifest">
+  <link rel="icon" type="image/png" href="../../images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
+  <link rel="apple-touch-icon" type="image/png" href="../../images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
+
+  <link rel="canonical" href="../../post/post29/">
+
+  
+  
+  
+  
+  
+  
+  
+    
+  
+  
+  <meta property="twitter:card" content="summary_large_image">
+  
+  <meta property="twitter:site" content="@vdjgdkhvskcndj">
+  <meta property="twitter:creator" content="@vdjgdkhvskcndj">
+  
+  <meta property="og:site_name" content="京都の電子部品メーカーで働く社会人が研究に没頭するブログ">
+  <meta property="og:url" content="/post/post29/">
+  <meta property="og:title" content="【徹底比較】センチメントスコア算出手法！！ - 第4回 | 京都の電子部品メーカーで働く社会人が研究に没頭するブログ">
+  <meta property="og:description" content="単語埋め込み(word embedding)を用いたセンチメントスコアの算出を実践します！"><meta property="og:image" content="/post/post29/featured.jpg">
+  <meta property="twitter:image" content="/post/post29/featured.jpg"><meta property="og:locale" content="ja">
+  
+    
+      <meta property="article:published_time" content="2022-04-02T00:00:00&#43;00:00">
+    
+    <meta property="article:modified_time" content="2022-04-02T00:00:00&#43;00:00">
+  
+
+  
+
+
+    
+
+
+
+
+
+
+  
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "/post/post29/"
+  },
+  "headline": "【徹底比較】センチメントスコア算出手法！！ - 第4回",
+  
+  "image": [
+    "/post/post29/featured.jpg"
+  ],
+  
+  "datePublished": "2022-04-02T00:00:00Z",
+  "dateModified": "2022-04-02T00:00:00Z",
+  
+  "author": {
+    "@type": "Person",
+    "name": "Ayato Ashihara"
+  },
+  
+  "publisher": {
+    "@type": "Organization",
+    "name": "京都の電子部品メーカーで働く社会人が研究に没頭するブログ",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png"
+    }
+  },
+  "description": "単語埋め込み(word embedding)を用いたセンチメントスコアの算出を実践します！"
+}
+</script>
+
+  
+
+  
+
+
+  
+  
+  
+  
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.1.1/cookieconsent.min.js" integrity="sha256-5VhCqFam2Cn+yjw61zbBNrbHVJ6SRydPeKopYlngbiQ=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.1.1/cookieconsent.min.css" integrity="sha256-zQ0LblD/Af8vOppw18+2anxsuaz3pWYyVWi+bTvTH8Q=" crossorigin="anonymous">
+  
+  <script>
+  window.addEventListener("load", function(){
+    window.cookieconsent.initialise({
+      "palette": {
+        "popup": {
+          "background": "#2962ff",
+          "text": "rgb(255, 255, 255)"
+        },
+        "button": {
+          "background": "rgb(255, 255, 255)",
+          "text": "#2962ff"
+        }
+      },
+      "theme": "classic",
+      "content": {
+        "message": "このウェブサイトはあなたが最高の体験を得るためにクッキーを使用します。",
+        "dismiss": "はい",
+        "link": "詳細を見る",
+        "href": "https://www.cookiesandyou.com"
+      }
+    })});
+  </script>
+
+
+
+  
+
+
+
+
+
+  <title>【徹底比較】センチメントスコア算出手法！！ - 第4回 | 京都の電子部品メーカーで働く社会人が研究に没頭するブログ</title>
+
+</head>
+
+
+<body id="top" data-spy="scroll" data-offset="70" data-target="#TableOfContents" class=" ">
+
+  
+  
+  
+    <script>window.wcDarkLightEnabled = true;</script>
+  
+  
+    <script>const isSiteThemeDark = false;</script>
+  
+  
+  <script src="../../js/load-theme.js"></script>
+
+  <aside class="search-results" id="search">
+  <div class="container">
+    <section class="search-header">
+
+      <div class="row no-gutters justify-content-between mb-3">
+        <div class="col-6">
+          <h1>Search</h1>
+        </div>
+        <div class="col-6 col-search-close">
+          <a class="js-search" href="#"><i class="fas fa-times-circle text-muted" aria-hidden="true"></i></a>
+        </div>
+      </div>
+
+      <div id="search-box">
+        
+        <input name="q" id="search-query" placeholder="検索..." autocapitalize="off"
+        autocomplete="off" autocorrect="off" spellcheck="false" type="search" class="form-control">
+        
+      </div>
+
+    </section>
+    <section class="section-search-results">
+
+      <div id="search-hits">
+        
+      </div>
+
+    </section>
+  </div>
+</aside>
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+<nav class="navbar navbar-expand-lg navbar-light compensate-for-scrollbar" id="navbar-main">
+  <div class="container">
+
+    
+    <div class="d-none d-lg-inline-flex">
+      <a class="navbar-brand" href="../../">京都の電子部品メーカーで働く社会人が研究に没頭するブログ</a>
+    </div>
+    
+
+    
+    <button type="button" class="navbar-toggler" data-toggle="collapse"
+            data-target="#navbar-content" aria-controls="navbar" aria-expanded="false" aria-label="ナビゲーションの切り替え">
+    <span><i class="fas fa-bars"></i></span>
+    </button>
+    
+
+    
+    <div class="navbar-brand-mobile-wrapper d-inline-flex d-lg-none">
+      <a class="navbar-brand" href="../../">京都の電子部品メーカーで働く社会人が研究に没頭するブログ</a>
+    </div>
+    
+
+    
+    
+    <div class="navbar-collapse main-menu-item collapse justify-content-start" id="navbar-content">
+
+      
+      <ul class="navbar-nav d-md-inline-flex">
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+            
+            
+            
+              
+            
+            
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="../../#about"><span>About</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link  active" href="../../post"><span>Posts</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="../../publication"><span>Publications</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+            
+            
+            
+              
+            
+            
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="../../#contact"><span>Contact</span></a>
+        </li>
+
+        
+        
+
+      
+
+        
+      </ul>
+    </div>
+
+    <ul class="nav-icons navbar-nav flex-row ml-auto d-flex pl-md-2">
+      
+      
+      <li class="nav-item">
+        <a class="nav-link js-search" href="#" aria-label="Search"><i class="fas fa-search" aria-hidden="true"></i></a>
+      </li>
+      
+
+      
+      
+      <li class="nav-item dropdown theme-dropdown">
+        <a href="#" class="nav-link" data-toggle="dropdown" aria-haspopup="true">
+          <i class="fas fa-moon" aria-hidden="true"></i>
+        </a>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item js-set-theme-light">
+            <span>Light</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-dark">
+            <span>Dark</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-auto">
+            <span>Automatic</span>
+          </a>
+        </div>
+      </li>
+      
+
+      
+
+    </ul>
+
+  </div>
+</nav>
+
+
+
+  <div class="container-fluid docs">
+  <div class="row flex-xl-nowrap">
+
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <ul class="nav toc-top">
+        <li><a href="#" id="back_to_top" class="docs-toc-title">Table Of Contents</a></li>
+      </ul>
+      <nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#1-単語埋め込みword-embedding手法について">1. 単語埋め込み(Word Embedding)手法について</a>
+          <ul>
+            <li><a href="#単語埋め込みword-embeddingとは">単語埋め込み(Word Embedding)とは</a></li>
+            <li><a href="#latent-semantic-scalingとは">Latent Semantic Scalingとは</a></li>
+          </ul>
+        </li>
+        <li><a href="#2-latent-semantic-scalingの実践">2. Latent Semantic Scalingの実践</a>
+          <ul>
+            <li><a href="#前処理">前処理</a></li>
+            <li><a href="#センチメントスコアの算出">センチメントスコアの算出</a></li>
+            <li><a href="#文書分類結果">文書分類結果</a></li>
+          </ul>
+        </li>
+        <li><a href="#3-終わりに">3. 終わりに</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+      
+    </div>
+
+    <main class="col-12 col-md-0 col-xl-10 py-md-3 pl-md-5 docs-content" role="main">
+      <article class="article">
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+
+<div class="article-container pt-3">
+  <h1>【徹底比較】センチメントスコア算出手法！！ - 第4回</h1>
+
+  
+
+  
+
+<div id="code-folding-buttons" class="dropdown btn-group pull-right">
+  <a class="btn btn-light btn-sm dropdown-toggle" href="#" role="button" id="allCodeToggleButton"
+     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    Code
+  </a>
+  <div class="dropdown-menu" aria-labelledby="allCodeToggleButton">
+    <a id="rmd-show-all-code" class="dropdown-item small" href="#">Show all</a>
+    <a id="rmd-hide-all-code" class="dropdown-item small" href="#">Hide all</a>
+  </div>
+</div>
+
+
+
+  
+
+
+<div class="article-metadata">
+
+  
+  
+
+  
+  <span class="article-date">
+    
+    
+      
+    
+    Apr 2, 2022
+  </span>
+  
+
+  
+
+  
+  <span class="middot-divider"></span>
+  <span class="article-reading-time">
+    16 分で読める
+  </span>
+  
+
+  
+  
+  
+  <span class="middot-divider"></span>
+  <a href="../../post/post29/#disqus_thread"></a>
+  
+
+  
+  
+  <span class="middot-divider"></span>
+  <span class="article-categories">
+    <i class="fas fa-folder mr-1"></i><a href="../../category/%E5%8D%98%E7%99%BA/">単発</a></span>
+  
+
+</div>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+<div class="article-header container featured-image-wrapper mt-4 mb-4" style="max-width: 1200px; max-height: 801px;">
+  <div style="position: relative">
+    <img src="../../post/post29/featured_hu5d339a5326ff7bd7d8bd6b537d91fffa_598291_1200x0_resize_q90_lanczos.jpg" alt="" class="featured-image">
+    
+  </div>
+</div>
+
+
+
+        <div class="article-container">
+
+          <div class="article-style">
+            <h2 id="1-単語埋め込みword-embedding手法について">1. 単語埋め込み(Word Embedding)手法について</h2>
+<p>前回までのpostで、教師なし学習である辞書ベース分類法と教師あり学習であるナイーブベイズ分類器を紹介しました。教師あり学習のほうが精度は出そうだが、教師データの準備にコストがかかり、教師なし学習は教師データは不要である一方、精度に課題があります。どちらも一長一短がある手法であり、この両者を埋め合わせる良い手法はないのかと調べていると準教師学習を用いた手法であるLatent Semantic Scalingを発見しました。</p>
+<p><strong>Latent Semantic Scaling: A Semisupervised Text Analysis Technique for New Domains and Languages</strong>(<strong>watanabe2020?</strong>)</p>
+<p>この手法は単語埋め込み(word embedding)を用いているため、まずはそちらを紹介します。</p>
+<h3 id="単語埋め込みword-embeddingとは">単語埋め込み(Word Embedding)とは</h3>
+<p>この論文では単語埋め込み(Word Embedding)を使用しています。単語埋め込み(Word Embedding)とは、<strong>自然言語処理における言語モデリング手法の一種であり、単語や語句を固定長の実数ベクトルとして表現する手法のこと</strong>です。</p>
+<p>Works Applicationsが提供しているモデルChiveを例とすると、以下のように各単語にその単語の特徴を表現する300次元の実数ベクトル(=Embeddingベクトル)が与えられています。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">chive_path <span style="color:#f92672">=</span> <span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;C:\Users\hogehoge\Watcher\chive-1.2-mc15_gensim\chive-1.2-mc15.kv&#34;</span>
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> gensim
+vectors <span style="color:#f92672">=</span> gensim<span style="color:#f92672">.</span>models<span style="color:#f92672">.</span>KeyedVectors<span style="color:#f92672">.</span>load(chive_path)
+<span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#34;Embeddingベクトルの次元数：&#34;</span>, vectors[<span style="color:#e6db74">&#34;王様&#34;</span>]<span style="color:#f92672">.</span>shape[<span style="color:#ae81ff">0</span>])
+</code></pre></div><pre><code>## Embeddingベクトルの次元数： 300
+</code></pre>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#34;Embeddingベクトルの値：&#34;</span>, vectors[<span style="color:#e6db74">&#34;王様&#34;</span>][<span style="color:#ae81ff">1</span>:<span style="color:#ae81ff">10</span>])
+</code></pre></div><pre><code>## Embeddingベクトルの値： [ 0.08844764 -0.02172066  0.11218461  0.00986984 -0.26948628 -0.14956778
+##   0.08493619  0.16736646  0.03643996]
+</code></pre>
+<p>このEmbeddingベクトルを用いて、単語同士の演算を行うことも可能です。例えば、「王様 - 男 + 女 = 女王」のようなもので、具体的には「王様」のEmbeddingベクトルから「男」のEmbeddingベクトルを減算、「女」のEmbeddingベクトルを加算し、計算結果と最も値が近い単語を返す処理をします。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#34;王様 - 男 - 女：&#34;</span>, vectors<span style="color:#f92672">.</span>most_similar(positive<span style="color:#f92672">=</span>[<span style="color:#e6db74">&#34;王様&#34;</span>,<span style="color:#e6db74">&#34;女&#34;</span>], negative<span style="color:#f92672">=</span>[<span style="color:#e6db74">&#34;男&#34;</span>], topn<span style="color:#f92672">=</span><span style="color:#ae81ff">3</span>))
+</code></pre></div><pre><code>## 王様 - 男 - 女： [('王女', 0.5806534886360168), ('女王', 0.5754266381263733), ('王妃', 0.5491030216217041)]
+</code></pre>
+<p>上記では「王女」が最も近い単語となっていますが、2番目が「女王」であり、意図した結果が返ったことが分かります。<br>
+以下のように、各単語のEmbeddingベクトルのコサイン類似度を測ることによって、或る単語と意味が近い単語を調べることも可能です。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#34;関西学院大学と意味の近い単語上位3位：&#34;</span>, vectors<span style="color:#f92672">.</span>most_similar([<span style="color:#e6db74">&#34;関西学院大学&#34;</span>],topn<span style="color:#f92672">=</span><span style="color:#ae81ff">3</span>))
+</code></pre></div><pre><code>## 関西学院大学と意味の近い単語上位3位： [('関西大学', 0.798370361328125), ('立命館大学', 0.7937482595443726), ('同志社大学', 0.7829927206039429)]
+</code></pre>
+<p>やはり関関同立というだけあって想定通りの結果です。また、その順番も多くの人のイメージ通りかも知れません(同じキリスト教の大学と言うことであれば、同志社大学の近いという見方もあるかも知れません)。<br>
+では、この実数ベクトルをどのように計算しているのでしょうか。Word Embeddingの手法としては、Word2Vec(<a href="https://arxiv.org/abs/1301.3781" target="_blank" rel="noopener">Efficient Estimation of Word Representations in Vector Space (arxiv.org)</a>)が有名です。</p>
+<h3 id="latent-semantic-scalingとは">Latent Semantic Scalingとは</h3>
+<p>政治学者である渡辺耕平さんによって提案されたWord Embeddingを利用してセンチメントスコアを単語へ付与する手法です。種語(Seed Words)と呼ばれる抽象的な意味を持つ幾つかの単語からの近さでセンチメントスコアの付与対象とする単語群の実数ベクトルを計算する準教師学習となっており、教師あり学習、教師なし学習のメリデメを補完しています。</p>
+<ul>
+<li>
+<p>教師あり学習</p>
+<p>メリット - 学習のスピードが速く、精度も高い</p>
+<p>デメリット - 教師データを整備するのが大変</p>
+</li>
+<li>
+<p>教師なし学習</p>
+<p>メリット - 教師データを用意する必要がないので、分析を始めやすい</p>
+<p>デメリット - 学習のスピードが遅く、精度も低い</p>
+</li>
+</ul>
+<p>Word Embeddingの算出には特異値分解を用いています。各要素がその文書(行)におけるその単語(列)の出現頻度が入力されている行列である文書行列に対して特異値分解を行い、各単語のEmbeddingベクトルを計算します。ここで文書行列を$D$、文書行列$D$における単語(列)数を$n$とすると、</p>
+<p>$$
+D \approx U \Sigma V'
+$$</p>
+<p>と分解でき、$V$が$k×n$行列となるので各単語の特徴量ベクトルと見なすことができます($k$は分析者が決定)。$V$のうち$i$列目のベクトルと$V_i$と表すと、センチメントスコアは種語$s \in S$の特徴量ベクトル$V_s$と各単語の特徴量ベクトル$V_j$のコサイン類似度から算出します。単語$f$のセンチメントスコアを$g_f$とすると、算出式は</p>
+<p>$$
+g_f = \frac{1}{|S|}\sum_{s\in S} \cos(v_s,v_f)p_s
+$$</p>
+<p>となります。ここで、$p_s$は分析者が定める種語のセンチメントスコアです。種語が複数個存在する場合には平均値を使用します。。</p>
+<p>次に、単語のセンチメントスコアを用いて文書のセンチメントスコアを算出します。文書$d$のセンチメントスコアを$y_d$とすると、その文書に含まれる単語$f\in F$を用いて</p>
+<p>$$
+y_d = \frac{1}{N}\sum_{f\in F}g_fh_f
+$$</p>
+<p>で計算します。ここで、$h_f$は各単語$f$のその文書内での出現回数、$N$はその文書に含まれる単語の総数です($V$に含まれない単語は除く)。</p>
+<h2 id="2-latent-semantic-scalingの実践">2. Latent Semantic Scalingの実践</h2>
+<p>Latent Semantic Scalingによるセンチメントスコアの算出を行います。</p>
+<h3 id="前処理">前処理</h3>
+<p><code>R</code>で行っていきます。まず、サンプルデータを読み込みます。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">filepath <span style="color:#f92672">&lt;-</span> r<span style="color:#e6db74">&#34;(C:\Users\hogehoge\Watcher\RawData)&#34;</span>
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">library</span>(magrittr)
+files <span style="color:#f92672">&lt;-</span> stringr<span style="color:#f92672">::</span><span style="color:#a6e22e">str_c</span>(filepath, <span style="color:#a6e22e">list.files</span>(filepath, pattern <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;*.csv&#34;</span>))
+sample <span style="color:#f92672">&lt;-</span> readr<span style="color:#f92672">::</span><span style="color:#a6e22e">read_csv</span>(files,locale<span style="color:#f92672">=</span>readr<span style="color:#f92672">::</span><span style="color:#a6e22e">locale</span>(encoding<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Shift-JIS&#34;</span>),show_col_types <span style="color:#f92672">=</span> <span style="color:#66d9ef">FALSE</span>)
+sample <span style="color:#f92672">&lt;-</span> sample[sample<span style="color:#f92672">$</span>追加説明及び具体的状況の説明<span style="color:#f92672">!=</span><span style="color:#e6db74">&#34;−&#34;</span><span style="color:#f92672">|</span>sample<span style="color:#f92672">$</span>追加説明及び具体的状況の説明<span style="color:#f92672">!=</span><span style="color:#e6db74">&#34;＊&#34;</span>,]
+sample <span style="color:#f92672">&lt;-</span> sample[sample<span style="color:#f92672">$</span>景気の現状判断<span style="color:#f92672">!=</span><span style="color:#e6db74">&#34;□&#34;</span>,]
+sample<span style="color:#f92672">$</span>景気の現状判断 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">factor</span>(sample<span style="color:#f92672">$</span>景気の現状判断, levels<span style="color:#f92672">=</span><span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;◎&#34;</span>,<span style="color:#e6db74">&#34;○&#34;</span>,<span style="color:#e6db74">&#34;▲&#34;</span>,<span style="color:#e6db74">&#34;×&#34;</span>))
+</code></pre></div><p>次に、<code>sudachi</code>を用いてテキストデータのToken化を行います。<code>R</code>には<code>sudachi</code>を使えるパッケージが存在しないので、Pythonパッケージの<code>sudachipy</code>を<code>reticulate</code>で呼び出して使用します。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># sudachiによる形態素解析→Token化</span>
+
+<span style="color:#75715e"># コーパス生成</span>
+corp <span style="color:#f92672">&lt;-</span> quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">corpus</span>(sample,text_field<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;追加説明及び具体的状況の説明&#34;</span>)
+<span style="color:#75715e"># sudachipy呼び出し→インスタンス化</span>
+sudachipy <span style="color:#f92672">&lt;-</span> reticulate<span style="color:#f92672">::</span><span style="color:#a6e22e">import</span>(<span style="color:#e6db74">&#34;sudachipy&#34;</span>)
+<span style="color:#75715e"># 正規化関数定義</span>
+sudachi_normalize <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(tokens){
+  res <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>()
+  <span style="color:#a6e22e">for</span>(i in <span style="color:#ae81ff">0</span><span style="color:#f92672">:</span>(<span style="color:#a6e22e">length</span>(tokens)<span style="color:#ae81ff">-1</span>)){
+    res <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">append</span>(res,tokens[i]<span style="color:#f92672">$</span><span style="color:#a6e22e">normalized_form</span>())
+  }
+  <span style="color:#a6e22e">return</span>(res)
+}
+<span style="color:#75715e"># tokenize関数定義</span>
+sudachi_tokenize <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(sentence, mode <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;A&#34;</span>){
+  tokenizer_obj <span style="color:#f92672">&lt;-</span> sudachipy<span style="color:#f92672">$</span>dictionary<span style="color:#f92672">$</span><span style="color:#a6e22e">Dictionary</span>()<span style="color:#f92672">$</span><span style="color:#a6e22e">create</span>()
+  mode <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">switch</span>(mode, 
+                 <span style="color:#e6db74">&#34;A&#34;</span> <span style="color:#f92672">=</span> sudachipy<span style="color:#f92672">$</span>tokenizer<span style="color:#f92672">$</span>Tokenizer<span style="color:#f92672">$</span>SplitMode<span style="color:#f92672">$</span>A,
+                 <span style="color:#e6db74">&#34;B&#34;</span> <span style="color:#f92672">=</span> sudachipy<span style="color:#f92672">$</span>tokenizer<span style="color:#f92672">$</span>Tokenizer<span style="color:#f92672">$</span>SplitMode<span style="color:#f92672">$</span>B,
+                 <span style="color:#e6db74">&#34;C&#34;</span> <span style="color:#f92672">=</span> sudachipy<span style="color:#f92672">$</span>tokenizer<span style="color:#f92672">$</span>Tokenizer<span style="color:#f92672">$</span>SplitMode<span style="color:#f92672">$</span>C,
+                 <span style="color:#a6e22e">stop</span>(<span style="color:#e6db74">&#34;Only Can Use A, B, C&#34;</span>))
+  res <span style="color:#f92672">&lt;-</span> purrr<span style="color:#f92672">::</span><span style="color:#a6e22e">map</span>(sentence, <span style="color:#f92672">~</span><span style="color:#a6e22e">sudachi_normalize</span>(tokenizer_obj<span style="color:#f92672">$</span><span style="color:#a6e22e">tokenize</span>(., mode)))
+  <span style="color:#a6e22e">return</span>(res)
+}
+
+stopwords <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;の&#34;</span>,<span style="color:#e6db74">&#34;に&#34;</span>,<span style="color:#e6db74">&#34;は&#34;</span>,<span style="color:#e6db74">&#34;を&#34;</span>,<span style="color:#e6db74">&#34;た&#34;</span>,<span style="color:#e6db74">&#34;が&#34;</span>,<span style="color:#e6db74">&#34;で&#34;</span>,<span style="color:#e6db74">&#34;て&#34;</span>,<span style="color:#e6db74">&#34;と&#34;</span>,<span style="color:#e6db74">&#34;し&#34;</span>,<span style="color:#e6db74">&#34;れ&#34;</span>,<span style="color:#e6db74">&#34;さ&#34;</span>,<span style="color:#e6db74">&#34;ある&#34;</span>,<span style="color:#e6db74">&#34;いる&#34;</span>,
+                <span style="color:#e6db74">&#34;も&#34;</span>,<span style="color:#e6db74">&#34;する&#34;</span>,<span style="color:#e6db74">&#34;から&#34;</span>,<span style="color:#e6db74">&#34;な&#34;</span>,<span style="color:#e6db74">&#34;こと&#34;</span>,<span style="color:#e6db74">&#34;い&#34;</span>,<span style="color:#e6db74">&#34;や&#34;</span>,<span style="color:#e6db74">&#34;れる&#34;</span>,<span style="color:#e6db74">&#34;など&#34;</span>,<span style="color:#e6db74">&#34;なっ&#34;</span>,<span style="color:#e6db74">&#34;ない&#34;</span>,<span style="color:#e6db74">&#34;この&#34;</span>,
+                <span style="color:#e6db74">&#34;ため&#34;</span>,<span style="color:#e6db74">&#34;その&#34;</span>,<span style="color:#e6db74">&#34;あっ&#34;</span>,<span style="color:#e6db74">&#34;よう&#34;</span>,<span style="color:#e6db74">&#34;また&#34;</span>,<span style="color:#e6db74">&#34;もの&#34;</span>,<span style="color:#e6db74">&#34;あり&#34;</span>,<span style="color:#e6db74">&#34;まで&#34;</span>,<span style="color:#e6db74">&#34;られ&#34;</span>,<span style="color:#e6db74">&#34;なる&#34;</span>,<span style="color:#e6db74">&#34;へ&#34;</span>,
+                <span style="color:#e6db74">&#34;か&#34;</span>,<span style="color:#e6db74">&#34;だ&#34;</span>,<span style="color:#e6db74">&#34;これ&#34;</span>,<span style="color:#e6db74">&#34;おり&#34;</span>,<span style="color:#e6db74">&#34;より&#34;</span>,<span style="color:#e6db74">&#34;ず&#34;</span>,<span style="color:#e6db74">&#34;なり&#34;</span>,<span style="color:#e6db74">&#34;られる&#34;</span>,<span style="color:#e6db74">&#34;ば&#34;</span>,<span style="color:#e6db74">&#34;なかっ&#34;</span>,<span style="color:#e6db74">&#34;なく&#34;</span>,
+                <span style="color:#e6db74">&#34;しかし&#34;</span>,<span style="color:#e6db74">&#34;せ&#34;</span>,<span style="color:#e6db74">&#34;だっ&#34;</span>,<span style="color:#e6db74">&#34;できる&#34;</span>,<span style="color:#e6db74">&#34;それ&#34;</span>,<span style="color:#e6db74">&#34;う&#34;</span>,<span style="color:#e6db74">&#34;なお&#34;</span>,<span style="color:#e6db74">&#34;のみ&#34;</span>,<span style="color:#e6db74">&#34;でき&#34;</span>,<span style="color:#e6db74">&#34;き&#34;</span>,<span style="color:#e6db74">&#34;つ&#34;</span>,
+                <span style="color:#e6db74">&#34;および&#34;</span>,<span style="color:#e6db74">&#34;いう&#34;</span>,<span style="color:#e6db74">&#34;さらに&#34;</span>,<span style="color:#e6db74">&#34;ら&#34;</span>,<span style="color:#e6db74">&#34;たり&#34;</span>,<span style="color:#e6db74">&#34;たち&#34;</span>,<span style="color:#e6db74">&#34;ます&#34;</span>,<span style="color:#e6db74">&#34;ん&#34;</span>,<span style="color:#e6db74">&#34;なら&#34;</span>,<span style="color:#e6db74">&#34;特に&#34;</span>,
+                <span style="color:#e6db74">&#34;せる&#34;</span>,<span style="color:#e6db74">&#34;及び&#34;</span>,<span style="color:#e6db74">&#34;とき&#34;</span>,<span style="color:#e6db74">&#34;にて&#34;</span>,<span style="color:#e6db74">&#34;ほか&#34;</span>,<span style="color:#e6db74">&#34;ながら&#34;</span>,<span style="color:#e6db74">&#34;うち&#34;</span>,<span style="color:#e6db74">&#34;そして&#34;</span>,<span style="color:#e6db74">&#34;ただし&#34;</span>,
+                <span style="color:#e6db74">&#34;かつて&#34;</span>,<span style="color:#e6db74">&#34;それぞれ&#34;</span>,<span style="color:#e6db74">&#34;お&#34;</span>,<span style="color:#e6db74">&#34;ほど&#34;</span>,<span style="color:#e6db74">&#34;ほとんど&#34;</span>,<span style="color:#e6db74">&#34;です&#34;</span>,<span style="color:#e6db74">&#34;とも&#34;</span>,<span style="color:#e6db74">&#34;ところ&#34;</span>,<span style="color:#e6db74">&#34;ここ&#34;</span>,
+               <span style="color:#e6db74">&#34;居る&#34;</span>,<span style="color:#e6db74">&#34;為る&#34;</span>,<span style="color:#e6db74">&#34;有る&#34;</span>,<span style="color:#e6db74">&#34;成る&#34;</span>,<span style="color:#e6db74">&#34;来る&#34;</span>,<span style="color:#e6db74">&#34;よる&#34;</span>,<span style="color:#e6db74">&#34;おる&#34;</span>)
+
+<span style="color:#75715e"># Token化実行</span>
+toks_sent <span style="color:#f92672">&lt;-</span> corp <span style="color:#f92672">%&gt;%</span>
+              <span style="color:#a6e22e">sudachi_tokenize</span>() <span style="color:#f92672">%&gt;%</span> 
+              quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">as.tokens</span>() <span style="color:#f92672">%&gt;%</span> 
+              quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">tokens_remove</span>(quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">stopwords</span>(<span style="color:#e6db74">&#34;ja&#34;</span>, source <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;marimo&#34;</span>)) <span style="color:#f92672">%&gt;%</span> 
+              quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">tokens_remove</span>(<span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;、&#34;</span>, <span style="color:#e6db74">&#34;。&#34;</span>, <span style="color:#e6db74">&#34;・&#34;</span>)) <span style="color:#f92672">%&gt;%</span> 
+              quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">tokens_remove</span>(stopwords)
+
+<span style="color:#75715e"># メタデータをTokenに再付与</span>
+quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">docvars</span>(toks_sent) <span style="color:#f92672">&lt;-</span> quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">docvars</span>(corp)
+</code></pre></div><p>この<code>toks_sent</code>から文書行列を生成します。文書行列とは、単語と文書の関係を表す行列で、各行が単語(token)、各列が文書を表し、各要素は文書中の単語の出現回数となっています。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># 文書行列の生成</span>
+dfmt_sent <span style="color:#f92672">&lt;-</span> toks_sent <span style="color:#f92672">%&gt;%</span> 
+              quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">dfm</span>() <span style="color:#f92672">%&gt;%</span> 
+              quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">dfm_remove</span>(pattern<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>) <span style="color:#f92672">%&gt;%</span> 
+              quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">dfm_trim</span>(min_termfreq <span style="color:#f92672">=</span> <span style="color:#ae81ff">10</span>)
+</code></pre></div><p>出現回数Top20は以下のようになっています。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">print</span>(quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">topfeatures</span>(dfmt_sent, n <span style="color:#f92672">=</span> <span style="color:#ae81ff">20</span>))
+</code></pre></div><pre><code>##       数       客     前年 売り上げ     影響     来客     減少     新型 
+##    11912    11752    11238     9461     9247     7908     7656     6100 
+##   コロナ        % ウイルス     販売     良い       為   増える     動き 
+##     5928     5893     5865     5114     5045     5037     4832     4602 
+##     状況        3     増加       量 
+##     4590     4587     4483     4402
+</code></pre>
+<h3 id="センチメントスコアの算出">センチメントスコアの算出</h3>
+<p>次に、種語として以下の単語を定義します。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">library</span>(magrittr)
+<span style="color:#a6e22e">library</span>(LSX)
+
+ja_seedwords <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>(positive <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;安心&#34;</span>,<span style="color:#e6db74">&#34;好調&#34;</span>,<span style="color:#e6db74">&#34;秀逸&#34;</span>,<span style="color:#e6db74">&#34;改善&#34;</span>,<span style="color:#e6db74">&#34;良好&#34;</span>,<span style="color:#e6db74">&#34;適切&#34;</span>,<span style="color:#e6db74">&#34;安堵&#34;</span>),
+                     negative<span style="color:#f92672">=</span><span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;不安&#34;</span>,<span style="color:#e6db74">&#34;不調&#34;</span>,<span style="color:#e6db74">&#34;稚拙&#34;</span>,<span style="color:#e6db74">&#34;悪化&#34;</span>,<span style="color:#e6db74">&#34;不良&#34;</span>,<span style="color:#e6db74">&#34;過剰&#34;</span>,<span style="color:#e6db74">&#34;過少&#34;</span>,<span style="color:#e6db74">&#34;懸念&#34;</span>)) <span style="color:#f92672">%&gt;%</span>
+                <span style="color:#a6e22e">as.seedwords</span>()
+<span style="color:#a6e22e">print</span>(ja_seedwords)
+</code></pre></div><pre><code>## 安心 好調 秀逸 改善 良好 適切 安堵 不安 不調 稚拙 悪化 不良 過剰 過少 懸念 
+##    1    1    1    1    1    1    1   -1   -1   -1   -1   -1   -1   -1   -1
+</code></pre>
+<p>上記のように、種語のスコアはポジティブ/ネガティブの最大値となっています。<br>
+文書行列に対して特異値分解を行い、センチメントスコアを算出します。Word Embeddingのサイズ$k$は300とします。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">lss <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">textmodel_lss</span>(dfmt_sent, seeds <span style="color:#f92672">=</span> ja_seedwords, k <span style="color:#f92672">=</span> <span style="color:#ae81ff">300</span>)
+</code></pre></div><p>センチメントスコア上位・下位20単語を抜き出します。<code>LSX::coef()</code>で抜き出すことができ、降順で並んでいます。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">print</span>(<span style="color:#a6e22e">head</span>(<span style="color:#a6e22e">coef</span>(lss), <span style="color:#ae81ff">20</span>)) <span style="color:#75715e"># most positive words</span>
+</code></pre></div><pre><code>##         安心         改善         好調         重点         米飯         前期 
+##   0.15075889   0.14272040   0.12926093   0.12218111   0.11418503   0.11297516 
+##           di コンクリート     デザート         誕生       フード         調理 
+##   0.10698720   0.10633358   0.09668659   0.09597283   0.09563199   0.09549041 
+##       努める   ファースト         政権       占める         良好         景況 
+##   0.09523555   0.09523126   0.09446756   0.09153319   0.09054534   0.09019622 
+##         今期     有り難い 
+##   0.09003611   0.08986984
+</code></pre>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">print</span>(<span style="color:#a6e22e">tail</span>(<span style="color:#a6e22e">coef</span>(lss), <span style="color:#ae81ff">20</span>)) <span style="color:#75715e"># most negative words</span>
+</code></pre></div><pre><code>##        贈与        老後      ローン        繰り        不良        減税 
+## -0.09561125 -0.09683069 -0.09875152 -0.09982278 -0.10067741 -0.10109826 
+##        韓国        益々        情勢        煽る        不調        日韓 
+## -0.10140439 -0.10567625 -0.10567861 -0.10844798 -0.11014713 -0.11054370 
+##        将来        要素      先行き        辿る        一途        不安 
+## -0.11360784 -0.11364341 -0.11439845 -0.11930636 -0.11956281 -0.13344996 
+##        悪化        懸念 
+## -0.15213723 -0.15636390
+</code></pre>
+<p>ポジティブな単語に「米飯」、「コンクリート」、「デザート」、「フード」が入っていたり、ネガティブな単語に「贈与」、「老後」が入っているなどツッコミどころはあるものの、7割はそれっぽい単語がリストアップされているのではないでしょうか。<br>
+次に、このスコアを用いて、辞書ベース分類法と同様のやり方で文書のセンチメントスコアを算出します。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># 文書のセンチメントスコア算出</span>
+coef_df <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">data.frame</span>(word<span style="color:#f92672">=</span><span style="color:#a6e22e">names</span>(<span style="color:#a6e22e">coef</span>(lss)), values<span style="color:#f92672">=</span><span style="color:#a6e22e">as.numeric</span>(<span style="color:#a6e22e">coef</span>(lss)))
+dfmt_sent_arranged <span style="color:#f92672">&lt;-</span> quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">dfm_match</span>(dfmt_sent, coef_df<span style="color:#f92672">$</span>word)
+
+n <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">unname</span>(quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">rowSums</span>(dfmt_sent_arranged))
+score_lss <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ifelse</span>(n<span style="color:#f92672">&gt;</span><span style="color:#ae81ff">0</span>, quanteda<span style="color:#f92672">::</span><span style="color:#a6e22e">rowSums</span>(dfmt_sent_arranged <span style="color:#f92672">%*%</span> coef_df<span style="color:#f92672">$</span>values)<span style="color:#f92672">/</span>n, <span style="color:#66d9ef">NA</span>)
+sample_with_score_lss <span style="color:#f92672">&lt;-</span> sample <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">cbind</span>(score_lss)
+</code></pre></div><p>センチメントスコア上位10位のサンプルを確認します。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">sample_with_score_lss <span style="color:#f92672">%&gt;%</span> dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">slice_max</span>(n<span style="color:#f92672">=</span><span style="color:#ae81ff">10</span>, order_by <span style="color:#f92672">=</span> score_lss) <span style="color:#f92672">%&gt;%</span> dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">select</span>(追加説明及び具体的状況の説明, score_lss)
+</code></pre></div><pre><code>##                                                                              追加説明及び具体的状況の説明
+## 1                                                                                  ・景況感が良好である。
+## 2                                                                                  ・好調に推移している。
+## 3                                                                                    ・受注が好調である。
+## 4      ・主要商品である米飯、調理パンやファストフードが好調に推移している。企画商品のデリカも好調である。
+## 5  ・県内企業の景況感は改善している。業況判断ＤＩが製造業で前期に比べて改善し、プラス水準を維持している。
+## 6                                                          ・客先の決算が好調である。納税額も増えている。
+## 7                                        ・ファーストフード、デザートの陳列を増やしたので売上が増加した。
+## 8                                        ・ファーストフード、デザートの陳列を増やしたので売上が増加した。
+## 9                                                                                  ・受注量が好調である。
+## 10                                                                                 ・受注量は好調である。
+##     score_lss
+## 1  0.08265024
+## 2  0.07564103
+## 3  0.07239461
+## 4  0.05859545
+## 5  0.05651628
+## 6  0.05048285
+## 7  0.04896476
+## 8  0.04896476
+## 9  0.04726825
+## 10 0.04726825
+</code></pre>
+<p>非常に良い結果となっているように思えます。
+「米飯」、「デザート」、「フード」の謎が解けましたね。「好調」、「改善」、「増加」など肯定的な単語に共起しているため、これらの単語も肯定的と捉えられたようです。サンプルにこれらの単語を含む否定的(または中立)な文章が含まれれば、これらの単語のスコアもあるべき値に収斂すると思われます。</p>
+<p>センチメントスコア下位10位のサンプルも確認しましょう。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">sample_with_score_lss <span style="color:#f92672">%&gt;%</span> dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">slice_min</span>(n<span style="color:#f92672">=</span><span style="color:#ae81ff">10</span>, order_by <span style="color:#f92672">=</span> score_lss) <span style="color:#f92672">%&gt;%</span> dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">select</span>(追加説明及び具体的状況の説明)
+</code></pre></div><pre><code>##                          追加説明及び具体的状況の説明
+## 1                        ・全てにおいて悪化している。
+## 2                        ・様々な問題で悪化している。
+## 3          ・客は、先行きが不安で買い控えをしている。
+## 4                              ・景気が悪化している。
+## 5            ・原油の値上がりが懸念材料になってくる。
+## 6                              ・先行きが見通せない。
+## 7                              ・先行きが見通せない。
+## 8        ・為替相場や株安により、先行きに不安がある。
+## 9                          ・客の業績が悪化している。
+## 10 ・海外情勢への不安要素が一層顕著に表れてきている。
+</code></pre>
+<p>こちらも良さそうです。</p>
+<h3 id="文書分類結果">文書分類結果</h3>
+<p>boxplotでデータ全体を見てみましょう。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#75715e"># 結果の可視化</span>
+<span style="color:#a6e22e">library</span>(ggplot2)
+<span style="color:#a6e22e">ggplot</span>(sample_with_score_lss, <span style="color:#a6e22e">aes</span>(x<span style="color:#f92672">=</span>景気の現状判断,y<span style="color:#f92672">=</span>score_lss)) <span style="color:#f92672">+</span> <span style="color:#a6e22e">geom_boxplot</span>()
+</code></pre></div><p><img src="../../post/post29/index_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
+<p>先ほどとは、様相が異なっています。
+上図では、横軸に「景気の現状判断」をとっていますが、景気が良い/悪いでセンチメントスコアがあまり変わらない結果となっています。サンプル全体でみると、文書分類を行える特徴量といえます。
+念のため、ロジスティック回帰を行ってみます。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">dataset <span style="color:#f92672">&lt;-</span> sample_with_score_lss <span style="color:#f92672">%&gt;%</span> 
+            dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">mutate</span>(condition<span style="color:#f92672">=</span><span style="color:#a6e22e">as.factor</span>(dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">if_else</span>(景気の現状判断<span style="color:#f92672">==</span><span style="color:#e6db74">&#34;○&#34;</span><span style="color:#f92672">|</span>景気の現状判断<span style="color:#f92672">==</span><span style="color:#e6db74">&#34;◎&#34;</span>,<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">0</span>))) <span style="color:#f92672">%&gt;%</span> 
+            dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">select</span>(condition, score_lss)
+sample_recipe <span style="color:#f92672">&lt;-</span> recipes<span style="color:#f92672">::</span><span style="color:#a6e22e">recipe</span>(condition<span style="color:#f92672">~</span>., dataset) <span style="color:#f92672">%&gt;%</span> 
+                  recipes<span style="color:#f92672">::</span><span style="color:#a6e22e">step_center</span>(recipes<span style="color:#f92672">::</span><span style="color:#a6e22e">all_predictors</span>()) <span style="color:#f92672">%&gt;%</span> 
+                  recipes<span style="color:#f92672">::</span><span style="color:#a6e22e">step_scale</span>(recipes<span style="color:#f92672">::</span><span style="color:#a6e22e">all_predictors</span>()) <span style="color:#f92672">%&gt;%</span>
+                  recipes<span style="color:#f92672">::</span><span style="color:#a6e22e">prep</span>(dataset)
+
+lr_fitted <span style="color:#f92672">&lt;-</span> parsnip<span style="color:#f92672">::</span><span style="color:#a6e22e">logistic_reg</span>() <span style="color:#f92672">%&gt;%</span> 
+              parsnip<span style="color:#f92672">::</span><span style="color:#a6e22e">set_engine</span>(<span style="color:#e6db74">&#34;glm&#34;</span>) <span style="color:#f92672">%&gt;%</span> 
+              parsnip<span style="color:#f92672">::</span><span style="color:#a6e22e">fit</span>(condition<span style="color:#f92672">~</span>., data<span style="color:#f92672">=</span>sample_recipe <span style="color:#f92672">%&gt;%</span> recipes<span style="color:#f92672">::</span><span style="color:#a6e22e">juice</span>())
+
+lr_fitted <span style="color:#f92672">%&gt;%</span> 
+  purrr<span style="color:#f92672">::</span><span style="color:#a6e22e">pluck</span>(<span style="color:#e6db74">&#34;fit&#34;</span>) <span style="color:#f92672">%&gt;%</span> 
+  gtsummary<span style="color:#f92672">::</span><span style="color:#a6e22e">tbl_regression</span>() <span style="color:#f92672">%&gt;%</span> 
+  gtsummary<span style="color:#f92672">::</span><span style="color:#a6e22e">add_n</span>()
+</code></pre></div><div id="wtlwlowqss" style="overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>html {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
+}
+<p>#wtlwlowqss .gt_table {
+display: table;
+border-collapse: collapse;
+margin-left: auto;
+margin-right: auto;
+color: #333333;
+font-size: 16px;
+font-weight: normal;
+font-style: normal;
+background-color: #FFFFFF;
+width: auto;
+border-top-style: solid;
+border-top-width: 2px;
+border-top-color: #A8A8A8;
+border-right-style: none;
+border-right-width: 2px;
+border-right-color: #D3D3D3;
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #A8A8A8;
+border-left-style: none;
+border-left-width: 2px;
+border-left-color: #D3D3D3;
+}</p>
+<p>#wtlwlowqss .gt_heading {
+background-color: #FFFFFF;
+text-align: center;
+border-bottom-color: #FFFFFF;
+border-left-style: none;
+border-left-width: 1px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 1px;
+border-right-color: #D3D3D3;
+}</p>
+<p>#wtlwlowqss .gt_title {
+color: #333333;
+font-size: 125%;
+font-weight: initial;
+padding-top: 4px;
+padding-bottom: 4px;
+padding-left: 5px;
+padding-right: 5px;
+border-bottom-color: #FFFFFF;
+border-bottom-width: 0;
+}</p>
+<p>#wtlwlowqss .gt_subtitle {
+color: #333333;
+font-size: 85%;
+font-weight: initial;
+padding-top: 0;
+padding-bottom: 6px;
+padding-left: 5px;
+padding-right: 5px;
+border-top-color: #FFFFFF;
+border-top-width: 0;
+}</p>
+<p>#wtlwlowqss .gt_bottom_border {
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+}</p>
+<p>#wtlwlowqss .gt_col_headings {
+border-top-style: solid;
+border-top-width: 2px;
+border-top-color: #D3D3D3;
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+border-left-style: none;
+border-left-width: 1px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 1px;
+border-right-color: #D3D3D3;
+}</p>
+<p>#wtlwlowqss .gt_col_heading {
+color: #333333;
+background-color: #FFFFFF;
+font-size: 100%;
+font-weight: normal;
+text-transform: inherit;
+border-left-style: none;
+border-left-width: 1px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 1px;
+border-right-color: #D3D3D3;
+vertical-align: bottom;
+padding-top: 5px;
+padding-bottom: 6px;
+padding-left: 5px;
+padding-right: 5px;
+overflow-x: hidden;
+}</p>
+<p>#wtlwlowqss .gt_column_spanner_outer {
+color: #333333;
+background-color: #FFFFFF;
+font-size: 100%;
+font-weight: normal;
+text-transform: inherit;
+padding-top: 0;
+padding-bottom: 0;
+padding-left: 4px;
+padding-right: 4px;
+}</p>
+<p>#wtlwlowqss .gt_column_spanner_outer:first-child {
+padding-left: 0;
+}</p>
+<p>#wtlwlowqss .gt_column_spanner_outer:last-child {
+padding-right: 0;
+}</p>
+<p>#wtlwlowqss .gt_column_spanner {
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+vertical-align: bottom;
+padding-top: 5px;
+padding-bottom: 5px;
+overflow-x: hidden;
+display: inline-block;
+width: 100%;
+}</p>
+<p>#wtlwlowqss .gt_group_heading {
+padding-top: 8px;
+padding-bottom: 8px;
+padding-left: 5px;
+padding-right: 5px;
+color: #333333;
+background-color: #FFFFFF;
+font-size: 100%;
+font-weight: initial;
+text-transform: inherit;
+border-top-style: solid;
+border-top-width: 2px;
+border-top-color: #D3D3D3;
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+border-left-style: none;
+border-left-width: 1px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 1px;
+border-right-color: #D3D3D3;
+vertical-align: middle;
+}</p>
+<p>#wtlwlowqss .gt_empty_group_heading {
+padding: 0.5px;
+color: #333333;
+background-color: #FFFFFF;
+font-size: 100%;
+font-weight: initial;
+border-top-style: solid;
+border-top-width: 2px;
+border-top-color: #D3D3D3;
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+vertical-align: middle;
+}</p>
+<p>#wtlwlowqss .gt_from_md &gt; :first-child {
+margin-top: 0;
+}</p>
+<p>#wtlwlowqss .gt_from_md &gt; :last-child {
+margin-bottom: 0;
+}</p>
+<p>#wtlwlowqss .gt_row {
+padding-top: 8px;
+padding-bottom: 8px;
+padding-left: 5px;
+padding-right: 5px;
+margin: 10px;
+border-top-style: solid;
+border-top-width: 1px;
+border-top-color: #D3D3D3;
+border-left-style: none;
+border-left-width: 1px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 1px;
+border-right-color: #D3D3D3;
+vertical-align: middle;
+overflow-x: hidden;
+}</p>
+<p>#wtlwlowqss .gt_stub {
+color: #333333;
+background-color: #FFFFFF;
+font-size: 100%;
+font-weight: initial;
+text-transform: inherit;
+border-right-style: solid;
+border-right-width: 2px;
+border-right-color: #D3D3D3;
+padding-left: 5px;
+padding-right: 5px;
+}</p>
+<p>#wtlwlowqss .gt_stub_row_group {
+color: #333333;
+background-color: #FFFFFF;
+font-size: 100%;
+font-weight: initial;
+text-transform: inherit;
+border-right-style: solid;
+border-right-width: 2px;
+border-right-color: #D3D3D3;
+padding-left: 5px;
+padding-right: 5px;
+vertical-align: top;
+}</p>
+<p>#wtlwlowqss .gt_row_group_first td {
+border-top-width: 2px;
+}</p>
+<p>#wtlwlowqss .gt_summary_row {
+color: #333333;
+background-color: #FFFFFF;
+text-transform: inherit;
+padding-top: 8px;
+padding-bottom: 8px;
+padding-left: 5px;
+padding-right: 5px;
+}</p>
+<p>#wtlwlowqss .gt_first_summary_row {
+border-top-style: solid;
+border-top-color: #D3D3D3;
+}</p>
+<p>#wtlwlowqss .gt_first_summary_row.thick {
+border-top-width: 2px;
+}</p>
+<p>#wtlwlowqss .gt_last_summary_row {
+padding-top: 8px;
+padding-bottom: 8px;
+padding-left: 5px;
+padding-right: 5px;
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+}</p>
+<p>#wtlwlowqss .gt_grand_summary_row {
+color: #333333;
+background-color: #FFFFFF;
+text-transform: inherit;
+padding-top: 8px;
+padding-bottom: 8px;
+padding-left: 5px;
+padding-right: 5px;
+}</p>
+<p>#wtlwlowqss .gt_first_grand_summary_row {
+padding-top: 8px;
+padding-bottom: 8px;
+padding-left: 5px;
+padding-right: 5px;
+border-top-style: double;
+border-top-width: 6px;
+border-top-color: #D3D3D3;
+}</p>
+<p>#wtlwlowqss .gt_striped {
+background-color: rgba(128, 128, 128, 0.05);
+}</p>
+<p>#wtlwlowqss .gt_table_body {
+border-top-style: solid;
+border-top-width: 2px;
+border-top-color: #D3D3D3;
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+}</p>
+<p>#wtlwlowqss .gt_footnotes {
+color: #333333;
+background-color: #FFFFFF;
+border-bottom-style: none;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+border-left-style: none;
+border-left-width: 2px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 2px;
+border-right-color: #D3D3D3;
+}</p>
+<p>#wtlwlowqss .gt_footnote {
+margin: 0px;
+font-size: 90%;
+padding-left: 4px;
+padding-right: 4px;
+padding-left: 5px;
+padding-right: 5px;
+}</p>
+<p>#wtlwlowqss .gt_sourcenotes {
+color: #333333;
+background-color: #FFFFFF;
+border-bottom-style: none;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+border-left-style: none;
+border-left-width: 2px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 2px;
+border-right-color: #D3D3D3;
+}</p>
+<p>#wtlwlowqss .gt_sourcenote {
+font-size: 90%;
+padding-top: 4px;
+padding-bottom: 4px;
+padding-left: 5px;
+padding-right: 5px;
+}</p>
+<p>#wtlwlowqss .gt_left {
+text-align: left;
+}</p>
+<p>#wtlwlowqss .gt_center {
+text-align: center;
+}</p>
+<p>#wtlwlowqss .gt_right {
+text-align: right;
+font-variant-numeric: tabular-nums;
+}</p>
+<p>#wtlwlowqss .gt_font_normal {
+font-weight: normal;
+}</p>
+<p>#wtlwlowqss .gt_font_bold {
+font-weight: bold;
+}</p>
+<p>#wtlwlowqss .gt_font_italic {
+font-style: italic;
+}</p>
+<p>#wtlwlowqss .gt_super {
+font-size: 65%;
+}</p>
+<p>#wtlwlowqss .gt_footnote_marks {
+font-style: italic;
+font-weight: normal;
+font-size: 75%;
+vertical-align: 0.4em;
+}</p>
+<p>#wtlwlowqss .gt_asterisk {
+font-size: 100%;
+vertical-align: 0;
+}</p>
+<p>#wtlwlowqss .gt_slash_mark {
+font-size: 0.7em;
+line-height: 0.7em;
+vertical-align: 0.15em;
+}</p>
+<p>#wtlwlowqss .gt_fraction_numerator {
+font-size: 0.6em;
+line-height: 0.6em;
+vertical-align: 0.45em;
+}</p>
+<p>#wtlwlowqss .gt_fraction_denominator {
+font-size: 0.6em;
+line-height: 0.6em;
+vertical-align: -0.05em;
+}
+</style></p>
+<table class="gt_table">
+  <thead class="gt_col_headings">
+    <tr>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1"><strong>Characteristic</strong></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>N</strong></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>log(OR)</strong><sup class="gt_footnote_marks">1</sup></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>95% CI</strong><sup class="gt_footnote_marks">1</sup></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>p-value</strong></th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr><td class="gt_row gt_left">score_lss</td>
+<td class="gt_row gt_center">44,944</td>
+<td class="gt_row gt_center">0.55</td>
+<td class="gt_row gt_center">0.53, 0.57</td>
+<td class="gt_row gt_center"><0.001</td></tr>
+  </tbody>
+  <tfoot class="gt_footnotes">
+    <tr>
+      <td class="gt_footnote" colspan="5"><sup class="gt_footnote_marks">1</sup> OR = Odds Ratio, CI = Confidence Interval</td>
+    </tr>
+  </tfoot>
+</table>
+</div>
+<p>推定したモデルの精度を確認するため、データセットの予測分類を計算し、正解ラベルと突合します。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">lr_pred <span style="color:#f92672">&lt;-</span> lr_fitted <span style="color:#f92672">%&gt;%</span> 
+              <span style="color:#a6e22e">predict</span>(dataset) <span style="color:#f92672">%&gt;%</span>
+              dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">mutate</span>(truth <span style="color:#f92672">=</span> dataset <span style="color:#f92672">%&gt;%</span> dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">select</span>(condition) <span style="color:#f92672">%&gt;%</span> dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">pull</span>())
+</code></pre></div><p>正解率は約60%となりました。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">lr_pred <span style="color:#f92672">%&gt;%</span> yardstick<span style="color:#f92672">::</span><span style="color:#a6e22e">metrics</span>(truth <span style="color:#f92672">=</span> truth, estimate <span style="color:#f92672">=</span> .pred_class)
+</code></pre></div><pre><code>## # A tibble: 2 x 3
+##   .metric  .estimator .estimate
+##   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;
+## 1 accuracy binary         0.612
+## 2 kap      binary         0
+</code></pre>
+<p>混合行列(Confusion Matrix)を描画します。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">lr_pred <span style="color:#f92672">%&gt;%</span> yardstick<span style="color:#f92672">::</span><span style="color:#a6e22e">conf_mat</span>(truth <span style="color:#f92672">=</span> truth, estimate <span style="color:#f92672">=</span> .pred_class) <span style="color:#f92672">%&gt;%</span> 
+              ggplot2<span style="color:#f92672">::</span><span style="color:#a6e22e">autoplot</span>(type <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;heatmap&#34;</span>)
+</code></pre></div><p><img src="../../post/post29/index_files/figure-html/unnamed-chunk-23-1.png" width="672" /></p>
+<p>全く文書分類できていませんね。全てのサンプルの予測値が0(=ネガティブ)となってしまっています。データセットは不均衡ですが、それにしても1(=ポジティブ)の予測がまったくないのは、そもそもの特徴量がいけていないためだと思われます。<br>
+上手くいかない仮説としては、センチメントスコアがゼロ周りに多く分布しているためという理由が考えられます(つまり、センチメントスコアが大きい単語はあまり文章に含まれていない or 様々な言葉で言い換えられている)。
+可視化を行い、確認してみます。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">textplot_terms</span>(lss, <span style="color:#a6e22e">names</span>(ja_seedwords))
+</code></pre></div><p><img src="../../post/post29/index_files/figure-html/unnamed-chunk-24-1.png" width="672" /></p>
+<p>上記の図は縦軸が頻度(対数)、横軸が極性(Polarity、センチメントスコアと解釈)となっています。極性が大きく、頻度が高い単語は種語が多く、頻度の高い単語はゼロ周りに分布していることが確認できました。
+語調の強い単語以外は極性の絶対値が低いと出るようで、日本語のように強い表現があまり取られない言語では機能しずらいのかもしれません。</p>
+<h2 id="3-終わりに">3. 終わりに</h2>
+<p>辞書ベース手法の時と同じく、教師あり学習以外の手法で文書分類を行うことは難しいという印象です。<br>
+次は、深層学習ベースの手法を用いて、語順や文脈を加味した分析を行います！</p>
+
+          </div>
+
+          
+
+
+
+
+
+
+<div class="article-tags">
+  
+  <a class="badge badge-light" href="../../tag/python/">Python</a>
+  
+  <a class="badge badge-light" href="../../tag/%E5%89%8D%E5%87%A6%E7%90%86/">前処理</a>
+  
+  <a class="badge badge-light" href="../../tag/%E6%A9%9F%E6%A2%B0%E5%AD%A6%E7%BF%92/">機械学習</a>
+  
+  <a class="badge badge-light" href="../../tag/%E3%83%86%E3%82%AD%E3%82%B9%E3%83%88%E8%A7%A3%E6%9E%90/">テキスト解析</a>
+  
+</div>
+
+
+
+<div class="share-box" aria-hidden="true">
+  <ul class="share">
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://twitter.com/intent/tweet?url=../../post/post29/&amp;text=%e3%80%90%e5%be%b9%e5%ba%95%e6%af%94%e8%bc%83%e3%80%91%e3%82%bb%e3%83%b3%e3%83%81%e3%83%a1%e3%83%b3%e3%83%88%e3%82%b9%e3%82%b3%e3%82%a2%e7%ae%97%e5%87%ba%e6%89%8b%e6%b3%95%ef%bc%81%ef%bc%81%20-%20%e7%ac%ac4%e5%9b%9e" target="_blank" rel="noopener" class="share-btn-twitter">
+          <i class="fab fa-twitter"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://www.facebook.com/sharer.php?u=/post/post29/&amp;t=%e3%80%90%e5%be%b9%e5%ba%95%e6%af%94%e8%bc%83%e3%80%91%e3%82%bb%e3%83%b3%e3%83%81%e3%83%a1%e3%83%b3%e3%83%88%e3%82%b9%e3%82%b3%e3%82%a2%e7%ae%97%e5%87%ba%e6%89%8b%e6%b3%95%ef%bc%81%ef%bc%81%20-%20%e7%ac%ac4%e5%9b%9e" target="_blank" rel="noopener" class="share-btn-facebook">
+          <i class="fab fa-facebook"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="mailto:?subject=%e3%80%90%e5%be%b9%e5%ba%95%e6%af%94%e8%bc%83%e3%80%91%e3%82%bb%e3%83%b3%e3%83%81%e3%83%a1%e3%83%b3%e3%83%88%e3%82%b9%e3%82%b3%e3%82%a2%e7%ae%97%e5%87%ba%e6%89%8b%e6%b3%95%ef%bc%81%ef%bc%81%20-%20%e7%ac%ac4%e5%9b%9e&amp;body=/post/post29/" target="_blank" rel="noopener" class="share-btn-email">
+          <i class="fas fa-envelope"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://www.linkedin.com/shareArticle?url=../../post/post29/&amp;title=%e3%80%90%e5%be%b9%e5%ba%95%e6%af%94%e8%bc%83%e3%80%91%e3%82%bb%e3%83%b3%e3%83%81%e3%83%a1%e3%83%b3%e3%83%88%e3%82%b9%e3%82%b3%e3%82%a2%e7%ae%97%e5%87%ba%e6%89%8b%e6%b3%95%ef%bc%81%ef%bc%81%20-%20%e7%ac%ac4%e5%9b%9e" target="_blank" rel="noopener" class="share-btn-linkedin">
+          <i class="fab fa-linkedin-in"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="whatsapp://send?text=%e3%80%90%e5%be%b9%e5%ba%95%e6%af%94%e8%bc%83%e3%80%91%e3%82%bb%e3%83%b3%e3%83%81%e3%83%a1%e3%83%b3%e3%83%88%e3%82%b9%e3%82%b3%e3%82%a2%e7%ae%97%e5%87%ba%e6%89%8b%e6%b3%95%ef%bc%81%ef%bc%81%20-%20%e7%ac%ac4%e5%9b%9e%20/post/post29/" target="_blank" rel="noopener" class="share-btn-whatsapp">
+          <i class="fab fa-whatsapp"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://service.weibo.com/share/share.php?url=../../post/post29/&amp;title=%e3%80%90%e5%be%b9%e5%ba%95%e6%af%94%e8%bc%83%e3%80%91%e3%82%bb%e3%83%b3%e3%83%81%e3%83%a1%e3%83%b3%e3%83%88%e3%82%b9%e3%82%b3%e3%82%a2%e7%ae%97%e5%87%ba%e6%89%8b%e6%b3%95%ef%bc%81%ef%bc%81%20-%20%e7%ac%ac4%e5%9b%9e" target="_blank" rel="noopener" class="share-btn-weibo">
+          <i class="fab fa-weibo"></i>
+        </a>
+      </li>
+    
+  </ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+
+  
+  
+  
+    
+  
+  
+  
+  <div class="media author-card content-widget-hr">
+    
+      
+      <a href="../../"><img class="avatar mr-3 avatar-circle" src="../../author/ayato-ashihara/avatar_hu77c0c0affdebd3b9cbda9c39412092b5_245163_270x270_fill_q90_lanczos_center.jpg" alt="Ayato Ashihara"></a>
+    
+
+    <div class="media-body">
+      <h5 class="card-title"><a href="../../">Ayato Ashihara</a></h5>
+      <h6 class="card-subtitle">会社員4年目</h6>
+      <p class="card-text">院卒4年目の社会人が夜な夜な更新中。本ブログの内容は筆者が所属する組織の公式見解とは全く関係ありません。</p>
+      <ul class="network-icon" aria-hidden="true">
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="../../#contact" >
+        <i class="fas fa-envelope"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://www.facebook.com/ASSIY" target="_blank" rel="noopener">
+        <i class="fab fa-facebook"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://github.com/AyatoAshihara/myblog_multi" target="_blank" rel="noopener">
+        <i class="fab fa-github"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://www.linkedin.com/in/%E5%BD%A9%E4%BA%BA-%E8%91%A6%E5%8E%9F-9391b7143/" target="_blank" rel="noopener">
+        <i class="fab fa-linkedin"></i>
+      </a>
+    </li>
+  
+</ul>
+
+    </div>
+  </div>
+
+
+
+
+
+
+
+<section id="comments">
+  
+    
+<div id="disqus_thread"></div>
+<script>
+  let disqus_config = function () {
+    
+    
+    
+  };
+  (function() {
+    if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+      document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+      return;
+    }
+    var d = document, s = d.createElement('script'); s.async = true;
+    s.src = 'https://' + "ayatoashihara-github-io-myblog-multi" + '.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+  })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  
+</section>
+
+
+
+
+<div class="article-widget">
+  
+<div class="post-nav">
+  
+  
+  
+  <div class="post-nav-item">
+    <div class="meta-nav">前へ</div>
+    <a href="../../post/post28/" rel="prev">【徹底比較】センチメントスコア算出手法！！ - 第3回</a>
+  </div>
+  
+</div>
+
+</div>
+
+
+
+
+
+  
+  
+  <div class="article-widget content-widget-hr">
+    <h3>関連項目</h3>
+    <ul>
+      
+      <li><a href="../../post/post28/">【徹底比較】センチメントスコア算出手法！！ - 第3回</a></li>
+      
+      <li><a href="../../post/post27/">【徹底比較】センチメントスコア算出手法！！ - 第2回</a></li>
+      
+      <li><a href="../../post/post25/">【徹底比較】センチメントスコア算出手法！！ - 第1回</a></li>
+      
+      <li><a href="../../post/post20/">PytorchのPre-trainedモデルで馬体写真の背景を自動トリミングする</a></li>
+      
+      <li><a href="../../post/post16/">LightGBMを使用して競馬結果を予想してみる</a></li>
+      
+    </ul>
+  </div>
+  
+
+
+
+
+
+        </div>
+      </article>
+    </main>
+
+  </div>
+</div>
+
+      
+
+    
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.4/imagesloaded.pkgd.min.js" integrity="sha256-lqvxZrPLtfffUl2G/e7szqSvPBILGbwmsGE1MKlOi0Q=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js" integrity="sha256-CBrpuqrMhXwcLLUd5tvQ4euBHCdh7wGlDfNz8vbu/iI=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js" integrity="sha256-yt2kYMy0w8AbtF89WXb2P1rfjcP/HTHLT7097U8Y5b8=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/instant.page/5.1.0/instantpage.min.js" integrity="sha512-1+qUtKoh9XZW7j+6LhRMAyOrgSQKenQ4mluTR+cvxXjP1Z54RxZuzstR/H9kgPXQsVB8IW7DMDFUJpzLjvhGSQ==" crossorigin="anonymous"></script>
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/8.8.0/mermaid.min.js" integrity="sha512-ja+hSBi4JDtjSqc4LTBsSwuBT3tdZ3oKYKd07lTVYmCnTCor56AnRql00ssqnTOR9Ss4gOP/ROGB3SfcJnZkeg==" crossorigin="anonymous" title="mermaid"></script>
+      
+
+      
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/highlight.min.js" integrity="sha512-TDKKr+IvoqZnPzc3l35hdjpHD0m+b2EC2SrLEgKDRWpxf2rFCxemkgvJ5kfU48ip+Y+m2XVKyOCD85ybtlZDmw==" crossorigin="anonymous"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/languages/r.min.js"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/languages/latex.min.js"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/languages/python.min.js"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/languages/sql.min.js"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/languages/cpp.min.js"></script>
+        
+      
+
+    
+
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.js" integrity="sha512-SeiQaaDh73yrb56sTW/RgVdi/mMqNeM2oBwubFHagc5BkixSpP1fvqF47mKzPGWYSSy4RwbBunrJBQ4Co8fRWA==" crossorigin="anonymous"></script>
+    
+
+    
+    
+    <script>const code_highlighting = true;</script>
+    
+
+    
+    
+    
+    
+    
+    
+    <script>
+      const search_config = {"indexURI":"/index.json","minLength":1,"threshold":0.3};
+      const i18n = {"no_results":"結果が見つかりませんでした","placeholder":"検索...","results":"results found"};
+      const content_type = {
+        'post': "投稿",
+        'project': "プロジェクト",
+        'publication' : "発表文献",
+        'talk' : "登壇",
+        'slides' : "Slides"
+        };
+    </script>
+    
+
+    
+    
+
+    
+    
+    <script id="search-hit-fuse-template" type="text/x-template">
+      <div class="search-hit" id="summary-{{key}}">
+      <div class="search-hit-content">
+        <div class="search-hit-name">
+          <a href="{{relpermalink}}">{{title}}</a>
+          <div class="article-metadata search-hit-type">{{type}}</div>
+          <p class="search-hit-description">{{snippet}}</p>
+        </div>
+      </div>
+      </div>
+    </script>
+    
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.2.1/fuse.min.js" integrity="sha256-VzgmKYmhsGNNN4Ph1kMW+BjoYJM2jV5i4IlFoeZA9XI=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js" integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin="anonymous"></script>
+    
+
+    
+    
+
+    
+    
+
+    
+    
+
+    
+    
+    <script id="dsq-count-scr" src="https://ayatoashihara-github-io-myblog-multi.disqus.com/count.js" async></script>
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+      
+    
+    
+      
+    
+    
+    
+    <script src="../../js/wowchemy.min.2a3f95be2bc4762ba1847fb5d7a28317.js"></script>
+
+    
+
+
+  
+  
+  <div class="container">
+    <footer class="site-footer">
+  
+
+  
+   
+  <script>
+  $(document).ready(function () {
+    window.initializeCodeFolding("show" === "show");
+  });
+  </script>
+  <script src="../../js/codefolding.js"></script>
+
+
+  <p class="powered-by">
+    
+  </p>
+
+  
+  
+
+
+
+
+
+
+  <p class="powered-by">
+    
+    Published with
+    <a href="https://wowchemy.com" target="_blank" rel="noopener">Wowchemy</a>  —
+    the free, <a href="https://github.com/wowchemy/wowchemy-hugo-modules" target="_blank" rel="noopener">
+    open source</a> website builder that empowers creators.
+    
+
+    
+    <span class="float-right" aria-hidden="true">
+      <a href="#" class="back-to-top">
+        <span class="button_icon">
+          <i class="fas fa-chevron-up fa-2x"></i>
+        </span>
+      </a>
+    </span>
+    
+  </p>
+</footer>
+
+  </div>
+  
+
+  
+<div id="modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">引用</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <pre><code class="tex hljs"></code></pre>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-outline-primary my-1 js-copy-cite" href="#" target="_blank">
+          <i class="fas fa-copy"></i> コピー
+        </a>
+        <a class="btn btn-outline-primary my-1 js-download-cite" href="#" target="_blank">
+          <i class="fas fa-download"></i> ダウンロード
+        </a>
+        <div id="modal-error"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

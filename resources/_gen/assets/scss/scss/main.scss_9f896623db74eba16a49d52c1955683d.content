@@ -9246,7 +9246,11 @@ html[dir="rtl"] body {
  *  Page content
  **************************************************/
 .article-container {
+  width: 100%;
   max-width: 1000px;
+  min-width: 500px;
+  margin-right: auto;
+  margin-left: auto;
   padding: 0 20px 0 20px;
   margin: 50px auto 0 auto; }
 
@@ -9279,13 +9283,6 @@ h2 {
 
 .footnotes {
   font-size: 75%; }
-
-.toc-list {
-  font-size: 75%;
-  position: fixed;
-  top: 100px;
-  left: 50px;
-  width: 280px; }
 
 .mjx-container[jax="CHTML"][display="true"] {
   overflow-x: auto; }
