@@ -158,6 +158,11 @@
   </url>
   
   <url>
+    <loc>/post/post31/</loc>
+    <lastmod>2022-04-02T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>/tag/%E3%83%86%E3%82%AD%E3%82%B9%E3%83%88%E8%A7%A3%E6%9E%90/</loc>
     <lastmod>2022-04-02T00:00:00+00:00</lastmod>
   </url>
@@ -795,6 +800,10 @@
                 hreflang="ja"
                 href="/project/"
                 />
+  </url>
+  
+  <url>
+    <loc>/post/post35/</loc>
   </url>
   
 </urlset>
