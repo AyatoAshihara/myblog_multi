@@ -1,4 +1,3 @@
----
 title: "転職後の近況について"
 author: admin
 date: 2026-02-21T00:00:00Z
@@ -6,7 +5,7 @@ categories: ["仕事関連"]
 tags: ["近況","転職"]
 draft: false
 featured: false
-slug: ["tenshoku-kinjou"]
+slug: "tenshoku-kinjou"
 image:
   caption: ''
   focal_point: ""
@@ -21,7 +20,6 @@ output:
     toc: true
     df_print: "paged"
     keep_md: true
----
 
 ## 1. 転職後の近況について
 
