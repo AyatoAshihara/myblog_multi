@@ -1,0 +1,33 @@
+{{/*
+  Partial: author-dynamic.html
+  Accepts context where `.` is an author Page (or a dict with "author_page").
+  Outputs a short paragraph with work years and age computed from front matter.
+*/}}
+{{ $author := . }}
+{{ with .author_page }}{{ $author = . }}{{ end }}
+{{ if not $author }}{{/* nothing to render */}}{{ end }}
+{{ $now := now }}
+{{ $currentYear := (dateFormat "2006" $now) | int }}
+{{ $parts := slice }}
+
+{{ with $author.Params.work_start_year }}
+  {{ $start := . | int }}
+  {{ $years := sub $currentYear $start }}
+  {{ $parts = $parts | append (printf "%d年に社会人となり、現在は社会人%d年目です。" $start $years) }}
+{{ end }}
+
+{{ with $author.Params.birthdate }}
+  {{ $birth := time . }}
+  {{ $byear := (dateFormat "2006" $birth) | int }}
+  {{ $bmd := dateFormat "0102" $birth }}
+  {{ $nowmd := dateFormat "0102" $now }}
+  {{ $age := sub $currentYear $byear }}
+  {{ if lt $nowmd $bmd }}
+    {{ $age = sub $age 1 }}
+  {{ end }}
+  {{ $parts = $parts | append (printf "%s生まれで現在%d歳です。" (dateFormat "2006-01-02" $birth) $age) }}
+{{ end }}
+
+{{ if gt (len $parts) 0 }}
+  <p class="card-text author-dynamic">{{ delimit $parts " " }}</p>
+{{ end }}
