@@ -34,12 +34,10 @@
   
     
   
-  <meta name="description" content="前回の馬体モデルでは厩舎の背景が邪魔だったのでトリミングしました。">
+  <meta name="description" content="転職してからの仕事や生活について書きました。">
 
   
-  <link rel="alternate" hreflang="en" href="../../en/post/post20/">
-  
-  <link rel="alternate" hreflang="ja" href="../../post/post20/">
+  <link rel="alternate" hreflang="ja" href="../../post/tenshoku-kinjou/">
 
   
 
@@ -300,7 +298,7 @@
   <link rel="icon" type="image/png" href="../../images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
   <link rel="apple-touch-icon" type="image/png" href="../../images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
 
-  <link rel="canonical" href="../../post/post20/">
+  <link rel="canonical" href="../../post/tenshoku-kinjou/">
 
   
   
@@ -310,23 +308,24 @@
   
   
     
+    
   
   
-  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:card" content="summary">
   
   <meta property="twitter:site" content="@vdjgdkhvskcndj">
   <meta property="twitter:creator" content="@vdjgdkhvskcndj">
   
   <meta property="og:site_name" content="京都の電子部品メーカーで働く社会人が研究に没頭するブログ">
-  <meta property="og:url" content="/post/post20/">
-  <meta property="og:title" content="PytorchのPre-trainedモデルで馬体写真の背景を自動トリミングする | 京都の電子部品メーカーで働く社会人が研究に没頭するブログ">
-  <meta property="og:description" content="前回の馬体モデルでは厩舎の背景が邪魔だったのでトリミングしました。"><meta property="og:image" content="/post/post20/featured.jpg">
-  <meta property="twitter:image" content="/post/post20/featured.jpg"><meta property="og:locale" content="ja">
+  <meta property="og:url" content="/post/tenshoku-kinjou/">
+  <meta property="og:title" content="転職後の近況について | 京都の電子部品メーカーで働く社会人が研究に没頭するブログ">
+  <meta property="og:description" content="転職してからの仕事や生活について書きました。"><meta property="og:image" content="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png">
+  <meta property="twitter:image" content="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png"><meta property="og:locale" content="ja">
   
     
-      <meta property="article:published_time" content="2020-08-12T00:00:00&#43;00:00">
+      <meta property="article:published_time" content="2026-02-21T00:00:00&#43;00:00">
     
-    <meta property="article:modified_time" content="2020-08-12T00:00:00&#43;00:00">
+    <meta property="article:modified_time" content="2026-02-22T00:00:00&#43;00:00">
   
 
   
@@ -350,16 +349,12 @@
   "@type": "BlogPosting",
   "mainEntityOfPage": {
     "@type": "WebPage",
-    "@id": "/post/post20/"
+    "@id": "/post/tenshoku-kinjou/"
   },
-  "headline": "PytorchのPre-trainedモデルで馬体写真の背景を自動トリミングする",
+  "headline": "転職後の近況について",
   
-  "image": [
-    "/post/post20/featured.jpg"
-  ],
-  
-  "datePublished": "2020-08-12T00:00:00Z",
-  "dateModified": "2020-08-12T00:00:00Z",
+  "datePublished": "2026-02-21T00:00:00Z",
+  "dateModified": "2026-02-22T00:00:00Z",
   
   "author": {
     "@type": "Person",
@@ -374,7 +369,7 @@
       "url": "/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png"
     }
   },
-  "description": "前回の馬体モデルでは厩舎の背景が邪魔だったのでトリミングしました。"
+  "description": "転職してからの仕事や生活について書きました。"
 }
 </script>
 
@@ -422,7 +417,7 @@
 
 
 
-  <title>PytorchのPre-trainedモデルで馬体写真の背景を自動トリミングする | 京都の電子部品メーカーで働く社会人が研究に没頭するブログ</title>
+  <title>転職後の近況について | 京都の電子部品メーカーで働く社会人が研究に没頭するブログ</title>
 
 </head>
 
@@ -684,21 +679,6 @@
       
 
       
-      <li class="nav-item dropdown i18n-dropdown">
-        <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true">
-          <i class="fas fa-globe mr-1" aria-hidden="true"></i><span class="d-none d-lg-inline">日本語</span></a>
-        <div class="dropdown-menu">
-          <div class="dropdown-item dropdown-item-active">
-            <span>日本語</span>
-          </div>
-          
-          <a class="dropdown-item" href="../../en/post/post20/">
-            <span>English</span>
-          </a>
-          
-        </div>
-      </li>
-      
 
     </ul>
 
@@ -718,11 +698,34 @@
   <ul>
     <li>
       <ul>
-        <li><a href="#1-pre-trainedモデルのダウンロード">1. Pre-trainedモデルのダウンロード</a></li>
-        <li><a href="#2-背景削除処理の実行">2. 背景削除処理の実行</a></li>
-        <li><a href="#3-cnnを用いた分析">3. CNNを用いた分析</a></li>
-        <li><a href="#4-shap値を用いた結果解釈">4. Shap値を用いた結果解釈</a></li>
-        <li><a href="#5まとめ">5.まとめ</a></li>
+        <li><a href="#1-転職後の近況について">1. 転職後の近況について</a></li>
+        <li><a href="#2-仕事について">2. 仕事について</a>
+          <ul>
+            <li><a href="#現在はデータサイエンスやai関連のプロジェクトを企画する仕事をしています">現在はデータサイエンスやAI関連のプロジェクトを企画する仕事をしています</a></li>
+            <li><a href="#転職してすぐは可視化ダッシュボードを作成していました">転職してすぐは可視化ダッシュボードを作成していました</a></li>
+            <li><a href="#広く市民開発のサポートへ">広く市民開発のサポートへ</a></li>
+            <li><a href="#高度データ分析チームへの配属">高度データ分析チームへの配属</a></li>
+          </ul>
+        </li>
+        <li><a href="#3-私生活について">3. 私生活について</a>
+          <ul>
+            <li><a href="#関西で生活できる幸せ">関西で生活できる幸せ</a></li>
+            <li><a href="#子供が生まれた">子供が生まれた</a></li>
+          </ul>
+        </li>
+        <li><a href="#4-仕事を変えた所感">4. 仕事を変えた所感</a>
+          <ul>
+            <li><a href="#市場が拡大していく企業は社内の雰囲気から違う">市場が拡大していく企業は社内の雰囲気から違う</a></li>
+            <li><a href="#勉強熱心な社風で自分も技術的に成長した">勉強熱心な社風で自分も技術的に成長した</a></li>
+            <li><a href="#読む本が変わった">読む本が変わった</a></li>
+            <li><a href="#マクロ経済学からはかなり遠ざかった">マクロ経済学からはかなり遠ざかった</a></li>
+            <li><a href="#ビジネスパーソンとしても成長できた">ビジネスパーソンとしても成長できた</a></li>
+            <li><a href="#今の会社は人がいい">今の会社は人がいい</a></li>
+            <li><a href="#人が多すぎるところはネック">人が多すぎるところはネック</a></li>
+            <li><a href="#電子部品のドメイン知識のキャッチアップが課題">電子部品のドメイン知識のキャッチアップが課題</a></li>
+          </ul>
+        </li>
+        <li><a href="#5-おわりに">5. おわりに</a></li>
       </ul>
     </li>
   </ul>
@@ -746,39 +749,19 @@
 
 
 
-
-
-
-
-
-
-
+  
 
   
   
-
-
+  
 <div class="article-container pt-3">
-  <h1>PytorchのPre-trainedモデルで馬体写真の背景を自動トリミングする</h1>
+  <h1>転職後の近況について</h1>
 
   
 
   
-
-<div id="code-folding-buttons" class="dropdown btn-group pull-right">
-  <a class="btn btn-light btn-sm dropdown-toggle" href="#" role="button" id="allCodeToggleButton"
-     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-    Code
-  </a>
-  <div class="dropdown-menu" aria-labelledby="allCodeToggleButton">
-    <a id="rmd-show-all-code" class="dropdown-item small" href="#">Show all</a>
-    <a id="rmd-hide-all-code" class="dropdown-item small" href="#">Hide all</a>
-  </div>
-</div>
-
-
-
-  
+    
+    
 
 
 <div class="article-metadata">
@@ -791,8 +774,10 @@
     
     
       
+          最終更新
+      
     
-    Aug 12, 2020
+    Feb 22, 2026
   </span>
   
 
@@ -801,7 +786,7 @@
   
   <span class="middot-divider"></span>
   <span class="article-reading-time">
-    3 分で読める
+    9 分で読める
   </span>
   
 
@@ -809,41 +794,34 @@
   
   
   <span class="middot-divider"></span>
-  <a href="../../post/post20/#disqus_thread"></a>
+  <a href="../../post/tenshoku-kinjou/#disqus_thread"></a>
   
 
   
   
   <span class="middot-divider"></span>
   <span class="article-categories">
-    <i class="fas fa-folder mr-1"></i><a href="../../category/%E7%AB%B6%E9%A6%AC/">競馬</a></span>
+    <i class="fas fa-folder mr-1"></i><a href="../../category/%E4%BB%95%E4%BA%8B%E9%96%A2%E9%80%A3/">仕事関連</a></span>
   
 
 </div>
 
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-</div>
-
-
-<div class="article-header container featured-image-wrapper mt-4 mb-4" style="max-width: 450px; max-height: 357px;">
-  <div style="position: relative">
-    <img src="../../post/post20/featured.jpg" alt="" class="featured-image">
     
-  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
 </div>
 
 
@@ -851,95 +829,93 @@
         <div class="article-container">
 
           <div class="article-style">
-            <p>おはこんばんにちは。前回、競走馬の馬体写真からCNNを用いて順位を予想するモデルを構築しました。結果は芳しくなく、特に<code>shap</code>値を用いた要因分析を行うと馬体よりも背景の厩舎に反応している様子が見えたりと分析の精緻化が必要となりました。今回は<code>Pytorch</code>のPre-trainedモデルを用いて馬体写真から背景を切り出し、馬体のみとなった写真で再分析を行いたいと思います。</p>
-<h2 id="1-pre-trainedモデルのダウンロード">1. Pre-trainedモデルのダウンロード</h2>
-<p>コードは<a href="https://pytorch.org/hub/pytorch_vision_deeplabv3_resnet101/" target="_blank" rel="noopener">こちら</a>のものを参考にしています。まず、パッケージをインストールします。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> numpy <span style="color:#f92672">as</span> np
-<span style="color:#f92672">import</span> cv2
-<span style="color:#f92672">import</span> matplotlib.pyplot <span style="color:#f92672">as</span> plt
-<span style="color:#f92672">import</span> torch
-<span style="color:#f92672">import</span> torchvision
-<span style="color:#f92672">from</span> torchvision <span style="color:#f92672">import</span> transforms
-<span style="color:#f92672">import</span> glob
-<span style="color:#f92672">from</span> PIL <span style="color:#f92672">import</span> Image
-<span style="color:#f92672">import</span> PIL
-<span style="color:#f92672">import</span> os
-</code></pre></div><p>学習済みモデルのインストールを行います。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#75715e">#学習済みモデルをインストール</span>
-device <span style="color:#f92672">=</span> torch<span style="color:#f92672">.</span>device(<span style="color:#e6db74">&#34;cuda:0&#34;</span> <span style="color:#66d9ef">if</span> torch<span style="color:#f92672">.</span>cuda<span style="color:#f92672">.</span>is_available() <span style="color:#66d9ef">else</span> <span style="color:#e6db74">&#34;cpu&#34;</span>)
-model <span style="color:#f92672">=</span> torchvision<span style="color:#f92672">.</span>models<span style="color:#f92672">.</span>segmentation<span style="color:#f92672">.</span>deeplabv3_resnet101(pretrained<span style="color:#f92672">=</span>True)
-model <span style="color:#f92672">=</span> model<span style="color:#f92672">.</span>to(device)
-model<span style="color:#f92672">.</span>eval()
-</code></pre></div><p>どうやら全てのPre-trainedモデルは、同じ方法で正規化された形状$（N, 3, H, W）$の3チャンネルRGB画像のミニバッチを想定しているようです。ここで$N$は画像の数、$H$と$W$は少なくとも224ピクセルであることが想定されています。画像は、[0, 1]の範囲にスケーリングされ、その後、平均値＝[0.485, 0.456, 0.406]と標準値＝[0.229, 0.224, 0.225]を使用して正規化される必要があります。ということで、前処理を行う関数を定義します。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#75715e">#前処理</span>
-preprocess <span style="color:#f92672">=</span> transforms<span style="color:#f92672">.</span>Compose([
-    transforms<span style="color:#f92672">.</span>ToTensor(),
-    transforms<span style="color:#f92672">.</span>Normalize(mean<span style="color:#f92672">=</span>[<span style="color:#ae81ff">0.485</span>, <span style="color:#ae81ff">0.456</span>, <span style="color:#ae81ff">0.406</span>], std<span style="color:#f92672">=</span>[<span style="color:#ae81ff">0.229</span>, <span style="color:#ae81ff">0.224</span>, <span style="color:#ae81ff">0.225</span>]),
-])
-</code></pre></div><h2 id="2-背景削除処理の実行">2. 背景削除処理の実行</h2>
-<p>では、前回記事の<code>selenium</code>を用いたコードで収集した画像を読み込み、1枚1枚背景削除処理を行っていきます。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#75715e">#フォルダを指定</span>
-folders <span style="color:#f92672">=</span> os<span style="color:#f92672">.</span>listdir(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;C:\Users\aashi\umanalytics\photo\image&#34;</span>)
-
-<span style="color:#75715e">#それぞれのフォルダから画像を読み込み、Image関数を使用してRGB値ベクトル(numpy array)へ変換</span>
-<span style="color:#66d9ef">for</span> i, folder <span style="color:#f92672">in</span> enumerate(folders):
-  files <span style="color:#f92672">=</span> glob<span style="color:#f92672">.</span>glob(<span style="color:#e6db74">&#34;C:/Users/aashi/umanalytics/photo/image/&#34;</span> <span style="color:#f92672">+</span> folder <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;/*.jpg&#34;</span>)
-  index <span style="color:#f92672">=</span> i
-  <span style="color:#66d9ef">for</span> k, file <span style="color:#f92672">in</span> enumerate(files):
-    img_array <span style="color:#f92672">=</span> np<span style="color:#f92672">.</span>fromfile(file, dtype<span style="color:#f92672">=</span>np<span style="color:#f92672">.</span>uint8)
-    img <span style="color:#f92672">=</span> cv2<span style="color:#f92672">.</span>imdecode(img_array, cv2<span style="color:#f92672">.</span>IMREAD_COLOR)
-    h,w,_ <span style="color:#f92672">=</span> img<span style="color:#f92672">.</span>shape
-    input_tensor <span style="color:#f92672">=</span> preprocess(img)
-    input_batch <span style="color:#f92672">=</span> input_tensor<span style="color:#f92672">.</span>unsqueeze(<span style="color:#ae81ff">0</span>)<span style="color:#f92672">.</span>to(device)
-
-    <span style="color:#66d9ef">with</span> torch<span style="color:#f92672">.</span>no_grad():
-      output <span style="color:#f92672">=</span> model(input_batch)[<span style="color:#e6db74">&#39;out&#39;</span>][<span style="color:#ae81ff">0</span>]
-    output_predictions <span style="color:#f92672">=</span> output<span style="color:#f92672">.</span>argmax(<span style="color:#ae81ff">0</span>)
-    mask_array <span style="color:#f92672">=</span> output_predictions<span style="color:#f92672">.</span>byte()<span style="color:#f92672">.</span>cpu()<span style="color:#f92672">.</span>numpy()
-    Image<span style="color:#f92672">.</span>fromarray(mask_array<span style="color:#f92672">*</span><span style="color:#ae81ff">255</span>)<span style="color:#f92672">.</span>save(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#39;C:\Users\aashi\umanalytics\photo\image\mask.jpg&#39;</span>)
-    mask <span style="color:#f92672">=</span> cv2<span style="color:#f92672">.</span>imread(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#39;C:\Users\aashi\umanalytics\photo\image\mask.jpg&#39;</span>)
-    bg <span style="color:#f92672">=</span> np<span style="color:#f92672">.</span>full_like(img,<span style="color:#ae81ff">255</span>)
-    img <span style="color:#f92672">=</span> cv2<span style="color:#f92672">.</span>multiply(img<span style="color:#f92672">.</span>astype(float), mask<span style="color:#f92672">.</span>astype(float)<span style="color:#f92672">/</span><span style="color:#ae81ff">255</span>)
-    bg <span style="color:#f92672">=</span> cv2<span style="color:#f92672">.</span>multiply(bg<span style="color:#f92672">.</span>astype(float), <span style="color:#ae81ff">1.0</span> <span style="color:#f92672">-</span> mask<span style="color:#f92672">.</span>astype(float)<span style="color:#f92672">/</span><span style="color:#ae81ff">255</span>)
-    outImage <span style="color:#f92672">=</span> cv2<span style="color:#f92672">.</span>add(img, bg)
-    Image<span style="color:#f92672">.</span>fromarray(outImage<span style="color:#f92672">.</span>astype(np<span style="color:#f92672">.</span>uint8))<span style="color:#f92672">.</span>convert(<span style="color:#e6db74">&#39;L&#39;</span>)<span style="color:#f92672">.</span>save(file)
-</code></pre></div><p>行っている処理はPre-trainedモデルで以下のような<code>mask</code>画像を出力し、実際の画像の<code>numpy</code>配列と<code>mask</code>画像を統合して、背景削除画像を生成しています。出力例は以下のような感じです。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">plt<span style="color:#f92672">.</span>gray()
-plt<span style="color:#f92672">.</span>figure(figsize<span style="color:#f92672">=</span>(<span style="color:#ae81ff">20</span>,<span style="color:#ae81ff">20</span>))
-plt<span style="color:#f92672">.</span>subplot(<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">1</span>)
-plt<span style="color:#f92672">.</span>imshow(img)
-plt<span style="color:#f92672">.</span>subplot(<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">2</span>)
-plt<span style="color:#f92672">.</span>imshow(mask)
-plt<span style="color:#f92672">.</span>subplot(<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>)
-plt<span style="color:#f92672">.</span>imshow(outImage)
-plt<span style="color:#f92672">.</span>show()
-</code></pre></div><p><img src="../../post/post20/index_files/figure-html/unnamed-chunk-7-1.png" width="1920" /></p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">plt<span style="color:#f92672">.</span>close()
-</code></pre></div><p>フォルダはこんな感じです。うまく処理できているものもあれば調教師の方が映ってしまっているのもありますね。物体を識別して、馬だけを<code>mask</code>する方法もあるとは思いますがこのモデルでは物体のラベリングまではできないのでこのまま進みます。</p>
-<p><img src="maskhorse.PNG" alt="フォルダ"></p>
-<h2 id="3-cnnを用いた分析">3. CNNを用いた分析</h2>
-<p>ここからは前回記事と同じ内容です。結果のみ掲載します。</p>
-<pre><code>## Test accuracy: 0.711864406779661
-</code></pre><pre><code>## &lt;sklearn.metrics._plot.confusion_matrix.ConfusionMatrixDisplay object at 0x000000003694DFC8&gt;
-</code></pre><p><img src="../../post/post20/index_files/figure-html/unnamed-chunk-9-3.png" width="672" /></p>
-<p>まったく識別できていません。全ての馬が負値の予想になっています。馬体写真には順位を予測するような特徴量はないんでしょうか。それともG1の出走馬ではバラツキがなく、識別不可能なのでしょうか。いずれいにせよ、ちょっと厳しそうです。</p>
-<h2 id="4-shap値を用いた結果解釈">4. Shap値を用いた結果解釈</h2>
-<p>前回同様、どのように失敗したのか<code>shap</code>値を使って検証してみましょう。この画像を例として使います。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">plt<span style="color:#f92672">.</span>imshow(X_test[<span style="color:#ae81ff">4</span>])
-plt<span style="color:#f92672">.</span>show()
-</code></pre></div><p><img src="../../post/post20/index_files/figure-html/unnamed-chunk-10-5.png" width="672" /></p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">plt<span style="color:#f92672">.</span>close()
-</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> shap
-background <span style="color:#f92672">=</span> X_resampled[np<span style="color:#f92672">.</span>random<span style="color:#f92672">.</span>choice(X_resampled<span style="color:#f92672">.</span>shape[<span style="color:#ae81ff">0</span>],<span style="color:#ae81ff">100</span>,replace<span style="color:#f92672">=</span>False)]
-
-e <span style="color:#f92672">=</span> shap<span style="color:#f92672">.</span>GradientExplainer(model,background)
-
-shap_values <span style="color:#f92672">=</span> e<span style="color:#f92672">.</span>shap_values(X_test[[<span style="color:#ae81ff">4</span>]])
-shap<span style="color:#f92672">.</span>image_plot(shap_values[<span style="color:#ae81ff">1</span>],X_test[[<span style="color:#ae81ff">4</span>]])
-</code></pre></div><p><img src="../../post/post20/index_files/figure-html/unnamed-chunk-11-7.png" width="576" /></p>
-<p>前足から顔にかけてを評価しているようです。意外に臀部を評価している様子はありません。</p>
-<h2 id="5まとめ">5.まとめ</h2>
-<p>厩舎背景を削除し、再実行してみましたが結果変わらずでした。PyTorchを使ったり、背景削除を行ういい経験にはなりましたが結果は伴わずということで馬体写真はいったんここでストップです。</p>
+            <h2 id="1-転職後の近況について">1. 転職後の近況について</h2>
+<p>おはこんばんにちは。またまた、かなり久しぶりの投稿になってしまいました。<br>
+2022年3月に今の会社に転職し、早くも4年が経とうとしています。<br>
+転職時の報告は「<a href="ja/post/post26/index.md">転職します</a>」で記載しましたので、まずそちらをご覧ください。<br>
+今回は、転職してからの近況について書いてみようと思います。</p>
+<h2 id="2-仕事について">2. 仕事について</h2>
+<h3 id="現在はデータサイエンスやai関連のプロジェクトを企画する仕事をしています">現在はデータサイエンスやAI関連のプロジェクトを企画する仕事をしています</h3>
+<p>退職エントリでは、プロジェクトマネージャーとしての仕事にやりがいを感じていると書きました。<br>
+現在でもプロジェクトマネージャーをやるときはありますが、より上流の企画段階から関わることが多くなりました。<br>
+<strong>データサイエンスやAIをどのように用いれば、ビジネス戦略を実現できるか</strong>を考える仕事です。<br>
+そして、そのためにどういったデータをどのように蓄積すればよいのか、といったことも考えます。<br>
+解くべき問題を定義し、その解き方を考える仕事です。やりがいを感じています。</p>
+<h3 id="転職してすぐは可視化ダッシュボードを作成していました">転職してすぐは可視化ダッシュボードを作成していました</h3>
+<p>転職してすぐは、主にPower BIを用いて可視化ダッシュボードを作る仕事をしていました。<br>
+ユーザー部門からデータと要件をもらい、Power BIで認知負荷の低いダッシュボードを作る仕事です。
+Power BIは使用したことがありませんでしたが、すぐに慣れました。<br>
+高度な分析を行うことはありませんでしたが、可視化を通じて特に営業部門のドメイン知識を深めることができました。<br>
+また、可視化に関する本を読み漁り、KTさんに心酔し、意思決定に貢献するためには綿密にダッシュボードを作りこむ必要があることを学びました。<br>
+あるプロジェクトでは、取り組みの内容について社長に直接報告することもありました。</p>
+<h3 id="広く市民開発のサポートへ">広く市民開発のサポートへ</h3>
+<p>Power BIでのダッシュボード作成をしばらく続けた後、広く市民開発のサポートをするようになりました。<br>
+まず、UiPathの社内受託開発サービスを立ち上げました。また、主に営業アシスタント向けにPower BIやUiPathを用いた教育プログラムを企画・運営する仕事もしました。<br>
+デジタルツールの活用を促進し、会社全体に対して業務効率化を広めていく仕事にスコープが広がっていきました。教育プログラムの取り組みについては、社長表彰を受賞することができました（びっくり）。</p>
+<h3 id="高度データ分析チームへの配属">高度データ分析チームへの配属</h3>
+<p>2023年に部署が異動になり、高度データ分析を行うチームに配属されました。<br>
+事業損益管理の高度化、機械学習モデルを用いたレコメンドアルゴリズムの開発、損益シミュレーションツールの開発などを行っています。<br>
+過去事例や社外知見を引っ提げて、部門を回り、プロジェクト企画を提案する仕事もしています。<br>
+所属する部の中期方針の策定を任されたり、役員や管理職が参加する重要会議で生成AI活用を企画することもありました。
+現在の関心事は、以下のようなことです。</p>
+<ul>
+<li>売り上げや利益の拡大につながるプロジェクトを企画・達成すること</li>
+<li>産業組織論や因果推論の知見を活用して、ビジネス戦略の材料となるナレッジを蓄積すること</li>
+<li>非常に多くの社員の意見を可視化、集約し、経営の透明化や社員のエンゲージメント向上に貢献すること</li>
+<li>若手メンバーへプロジェクト企画、推進のノウハウを共同化・表出化すること</li>
+</ul>
+<h2 id="3-私生活について">3. 私生活について</h2>
+<h3 id="関西で生活できる幸せ">関西で生活できる幸せ</h3>
+<p>東京から関西に帰ってきて、なにより食べ物がおいしい。行き慣れた店や場所も多く、刺激はないけど安心感がある生活を送っています。お互いの実家が近く、両親とも仲が良いので、家族で集まる機会も多いです。</p>
+<h3 id="子供が生まれた">子供が生まれた</h3>
+<p>2025年2月14日に第一子（長男）が生まれました。妻も子供も健康で、毎日幸せな日々を過ごしています。子供が生まれてからは、育児休暇を約半年取得していました。育児休暇中は、子供の世話をしながら、家事をほぼすべて行っていました。<br>
+子供が生まれたことでワークライフバランスに対する考え方が変わり、私生活の時間をより多く確保するようになりました。先日、保育所の入所が決まり、ほっとしているところです。まだ一歳になったばかりなので、関西弁はしゃべりませんが、バリバリの関西弁を仕込むつもりです。</p>
+<p><img src="S__700334084.jpg" alt=""></p>
+<h2 id="4-仕事を変えた所感">4. 仕事を変えた所感</h2>
+<h3 id="市場が拡大していく企業は社内の雰囲気から違う">市場が拡大していく企業は社内の雰囲気から違う</h3>
+<p>新卒で入社した会社はアセットマネジメント業界でした。アセットマネジメント業界は、おもに国内のアセットオーナーを顧客とする業界です。日本は人口減少や高齢化が進んでいるため、アセットマネジメント業界は市場が縮小していくと考えられています。そのため、縮小していくパイを数社で奪い合う構造で、コスト削減や効率化が求められ、新しいことに挑戦する雰囲気はありませんでした(あったとしても少数派で大多数は冷ややかな目で見ている)。また、ビジネス戦略と呼べるものもなく、金融専門職はいるが、ビジネスパーソンが不在という状況でした。</p>
+<p>一方、転職して入社した会社は、電子部品業界です。自動車の電装化やAIサーバなどの需要を受け、今後も市場が拡大していくと考えられています。市場が拡大していく企業は、社内の雰囲気から違うと感じました。拡大する需要をどのように取り込んでいくか、中華系企業の台頭にどのように対抗していくか、など競争が激しい領域なので積極的にリスクをとることが求められます。事業部門でビジネス戦略を立てられる人材がいて、その戦略を実現するために我々を頼ってくれるので、やりがいを感じます。</p>
+<h3 id="勉強熱心な社風で自分も技術的に成長した">勉強熱心な社風で自分も技術的に成長した</h3>
+<p>これは社風によるのかもしれませんが、非常に勉強熱心な方が多いです。社内での勉強会は定期的に開催されます。最新のデータサイエンス技術やソフトウェアエンジニアリングのナレッジについて、社員が自発的に発信しています。私も転職してから応用情報技術者を取得し、最近はクラウドサービス（おもにAWS）を活用してアプリケーションを構築することも多いです。フロントエンドもバックエンドも（まだまだ勉強中ですが）自分で構築できるようになりました。</p>
+<p>前職自体のExcel, PowerPointで作業していたころからすると、技術的にかなり成長したと感じます。</p>
+<h3 id="読む本が変わった">読む本が変わった</h3>
+<p>以前は経済学とアセットマネジメントに関する本ばかり読んでいました。CLS決済、金融工学、バックオフィス業務などです。<br>
+現在は、色々な範囲の本を読むようになりました（マクロ経済学からは遠ざかった）。</p>
+<ul>
+<li>統計学（産業組織論と因果推論多め）</li>
+<li>機械学習</li>
+<li>ソフトウェアエンジニアリング</li>
+<li>データマネジメント</li>
+<li>UXデザイン</li>
+<li>UIデザイン/データビジュアライゼーション</li>
+<li>フロントエンドエンジニアリング(React, HTML/CSS)</li>
+<li>経営戦略</li>
+<li>電気回路/電子回路</li>
+</ul>
+<p><img src="S__700334083.jpg" alt=""></p>
+<p><img src="S__700301316_0.jpg" alt=""></p>
+<p><img src="S__700301317_0.jpg" alt=""></p>
+<h3 id="マクロ経済学からはかなり遠ざかった">マクロ経済学からはかなり遠ざかった</h3>
+<p>大学院ではマクロ経済学を専攻していましたが、転職してからはかなり遠ざかりました。<br>
+時系列分析や金融の知識を生かす機会もあまりありません。<br>
+むしろ、運用企画をやっていたときの管理会計の知識や予算管理、企画立案、プロジェクトマネジメントの経験が生かされていると感じます。<br>
+マクロ経済学は政策立案には役立つと思いますが、中央官庁、日銀、シンクタンクでしか役立たず、なかなかお金になりにくいと思います。ミクロ実証だと営利企業でも役に立つと思いますが。ここは、大学生の皆さんには注意してほしいポイントだと思います。</p>
+<h3 id="ビジネスパーソンとしても成長できた">ビジネスパーソンとしても成長できた</h3>
+<p>前職では、金融専門職が多く、特にファンドマネジャーを目指す若手が多かったです。ファンドマネジャー以外のキャリアパスが不透明で、ビジネスパーソン（と呼べる人）が少ない環境でした。<br>
+転職してからは、電子部品の専門性が高い人もいれば、BizDevを深める人、アカウント営業を極める人、マーケティングやインサイドセールスの戦略を立てる人など、様々なキャリアパスを歩む人がいます。<br>
+私は、ビジネス戦略を実現するためのデータ戦略を立案する立場で、ビジネスパーソンとしての成長も感じています。今後も、ビジネス部門とデータサイエンス部門をつなぎ、ビジネス成果を出すことにコミットしていきたいと思います。</p>
+<h3 id="今の会社は人がいい">今の会社は人がいい</h3>
+<p>今の会社はやさしい人が多いと感じます。前職も周りの人には恵まれていたと思います。一方で、ただ退職を待ちながら仕事している人やプロフェッショナルさを感じない人もそれなりにいました。また、組織間の事でストレスを感じる機会もそれなりにあったように思います。胃が痛い思いも何度かしました。</p>
+<p>時代が変わっているのかもしれませんが、今の会社は詰めてくるような人がほとんどいません。人間関係のストレスが少ない環境で仕事できていることには感謝です。</p>
+<h3 id="人が多すぎるところはネック">人が多すぎるところはネック</h3>
+<p>いわゆる伝統的な日本の大企業なので、社員数が多いことはネックに感じることもあります。社内の人とコミュニケーションをとるのが大変なこともありますし、社内の人と関わるための会議が多いこともあります。また、役割が重複している部署があったり、情報連携が不足しているなど、組織構造の複雑さも感じることがあります。ここは前職ではあまり感じなかったポイントです。</p>
+<h3 id="電子部品のドメイン知識のキャッチアップが課題">電子部品のドメイン知識のキャッチアップが課題</h3>
+<p>経済学がバックグラウンドの私にとって、電子部品は全く未経験の領域です。いまだに商品に対する理解は不十分だと感じています。育休中には、電気回路・電子回路に関する入門本を読んでみましたが、まだまだ理解が足りないと感じています。また、業界の構造や競合企業の動向なども理解が不十分だと感じています。お客様がどのような課題を抱えているのか、どのようなニーズがあるのかを理解するためにも、ドメイン知識のキャッチアップは引き続き課題だと感じています。</p>
+<h2 id="5-おわりに">5. おわりに</h2>
+<p>転職してからの近況について書いてみました。
+仕事も私生活も充実していて、幸せな日々を過ごしています。転職は正解でした。機会に恵まれていたと思います。
+今後は、日本を飛び出して海外拠点で働いてみたいなぁと思い始めています。</p>
+<hr>
 
           </div>
 
@@ -952,11 +928,9 @@ shap<span style="color:#f92672">.</span>image_plot(shap_values[<span style="colo
 
 <div class="article-tags">
   
-  <a class="badge badge-light" href="../../tag/python/">Python</a>
+  <a class="badge badge-light" href="../../tag/%E8%BF%91%E6%B3%81/">近況</a>
   
-  <a class="badge badge-light" href="../../tag/%E6%A9%9F%E6%A2%B0%E5%AD%A6%E7%BF%92/">機械学習</a>
-  
-  <a class="badge badge-light" href="../../tag/%E5%89%8D%E5%87%A6%E7%90%86/">前処理</a>
+  <a class="badge badge-light" href="../../tag/%E8%BB%A2%E8%81%B7/">転職</a>
   
 </div>
 
@@ -973,7 +947,7 @@ shap<span style="color:#f92672">.</span>image_plot(shap_values[<span style="colo
       
       
       <li>
-        <a href="https://twitter.com/intent/tweet?url=../../post/post20/&amp;text=Pytorch%e3%81%aePre-trained%e3%83%a2%e3%83%87%e3%83%ab%e3%81%a7%e9%a6%ac%e4%bd%93%e5%86%99%e7%9c%9f%e3%81%ae%e8%83%8c%e6%99%af%e3%82%92%e8%87%aa%e5%8b%95%e3%83%88%e3%83%aa%e3%83%9f%e3%83%b3%e3%82%b0%e3%81%99%e3%82%8b" target="_blank" rel="noopener" class="share-btn-twitter">
+        <a href="https://twitter.com/intent/tweet?url=../../post/tenshoku-kinjou/&amp;text=%e8%bb%a2%e8%81%b7%e5%be%8c%e3%81%ae%e8%bf%91%e6%b3%81%e3%81%ab%e3%81%a4%e3%81%84%e3%81%a6" target="_blank" rel="noopener" class="share-btn-twitter">
           <i class="fab fa-twitter"></i>
         </a>
       </li>
@@ -986,7 +960,7 @@ shap<span style="color:#f92672">.</span>image_plot(shap_values[<span style="colo
       
       
       <li>
-        <a href="https://www.facebook.com/sharer.php?u=/post/post20/&amp;t=Pytorch%e3%81%aePre-trained%e3%83%a2%e3%83%87%e3%83%ab%e3%81%a7%e9%a6%ac%e4%bd%93%e5%86%99%e7%9c%9f%e3%81%ae%e8%83%8c%e6%99%af%e3%82%92%e8%87%aa%e5%8b%95%e3%83%88%e3%83%aa%e3%83%9f%e3%83%b3%e3%82%b0%e3%81%99%e3%82%8b" target="_blank" rel="noopener" class="share-btn-facebook">
+        <a href="https://www.facebook.com/sharer.php?u=/post/tenshoku-kinjou/&amp;t=%e8%bb%a2%e8%81%b7%e5%be%8c%e3%81%ae%e8%bf%91%e6%b3%81%e3%81%ab%e3%81%a4%e3%81%84%e3%81%a6" target="_blank" rel="noopener" class="share-btn-facebook">
           <i class="fab fa-facebook"></i>
         </a>
       </li>
@@ -999,7 +973,7 @@ shap<span style="color:#f92672">.</span>image_plot(shap_values[<span style="colo
       
       
       <li>
-        <a href="mailto:?subject=Pytorch%e3%81%aePre-trained%e3%83%a2%e3%83%87%e3%83%ab%e3%81%a7%e9%a6%ac%e4%bd%93%e5%86%99%e7%9c%9f%e3%81%ae%e8%83%8c%e6%99%af%e3%82%92%e8%87%aa%e5%8b%95%e3%83%88%e3%83%aa%e3%83%9f%e3%83%b3%e3%82%b0%e3%81%99%e3%82%8b&amp;body=/post/post20/" target="_blank" rel="noopener" class="share-btn-email">
+        <a href="mailto:?subject=%e8%bb%a2%e8%81%b7%e5%be%8c%e3%81%ae%e8%bf%91%e6%b3%81%e3%81%ab%e3%81%a4%e3%81%84%e3%81%a6&amp;body=/post/tenshoku-kinjou/" target="_blank" rel="noopener" class="share-btn-email">
           <i class="fas fa-envelope"></i>
         </a>
       </li>
@@ -1012,7 +986,7 @@ shap<span style="color:#f92672">.</span>image_plot(shap_values[<span style="colo
       
       
       <li>
-        <a href="https://www.linkedin.com/shareArticle?url=../../post/post20/&amp;title=Pytorch%e3%81%aePre-trained%e3%83%a2%e3%83%87%e3%83%ab%e3%81%a7%e9%a6%ac%e4%bd%93%e5%86%99%e7%9c%9f%e3%81%ae%e8%83%8c%e6%99%af%e3%82%92%e8%87%aa%e5%8b%95%e3%83%88%e3%83%aa%e3%83%9f%e3%83%b3%e3%82%b0%e3%81%99%e3%82%8b" target="_blank" rel="noopener" class="share-btn-linkedin">
+        <a href="https://www.linkedin.com/shareArticle?url=../../post/tenshoku-kinjou/&amp;title=%e8%bb%a2%e8%81%b7%e5%be%8c%e3%81%ae%e8%bf%91%e6%b3%81%e3%81%ab%e3%81%a4%e3%81%84%e3%81%a6" target="_blank" rel="noopener" class="share-btn-linkedin">
           <i class="fab fa-linkedin-in"></i>
         </a>
       </li>
@@ -1025,7 +999,7 @@ shap<span style="color:#f92672">.</span>image_plot(shap_values[<span style="colo
       
       
       <li>
-        <a href="whatsapp://send?text=Pytorch%e3%81%aePre-trained%e3%83%a2%e3%83%87%e3%83%ab%e3%81%a7%e9%a6%ac%e4%bd%93%e5%86%99%e7%9c%9f%e3%81%ae%e8%83%8c%e6%99%af%e3%82%92%e8%87%aa%e5%8b%95%e3%83%88%e3%83%aa%e3%83%9f%e3%83%b3%e3%82%b0%e3%81%99%e3%82%8b%20/post/post20/" target="_blank" rel="noopener" class="share-btn-whatsapp">
+        <a href="whatsapp://send?text=%e8%bb%a2%e8%81%b7%e5%be%8c%e3%81%ae%e8%bf%91%e6%b3%81%e3%81%ab%e3%81%a4%e3%81%84%e3%81%a6%20/post/tenshoku-kinjou/" target="_blank" rel="noopener" class="share-btn-whatsapp">
           <i class="fab fa-whatsapp"></i>
         </a>
       </li>
@@ -1038,7 +1012,7 @@ shap<span style="color:#f92672">.</span>image_plot(shap_values[<span style="colo
       
       
       <li>
-        <a href="https://service.weibo.com/share/share.php?url=../../post/post20/&amp;title=Pytorch%e3%81%aePre-trained%e3%83%a2%e3%83%87%e3%83%ab%e3%81%a7%e9%a6%ac%e4%bd%93%e5%86%99%e7%9c%9f%e3%81%ae%e8%83%8c%e6%99%af%e3%82%92%e8%87%aa%e5%8b%95%e3%83%88%e3%83%aa%e3%83%9f%e3%83%b3%e3%82%b0%e3%81%99%e3%82%8b" target="_blank" rel="noopener" class="share-btn-weibo">
+        <a href="https://service.weibo.com/share/share.php?url=../../post/tenshoku-kinjou/&amp;title=%e8%bb%a2%e8%81%b7%e5%be%8c%e3%81%ae%e8%bf%91%e6%b3%81%e3%81%ab%e3%81%a4%e3%81%84%e3%81%a6" target="_blank" rel="noopener" class="share-btn-weibo">
           <i class="fab fa-weibo"></i>
         </a>
       </li>
@@ -1197,15 +1171,8 @@ shap<span style="color:#f92672">.</span>image_plot(shap_values[<span style="colo
   
   
   <div class="post-nav-item">
-    <div class="meta-nav">次へ</div>
-    <a href="../../post/post21/" rel="next">Rcppでデータハンドリングを高速に行う(Tickデータの処理を事例に)</a>
-  </div>
-  
-  
-  
-  <div class="post-nav-item">
     <div class="meta-nav">前へ</div>
-    <a href="../../post/post19/" rel="prev">そのバックテスト本当に再現性ありますか？</a>
+    <a href="../../post/post29/" rel="prev">【徹底比較】センチメントスコア算出手法！！ - 第4回</a>
   </div>
   
 </div>
@@ -1222,15 +1189,9 @@ shap<span style="color:#f92672">.</span>image_plot(shap_values[<span style="colo
     <h3>関連項目</h3>
     <ul>
       
-      <li><a href="../../post/post16/">LightGBMを使用して競馬結果を予想してみる</a></li>
+      <li><a href="../../post/post19/">そのバックテスト本当に再現性ありますか？</a></li>
       
-      <li><a href="../../post/post31/">【徹底比較】センチメントスコア算出手法！！ - 第4回</a></li>
-      
-      <li><a href="../../post/post29/">【徹底比較】センチメントスコア算出手法！！ - 第4回</a></li>
-      
-      <li><a href="../../post/post28/">【徹底比較】センチメントスコア算出手法！！ - 第3回</a></li>
-      
-      <li><a href="../../post/post27/">【徹底比較】センチメントスコア算出手法！！ - 第2回</a></li>
+      <li><a href="../../post/post2/">Asset Allocation ModelをRで組んでみた。</a></li>
       
     </ul>
   </div>
@@ -1375,14 +1336,7 @@ shap<span style="color:#f92672">.</span>image_plot(shap_values[<span style="colo
   
 
   
-   
-  <script>
-  $(document).ready(function () {
-    window.initializeCodeFolding("show" === "show");
-  });
-  </script>
-  <script src="../../js/codefolding.js"></script>
-
+  
 
   <p class="powered-by">
     

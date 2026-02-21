@@ -94,7 +94,7 @@
   
   <url>
     <loc>/categories/</loc>
-    <lastmod>2022-04-02T00:00:00+00:00</lastmod>
+    <lastmod>2026-02-22T00:00:00+00:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="en"
@@ -109,7 +109,7 @@
   
   <url>
     <loc>/post/</loc>
-    <lastmod>2022-04-02T00:00:00+00:00</lastmod>
+    <lastmod>2026-02-22T00:00:00+00:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="en"
@@ -120,6 +120,41 @@
                 hreflang="ja"
                 href="/post/"
                 />
+  </url>
+  
+  <url>
+    <loc>/tags/</loc>
+    <lastmod>2026-02-22T00:00:00+00:00</lastmod>
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="/en/tags/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="ja"
+                href="/tags/"
+                />
+  </url>
+  
+  <url>
+    <loc>/category/%E4%BB%95%E4%BA%8B%E9%96%A2%E9%80%A3/</loc>
+    <lastmod>2026-02-22T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tag/%E8%BB%A2%E8%81%B7/</loc>
+    <lastmod>2026-02-22T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/tenshoku-kinjou/</loc>
+    <lastmod>2026-02-22T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tag/%E8%BF%91%E6%B3%81/</loc>
+    <lastmod>2026-02-22T00:00:00+00:00</lastmod>
   </url>
   
   <url>
@@ -134,21 +169,6 @@
                 rel="alternate"
                 hreflang="ja"
                 href="/tag/python/"
-                />
-  </url>
-  
-  <url>
-    <loc>/tags/</loc>
-    <lastmod>2022-04-02T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="en"
-                href="/en/tags/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="ja"
-                href="/tags/"
                 />
   </url>
   
@@ -360,11 +380,6 @@
                 hreflang="ja"
                 href="/post/post19/"
                 />
-  </url>
-  
-  <url>
-    <loc>/category/%E4%BB%95%E4%BA%8B%E9%96%A2%E9%80%A3/</loc>
-    <lastmod>2020-07-08T00:00:00+00:00</lastmod>
   </url>
   
   <url>
@@ -800,10 +815,6 @@
                 hreflang="ja"
                 href="/project/"
                 />
-  </url>
-  
-  <url>
-    <loc>/post/post35/</loc>
   </url>
   
 </urlset>

@@ -1,3 +1,4 @@
+---
 title: "転職後の近況について"
 author: admin
 date: 2026-02-21T00:00:00Z
@@ -13,13 +14,12 @@ image:
   preview_only: false
 lastmod: "2026-02-22T00:00:00Z"
 projects: []
+url: "/post/tenshoku-kinjou/"
+aliases:
+  - "/post/post35/"
 summary: 転職してからの仕事や生活について書きました。
-output:
-  blogdown::html_page:
-    number_sections: false
-    toc: true
-    df_print: "paged"
-    keep_md: true
+summary: 転職してからの仕事や生活について書きました。
+---
 
 ## 1. 転職後の近況について
 
