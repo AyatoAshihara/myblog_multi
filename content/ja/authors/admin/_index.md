@@ -1,5 +1,5 @@
 ---
-bio: 2016年に社会人となり、現在は8年目の社会人が夜な夜な更新中。本ブログの内容は筆者が所属する組織の公式見解とは関係ありません。
+bio: 社会人が夜な夜な更新中。本ブログの内容は筆者が所属する組織の公式見解とは関係ありません。
 education:
   courses:
   - course: 総合政策 修士
@@ -18,9 +18,9 @@ interests:
 - データ基盤の設計・構築・運用
 organizations:
 - name: 京都のとある電子部品メーカー
-  url: 
+  url: ""
 role: 会社員8年目
-work_start_year: 2016
+work_start_year: 2018
 birthdate: "1994-01-19"
 social:
 - icon: envelope
@@ -41,6 +41,4 @@ user_groups:
 - Principal Investigators
 ---
 
-{{< author-dynamic >}}
-
-専攻はマクロ経済（主にDynamic Stochastic General Equilibrium model）、時系列解析やテキストマイニングにも手を出していました。2018年に新卒で東京の資産運用会社に就職し、主に企画業務に従事。2022年3月より転職し、京都の電子部品メーカーでデータコンサントとしてのキャリアパスをスタートしました。広瀬すずより有村架純よりお姉ちゃんのほうがタイプ。
+奈良県出身の院卒。{{< author-dynamic >}} 専攻はマクロ経済（主にDynamic Stochastic General Equilibrium model）、時系列解析やテキストマイニングにも手を出していました。2018年に新卒で東京の資産運用会社に就職し、主に企画業務に従事。2022年3月より転職し、京都の電子部品メーカーでデータコンサルタントとしてのキャリアパスをスタートしました。広瀬すずより有村架純よりお姉ちゃんのほうがタイプ。
