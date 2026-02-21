@@ -1,0 +1,218 @@
+---
+title: "三菱VISAデビットの明細情報をマネーフォワードに反映する"
+author: admin
+date: 2022-04-18T00:00:00Z
+categories: ["単発"]
+tags: ["前処理","webスクレイピング","python"]
+draft: false
+featured: false
+slug: ["money_forward"]
+image:
+  caption: ''
+  focal_point: ""
+  placement: 2
+  preview_only: false
+lastmod: ""
+projects: []
+summary: 
+output: 
+  blogdown::html_page:
+    toc: true
+codefolding_show: "show"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+## 1. 日常の作業を自動化しました
+
+### モチベーション
+
+我が家では、家計簿アプリ「マネーフォワード」を使用して月々の支出を管理しています。日々の食料品は妻が買ってくれるので、月末に金額を集計して精算をしているのですが、その管理が少々面倒です。というのも、決済に三菱UFJ VISAデビットカードを使用しているのですが、マネーフォワード上ではこんな出方をするんです。
+
+[](/post/post32/明細.png)
+
+これではなにに使ったのかがわからず、三菱UFJの明細とマネーフォワードを照らし合わせながら、仕分けをしている状態です。非常に非効率だったので、「面倒なことは全てPythonに任せよう」ということで、自動化することにしました。
+
+### やりたいこと
+
+実装したのは以下のようなことです。
+
+1. [三菱UFJ VISAデビット会員用Web](https://debit.bk.mufg.jp/p/login/RW0312010001)にログイン。
+2. ご利用明細紹介ページに移動し、セレクトボックス「ご利用月」で当月を選択する。
+3. 取引明細において、「お取引内容」と「承認番号」を取得する。
+4. [マネーフォワード](https://moneyforward.com/)にGoogleアカウントでログイン。
+5. 収入・支出詳細ページへ移動し、「内容」が「デビット1 VISA-******(6ｹﾀの数字)」となっているもので、末尾6桁の数字と3.で取得した「承認番号」を突合し、一致したレコードのメモ欄に3.で取得した「お取引内容」を入力する。
+
+これで、スマホアプリで見た際にメモに取引内容が記載されているので、仕分けがやりやすくなるというわけです。妻から褒められました。
+
+## 2. Pythonによる実装
+
+### 使用するライブラリ
+
+Webブラウザ操作は`selenium`を使用しました。
+
+```{python}
+from selenium import webdriver
+from selenium.webdriver.support.ui import Select
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+import getpass
+from time import sleep
+import re
+```
+
+### コード
+
+コードは以下の通りです。インスタンス化の引数にprofileへのパスを渡してやる必要があります。なお、Webブラウザは色々あってFireFoxを使用しています。パスが分からない方は[こちら](https://www.howtogeek.com/255587/how-to-find-your-firefox-profile-folder-on-windows-mac-and-linux/#:%7E:text=The%20default%20locations%20are%3A,%2FFirefox%2FProfiles%2Fxxxxxxxx.)を参考にしてください。
+
+```{python}
+class Moneyfoward_Crawling:
+  def __init__(self, profile_path):
+    profile = webdriver.FirefoxProfile(profile_path))
+    profile.set_preference("dom.webdriver.enabled", False)
+    profile.set_preference('useAutomationExtension', False)
+    profile.update_preferences()
+    desired = DesiredCapabilities.FIREFOX
+    self.driver = webdriver.Firefox(firefox_profile=profile, desired_capabilities=desired)
+    self.driver.implicitly_wait(15)
+
+  def click_by_css_selector(self, target_selector):
+    element = self.driver.find_element_by_css_selector(target_selector)
+    element.click()
+    sleep(2)
+
+  def input_text_by_css_selector(self, target_selector, text):
+    element = self.driver.find_element_by_css_selector(target_selector)
+    element.send_keys(text)
+    sleep(2)
+  
+  def click_by_class_name(self, target_class):
+    element = self.driver.find_element_by_class_name(target_class)
+    element.click()
+    sleep(2)
+  
+  def input_text_by_class_name(self, target_class, text):
+    element = self.driver.find_element_by_class_name(target_class)
+    element.send_keys(text)
+    sleep(2)
+  
+  def click_by_name(self, target_name):
+    element = self.driver.find_element_by_name(target_name)
+    element.click()
+    sleep(2)
+  
+  def select_by_css_selector_index(self, target_selector, index):
+    element = self.driver.find_element_by_css_selector(target_selector)
+    select = Select(element)
+    select.select_by_index(index)
+  
+  def login_MF_by_Google(self, login_id, login_password):
+    self.driver.get("https://moneyforward.com/login")
+    self.click_by_css_selector(target_selector = "#login > div > div > div.button-login.mf-mb20 > a")
+    self.click_by_css_selector(target_selector = "body > main > div > div > div > div > div.lWVjD3mq.contentWrapper > section > div > div > div.buttonWrapper > div > a:nth-child(2)")
+    self.input_text_by_css_selector(target_selector = "#identifierId", text = login_id)
+    self.click_by_css_selector(target_selector = "#identifierNext > div > button > span")
+    self.input_text_by_css_selector(target_selector = "#password > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > input:nth-child(1)", text = login_password)
+    self.click_by_css_selector(target_selector = ".VfPpkd-LgbsSe-OWXEXe-k8QpJ > span:nth-child(4)")
+
+  def update_memo_from_MUFG_VISA(self):
+    self.click_by_css_selector(target_selector = "li.global-menu-item:nth-child(2) > a:nth-child(1)")
+    self.click_by_css_selector(target_selector = "button.btn:nth-child(4)")
+    for k in range(0, len(self.transaction_ids)):
+      approval_number = self.transaction_ids[k]
+      transaction_name = self.transactions[k]
+      elements = self.driver.find_elements_by_class_name("transaction_list")
+      for i in range(0, len(elements)):
+        elements = self.driver.find_elements_by_class_name("transaction_list")
+        content = elements[i].find_element_by_class_name("content").text
+        VISA_content = re.match("デビット1 VISA-[0-9]{6}", content)
+        if VISA_content != None:
+          if VISA_content.group()[-6:] == approval_number:
+            memo_element = elements[i].find_element_by_class_name("memo")
+            memo_element.click()
+            sleep(2)
+            v_memo_element = elements[i].find_element_by_class_name("v_memo")
+            v_memo_element.send_keys(transaction_name)
+            sleep(2)
+            self.driver.refresh()
+            sleep(2)
+  
+  def login_MUFG(self, login_id, login_password):
+    self.driver.get("https://debit.bk.mufg.jp/p/login/RW0312010001")
+    self.input_text_by_css_selector(target_selector = "#text-mail", text = login_id)
+    self.input_text_by_css_selector(target_selector = "#text-password", text = login_password)
+    self.click_by_css_selector(target_selector = "#entrance > div.content > div.content-inner > div.panel-login.js-match-height > div.panel-login-col._mail > form > div > div > p > input")
+  
+  def get_transaction_from_MUFG(self):
+    self.transactions = []
+    self.transaction_ids = []
+    self.click_by_css_selector(target_selector = "body > div.content > div > form:nth-child(6) > p:nth-child(1) > a")
+    self.select_by_css_selector_index(".form-select-02", 1)
+    while True:
+      elements = self.driver.find_elements_by_css_selector(".lyt-sp-none > div:nth-child(1) > table:nth-child(2) > tbody")
+      sleep(2)
+      for i in range(0, len(elements)):
+        element = elements[i]
+        transaction = element.find_element_by_class_name("content").text
+        transaction_id = element.find_element_by_css_selector("tr:nth-child(1) > td:nth-child(9)").text
+        self.transactions.append(transaction)
+        self.transaction_ids.append(transaction_id)
+      if self.driver.find_elements_by_css_selector(".lyt-sp-none > div:nth-child(1) > div:nth-child(3) > div:nth-child(1) > div:nth-child(1) > div:nth-child(3) > div:nth-child(1) > a:nth-child(1)")==[]:
+        self.click_by_name(target_name = "logout")
+        break
+      else:
+        self.click_by_class_name(target_class = "nablarch_nextSubmit")
+```
+
+### 使い方
+
+```{python, eval=FALSE}
+# マネーフォワードと三菱UFJ VISAデビットのIDとパスワード
+MF_login_id = "hogehoge@gmail.com"
+MF_login_password = "hogehoge1234"
+MUFG_login_id = "hogehoge"
+MUFG_login_password = "hogehoge5678"
+
+# Profileのパスを定義
+Firefox_Profile = r"C:\Users\{}\AppData\Roaming\Mozilla\Firefox\Profiles\scrdra7f.default-0000000000000".format(getpass.getuser())
+
+# インスタンス化(Webブラウザが立ち上がる)
+MUFG_to_MF = Moneyfoward_Crawling(Firefox_Profile)
+
+# 三菱UFJ VISAデビット会員用Webへのログイン
+MUFG_to_MF.login_MUFG(MUFG_login_id, MUFG_login_password)
+
+# 三菱UFJ VISAデビット会員用Webから明細情報を取得
+MUFG_to_MF.get_transaction_from_MUFG()
+
+# Googleアカウントでマネーフォワードへログイン
+MUFG_to_MF.login_MF_by_Google(MF_login_id, MF_login_password)
+
+# 取引内容をメモに記載
+MUFG_to_MF.update_memo_from_MUFG_VISA()
+```
+
+結果を見てみます。
+
+[](/post/post32/明細3.png)
+
+入力されました(Amazonは妻が先にだしというメモを打っていたようです)。
+
+### 個人的つまずきポイント1 三菱UFJ VISAデビットの明細取得
+
+三菱UFJ VISAデビットの明細取得で少し悩みました。というのも、明細は1ページに収まりきらず、複数ページにまたがる可能性があるからです。
+
+[](/post/post32/明細2.png)
+
+「次へ」をクリックして進めばよいのですが、今いるページが最終ページかどうかを判断させるのに迷いました。「次へ」にリンク属性要素が存在するかどうかを判定させて、最終ページかどうかを判断させています。
+
+### 個人的つまずきポイント2 Googleアカウントによるログイン
+
+最も困ったのがこちらです。EdgeやChromeからログインを試みると、信頼できないブラウザと言われ、ログイン出来ませんでした。ググったところ、Firefoxであれば掻い潜れるという情報があり、試したところ上手くいったので、こちらを使用しています。
+
+## 3. 最後に
+
+まだ今月しか使用していないので、今後不都合が出るかも知れません。
+使用される場合は、個人責任でお願いいたします。

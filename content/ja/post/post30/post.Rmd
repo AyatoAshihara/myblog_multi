@@ -1,0 +1,638 @@
+---
+title: "【徹底比較】センチメントスコア算出手法！！ - 第5回"
+author: admin
+date: 2022-04-014T00:00:00Z
+categories: ["単発"]
+tags: ["Python","前処理","機械学習","テキスト解析"]
+draft: false
+featured: false
+slug: ["sentiment_score"]
+image:
+  caption: ''
+  focal_point: ""
+  placement: 2
+  preview_only: false
+lastmod: ""
+projects: []
+summary: Recurrent Neural Network(RNN)を用いたセンチメントスコアの算出を実践します！
+output: 
+  blogdown::html_page:
+    toc: true
+codefolding_show: "show"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+## 1. Recurrent Neural Network(RNN)について 
+
+おはこんばんにちは。これまで景気ウオッチャー調査のテキストデータからセンチメントを抜き出し、景気判断を予想する問題にさまざまな手法を用いて、取り組んできました。現時点では教師あり学習であるナイーブベイズ分類器の性能が最も高い結果となっています。ここからの2つの記事では、深層学習(Deep Neural Network)に取り組みます。1回目の今回はRecurrent Neural Network(RNN)です。
+
+RNNのイメージは[こちら](https://www.ibm.com/cloud/learn/recurrent-neural-networks)をご覧ください。
+数学的な記述も含めて確認されたい方は[こちら](extension://oemmndcbldboiebfnladdacbdfmadadm/https://www.cs.toronto.edu/~tingwuwang/rnn_tutorial.pdf)。
+
+### 2. RNNの実装
+
+`Pytorch`を用いて、RNNの実装を行います。
+手順としては大きく「前処理」、「ネットワークの作成」、「推論の実施」の3パートに分かれます。
+
+- [] 前処理
+　- [] 分かち書きを行う関数の定義
+　- [] Datasetの定義
+　- [] Word Embeddingベクトルの読み込み・整形
+　- [] Word Embeddingベクトルのボキャブラリー生成
+　- [] Dataloaderの定義(Iteratorの作成)
+- [] ネットワークモデルの作成
+  - [] Embedding層の定義
+  - [] Positional Encoder層の定義
+  - [] Recurrent Neural Network層の定義
+  - [] ClassificationHead層の定義
+  - [] ネットワークモデルの定義
+- [] 推論の実施
+  - [] 学習の実施
+  - [] テストデータでの性能検証
+
+「前処理」パートでは、生の文章データを各形態素に分かち書きし、それぞれにWord Embeddingベクトルを付与するDatasetオブジェクトを定義し、それをイテレータ化することでミニバッチを作成します。  
+「ネットワークの作成」パートでは、RNNの構築を行います。  
+「推論の実施」パートでは、学習データを用いてパラメータの学習を実施し、その後でテストデータを使って学習器の性能を検証します。
+
+使用するライブラリを呼び出しておきます。
+
+```{python}
+import random
+import numpy as np
+from tqdm import tqdm
+
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import torch.utils.data as data
+import torch.nn.functional as F
+import torchtext
+
+from sudachipy import tokenizer
+from sudachipy import dictionary
+import re
+
+from sklearn.preprocessing import LabelEncoder
+```
+
+`Python`のバージョンは以下の通りです。
+
+```{python}
+import sys
+print(sys.version)
+```
+`Pytorch`と`torchtext`のバージョンは以下の通りです。
+
+```{python}
+print("torchのバージョン：", torch.__version__)
+print("torchtextのバージョン：", torchtext.__version__)
+```
+
+再現性を確保するために、乱数のシードを指定しておきます。
+
+```{python}
+torch.manual_seed(1234)
+np.random.seed(1234)
+random.seed(1234)
+```
+
+### 前処理
+
+#### 分かち書きを行う関数の定義
+
+前回までと同様、テキストデータの分かち書きにはsudachiを使用します。  
+まず、日本語文章を分かち書きする関数を`tokenizer_sudachi`として定義します。
+
+```{python}
+# 日本語文章を単語分割する関数を定義(sudachiを使用)
+def tokenizer_sudachi(text):
+  tokenizer_obj = dictionary.Dictionary().create()
+  mode = tokenizer.Tokenizer.SplitMode.A
+  return [m for m in tokenizer_obj.tokenize(text, mode)]
+```
+
+この関数はテキスト(文章)を入力すると、分かち書きされた各単語がリストの形で出力される仕様になっています。  
+この`tokenizer_sudachi`にテキスト(文章)を渡す前に、空白を排除したり、全ての数値を0に規格化するなどの前処理を行う関数を定義し、一連の処理を`tokenizer_with_preprocessing`として定義します。
+
+```{python}
+# 文章の前処理を行う関数を定義
+def preprocessing_text(text):
+  text = re.sub(' ', '', text)
+  text = re.sub('　', '', text)
+  text = re.sub('・', '', text)
+  text = re.sub(r'[0-9 ０-９]', '0', text)
+  return text
+
+# 前処理と単語分割を行う関数を定義
+def tokenizer_with_preprocessing(text):
+  text = preprocessing_text(text)
+  ret = tokenizer_sudachi(text)
+  return ret
+```
+
+#### Datasetの定義
+
+`Pytorch`での深層学習実装では、クラス`Dataset`を作成します。`Dataset`は入力データとそのラベルをセットにしたクラスです。このクラスに、先ほど定義した前処理関数を渡すことで、学習データを読み込む際に前処理を自動で適用させることができます。  
+文章データの学習では、`torchtext.legacy.data.Field`を使用します。このクラスの引数は以下になっています。
+
+- sequential
+  データの長さが可変かどうか
+- tokenize
+  文章を読み込む際に適用する前処理や分かち書きの関数を定義
+- use_vocab
+  単語をボキャブラリーに追加するかどうか
+- lower
+　アルファベットを小文字に変換するかどうか
+- include_length
+　文章の単語数のデータを保持するか否か
+- batch_first
+　ミニバッチの次元を先頭に用意するかどうか
+- fix_length
+　全部の文章をあらかじめ指定した長さになるようpaddingを行うかどうか
+- init_token
+　先頭に付与するtokenを指定
+- eos_token
+　末尾に付与するtokenを指定
+
+```{python}
+# 学習する文章の最大単語数
+max_length = 256
+
+# 文章とラベルのFieldを定義
+TEXT = torchtext.legacy.data.Field(sequential=True, tokenize=tokenizer_with_preprocessing, 
+                        use_vocab=True, lower=False, include_lengths=True,
+                        batch_first=True, fix_length=max_length, init_token="<cls>",
+                        eos_token="<eos>")
+LABEL = torchtext.legacy.data.Field(sequential=False, use_vocab=False)
+```
+
+今、定義した`Dataset`に、訓練データと学習データを読み込みます。訓練データと学習データはあらかじめ別々のcsvファイルとして保存しています。そして、訓練データを学習データとvalidationデータに分割しています。
+
+```{python, include=FALSE}
+textpath = r"C:\Users\aashi\Desktop\TextMining\景気ウオッチャー"
+```
+
+```{python, eval=FALSE}
+textpath = r"C:\Users\hogehoge\Watcher\RawData"
+```
+
+```{python}
+# フォルダから各csvファイルを読み込む
+train_val_ds, test_ds = torchtext.legacy.data.TabularDataset.splits(path=textpath,
+                          train='train.csv', test='test.csv', format='csv', fields=[('Text',                           TEXT), ('label', LABEL)])
+
+# 学習データとValidationデータを分割する
+train_ds, val_ds = train_val_ds.split(split_ratio=0.8, random_state=random.seed(1234))
+```
+
+動作確認してみます。
+
+```{python}
+print("訓練および検証のデータ数", len(train_val_ds))
+print("1つ目の訓練および検証のデータ", vars(train_val_ds[0]))
+```
+
+
+
+#### Word Embeddingベクトルの読み込み・整形
+
+
+
+```{python, include=FALSE}
+chivepath = r"C:\Users\aashi\Desktop\TextMining\chive-1.2-mc15_gensim\chive-1.2-mc15.kv"
+```
+
+```{python}
+chivepath = r"C:\Users\hogehoge\Watcher\chive-1.2-mc15_gensim\chive-1.2-mc15.kv"
+```
+
+```{python}
+from gensim.models import KeyedVectors
+
+# 日本語学習済みモデルchiveをtorchで読み込める形式で保存し直す
+model = KeyedVectors.load(path)
+model.wv.save_word2vec_format(r"C:\Users\aashi\Desktop\TextMining\chive-1.2-mc15_gensim\chive-1.2-mc15.vec")
+```
+
+### Word Embeddingベクトルのボキャブラリー生成
+
+```{python}
+from torchtext.vocab import Vectors
+
+# chiveを単語ベクトルとしてtorchtextに読み込む
+chive_vectors = Vectors(name=r"C:\Users\aashi\Desktop\TextMining\chive-1.2-mc15_gensim\chive-1.2-mc15.vec")
+print("1単語を表現する次元数", chive_vectors.dim)
+print("単語数:",len(chive_vectors.itos))
+```
+
+```{python}
+# chiveをもとにボキャブラリーを作成
+TEXT.build_vocab(train_ds, vectors=chive_vectors, min_freq=10)
+print(TEXT.vocab.vectors.shape)
+TEXT.vocab.vectors
+```
+
+### Dataloaderの定義(Iteratorの作成)
+
+```{python}
+# DataLoaderを作成
+train_dl = torchtext.legacy.data.Iterator(train_ds, batch_size=24, train=True)
+val_dl = torchtext.legacy.data.Iterator(val_ds, batch_size=24, train=False, sort=False)
+test_dl = torchtext.legacy.data.Iterator(test_ds, batch_size=24, train=False, sort=False)
+
+batch = next(iter(val_dl))
+print(batch.Text)
+print(batch.label)
+```
+
+### Embedding層の定義
+
+```{python}
+class Embedder(nn.Module):
+  # id表示の単語をベクトルに変換する
+  def __init__(self, text_embedding_vectors):
+    super(Embedder, self).__init__()
+    
+    self.embeddings = nn.Embedding.from_pretrained(
+        embeddings=text_embedding_vectors, freeze=True)
+    
+  def forward(self, x):
+    x_vec = self.embeddings(x)
+    
+    return x_vec
+```
+
+```{python}
+batch = next(iter(train_dl))
+net1 = Embedder(TEXT.vocab.vectors)
+
+x = batch.Text[0]
+x1 = net1(x)
+
+print("入力のテンソルサイズ：", x.shape)
+print("出力のテンソルサイズ：", x1.shape)
+```
+
+### Positional Encoder層の定義
+
+```{python}
+import math
+
+class PositionalEncoder(nn.Module):
+  # 入力単語の位置を表すベクトル情報を付与する
+  def __init__(self, d_model=300, max_seq_len=256):
+    super().__init__()
+    
+    self.d_model = d_model
+    
+    pe = torch.zeros(max_seq_len, d_model)
+    
+    for pos in range(max_seq_len):
+      for i in range(0, d_model, 2):
+        pe[pos, i] = math.sin(pos / (10000 ** ((2*i)/d_model)))
+        pe[pos, i + 1] = math.cos(pos / (10000 ** ((2*i)/d_model)))
+    
+    # ミニバッチの次元を付与する(retの計算用)
+    self.pe = pe.unsqueeze(0)
+    
+    # 学習時に勾配を計算しない
+    self.pe.requires_grad = False
+    
+  def forward(self, x):
+    ret = math.sqrt(self.d_model)*x + self.pe
+    return ret
+```
+
+```{python}
+net1 = Embedder(TEXT.vocab.vectors)
+net2 = PositionalEncoder(d_model=300, max_seq_len=256)
+
+x = batch.Text[0]
+x1 = net1(x)
+x2 = net2(x1)
+
+print("入力のテンソルサイズ：", x1.shape)
+print("出力のテンソルサイズ：", x2.shape)
+```
+
+### Attention層の定義
+
+```{python}
+class Attention(nn.Module):
+  # Attentionの実装
+  def __init__(self, d_model=300):
+    super().__init__()
+    
+    # 全結合用で特徴量の変換を行う
+    self.q_linear = nn.Linear(d_model, d_model)
+    self.v_linear = nn.Linear(d_model, d_model)
+    self.k_linear = nn.Linear(d_model, d_model)
+    
+    # 出力時に使用する全結合層
+    self.out = nn.Linear(d_model, d_model)
+    
+    # Attentionの大きさの調整を行う定数
+    self.d_k = d_model
+    
+  def forward(self, q, k, v, mask):
+    # 全結合用で特徴量を変換
+    k = self.k_linear(k)
+    q = self.q_linear(q)
+    v = self.v_linear(k)
+    
+    # Attentionの値を計算
+    weights = torch.matmul(q, k.transpose(1, 2)) / math.sqrt(self.d_k)
+    
+    # maskを計算(<pad>の箇所にマイナス無限大を入力)
+    mask = mask.unsqueeze(1)
+    weights = weights.masked_fill(mask==0, -1e9)
+    
+    # softmaxで規格化を実行
+    normalized_weights = F.softmax(weights, dim=-1)
+    
+    # AttentionをValueに乗ずる
+    output = torch.matmul(normalized_weights, v)
+    
+    # 全結合用で特徴量を変換
+    output = self.out(output)
+    
+    return output, normalized_weights
+```
+
+### FeedForward層の定義
+
+```{python}
+class FeedForward(nn.Module):
+  # Attention層から出力された特徴量を2つの全結合層で変換
+  def __init__(self, d_model, d_ff=1024, dropout=0.1):
+    super().__init__()
+    
+    self.linear_1 = nn.Linear(d_model, d_ff)
+    self.dropout = nn.Dropout(dropout)
+    self.linear_2 = nn.Linear(d_ff, d_model)
+    
+  def forward(self, x):
+    x = self.linear_1(x)
+    x = self.dropout(F.relu(x))
+    x = self.linear_2(x)
+    return x
+
+class TransformerBlock(nn.Module):
+  def __init__(self, d_model, dropout=0.1):
+    super().__init__()
+    
+    self.norm_1 = nn.LayerNorm(d_model)
+    self.norm_2 = nn.LayerNorm(d_model)
+    
+    self.attn = Attention(d_model)
+    
+    self.ff = FeedForward(d_model)
+    
+    self.dropout_1 = nn.Dropout(dropout)
+    self.dropout_2 = nn.Dropout(dropout)
+    
+  def forward(self, x, mask):
+    # 正規化とAttention
+    x_normalized = self.norm_1(x)
+    output, normalized_weights = self.attn(x_normalized, x_normalized, x_normalized, mask)
+    
+    x2 = x + self.dropout_1(output)
+    
+    # 正規化と全結合層
+    x_normalized2 = self.norm_2(x2)
+    output = x2 + self.dropout_2(self.ff(x_normalized2))
+    
+    return output, normalized_weights
+```
+
+```{python}
+net1 = Embedder(TEXT.vocab.vectors)
+net2 = PositionalEncoder(d_model=300, max_seq_len=256)
+net3 = TransformerBlock(d_model=300)
+
+x = batch.Text[0]
+input_pad = 1
+input_mask = (x != input_pad)
+
+x1 = net1(x)
+x2 = net2(x1)
+x3, normalized_weights = net3(x2, input_mask)
+
+print("入力のテンソルサイズ：", x2.shape)
+print("出力のテンソルサイズ：", x3.shape)
+print("Attentionのサイズ：", normalized_weights.shape)
+```
+
+### ClassificationHead層の定義
+
+```{python}
+class ClassificationHead(nn.Module):
+  "TransformerBlockの出力を用いて、クラス分類を行うユニット
+  def __init__(self, d_model=300, output_dim=2):
+    super().__init__()
+    
+    # 全結合層
+    self.linear = nn.Linear(d_model, output_dim)
+    
+    # 重み初期化処理
+    nn.init.normal_(self.linear.weight, std=0.02)
+    nn.init.normal_(self.linear.bias, 0)
+    
+  def forward(self, x):
+    # 各ミニバッチの各文の先頭単語の特徴量を取り出す
+    x0 = x[:, 0, :]
+    out = self.linear(x0)
+    return out
+```
+
+```{python}
+batch = next(iter(train_dl))
+
+net1 = Embedder(TEXT.vocab.vectors)
+net2 = PositionalEncoder(d_model=300, max_seq_len=256)
+net3 = TransformerBlock(d_model=300)
+net4 = ClassificationHead(output_dim=2, d_model=300)
+
+x = batch.Text[0]
+x1 = net1(x)
+x2 = net2(x1)
+x3, normalized_weights = net3(x2, input_mask)
+x4 = net4(x3)
+
+print("入力のテンソルサイズ：", x3.shape)
+print("出力のテンソルサイズ：", x4.shape)
+```
+
+### ネットワークモデルの定義
+
+```{python}
+class TransformerClassification(nn.Module):
+  def __init__(self, text_embedding_vectors, d_model=300, max_seq_len=256, output_dim=2):
+    super().__init__()
+    
+    # モデル構築
+    self.net1 = Embedder(text_embedding_vectors)
+    self.net2 = PositionalEncoder(d_model=d_model, max_seq_len=max_seq_len)
+    self.net3_1 = TransformerBlock(d_model=d_model)
+    self.net3_2 = TransformerBlock(d_model=d_model)
+    self.net4 = ClassificationHead(output_dim=output_dim, d_model=d_model)
+    
+  def forward(self, x, mask):
+    x1 = self.net1(x)
+    x2 = self.net2(x1)
+    x3_1, normalized_weights_1 = self.net3_1(x2, mask)
+    x3_2, normalized_weights_2 = self.net3_2(x3_1, mask)
+    x4 = self.net4(x3_2)
+    return x4, normalized_weights_1, normalized_weights_2
+```
+
+```{python}
+batch = next(iter(train_dl))
+
+net = TransformerClassification(text_embedding_vectors=TEXT.vocab.vectors, d_model=300, max_seq_len=256, output_dim=2)
+
+x = batch.Text[0]
+input_mask = (x != input_pad)
+out, normalized_weights_1, normalized_weight_2 = net(x, input_mask)
+
+print("出力のテンソルサイズ：", out.shape)
+print("出力テンソルのsigmoid：", F.softmax(out, dim=1))
+```
+
+### 学習の実施
+
+```{python}
+dataloaders_dict = {"train": train_dl, "val": val_dl}
+```
+
+```{python}
+# モデル定義
+net = TransformerClassification(text_embedding_vectors=TEXT.vocab.vectors, d_model=300, max_seq_len=256, output_dim=2)
+
+# Linear層の初期化を行う関数を定義
+def weights_init(m):
+  classname = m.__class__.__name__
+  if classname.find('Linear') != -1:
+    nn.init.kaiming_normal_(m.weight)
+    if m.bias is not None:
+      nn.init.constant_(m.bias, 0.0)
+
+# 訓練モードに設定
+net.train()
+
+# TransformerBlockの初期化
+net.net3_1.apply(weights_init)
+net.net3_2.apply(weights_init)
+
+print('ネットワーク設定完了')
+```
+
+```{python}
+# 損失関数の設定
+criterion = nn.CrossEntropyLoss()
+
+# 最適化手法の設定
+learning_rate= 2e-5
+optimizer = optim.Adam(net.parameters(), lr=learning_rate)
+```
+
+```{python}
+# モデル学習のための関数を定義
+def train_model(net, dataloaders_dict, criterion, optimizer, num_epochs):
+  # GPUの使用可否
+  device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+  print("\n")
+  print("使用デバイス：", device)
+  print("-----start-----")
+  
+  net.to(device)
+  
+  torch.backends.cudnn.benchmark = True
+  
+  # epochのループ
+  for epoch in range(num_epochs):
+    # 訓練と検証のループ
+    for phase in ['train', 'val']:
+      if phase == 'train':
+        net.train()
+      else:
+        net.eval()
+      
+      epoch_loss = 0.0
+      epoch_corrects = 0
+      
+      # 学習の効果を確認するため、初回は学習を行わない
+      if(epoch==0) and (phase=='train'):
+        continue
+      
+      # DataLoaderからミニバッチを取り出すループ
+      for batch in tqdm(dataloaders_dict[phase]):
+        inputs = batch.Text[0].to(device)
+        labels = batch.label.to(device)
+        
+        optimizer.zero_grad()
+        
+        # 順伝播の計算
+        with torch.set_grad_enabled(phase == 'train'):
+          
+          input_pad = 1
+          input_mask = (inputs != input_pad)
+          
+          outputs, _, _ = net(inputs, input_mask)
+          loss = criterion(outputs, labels)
+          
+          _, preds = torch.max(outputs, 1)
+          
+          # 訓練時はバックプロパゲーション
+          if phase == 'train':
+            loss.backward()
+            optimizer.step()
+          
+          epoch_loss += loss.item() * inputs.size(0)
+          epoch_corrects += torch.sum(preds == labels.data)
+          
+      epoch_loss = epoch_loss / len(dataloaders_dict[phase].dataset)
+      epoch_acc = epoch_corrects.double() / len(dataloaders_dict[phase].dataset)
+      
+      print('Epoch {}/{} | {:^5} | Loss: {:.4f} Acc: {:.4f}'.format(epoch+1, num_epochs, phase, epoch_loss, epoch_acc))
+  return net
+```
+
+```{python}
+# 学習・検証を実行
+num_epochs = 2
+net_trained = train_model(net, dataloaders_dict, criterion, optimizer, num_epochs=num_epochs)
+```
+
+### テストデータでの性能検証
+
+```{python}
+# テストデータでの検証を実施
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+net_trained.eval()
+net_trained.to(device)
+
+epoch_corrects = 0
+
+for batch in (test_dl):
+  inputs = batch.Text[0].to(device)
+  labels = batch.label.to(device)
+  
+  with torch.set_grad_enabled(False):
+    input_pad = 1
+    input_mask = (inputs != input_pad)
+    
+    outputs, _, _ = net_trained(inputs, input_mask)
+    _, preds = torch.max(outputs, 1)
+    
+    epoch_corrects += torch.sum(preds == labels.data)
+    
+epoch_acc = epoch_corrects.double() / len(testdl.dataset)
+
+print('テストデータ{}個での正解率：{:.4f}'.format(len(test_dl.dataset), epoch_acc))
+```

@@ -1,0 +1,399 @@
+---
+title: "Twitterで#TidyTuesdayを見てたら良さげな可視化ライブラリに出会った"
+author: admin
+date: 2022-04-19T00:00:00Z
+categories: ["TidyTuesday"]
+tags: ["R","前処理","可視化"]
+draft: false
+featured: false
+slug: ["sentiment_score"]
+image:
+  caption: ''
+  focal_point: ""
+  placement: 2
+  preview_only: false
+lastmod: ""
+projects: []
+summary: Transformerを用いたセンチメントスコアの算出を実践します！
+output: 
+  blogdown::html_page:
+    toc: true
+codefolding_show: "show"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+## 1. TidyTuesdayとは
+
+Rで作る週刊ソーシャルデータプロジェクトです。[TidyTuesdayのGithubページ](https://github.com/rfordatascience/tidytuesday)では、以下のように説明されています。
+
+> A weekly social data project in R\
+> A weekly data project aimed at the R ecosystem. As this project was borne out of the R4DS Online Learning Community and the R for Data Science textbook, an emphasis was placed on understanding how to summarize and arrange data to make meaningful charts with ggplot2, tidyr, dplyr, and other tools in the tidyverse ecosystem. However, any code-based methodology is welcome - just please remember to share the code used to generate the results.
+>
+> (拙訳)
+>
+> Rによる週刊ソーシャルデータプロジェクト。Rエコシステムを目指した週刊データプロジェクト。このプロジェクトはR4DSオンライン学習コミュニティとRを用いたデータサイエンスの教科書から生まれたため、ggplot2、tidyr、dplyr、そしてtidyverseエコシステムの他のツールを使って意味のあるチャートを作るためのデータの要約や 整理方法を理解することに重点が置かれました。しかし、どんなコードベースの方法論も歓迎します - ただ、結果を生成するために使用したコードを共有することを忘れないでください。
+
+続きです。
+
+> Join the R4DS Online Learning Community in the weekly #TidyTuesday event! Every week we post a raw dataset, a chart or article related to that dataset, and ask you to explore the data. While the dataset will be "tamed", it will not always be tidy! As such you might need to apply various R for Data Science techniques to wrangle the data into a true tidy format. The goal of TidyTuesday is to apply your R skills, get feedback, explore other's work, and connect with the greater #RStats community! As such we encourage everyone of all skills to participate!
+>
+> We will have many sources of data and want to emphasize that no causation is implied. There are various moderating variables that affect all data, many of which might not have been captured in these datasets. As such, our guidelines are to use the data provided to practice your data tidying and plotting techniques. Participants are invited to consider for themselves what nuancing factors might underlie these relationships.
+>
+> The intent of Tidy Tuesday is to provide a safe and supportive forum for individuals to practice their wrangling and data visualization skills independent of drawing conclusions. While we understand that the two are related, the focus of this practice is purely on building skills with real-world data.
+>
+> All data will be posted on the data sets page on Monday. It will include the link to the original article (for context) and to the data set.
+>
+> We welcome all newcomers, enthusiasts, and experts to participate, but be mindful of a few things:
+>
+> 1.  The data set comes from the source article or the source that the article credits. Be mindful that the data is what it is and Tidy Tuesday is designed to help you practice data visualization and basic data wrangling in R.
+>
+> 2.  Again, the data is what it is! You are welcome to explore beyond the provided dataset, but the data is provided as a "toy" dataset to practice techniques on.
+>
+> 3.  This is NOT about criticizing the original article or graph. Real people made the graphs, collected or acquired the data! Focus on the provided dataset, learning, and improving your techniques in R.
+>
+> 4.  This is NOT about criticizing or tearing down your fellow #RStats practitioners or their code! Be supportive and kind to each other! Like other's posts and help promote the #RStats community!
+>
+> 5.  Use the hashtag #TidyTuesday on Twitter if you create your own version and would like to share it.
+>
+> 6.  Include a picture of the visualisation when you post to Twitter.
+>
+> 7.  Include a copy of the code used to create your visualization when you post to Twitter. Comment your code wherever possible to help yourself and others understand your process!
+>
+> 8.  Focus on improving your craft, even if you end up with something simple!
+>
+> 9.  Give credit to the original data source whenever possible.
+>
+> (拙訳)
+>
+> R4DSオンライン学習コミュニティで、毎週開催される「#TidyTuesday」に参加しませんか？毎週、未加工のデータセットとそのデータセットに関連する図表や記事を投稿し、データを探ってもらうイベントです。データセットは「整頓」されますが、常に整頓されているわけではありません! そのため、R for Data Scienceの様々なテクニックを使って、データを本当の意味で整頓する必要があるかもしれません。TidyTuesdayの目標は、あなたのRスキルを適用し、フィードバックを得て、他者の作品を探究し、より大きな#RStatsコミュニティとつながることです! そのため、私たちはあらゆるスキルレベルの皆さんに参加をお勧めします!
+>
+> 私たちは多くのデータソースを持っており、それらが因果関係を持っていないことを強調したいと思います。すべてのデータに影響を与える様々な緩和因子があり、その多くはこれらのデータセットでは捕捉されていないかもしれません。そのため、提供されたデータを使って、データの整理やプロットのテクニックを磨くことが我々の方針です。参加者は、これらの関係の根底にどのような要素があるのか、自分自身で考えてみることが大切です。
+>
+> Tidy Tuesdayの目的は、結論を出すこととは無関係に、個人がデータ整理とデータ可視化のスキルを練習するための、安全で協力的なフォーラムを提供することです。我々はこの2つが関連していることを理解していますが、この練習の焦点は純粋に実世界のデータを使ってスキルを身につけることです。
+>
+> すべてのデータは月曜日にデータセットのページに掲載されます。このページには、元記事へのリンク（文脈のため）とデータセットへのリンクが含まれます。
+>
+> 初めての方、熱心な方、専門家の方の参加を歓迎しますが、いくつかの点に注意してください。
+>
+> 1.  データセットは、元記事または記事がクレジットしているソースに由来しています。データはあるがままのものであり、Tidy TuesdayはRでのデータ可視化と基本的なデータ操作の練習を助けるように設計されていることを心に留めておいてください。
+>
+> 2.  繰り返しになりますが、データはあるがままのものです。提供されたデータセットをそれ以上に自由に探索することができますが、このデータはテクニックを練習するための「おもちゃ」のデータセットとして提供されています。
+>
+> 3.  これは、元の記事やグラフを批判するためのものではありません。実際に人々がグラフを作り、データを収集し、取得したのです。提供されたデータセットに集中し、Rで学び、テクニックを向上させましょう。
+>
+> 4.  RStatsの仲間やそのコードについて、批判や誹謗中傷するためのものではありません。お互いに協力し合い、親切にしましょう。他の人の投稿に「いいね！」を押して、#RStats コミュニティを盛り上げてください。
+>
+> 5.  もしあなたが独自のバージョンを作成し、それを共有したい場合は、Twitterでハッシュタグ#TidyTuesdayを使用してください。
+>
+> 6.  Twitterに投稿する際は、ビジュアライゼーションの画像を添付してください。
+>
+> 7.  Twitterに投稿する際、あなたの可視化を作成するために使用したコードのコピーを添付してください。自分自身や他の人があなたのプロセスを理解するのに役立つように、可能な限りあなたのコードについてコメントしてください。
+>
+> 8.  たとえ簡単なもので終わっても、自分の技術を向上させることに専念してください。
+>
+> 9.  可能な限り、元のデータソースのクレジットを表示するようにしましょう。
+
+というわけで、`R`を用いた可視化テクニックの鍛錬の場として、週次でデータセットが配布されているようです。それを何らかの形で可視化して、Twitterで#TidyTuesdayを付けて共有するといった感じです。
+
+### TidyTuesdayの参加方法
+
+`tidytuesdayR`というパッケージが存在します。`tt_load()`関数でデータセットを取得できます。引数に基準日を渡します。
+
+```{r}
+tuesdata <- tidytuesdayR::tt_load("2022-4-12")
+```
+
+データのダウンロードが出来ました。今週のデータセットは室内空気汚染です。室内空気汚染は、調理や暖房のために薪、生ゴミ、肥やしなどの固形燃料を燃やすことによって引き起こされるようです。特に貧しい家庭では、このような燃焼が大気汚染を引き起こし、呼吸器系疾患の原因となり、早死にすることもあり、WHOは室内空気汚染を「世界最大の環境健康リスク」と呼んでいるとのことです。
+
+`tuesdata`には6つのデータが格納されています。`fuel_gdp`を確認してみます。
+
+```{r}
+tuesdata$fuel_gdp |> head()
+```
+
+調理用のクリーン燃料と技術へアクセスできる割合(%/全人口)と購買力平価ベース(2017年基準)の1人当たりGDPが国×時系列で格納されています。
+次に、`indoor_pollution`を見てみましょう。
+
+```{r}
+tuesdata$indoor_pollution |> head()
+```
+
+固形燃料による家庭内空気汚染による死亡が全死亡に占める割合(性別：両方、年齢：標準化済み)が国×時系列で格納されています。
+
+### 前処理
+
+```{r}
+fuel_gdp <- tuesdata$fuel_gdp |> 
+              janitor::clean_names() |> 
+              dplyr::rename(
+                access_to_fuels = access_to_clean_fuels_and_technologies_for_cooking_percent_of_population,
+                gdp_pc = gdp_per_capita_ppp_constant_2017_international,
+                population_est = population_historical_estimates
+                  ) |> 
+              dplyr::filter(stringr::str_detect(code, "^OWID", negate = TRUE))
+
+pollution <- tuesdata$indoor_pollution |> 
+                janitor::clean_names() |> 
+                dplyr::rename(
+                  death = deaths_cause_all_causes_risk_household_air_pollution_from_solid_fuels_sex_both_age_age_standardized_percent
+                ) |> 
+                dplyr::filter(stringr::str_detect(code, "^OWID", negate = TRUE))
+
+polution_gdp <- pollution |> 
+                  dplyr::inner_join(fuel_gdp, by = c("year", "code", "entity")) |> 
+                  dplyr::filter(year >= 2000 & year < 2017) |> 
+                  dplyr::group_by(code) |> 
+                  dplyr::ungroup() |> 
+                  dplyr::mutate(
+                    gdp_pc_log = round(log10(gdp_pc), 2),
+                    death_rate = round(death / (population_est / 100000), 2),
+                    death_scaled = scales::rescale(death_rate, to = c(2, 20)),
+                    not_access = 100 - access_to_fuels
+                  )
+```
+
+
+### 簡単な可視化
+
+## 2. 可視化に良さげなライブラリ`echarts4r`
+
+### `echarts4r`とは
+
+### `echarts4r`での作図方法
+
+```{r}
+df <- state.x77 |> 
+  as.data.frame() |> 
+  tibble::rownames_to_column("State")
+df |> head()
+```
+
+```{r}
+df |> 
+  e_charts(x = State) |> # x軸を指定し、チャートを初期化
+  e_line(serie = Population) # 折れ線グラフを追加
+```
+
+```{r}
+df |> 
+  e_charts_("State") |> 
+  e_line_("Population")
+```
+
+```{r}
+df |> 
+  e_charts(x = State) |> # x軸を指定し、チャートを初期化
+  e_line(serie = Population) |> # 折れ線グラフを追加
+  e_area(Income) # 面グラフを追加
+```
+
+```{r}
+df |> 
+  e_charts(x = State) |> # x軸を指定し、チャートを初期化
+  e_line(serie = Population, smooth = TRUE) |> # 折れ線グラフを追加
+  e_area(Income, smooth = TRUE) # 面グラフを追加
+```
+
+```{r}
+df |> 
+  e_charts(State) |> # x軸を指定し、チャートを初期化
+  e_line(Population, smooth = TRUE) |>  # 折れ線グラフを追加
+  e_area(Income, smooth = TRUE) |>  # 面グラフを追加
+  e_axis_labels(x = "State") # x軸ラベルを追加
+```
+
+```{r}
+df |> 
+  e_charts(State) |> # x軸を指定し、チャートを初期化
+  e_line(Population, smooth = TRUE) |>  # 折れ線グラフを追加
+  e_area(Income, smooth = TRUE) |>  # 面グラフを追加
+  e_axis_labels(x = "State") |> # x軸ラベルを追加
+  e_title(text = "US States", subtext = "Population & Income") |> # タイトルとサブタイトルを追加
+  e_theme("infographic") # テーマを指定
+```
+
+[こちら](https://echarts4r.john-coene.com/articles/themes.html)
+
+```{r}
+df |> 
+  e_charts(State) |> # x軸を指定し、チャートを初期化
+  e_line(Population, smooth = TRUE) |>  # 折れ線グラフを追加
+  e_area(Income, smooth = TRUE) |>  # 面グラフを追加
+  e_axis_labels(x = "State") |> # x軸ラベルを追加
+  e_title(text = "US States", subtext = "Population & Income") |> # タイトルとサブタイトルを追加
+  e_theme("infographic") |> # テーマを指定
+  e_legend(right = 0) # 凡例を右寄せに変更
+```
+
+```{r}
+df |> 
+  e_charts(State) |> # x軸を指定し、チャートを初期化
+  e_line(Population, smooth = TRUE) |>  # 折れ線グラフを追加
+  e_area(Income, smooth = TRUE) |>  # 面グラフを追加
+  e_axis_labels(x = "State") |> # x軸ラベルを追加
+  e_title(text = "US States", subtext = "Population & Income") |> # タイトルとサブタイトルを追加
+  e_theme("infographic") |> # テーマを指定
+  e_legend(right = 0) |> # 凡例を右寄せに変更
+  e_tooltip(trigger = "axis") # ツールティップ(ヒント)を追加
+```
+
+```{r}
+df |> 
+  e_charts(State) |> # x軸を指定し、チャートを初期化
+  e_line(Population, smooth = TRUE) |>  # 折れ線グラフを追加
+  e_area(Income, smooth = TRUE, y_index = 1) |>  # 面グラフを追加(第2軸)
+  e_axis_labels(x = "State") |> # x軸ラベルを追加
+  e_title(text = "US States", subtext = "Population & Income") |> # タイトルとサブタイトルを追加
+  e_theme("infographic") |> # テーマを指定
+  e_legend(right = 0) |> # 凡例を右寄せに変更
+  e_tooltip(trigger = "axis") # ツールティップ(ヒント)を追加
+```
+
+```{r}
+df |> 
+  e_charts(State) |> # x軸を指定し、チャートを初期化
+  e_line(Population, smooth = TRUE) |>  # 折れ線グラフを追加
+  e_area(Income, smooth = TRUE) |>  # 面グラフを追加
+  e_axis_labels(x = "State") |> # x軸ラベルを追加
+  e_title(text = "US States", subtext = "Population & Income") |> # タイトルとサブタイトルを追加
+  e_theme("infographic") |> # テーマを指定
+  e_legend(right = 0) |> # 凡例を右寄せに変更
+  e_tooltip(
+    axisPointer = list(
+      type = "cross"
+    )) # ツールティップ(ヒント)を追加
+```
+
+```{r}
+e_common(
+  font_family = "Raleway",
+  theme = NULL
+)
+```
+
+```{r}
+iris |> 
+  dplyr::group_by(Species) |> 
+  e_charts(Sepal.Length) |> 
+  e_line(Sepal.Width) |> 
+  e_title("Grouped data")
+```
+
+```{r}
+iris |> 
+  group_by(Species) |> 
+  e_charts(Sepal.Length, timeline = TRUE) |> 
+  e_line(Sepal.Width) |> 
+  e_title("Timeline")
+```
+
+```{r}
+df <- data.frame(
+  x = LETTERS[1:10],
+  a = runif(10),
+  b = runif(10),
+  c = runif(10),
+  d = runif(10)
+)
+
+df |> 
+  e_charts(x) |> 
+  e_bar(a, stack = "grp") |> 
+  e_bar(b, stack = "grp") |> 
+  e_bar(c, stack = "grp2") |> 
+  e_bar(d, stack = "grp2") 
+```
+
+```{r}
+iris |> 
+    group_by(Species) |> 
+    e_charts(Sepal.Length) |> 
+    e_scatter(Petal.Length, Sepal.Width)
+```
+
+```{r}
+my_scale <- function(x){
+  scales::rescale(x, to = c(5, 30))
+}
+
+iris |> 
+    group_by(Species) |> 
+    e_charts(Sepal.Length) |> 
+    e_scatter(Petal.Length, Sepal.Width, scale = my_scale)
+```
+
+```{r}
+iris |> 
+    group_by(Species) |> 
+    e_charts(Sepal.Length) |> 
+    e_scatter(Petal.Length, symbol_size = 15)
+```
+
+```{r}
+iris |> 
+    group_by(Species) |> 
+    e_charts(Sepal.Length) |> 
+    e_scatter(Petal.Length, Sepal.Width, scale = log1p, symbol_size = 10)
+```
+
+```{r}
+iris |> 
+    group_by(Species) |> 
+    e_charts(Sepal.Length) |> 
+    e_scatter(Petal.Length, Sepal.Width, scale = log1p, symbol_size = 10)
+```
+
+```{r}
+echart <- mtcars |> 
+  e_charts(mpg) |> 
+  e_scatter(qsec, wt, scale = e_scale) |> 
+  e_legend(show = FALSE)
+
+echart |> 
+  e_visual_map(wt, scale = e_scale)
+```
+
+```{r}
+
+```
+
+
+## echarts4rでTidyTuesday
+
+```{r}
+library(echarts4r)
+
+my_scale <- function(x) 2*sqrt(x) + 1
+
+polution_gdp |> 
+  dplyr::mutate(opacity = 0.4) |> 
+  e_color_range(death_rate, color, colors = MetBrewer::met.brewer("OKeeffe1", 11)[c(11, 2)]) |> 
+  dplyr::group_by(year) |> 
+  e_charts(gdp_pc_log, timeline = TRUE) |> 
+  e_scatter(access_to_fuels, symbol_size = 5, bind = entity, size = death_rate, scale = my_scale, legend = FALSE) |> 
+  e_add_nested("itemStyle", opacity, color) |> 
+  e_tooltip(
+    formatter = htmlwidgets::JS("
+      function(params){
+        return('<strong>' + params.name + 
+        '</strong><br />GDP per capita: 10 E' + params.value[0] + '$' +
+          '<br />Clean Fuel access: ' + params.value[1] + '%' +
+          '<br />Death rate: ' + params.value[2] + '/100,000 inhabitants')
+                }
+    ")
+  ) |>
+  e_x_axis(name = "log10(GDP p.c.") |> 
+  e_y_axis(name = "Access to clean fuels\nand technologies\nfor cooking\n(% of population)") |> 
+  e_title(text = "Access to clean fuels for cooking") |> 
+  e_theme("roma") |> 
+  e_grid(bottom = "15%", top = "25%", left = "10%", right = "15%") |> 
+  e_timeline_opts(playInterval = 1000, loop = TRUE)
+```
+
+### 拡張機能
+
+## 3. `echats4r`を用いてTidyTuesdayを可視化
