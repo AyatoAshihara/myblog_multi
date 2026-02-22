@@ -41,4 +41,4 @@ user_groups:
 - Principal Investigators
 ---
 
-{{< author-dynamic >}}
+{{< author-dynamic mode="about" >}}

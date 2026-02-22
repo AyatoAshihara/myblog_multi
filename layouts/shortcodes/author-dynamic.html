@@ -1,2 +1,3 @@
-{{/* Shortcode wrapper - delegates to partial so logic is shared. */}}
-{{ partial "author-dynamic.html" (dict "author_page" .Page) }}
+{{/* Shortcode wrapper - accept optional mode parameter and delegate to partial. */}}
+{{ $mode := .Get "mode" | default "about" }}
+{{ partial "author-dynamic.html" (dict "author_page" .Page "mode" $mode) }}

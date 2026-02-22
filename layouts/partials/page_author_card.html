@@ -27,7 +27,7 @@
       {{/* Render dynamic author info (work years / age) if available; fall back to bio. */}}
       {{ $dyn := "" }}
       {{ if or $author_page.Params.work_start_year $author_page.Params.birthdate }}
-        {{ $dyn = partial "author-dynamic.html" (dict "author_page" $author_page) }}
+        {{ $dyn = partial "author-dynamic.html" (dict "author_page" $author_page "mode" "card") }}
       {{ end }}
       {{ if $dyn }}
         <p class="card-text author-dynamic">{{ $dyn | safeHTML }}</p>

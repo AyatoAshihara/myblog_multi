@@ -11,14 +11,20 @@
 {{ $parts := slice }}
 {{/* Determine language: prefer author page language, else site language */}}
 {{ $lang := default .Site.Language.Lang $author.Lang }}
+{{/* Mode: "about" (default) or "card" - passed via dict when calling partial or via shortcode */}}
+{{ $mode := default "about" .mode }}
+
+{{/* Prepare sentence fragments */}}
+{{ $yearsSentence := "" }}
+{{ $birthSentence := "" }}
 
 {{ with $author.Params.work_start_year }}
   {{ $start := . | int }}
   {{ $years := sub $currentYear $start }}
   {{ if eq $lang "en" }}
-    {{ $parts = $parts | append (printf "Started work in %d; currently in year %d of professional career." $start $years) }}
+    {{ $yearsSentence = printf "Started work in %d; currently in year %d of professional career." $start $years }}
   {{ else }}
-    {{ $parts = $parts | append (printf "%d年に社会人となり、現在は社会人%d年目です。" $start $years) }}
+    {{ $yearsSentence = printf "%d年に社会人となり、現在は社会人%d年目です。" $start $years }}
   {{ end }}
 {{ end }}
 
@@ -32,12 +38,34 @@
     {{ $age = sub $age 1 }}
   {{ end }}
   {{ if eq $lang "en" }}
-    {{ $parts = $parts | append (printf "Born on %s and currently %d years old." (dateFormat "January 2, 2006" $birth) $age) }}
+    {{ $birthSentence = printf "Born on %s and currently %d years old." (dateFormat "January 2, 2006" $birth) $age }}
   {{ else }}
-    {{ $parts = $parts | append (printf "%s生まれで現在%d歳です。" (dateFormat "2006年1月2日" $birth) $age) }}
+    {{ $birthSentence = printf "%s生まれで現在%d歳です。" (dateFormat "2006年1月2日" $birth) $age }}
   {{ end }}
 {{ end }}
 
-{{ if gt (len $parts) 0 }}
-  {{ delimit $parts " " }}
+{{/* Output based on mode */}}
+{{ if eq $mode "card" }}
+  {{/* Card: short headline with auto-updated years; fall back to bio if years not present */}}
+  {{ if ne $yearsSentence "" }}
+    {{ if eq $lang "en" }}
+      {{ printf "%s updates nightly. The content does not reflect the views of the author's organization." (replace $yearsSentence "Started work in " "In his " ) }}
+    {{ else }}
+      {{/* Use pattern: 社会人N年目が夜な夜な更新中。本ブログの内容は筆者が所属する組織の公式見解とは関係ありません。 */}}
+      {{ $yearsOnly := replace $yearsSentence "年に社会人となり、現在は社会人" "" }}
+      {{/* Extract start and years not straightforward; use $author.Params.work_start_year to compute years number again for card text */}}
+      {{ $start := $author.Params.work_start_year | int }}
+      {{ $years := sub $currentYear $start }}
+      {{ printf "社会人%d年目が夜な夜な更新中。本ブログの内容は筆者が所属する組織の公式見解とは関係ありません。" $years }}
+    {{ end }}
+  {{ else }}
+    {{/* Fallback to bio */}}
+    {{ with $author.Params.bio }}{{ . | markdownify | emojify }}{{ end }}
+  {{ end }}
+{{ else }}
+  {{/* about mode (default): join years and birth sentences if present */}}
+  {{ $out := slice }}
+  {{ if ne $yearsSentence "" }}{{ $out = $out | append $yearsSentence }}{{ end }}
+  {{ if ne $birthSentence "" }}{{ $out = $out | append $birthSentence }}{{ end }}
+  {{ if gt (len $out) 0 }}{{ delimit $out " " }}{{ end }}
 {{ end }}
