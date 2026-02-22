@@ -9,11 +9,17 @@
 {{ $now := now }}
 {{ $currentYear := (dateFormat "2006" $now) | int }}
 {{ $parts := slice }}
+{{/* Determine language: prefer author page language, else site language */}}
+{{ $lang := default .Site.Language.Lang $author.Lang }}
 
 {{ with $author.Params.work_start_year }}
   {{ $start := . | int }}
   {{ $years := sub $currentYear $start }}
-  {{ $parts = $parts | append (printf "%d年に社会人となり、現在は社会人%d年目です。" $start $years) }}
+  {{ if eq $lang "en" }}
+    {{ $parts = $parts | append (printf "Started work in %d; currently in year %d of professional career." $start $years) }}
+  {{ else }}
+    {{ $parts = $parts | append (printf "%d年に社会人となり、現在は社会人%d年目です。" $start $years) }}
+  {{ end }}
 {{ end }}
 
 {{ with $author.Params.birthdate }}
@@ -25,7 +31,11 @@
   {{ if lt $nowmd $bmd }}
     {{ $age = sub $age 1 }}
   {{ end }}
-  {{ $parts = $parts | append (printf "%s生まれで現在%d歳です。" (dateFormat "2006-01-02" $birth) $age) }}
+  {{ if eq $lang "en" }}
+    {{ $parts = $parts | append (printf "Born on %s and currently %d years old." (dateFormat "January 2, 2006" $birth) $age) }}
+  {{ else }}
+    {{ $parts = $parts | append (printf "%s生まれで現在%d歳です。" (dateFormat "2006-01-02" $birth) $age) }}
+  {{ end }}
 {{ end }}
 
 {{ if gt (len $parts) 0 }}

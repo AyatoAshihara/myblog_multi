@@ -1,5 +1,7 @@
 ---
 bio: This blog is a nightly update by a man who is working in his forth year since completing graduate school. The content of this blog has nothing to do with the official position of the author's organization.
+work_start_year: 2018
+birthdate: "1994-01-19"
 education:
   courses:
   - course: Policy Studies Master
@@ -39,4 +41,4 @@ user_groups:
 - Principal Investigators
 ---
 
-I'm 28 years old, from Nara, Japan and currently in my forth year since completing graduate studies. I majored in macroeconomics (mainly Dynamic Stochastic General Equilibruim models), and also experimented with time series analysis and text mining. In 2018, I graduated and started working for an asset management company in Tokyo, mainly in strategic planning. In March 2022, I changed jobs and started my career path as a data consultant for an electronic components manufacturer in Kyoto, Japan.
+{{< author-dynamic >}}
