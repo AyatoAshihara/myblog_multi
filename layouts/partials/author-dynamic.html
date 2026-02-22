@@ -17,6 +17,7 @@
 {{/* Prepare sentence fragments */}}
 {{ $yearsSentence := "" }}
 {{ $birthSentence := "" }}
+{{ $ageVal := 0 }}
 
 {{ with $author.Params.work_start_year }}
   {{ $start := . | int }}
@@ -42,6 +43,7 @@
   {{ else }}
     {{ $birthSentence = printf "%s生まれで現在%d歳です。" (dateFormat "2006年1月2日" $birth) $age }}
   {{ end }}
+  {{ $ageVal = $age }}
 {{ end }}
 
 {{/* Output based on mode */}}
@@ -63,9 +65,27 @@
     {{ with $author.Params.bio }}{{ . | markdownify | emojify }}{{ end }}
   {{ end }}
 {{ else }}
-  {{/* about mode (default): join years and birth sentences if present */}}
-  {{ $out := slice }}
-  {{ if ne $yearsSentence "" }}{{ $out = $out | append $yearsSentence }}{{ end }}
-  {{ if ne $birthSentence "" }}{{ $out = $out | append $birthSentence }}{{ end }}
-  {{ if gt (len $out) 0 }}{{ delimit $out " " }}{{ end }}
+  {{/* about mode (default): for Japanese, prefer age first, then years, then living status. */}}
+  {{ if ne $lang "en" }}
+    {{ if ne $ageVal 0 }}
+      {{/* Print: "32歳。2018年に社会人となり、現在は社会人8年目です。妻と息子と3人暮らし。」 */}}
+      {{ if ne $yearsSentence "" }}
+        {{ printf "%d歳。%s妻と息子と3人暮らし。" $ageVal $yearsSentence }}
+      {{ else }}
+        {{ printf "%d歳。妻と息子と3人暮らし。" $ageVal }}
+      {{ end }}
+    {{ else }}
+      {{/* Fallback: join sentences */}}
+      {{ $out := slice }}
+      {{ if ne $yearsSentence "" }}{{ $out = $out | append $yearsSentence }}{{ end }}
+      {{ if ne $birthSentence "" }}{{ $out = $out | append $birthSentence }}{{ end }}
+      {{ if gt (len $out) 0 }}{{ delimit $out " " }}{{ end }}
+    {{ end }}
+  {{ else }}
+    {{/* English: default behavior */}}
+    {{ $out := slice }}
+    {{ if ne $yearsSentence "" }}{{ $out = $out | append $yearsSentence }}{{ end }}
+    {{ if ne $birthSentence "" }}{{ $out = $out | append $birthSentence }}{{ end }}
+    {{ if gt (len $out) 0 }}{{ delimit $out " " }}{{ end }}
+  {{ end }}
 {{ end }}
