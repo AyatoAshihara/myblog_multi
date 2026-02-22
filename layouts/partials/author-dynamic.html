@@ -34,10 +34,10 @@
   {{ if eq $lang "en" }}
     {{ $parts = $parts | append (printf "Born on %s and currently %d years old." (dateFormat "January 2, 2006" $birth) $age) }}
   {{ else }}
-    {{ $parts = $parts | append (printf "%s生まれで現在%d歳です。" (dateFormat "2006-01-02" $birth) $age) }}
+    {{ $parts = $parts | append (printf "%s生まれで現在%d歳です。" (dateFormat "2006年1月2日" $birth) $age) }}
   {{ end }}
 {{ end }}
 
 {{ if gt (len $parts) 0 }}
-  <p class="card-text author-dynamic">{{ delimit $parts " " }}</p>
+  {{ delimit $parts " " }}
 {{ end }}

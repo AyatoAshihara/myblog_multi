@@ -24,8 +24,13 @@
       <h5 class="card-title"><a href="{{$profile_url}}">{{$author_page.Title}}</a></h5>
       {{ with $author_page.Params.role }}<h6 class="card-subtitle">{{. | markdownify | emojify}}</h6>{{end}}
       {{/* Render dynamic author info (work years / age) if available; fall back to bio. */}}
+      {{/* Render dynamic author info (work years / age) if available; fall back to bio. */}}
+      {{ $dyn := "" }}
       {{ if or $author_page.Params.work_start_year $author_page.Params.birthdate }}
-        {{ partial "author-dynamic.html" (dict "author_page" $author_page) }}
+        {{ $dyn = partial "author-dynamic.html" (dict "author_page" $author_page) }}
+      {{ end }}
+      {{ if $dyn }}
+        <p class="card-text author-dynamic">{{ $dyn | safeHTML }}</p>
       {{ else }}
         {{ with $author_page.Params.bio }}<p class="card-text">{{. | markdownify | emojify}}</p>{{end}}
       {{ end }}
