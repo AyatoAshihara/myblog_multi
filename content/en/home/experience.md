@@ -25,13 +25,13 @@ date_format: 2006 Jan
 #   Leave `date_end` empty if it's your current employer.
 #   You can begin a multiline `description` using YAML's `|-`.
 experience:
-- company: An electronic components manufacturer
+- company: An electronic component manufacturer
   company_url: ""
-  date_end: ""
+  date_end: "Now"
   date_start: "2022-03-01"
   description: |-
-    * Data Utilization Promotion
-  location: Chiyoda Ward, Tokyo, Japan
+    * Internal support for data utilization through the provision of visualization services
+  location: Kyoto, Japan
   title: Company employee
 - company: An asset management company
   company_url: ""
@@ -42,7 +42,7 @@ experience:
     * Development and maintenance of business infrastructures
     * Regulatory and institutional compliance
     * Operational Risk Management
-  location: Kyoto, Japan
+  location: Chiyoda Ward, Tokyo, Japan
   title: Company employee
 - company: An asset management company
   company_url: ""

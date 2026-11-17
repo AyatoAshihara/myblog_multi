@@ -27,10 +27,10 @@ date_format: 2006年1月
 experience:
 - company: とある電子部品メーカー
   company_url: ""
-  date_end: ""
+  date_end: "現在"
   date_start: "2022-03-01"
   description: |-
-    * データ利活用推進
+    * 可視化サービス提供を通じたデータ活用社内支援
   location: 京都府
   title: 正社員
 - company: とある資産運用会社
